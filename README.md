@@ -1,6 +1,6 @@
-# phoenician
+# oaklang.com
 
-- Prod: https://wonderful.dev
+- Prod: https://oaklang.com
 - Dev: http://localhost:3000
 
 ## Setup
@@ -8,11 +8,11 @@
 Install [Postgres](https://postgresapp.com/).
 
 ```
-git clone git@github.com:wakatime/wonderful.dev.git
-cd wonderful.dev
-psql -c "CREATE ROLE wonderfuldev WITH LOGIN SUPERUSER PASSWORD 'wonderfuldev';"
-psql -c "CREATE DATABASE wonderfuldev WITH OWNER wonderfuldev;"
-psql -d wonderfuldev -c "CREATE EXTENSION citext;"
+git clone git@github.com:soaklander/oaklang.git
+cd oaklang
+psql -c "CREATE ROLE oaklang WITH LOGIN SUPERUSER PASSWORD 'oaklang';"
+psql -c "CREATE DATABASE oaklang WITH OWNER oaklang;"
+psql -d oaklang -c "CREATE EXTENSION citext;"
 cp .env.example .env
 npm i
 npm run migrate
