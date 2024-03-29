@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "bradlc.vscode-tailwindcss",
+    "wakatime.vscode-wakatime",
+    "mcright.auto-save",
+    "esbenp.prettier-vscode",
+    "austenc.tailwind-docs",
+    "dbaeumer.vscode-eslint",
+    "amatiasq.sort-imports"
+  ]
+}
