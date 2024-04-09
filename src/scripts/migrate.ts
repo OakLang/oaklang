@@ -1,10 +1,10 @@
 import 'dotenv/config';
 
-import * as schema from '~/server/schema';
+import * as schema from '~/lib/schema';
 
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { migrationClient } from '~/server/db';
+import { migrationClient } from '~/lib/db';
 
 const applyMigrations = async () => {
   const migrateDb = drizzle(migrationClient, { schema });

@@ -1,11 +1,12 @@
 import { clsx } from 'clsx';
 import type { ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { SidebarItem } from './types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const getFirstRow = <T>(rows: T[]) => (rows.length > 0 ? rows[0] : null);
 
 export const roundWithPrecision = (n: number, precision = 2) => {
   const factor = Math.pow(10, precision);
@@ -98,15 +99,4 @@ export const getSuffixForNumber = (i: number, suffix: string, opts?: { plural?: 
   i = Math.floor(i);
   const plural = opts?.plural ?? `${suffix}s`;
   return i === 1 ? suffix : plural;
-};
-
-export const isSidebarItemActive = (item: SidebarItem, pathname: string) => {
-  let isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
-  if (!isActive && item.extraMatches && item.extraMatches.length > 0) {
-    isActive = item.extraMatches.findIndex((match) => (match.exact ? match.href === pathname : pathname.startsWith(match.href))) !== -1;
-  }
-  if (isActive && item.excludePaths && item.excludePaths.length > 0) {
-    isActive = item.excludePaths.findIndex((match) => (match.exact ? match.href === pathname : pathname.startsWith(match.href))) === -1;
-  }
-  return isActive;
 };

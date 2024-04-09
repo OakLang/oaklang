@@ -1,44 +1,46 @@
 'use client';
 
+import { QueryClientProvider } from '@tanstack/react-query';
+import type { QueryClientConfig } from '@tanstack/react-query';
+import { httpBatchLink, loggerLink } from '@trpc/client';
 import { useState } from 'react';
-import type { ReactNode } from 'react';
-import { httpBatchLink } from '@trpc/client';
-import { getCookie } from 'cookies-next';
-import { CSRF_COOKIE, CSRF_TOKEN_HEADER } from '~/utils/constants';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { api } from '~/trpc/client';
 import { getTrpcUrl, transformer } from '~/trpc/shared';
+import { QueryClient } from '@tanstack/react-query';
 
-export default function TrpcProvider({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } }));
+const queryConfig: QueryClientConfig = {
+  defaultOptions: {
+    queries: {
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 1000,
+    },
+  },
+};
+
+export const TrpcProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [queryClient] = useState(() => new QueryClient(queryConfig));
   const [trpcClient] = useState(() =>
     api.createClient({
       links: [
+        loggerLink({
+          enabled: (op) => process.env.NODE_ENV === 'development' || (op.direction === 'down' && op.result instanceof Error),
+        }),
         httpBatchLink({
-          headers: ({ opList }) => {
-            // client
-            if (!opList.find((op) => op.type !== 'query')) {
-              return {};
-            }
-
-            const token = getCookie(CSRF_COOKIE);
-            if (!token) {
-              return {};
-            }
-
-            return {
-              [CSRF_TOKEN_HEADER]: token,
-            };
-          },
+          transformer,
           url: getTrpcUrl(),
         }),
       ],
-      transformer,
     }),
   );
+
   return (
     <api.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <ReactQueryDevtools />
+      </QueryClientProvider>
     </api.Provider>
   );
-}
+};

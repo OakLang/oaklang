@@ -81,9 +81,3 @@
       'calt' 1;
   }
 }
-
-.polka {
-  background-color: hsl(var(--background));
-  background-image: radial-gradient(hsl(var(--border)) 1px, hsl(var(--background)) 1px);
-  background-size: 16px 16px;
-}
