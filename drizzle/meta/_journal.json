@@ -8,6 +8,13 @@
       "when": 1712669378773,
       "tag": "0000_clammy_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1712690390500,
+      "tag": "0001_goofy_scarecrow",
+      "breakpoints": true
     }
   ]
 }

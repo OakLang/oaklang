@@ -1,166 +1,138 @@
 import type { Adapter } from '@auth/core/adapters';
-import { Account, Session, User, VerificationToken } from './schema';
+import { accounts, sessions, users, verificationTokens } from './schema';
 import { db } from './db';
 import { eq, and } from 'drizzle-orm';
 
 export const drizzleAdapter: Adapter = {
-  async createSession(data) {
-    const session = await db
-      .insert(Session)
-      .values(data)
-      .returning()
-      .then((res) => res[0]);
+  async createSession({ expires, sessionToken, userId }) {
+    const [session] = await db.insert(sessions).values({ expires, sessionToken, userId }).returning();
     if (!session) {
       throw new Error('Failed to create session');
     }
     return session;
   },
-  async createUser(data) {
-    const user = await db
-      .insert(User)
-      .values(data)
-      .returning()
-      .then((res) => res[0]);
+  async createUser({ email, emailVerified, image, name }) {
+    const [user] = await db.insert(users).values({ email, emailVerified, image, name }).returning();
     if (!user) {
       throw new Error('Failed to create user');
     }
     return user;
   },
   async createVerificationToken(token) {
-    return await db
-      .insert(VerificationToken)
-      .values(token)
-      .returning()
-      .then((res) => res[0]);
+    const [verificationToken] = await db.insert(verificationTokens).values(token).returning();
+    return verificationToken ?? null;
   },
   async deleteSession(sessionToken) {
-    const session = await db
-      .delete(Session)
-      .where(eq(Session.sessionToken, sessionToken))
-      .returning()
-      .then((res) => res[0] ?? null);
-
-    return session;
+    const [session] = await db.delete(sessions).where(eq(sessions.sessionToken, sessionToken)).returning();
+    return session ?? null;
   },
-  async deleteUser(id) {
-    await db
-      .delete(User)
-      .where(eq(User.id, id))
-      .returning()
-      .then((res) => res[0] ?? null);
+  async deleteUser(userId) {
+    await db.delete(users).where(eq(users.id, userId)).returning();
   },
-  async getSessionAndUser(data) {
-    return await db
+  async getSessionAndUser(sessionToken) {
+    const [session] = await db
       .select({
-        session: Session,
-        user: User,
+        session: sessions,
+        user: users,
       })
-      .from(Session)
-      .where(eq(Session.sessionToken, data))
-      .innerJoin(User, eq(User.id, Session.userId))
-      .then((res) => res[0] ?? null);
+      .from(sessions)
+      .where(eq(sessions.sessionToken, sessionToken))
+      .innerJoin(users, eq(users.id, sessions.userId));
+    return session ?? null;
   },
-  async getUser(data) {
-    return await db
-      .select()
-      .from(User)
-      .where(eq(User.id, data))
-      .then((res) => res[0] ?? null);
+  async getUser(userId) {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    return user ?? null;
   },
-  async getUserByAccount(account) {
-    const dbAccount =
-      (await db
-        .select()
-        .from(Account)
-        .where(and(eq(Account.providerAccountId, account.providerAccountId), eq(Account.provider, account.provider)))
-        .leftJoin(User, eq(Account.userId, User.id))
-        .then((res) => res[0])) ?? null;
-
-    return dbAccount?.user ?? null;
+  async getUserByAccount({ provider, providerAccountId }) {
+    const [account] = await db
+      .select({ user: users })
+      .from(accounts)
+      .where(and(eq(accounts.providerAccountId, providerAccountId), eq(accounts.provider, provider)))
+      .innerJoin(users, eq(accounts.userId, users.id));
+    if (!account) {
+      return null;
+    }
+    return account.user;
   },
-  async getUserByEmail(data) {
-    return await db
-      .select()
-      .from(User)
-      .where(eq(User.email, data))
-      .then((res) => res[0] ?? null);
+  async getUserByEmail(email) {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user ?? null;
   },
-  async linkAccount(rawAccount) {
-    const account = await db
-      .insert(Account)
-      .values(rawAccount)
-      .returning()
-      .then((res) => res[0]);
-
+  async linkAccount({ provider, providerAccountId, type, userId, access_token, expires_at, id_token, refresh_token, scope, token_type }) {
+    const [account] = await db
+      .insert(accounts)
+      .values({
+        accessToken: access_token,
+        expiresAt: expires_at,
+        idToken: id_token,
+        provider,
+        providerAccountId,
+        refreshToken: refresh_token,
+        scope,
+        tokenType: token_type,
+        type,
+        userId,
+      })
+      .returning();
     if (!account) {
       throw new Error('Failed to link account!');
     }
-
     return {
-      access_token: account.access_token ?? undefined,
+      access_token: account.accessToken ?? undefined,
       authorization_details: undefined,
-      expires_at: account.expires_at ?? undefined,
-      id_token: account.id_token ?? undefined,
+      expires_at: account.expiresAt ?? undefined,
+      id_token: account.idToken ?? undefined,
       provider: account.provider,
       providerAccountId: account.providerAccountId,
-      refresh_token: account.refresh_token ?? undefined,
+      refresh_token: account.refreshToken ?? undefined,
       scope: account.scope ?? undefined,
-      token_type: account.token_type ?? undefined,
+      token_type: account.tokenType ?? undefined,
       type: account.type,
       userId: account.userId,
     };
   },
-  async unlinkAccount(account) {
-    const deletedAccount = await db
-      .delete(Account)
-      .where(and(eq(Account.providerAccountId, account.providerAccountId), eq(Account.provider, account.provider)))
-      .returning()
-      .then((res) => res[0]);
-
-    if (!deletedAccount) {
+  async unlinkAccount({ provider, providerAccountId }) {
+    const [account] = await db
+      .delete(accounts)
+      .where(and(eq(accounts.providerAccountId, providerAccountId), eq(accounts.provider, provider)))
+      .returning();
+    if (!account) {
       throw new Error('Account not found!');
     }
-
     return {
-      provider: deletedAccount.provider,
-      providerAccountId: deletedAccount.providerAccountId,
-      type: deletedAccount.type,
-      userId: deletedAccount.userId,
+      provider: account.provider,
+      providerAccountId: account.providerAccountId,
+      type: account.type,
+      userId: account.userId,
     };
   },
-  async updateSession(data) {
-    return await db
-      .update(Session)
-      .set(data)
-      .where(eq(Session.sessionToken, data.sessionToken))
-      .returning()
-      .then((res) => res[0]);
-  },
-  async updateUser(data) {
-    if (!data.id) {
-      throw new Error('No user id.');
+  async updateSession({ expires, userId, sessionToken }) {
+    const [session] = await db
+      .update(sessions)
+      .set({ expires, sessionToken, userId })
+      .where(eq(sessions.sessionToken, sessionToken))
+      .returning();
+    if (!session) {
+      throw new Error('Session not found!');
     }
-
-    const user = await db
-      .update(User)
-      .set(data)
-      .where(eq(User.id, data.id))
-      .returning()
-      .then((res) => res[0]);
+    return session;
+  },
+  async updateUser({ id: userId, email, emailVerified, image, name }) {
+    const [user] = await db.update(users).set({ email, emailVerified, image, name }).where(eq(users.id, userId)).returning();
     if (!user) {
       throw new Error('User not found!');
     }
     return user;
   },
-  async useVerificationToken(token) {
-    try {
-      return await db
-        .delete(VerificationToken)
-        .where(and(eq(VerificationToken.identifier, token.identifier), eq(VerificationToken.token, token.token)))
-        .returning()
-        .then((res) => res[0] ?? null);
-    } catch (err) {
-      throw new Error('No verification token found.');
+  async useVerificationToken({ identifier, token }) {
+    const [verificationToken] = await db
+      .delete(verificationTokens)
+      .where(and(eq(verificationTokens.identifier, identifier), eq(verificationTokens.token, token)))
+      .returning();
+    if (!verificationToken) {
+      throw new Error('Verification Token not found!');
     }
+    return verificationToken;
   },
 };

@@ -7,5 +7,5 @@ export default {
   },
   driver: 'pg',
   out: 'drizzle',
-  schema: 'src/server/schema.ts',
+  schema: 'src/lib/schema.ts',
 } satisfies Config;
