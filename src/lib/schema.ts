@@ -2,7 +2,7 @@ import { boolean, index, integer, pgTable, primaryKey, real, text, timestamp, uu
 import type { AdapterAccount } from '@auth/core/adapters';
 import { relations } from 'drizzle-orm';
 
-export const users = pgTable('user', {
+export const usersTable = pgTable('user', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   email: varchar('email').notNull().unique(),
   emailVerified: timestamp('email_verified'),
@@ -12,14 +12,14 @@ export const users = pgTable('user', {
   name: varchar('name'),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
-  accounts: many(accounts),
-  trainingSessions: many(trainingSessions),
+export const usersRelations = relations(usersTable, ({ many }) => ({
+  accounts: many(accountsTable),
+  trainingSessions: many(trainingSessionsTable),
 }));
 
-export type User = typeof users.$inferSelect;
+export type User = typeof usersTable.$inferSelect;
 
-export const accounts = pgTable(
+export const accountsTable = pgTable(
   'account',
   {
     accessToken: text('access_token'),
@@ -35,7 +35,7 @@ export const accounts = pgTable(
     type: varchar('type').$type<AdapterAccount['type']>().notNull(),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => usersTable.id, { onDelete: 'cascade' }),
   },
   (table) => ({
     pk: primaryKey({
@@ -44,34 +44,34 @@ export const accounts = pgTable(
   }),
 );
 
-export const accountsRelations = relations(accounts, ({ one }) => ({
-  user: one(users, {
-    fields: [accounts.userId],
-    references: [users.id],
+export const accountsRelations = relations(accountsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [accountsTable.userId],
+    references: [usersTable.id],
   }),
 }));
 
-export type Account = typeof accounts.$inferSelect;
+export type Account = typeof accountsTable.$inferSelect;
 
-export const sessions = pgTable('session', {
+export const sessionsTable = pgTable('session', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   expires: timestamp('expires').notNull(),
   sessionToken: text('session_token').notNull().primaryKey(),
   userId: uuid('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => usersTable.id, { onDelete: 'cascade' }),
 });
 
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
+export const sessionsRelations = relations(sessionsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [sessionsTable.userId],
+    references: [usersTable.id],
   }),
 }));
 
-export type Session = typeof sessions.$inferSelect;
+export type Session = typeof sessionsTable.$inferSelect;
 
-export const verificationTokens = pgTable(
+export const verificationTokensTable = pgTable(
   'verification_token',
   {
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -84,11 +84,11 @@ export const verificationTokens = pgTable(
   }),
 );
 
-export const verificationTokensRelations = relations(verificationTokens, () => ({}));
+export const verificationTokensRelations = relations(verificationTokensTable, () => ({}));
 
-export type VerificationToken = typeof verificationTokens.$inferSelect;
+export type VerificationToken = typeof verificationTokensTable.$inferSelect;
 
-export const trainingSessions = pgTable(
+export const trainingSessionsTable = pgTable(
   'training_session',
   {
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -102,24 +102,24 @@ export const trainingSessions = pgTable(
     sentenceLength: integer('sentence_length'),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => usersTable.id, { onDelete: 'cascade' }),
   },
   (table) => ({
     languageIdx: index().on(table.language),
   }),
 );
 
-export const trainingSessionsRelations = relations(trainingSessions, ({ one, many }) => ({
-  user: one(users, {
-    fields: [trainingSessions.userId],
-    references: [users.id],
+export const trainingSessionsRelations = relations(trainingSessionsTable, ({ one, many }) => ({
+  user: one(usersTable, {
+    fields: [trainingSessionsTable.userId],
+    references: [usersTable.id],
   }),
-  words: many(words),
+  words: many(wordsTable),
 }));
 
-export type TrainingSession = typeof trainingSessions.$inferSelect;
+export type TrainingSession = typeof trainingSessionsTable.$inferSelect;
 
-export const words = pgTable(
+export const wordsTable = pgTable(
   'word',
   {
     comprehensionProb: integer('comprehension_prob').notNull().default(0),
@@ -130,7 +130,7 @@ export const words = pgTable(
     repetitions: integer('repetitions').notNull().default(0),
     trainingSessionId: uuid('training_session_id')
       .notNull()
-      .references(() => trainingSessions.id, { onDelete: 'cascade' }),
+      .references(() => trainingSessionsTable.id, { onDelete: 'cascade' }),
     word: varchar('word').notNull(),
   },
   (table) => ({
@@ -139,11 +139,11 @@ export const words = pgTable(
   }),
 );
 
-export const wordsRelations = relations(words, ({ one }) => ({
-  trainingSession: one(trainingSessions, {
-    fields: [words.trainingSessionId],
-    references: [trainingSessions.id],
+export const wordsRelations = relations(wordsTable, ({ one }) => ({
+  trainingSession: one(trainingSessionsTable, {
+    fields: [wordsTable.trainingSessionId],
+    references: [trainingSessionsTable.id],
   }),
 }));
 
-export type Word = typeof words.$inferSelect;
+export type Word = typeof wordsTable.$inferSelect;

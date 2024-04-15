@@ -1,9 +1,9 @@
 import type { Config } from 'drizzle-kit';
-import { DATABASE_URL } from '~/utils/constants';
+import { env } from '~/env';
 
 export default {
   dbCredentials: {
-    connectionString: DATABASE_URL!,
+    connectionString: env.DATABASE_URL,
   },
   driver: 'pg',
   out: 'drizzle',

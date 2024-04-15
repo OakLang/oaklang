@@ -1,67 +1,67 @@
 import type { Adapter } from '@auth/core/adapters';
-import { accounts, sessions, users, verificationTokens } from './schema';
+import { accountsTable, sessionsTable, usersTable, verificationTokensTable } from './schema';
 import { db } from './db';
 import { eq, and } from 'drizzle-orm';
 
 export const drizzleAdapter: Adapter = {
   async createSession({ expires, sessionToken, userId }) {
-    const [session] = await db.insert(sessions).values({ expires, sessionToken, userId }).returning();
+    const [session] = await db.insert(sessionsTable).values({ expires, sessionToken, userId }).returning();
     if (!session) {
       throw new Error('Failed to create session');
     }
     return session;
   },
   async createUser({ email, emailVerified, image, name }) {
-    const [user] = await db.insert(users).values({ email, emailVerified, image, name }).returning();
+    const [user] = await db.insert(usersTable).values({ email, emailVerified, image, name }).returning();
     if (!user) {
       throw new Error('Failed to create user');
     }
     return user;
   },
   async createVerificationToken(token) {
-    const [verificationToken] = await db.insert(verificationTokens).values(token).returning();
+    const [verificationToken] = await db.insert(verificationTokensTable).values(token).returning();
     return verificationToken ?? null;
   },
   async deleteSession(sessionToken) {
-    const [session] = await db.delete(sessions).where(eq(sessions.sessionToken, sessionToken)).returning();
+    const [session] = await db.delete(sessionsTable).where(eq(sessionsTable.sessionToken, sessionToken)).returning();
     return session ?? null;
   },
   async deleteUser(userId) {
-    await db.delete(users).where(eq(users.id, userId)).returning();
+    await db.delete(usersTable).where(eq(usersTable.id, userId)).returning();
   },
   async getSessionAndUser(sessionToken) {
     const [session] = await db
       .select({
-        session: sessions,
-        user: users,
+        session: sessionsTable,
+        user: usersTable,
       })
-      .from(sessions)
-      .where(eq(sessions.sessionToken, sessionToken))
-      .innerJoin(users, eq(users.id, sessions.userId));
+      .from(sessionsTable)
+      .where(eq(sessionsTable.sessionToken, sessionToken))
+      .innerJoin(usersTable, eq(usersTable.id, sessionsTable.userId));
     return session ?? null;
   },
   async getUser(userId) {
-    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
     return user ?? null;
   },
   async getUserByAccount({ provider, providerAccountId }) {
     const [account] = await db
-      .select({ user: users })
-      .from(accounts)
-      .where(and(eq(accounts.providerAccountId, providerAccountId), eq(accounts.provider, provider)))
-      .innerJoin(users, eq(accounts.userId, users.id));
+      .select({ user: usersTable })
+      .from(accountsTable)
+      .where(and(eq(accountsTable.providerAccountId, providerAccountId), eq(accountsTable.provider, provider)))
+      .innerJoin(usersTable, eq(accountsTable.userId, usersTable.id));
     if (!account) {
       return null;
     }
     return account.user;
   },
   async getUserByEmail(email) {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
     return user ?? null;
   },
   async linkAccount({ provider, providerAccountId, type, userId, access_token, expires_at, id_token, refresh_token, scope, token_type }) {
     const [account] = await db
-      .insert(accounts)
+      .insert(accountsTable)
       .values({
         accessToken: access_token,
         expiresAt: expires_at,
@@ -94,8 +94,8 @@ export const drizzleAdapter: Adapter = {
   },
   async unlinkAccount({ provider, providerAccountId }) {
     const [account] = await db
-      .delete(accounts)
-      .where(and(eq(accounts.providerAccountId, providerAccountId), eq(accounts.provider, provider)))
+      .delete(accountsTable)
+      .where(and(eq(accountsTable.providerAccountId, providerAccountId), eq(accountsTable.provider, provider)))
       .returning();
     if (!account) {
       throw new Error('Account not found!');
@@ -109,9 +109,9 @@ export const drizzleAdapter: Adapter = {
   },
   async updateSession({ expires, userId, sessionToken }) {
     const [session] = await db
-      .update(sessions)
+      .update(sessionsTable)
       .set({ expires, sessionToken, userId })
-      .where(eq(sessions.sessionToken, sessionToken))
+      .where(eq(sessionsTable.sessionToken, sessionToken))
       .returning();
     if (!session) {
       throw new Error('Session not found!');
@@ -119,7 +119,7 @@ export const drizzleAdapter: Adapter = {
     return session;
   },
   async updateUser({ id: userId, email, emailVerified, image, name }) {
-    const [user] = await db.update(users).set({ email, emailVerified, image, name }).where(eq(users.id, userId)).returning();
+    const [user] = await db.update(usersTable).set({ email, emailVerified, image, name }).where(eq(usersTable.id, userId)).returning();
     if (!user) {
       throw new Error('User not found!');
     }
@@ -127,8 +127,8 @@ export const drizzleAdapter: Adapter = {
   },
   async useVerificationToken({ identifier, token }) {
     const [verificationToken] = await db
-      .delete(verificationTokens)
-      .where(and(eq(verificationTokens.identifier, identifier), eq(verificationTokens.token, token)))
+      .delete(verificationTokensTable)
+      .where(and(eq(verificationTokensTable.identifier, identifier), eq(verificationTokensTable.token, token)))
       .returning();
     if (!verificationToken) {
       throw new Error('Verification Token not found!');

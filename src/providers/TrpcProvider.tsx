@@ -6,8 +6,9 @@ import { httpBatchLink, loggerLink } from '@trpc/client';
 import { useState } from 'react';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { api } from '~/trpc/client';
-import { getTrpcUrl, transformer } from '~/trpc/shared';
+import { transformer } from '~/trpc/shared';
 import { QueryClient } from '@tanstack/react-query';
+import { env } from '~/env';
 
 const queryConfig: QueryClientConfig = {
   defaultOptions: {
@@ -19,17 +20,19 @@ const queryConfig: QueryClientConfig = {
   },
 };
 
+const url = env.NEXT_PUBLIC_VERCEL_URL ? `https://${env.NEXT_PUBLIC_VERCEL_URL}` : 'http://localhost:3000/api/trpc/';
+
 export const TrpcProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [queryClient] = useState(() => new QueryClient(queryConfig));
   const [trpcClient] = useState(() =>
     api.createClient({
       links: [
         loggerLink({
-          enabled: (op) => process.env.NODE_ENV === 'development' || (op.direction === 'down' && op.result instanceof Error),
+          enabled: (op) => env.NODE_ENV === 'development' || (op.direction === 'down' && op.result instanceof Error),
         }),
         httpBatchLink({
           transformer,
-          url: getTrpcUrl(),
+          url,
         }),
       ],
     }),

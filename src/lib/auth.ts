@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import type { User as UserType } from 'next-auth';
 import authConfig from './auth.config';
-import { users } from './schema';
+import { usersTable } from './schema';
 import { eq, and } from 'drizzle-orm';
 import { db } from './db';
 import { drizzleAdapter } from './drizzle-adapter';
@@ -19,14 +19,14 @@ export const { handlers, auth } = NextAuth({
       if (!token.sub) {
         return null;
       }
-      const refreshedUser = await db.query.users.findFirst({
+      const refreshedUser = await db.query.usersTable.findFirst({
         columns: {
           email: true,
           id: true,
           image: true,
           name: true,
         },
-        where: and(eq(users.isActive, true), eq(users.id, token.sub)),
+        where: and(eq(usersTable.isActive, true), eq(usersTable.id, token.sub)),
       });
 
       if (refreshedUser) {
