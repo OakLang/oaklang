@@ -35,9 +35,9 @@ export default function HomePage() {
 
   return (
     <div>
-      <pre>{JSON.stringify(session, null, 2)}</pre>
       {session.status === 'authenticated' ? (
         <>
+          <p>Welcome, {session.data.user.name ?? 'there'} 👋</p>
           <Button
             disabled={createSessionMut.isPending || createSessionMut.isSuccess}
             onClick={() => createSessionMut.mutate(defaultSessionInput)}
@@ -50,7 +50,10 @@ export default function HomePage() {
           </Button>
         </>
       ) : (
-        <Button onClick={() => signIn()}>Sign In</Button>
+        <>
+          <p>Welcome to Oaklang</p>
+          <Button onClick={() => signIn()}>Sign In</Button>
+        </>
       )}
     </div>
   );
