@@ -88,3 +88,15 @@ export const roundToMostSignificantDigit = (n: number) => {
   const denominator = Math.pow(10, Math.floor(Math.abs(n)).toString().length - 1);
   return Math.floor(n / denominator) * denominator;
 };
+
+export const extractWords = (paragraph: string) => {
+  const matches = paragraph.match(/\b\w+\b/g) ?? [];
+  const words = matches.map((match) => match.trim());
+  return words;
+};
+
+export const extractComaSeperatedWords = (input: string) => {
+  const matches = input.match(/(?<=,|^)\s*([^,]+)/g) ?? [];
+  const words = matches.map((match) => match.trim());
+  return words;
+};
