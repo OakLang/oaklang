@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const createTrainingSessionInput = z.object({
-  language: z.string().min(1).max(100),
+  languageId: z.string().min(1).max(100),
   numberOfTimesToRepeat: z.number().min(0),
   numberOfTimesToTrain: z.number().min(0),
   numberOfWordsToTrain: z.number().min(0),

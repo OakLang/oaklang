@@ -12,6 +12,7 @@
     "lint:fix": "eslint src --fix",
     "start": "next start -H 0.0.0.0 -p ${PORT:-8080}",
     "generate": "drizzle-kit generate:pg",
+    "studio": "drizzle-kit studio",
     "check": "drizzle-kit check:pg",
     "migrate": "tsx src/scripts/migrate.ts"
   },
@@ -91,6 +92,7 @@
     "next-themes": "^0.3.0",
     "node-html-parser": "^6.1.13",
     "openai": "^4.35.0",
+    "pg": "^8.11.5",
     "pluralize": "^8.0.0",
     "postcss": "^8.4.38",
     "postgres": "^3.4.4",

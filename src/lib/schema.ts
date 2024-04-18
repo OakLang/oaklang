@@ -1,4 +1,4 @@
-import { boolean, index, integer, pgTable, primaryKey, real, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgTable, primaryKey, real, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import type { AdapterAccount } from '@auth/core/adapters';
 import { relations } from 'drizzle-orm';
 
@@ -88,28 +88,28 @@ export const verificationTokensRelations = relations(verificationTokensTable, ()
 
 export type VerificationToken = typeof verificationTokensTable.$inferSelect;
 
-export const trainingSessionsTable = pgTable(
-  'training_session',
-  {
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    id: uuid('id').primaryKey().defaultRandom(),
-    language: varchar('language').notNull(),
-    numberOfTimesToRepeat: integer('number_of_times_to_repeat').notNull(),
-    numberOfTimesToTrain: integer('number_of_times_to_train').notNull(),
-    numberOfWordsToTrain: integer('number_of_words_to_train').notNull(),
-    percentKnown: real('percent_known').notNull(),
-    relatedPrecursor: boolean('related_precursor').notNull(),
-    sentenceLength: integer('sentence_length'),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => usersTable.id, { onDelete: 'cascade' }),
-  },
-  (table) => ({
-    languageIdx: index().on(table.language),
-  }),
-);
+export const trainingSessionsTable = pgTable('training_session', {
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  id: uuid('id').primaryKey().defaultRandom(),
+  languageId: varchar('language_id')
+    .notNull()
+    .references(() => languagesTable.id),
+  numberOfTimesToRepeat: integer('number_of_times_to_repeat').notNull(),
+  numberOfTimesToTrain: integer('number_of_times_to_train').notNull(),
+  numberOfWordsToTrain: integer('number_of_words_to_train').notNull(),
+  percentKnown: real('percent_known').notNull(),
+  relatedPrecursor: boolean('related_precursor').notNull(),
+  sentenceLength: integer('sentence_length'),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => usersTable.id, { onDelete: 'cascade' }),
+});
 
 export const trainingSessionsRelations = relations(trainingSessionsTable, ({ one, many }) => ({
+  language: one(languagesTable, {
+    fields: [trainingSessionsTable.languageId],
+    references: [languagesTable.id],
+  }),
   user: one(usersTable, {
     fields: [trainingSessionsTable.userId],
     references: [usersTable.id],
@@ -124,7 +124,9 @@ export const wordsTable = pgTable(
   {
     comprehensionProb: integer('comprehension_prob').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
-    language: varchar('language').notNull(),
+    languageId: varchar('language_id')
+      .notNull()
+      .references(() => languagesTable.id),
     markedKnown: boolean('marked_known').notNull().default(false),
     productionProb: integer('production_prob').notNull().default(0),
     repetitions: integer('repetitions').notNull().default(0),
@@ -134,12 +136,15 @@ export const wordsTable = pgTable(
     word: varchar('word').notNull(),
   },
   (table) => ({
-    languageIdx: index().on(table.language),
     pk: primaryKey({ columns: [table.trainingSessionId, table.word] }),
   }),
 );
 
 export const wordsRelations = relations(wordsTable, ({ one }) => ({
+  language: one(languagesTable, {
+    fields: [wordsTable.languageId],
+    references: [languagesTable.id],
+  }),
   trainingSession: one(trainingSessionsTable, {
     fields: [wordsTable.trainingSessionId],
     references: [trainingSessionsTable.id],
@@ -147,3 +152,17 @@ export const wordsRelations = relations(wordsTable, ({ one }) => ({
 }));
 
 export type Word = typeof wordsTable.$inferSelect;
+
+export const languagesTable = pgTable('language', {
+  id: varchar('id').primaryKey(), // ISO 639-1 Code
+  isActive: boolean('is_active').notNull().default(true),
+  name: varchar('name').notNull(),
+  nativeName: varchar('native_name').notNull(),
+});
+
+export const languagesRelations = relations(languagesTable, ({ many }) => ({
+  trainingSessions: many(trainingSessionsTable),
+  words: many(wordsTable),
+}));
+
+export type Language = typeof languagesTable.$inferSelect;

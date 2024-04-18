@@ -21,7 +21,7 @@ export const trainingSessionsRouter = router({
     }
     const dbWords = await opts.ctx.db
       .insert(wordsTable)
-      .values(words.map((word) => ({ language: data.language, trainingSessionId: trainingSession.id, word })))
+      .values(words.map((word) => ({ languageId: data.languageId, trainingSessionId: trainingSession.id, word })))
       .onConflictDoNothing();
     return { ...trainingSession, words: dbWords } satisfies PublicTrainingSession;
   }),
@@ -75,7 +75,7 @@ export const trainingSessionsRouter = router({
     if (newWords.length > 0) {
       await opts.ctx.db
         .insert(wordsTable)
-        .values(newWords.map((word) => ({ language: updatedTrainingSession.language, trainingSessionId, word })))
+        .values(newWords.map((word) => ({ languageId: updatedTrainingSession.languageId, trainingSessionId, word })))
         .onConflictDoNothing();
     }
     if (deletedWords.length > 0) {

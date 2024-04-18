@@ -1,5 +1,5 @@
 {
-  "id": "cc1568e3-130e-451c-b285-8642b3f1ecc6",
+  "id": "bea6df46-c4b5-4966-922c-54243c7150f8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -109,6 +109,41 @@
       },
       "uniqueConstraints": {}
     },
+    "language": {
+      "name": "language",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "native_name": {
+          "name": "native_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "session": {
       "name": "session",
       "schema": "",
@@ -144,6 +179,105 @@
         "session_user_id_user_id_fk": {
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "training_session": {
+      "name": "training_session",
+      "schema": "",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "language_id": {
+          "name": "language_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "number_of_times_to_repeat": {
+          "name": "number_of_times_to_repeat",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "number_of_times_to_train": {
+          "name": "number_of_times_to_train",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "number_of_words_to_train": {
+          "name": "number_of_words_to_train",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "percent_known": {
+          "name": "percent_known",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "related_precursor": {
+          "name": "related_precursor",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sentence_length": {
+          "name": "sentence_length",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "training_session_language_id_language_id_fk": {
+          "name": "training_session_language_id_language_id_fk",
+          "tableFrom": "training_session",
+          "tableTo": "language",
+          "columnsFrom": [
+            "language_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "training_session_user_id_user_id_fk": {
+          "name": "training_session_user_id_user_id_fk",
+          "tableFrom": "training_session",
           "tableTo": "user",
           "columnsFrom": [
             "user_id"
@@ -259,6 +393,104 @@
           "columns": [
             "identifier",
             "token"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "word": {
+      "name": "word",
+      "schema": "",
+      "columns": {
+        "comprehension_prob": {
+          "name": "comprehension_prob",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "language_id": {
+          "name": "language_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marked_known": {
+          "name": "marked_known",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "production_prob": {
+          "name": "production_prob",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "repetitions": {
+          "name": "repetitions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "training_session_id": {
+          "name": "training_session_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "word": {
+          "name": "word",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "word_language_id_language_id_fk": {
+          "name": "word_language_id_language_id_fk",
+          "tableFrom": "word",
+          "tableTo": "language",
+          "columnsFrom": [
+            "language_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "word_training_session_id_training_session_id_fk": {
+          "name": "word_training_session_id_training_session_id_fk",
+          "tableFrom": "word",
+          "tableTo": "training_session",
+          "columnsFrom": [
+            "training_session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "word_training_session_id_word_pk": {
+          "name": "word_training_session_id_word_pk",
+          "columns": [
+            "training_session_id",
+            "word"
           ]
         }
       },

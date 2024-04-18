@@ -29,7 +29,7 @@ export default function CreateOrUpdateTrainingSessionForm({
   const session = useSession({ required: true });
   const form = useForm<CreateTrainingSessionInput>({
     defaultValues: {
-      language: 'en',
+      languageId: 'en',
       numberOfTimesToRepeat: 0,
       numberOfTimesToTrain: 0,
       numberOfWordsToTrain: 0,
@@ -110,7 +110,7 @@ export default function CreateOrUpdateTrainingSessionForm({
         <form className="mt-6 space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
           <FormField
             control={form.control}
-            name="language"
+            name="languageId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Language</FormLabel>
