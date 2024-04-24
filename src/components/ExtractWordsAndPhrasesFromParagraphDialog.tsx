@@ -10,7 +10,7 @@ import { Button } from './ui/button';
 import { Loader2, XIcon } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
-import { extractWords } from '~/utils/helpers';
+import { extractWords as extractLexicons } from '~/utils/helpers';
 import pluralize from 'pluralize';
 import type { TRPCError } from '@trpc/server';
 
@@ -18,16 +18,16 @@ const schema = z.object({
   paragraph: z.string().max(2000),
 });
 
-export default function ExtractWordsAndPhrasesFromParagraphDialog({
+export default function ExtractLexicondsAndPhrasesFromParagraphDialog({
   onOpenChange,
   open,
   onComplete,
 }: {
-  onComplete?: (words: string[]) => void;
+  onComplete?: (lexcions: string[]) => void;
   onOpenChange?: (value: boolean) => void;
   open?: boolean;
 }) {
-  const [words, setWords] = useState<string[]>([]);
+  const [lexicons, setLexicons] = useState<string[]>([]);
   const [isExtracting, setIsExtracting] = useState(false);
   const form = useForm<z.infer<typeof schema>>({
     defaultValues: {
@@ -35,33 +35,31 @@ export default function ExtractWordsAndPhrasesFromParagraphDialog({
     },
     resolver: zodResolver(schema),
   });
-  const extractWordsMut = api.ai.extractWords.useMutation();
+  const extractLexiconsMut = api.ai.extractLexicons.useMutation();
 
   const handleSubmit = useCallback(
     async (data: z.infer<typeof schema>) => {
       setIsExtracting(true);
       try {
-        const extractedWords = await extractWordsMut.mutateAsync(data.paragraph);
-        setWords(extractedWords);
-        toast(
-          `${extractWords.length} new ${pluralize('word', extractWords.length)} and ${pluralize('phrase', extractWords.length)} extracted from the paragraph`,
-        );
+        const extractedLexicons = await extractLexiconsMut.mutateAsync(data.paragraph);
+        setLexicons(extractedLexicons);
+        toast(`${extractLexicons.length} new ${pluralize('lexicon', extractLexicons.length)} extracted from the paragraph`);
       } catch (error: unknown) {
         toast('Failed to extract', { description: (error as TRPCError).message });
       } finally {
         setIsExtracting(false);
       }
     },
-    [extractWordsMut],
+    [extractLexiconsMut],
   );
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Extract Words and Phreses from Paragraph</DialogTitle>
+          <DialogTitle>Extract Lexicons from Paragraph</DialogTitle>
         </DialogHeader>
-        {words.length === 0 ? (
+        {lexicons.length === 0 ? (
           <Form {...form}>
             <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
               <FormField
@@ -86,12 +84,12 @@ export default function ExtractWordsAndPhrasesFromParagraphDialog({
         ) : (
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              {words.map((word) => (
-                <Badge key={word} variant="outline">
-                  {word}
+              {lexicons.map((lexicon) => (
+                <Badge key={lexicon} variant="outline">
+                  {lexicon}
                   <Button
                     className="-mr-2 ml-0.5 h-6 w-6 rounded-full"
-                    onClick={() => setWords((words) => words.filter((w) => w !== word))}
+                    onClick={() => setLexicons((lexicons) => lexicons.filter((l) => l !== lexicon))}
                     size="icon"
                     type="button"
                     variant="ghost"
@@ -105,12 +103,12 @@ export default function ExtractWordsAndPhrasesFromParagraphDialog({
             <Button
               onClick={() => {
                 onOpenChange?.(false);
-                onComplete?.(words);
-                setWords([]);
+                onComplete?.(lexicons);
+                setLexicons([]);
                 form.reset();
               }}
             >
-              Add Words
+              Add Lexicons
             </Button>
           </div>
         )}

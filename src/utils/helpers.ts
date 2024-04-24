@@ -91,12 +91,12 @@ export const roundToMostSignificantDigit = (n: number) => {
 
 export const extractWords = (paragraph: string) => {
   const matches = paragraph.match(/\b\w+\b/g) ?? [];
-  const words = matches.map((match) => match.trim());
-  return words;
+  const lexicons = matches.map((match) => match.trim());
+  return lexicons;
 };
 
 export const extractComaSeperatedWords = (input: string) => {
   const matches = input.match(/(?<=,|^)\s*([^,]+)/g) ?? [];
-  const words = matches.map((match) => match.trim());
-  return words;
+  const lexicons = matches.map((match) => match.trim());
+  return lexicons;
 };

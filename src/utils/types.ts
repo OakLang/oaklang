@@ -1,5 +1,5 @@
-import type { TrainingSession, Word } from '~/lib/schema';
+import type { TrainingSession, Lexicon } from '~/lib/schema';
 
 export interface PublicTrainingSession extends TrainingSession {
-  words: Word[];
+  lexicons: Lexicon[];
 }

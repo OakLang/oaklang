@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1713434509740,
-      "tag": "0000_odd_king_cobra",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1713925232481,
-      "tag": "0001_flippant_sumo",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1713925511750,
-      "tag": "0002_late_expediter",
+      "when": 1713927780343,
+      "tag": "0000_cold_nemesis",
       "breakpoints": true
     }
   ]

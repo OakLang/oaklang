@@ -2,13 +2,13 @@ import { z } from 'zod';
 
 export const createTrainingSessionInput = z.object({
   languageId: z.string().min(1).max(100),
+  lexicons: z.array(z.string().min(1)).min(1),
+  numberOfLexiconsToTrain: z.number().min(0),
   numberOfTimesToRepeat: z.number().min(0),
   numberOfTimesToTrain: z.number().min(0),
-  numberOfWordsToTrain: z.number().min(0),
   percentKnown: z.number().min(0).max(100),
   relatedPrecursor: z.boolean(),
   sentenceLength: z.number().nullish(),
-  words: z.array(z.string().min(1)).min(1),
 });
 export type CreateTrainingSessionInput = z.infer<typeof createTrainingSessionInput>;
 

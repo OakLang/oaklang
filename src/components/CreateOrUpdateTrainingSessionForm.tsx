@@ -9,14 +9,14 @@ import { Loader2, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { Input } from './ui/input';
-import { extractComaSeperatedWords } from '~/utils/helpers';
+import { extractComaSeperatedWords as extractComaSeperatedLexicons } from '~/utils/helpers';
 import { useCallback, useRef, useState } from 'react';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import pluralize from 'pluralize';
 import { Switch } from './ui/switch';
 import type { PublicTrainingSession } from '~/utils/types';
-import ExtractWordsAndPhrasesFromParagraphDialog from './ExtractWordsAndPhrasesFromParagraphDialog';
+import ExtractLexicondsAndPhrasesFromParagraphDialog from './ExtractWordsAndPhrasesFromParagraphDialog';
 
 export default function CreateOrUpdateTrainingSessionForm({
   update,
@@ -30,21 +30,21 @@ export default function CreateOrUpdateTrainingSessionForm({
   const form = useForm<CreateTrainingSessionInput>({
     defaultValues: {
       languageId: 'en',
+      numberOfLexiconsToTrain: 0,
       numberOfTimesToRepeat: 0,
       numberOfTimesToTrain: 0,
-      numberOfWordsToTrain: 0,
       percentKnown: 0,
       relatedPrecursor: false,
       sentenceLength: null,
       ...(update ?? {}),
-      words: update ? update.words.map((word) => word.word) : [],
+      lexicons: update ? update.lexicons.map((lexicon) => lexicon.lexicon) : [],
     },
     resolver: zodResolver(createTrainingSessionInput),
   });
-  const [wordsInputText, setWordsInputText] = useState('');
-  const wordsInputFieldRef = useRef<HTMLInputElement>(null);
-  const [showExtractWordsModal, setShowExtractWordsModal] = useState(false);
-  const words = form.watch('words');
+  const [lexiconsInputText, setLexiconsInputText] = useState('');
+  const lexiconsInputFieldRef = useRef<HTMLInputElement>(null);
+  const [showExtractWordsModal, setShowExtracLexiconsModal] = useState(false);
+  const lexicons = form.watch('lexicons');
 
   const createSessionMut = api.trainingSessions.createTrainingSession.useMutation({
     onError: (error) => {
@@ -71,23 +71,21 @@ export default function CreateOrUpdateTrainingSessionForm({
     onSuccess,
   });
 
-  const addWords = useCallback(
-    (newWords: string[]) => {
-      const uniqueWords = newWords.filter((word) => !words.includes(word));
-      form.setValue('words', [...words, ...uniqueWords]);
-      toast(
-        `${uniqueWords.length} new unique ${pluralize('word', uniqueWords.length)} and ${pluralize('phrase', uniqueWords.length)} added to the list.`,
-      );
+  const addLexicons = useCallback(
+    (newLexicons: string[]) => {
+      const uniqueLexicons = newLexicons.filter((lexicon) => !lexicons.includes(lexicon));
+      form.setValue('lexicons', [...lexicons, ...uniqueLexicons]);
+      toast(`${uniqueLexicons.length} new unique ${pluralize('lexicon', uniqueLexicons.length)} added to the list.`);
     },
-    [form, words],
+    [form, lexicons],
   );
 
-  const handleExtractWords = useCallback(() => {
-    const words = extractComaSeperatedWords(wordsInputText);
-    addWords(words);
-    setWordsInputText('');
-    wordsInputFieldRef.current?.blur();
-  }, [addWords, wordsInputText]);
+  const handleExtractLexicons = useCallback(() => {
+    const lexicons = extractComaSeperatedLexicons(lexiconsInputText);
+    addLexicons(lexicons);
+    setLexiconsInputText('');
+    lexiconsInputFieldRef.current?.blur();
+  }, [addLexicons, lexiconsInputText]);
 
   const handleSubmit = useCallback(
     (data: CreateTrainingSessionInput) => {
@@ -163,10 +161,10 @@ export default function CreateOrUpdateTrainingSessionForm({
           />
           <FormField
             control={form.control}
-            name="numberOfWordsToTrain"
+            name="numberOfLexiconsToTrain"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Number of words to train</FormLabel>
+                <FormLabel>Number of lexicons to train</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -215,22 +213,22 @@ export default function CreateOrUpdateTrainingSessionForm({
             )}
           />
           <div className="space-y-2">
-            <Label htmlFor="words-input">
-              Words{words.length > 0 ? ` (${words.length.toFixed()} ${pluralize('word', words.length)})` : null}
+            <Label htmlFor="lexicons-input">
+              Lexicons{lexicons.length > 0 ? ` (${lexicons.length.toFixed()} ${pluralize('lexicon', lexicons.length)})` : null}
             </Label>
             <div className="flex flex-wrap gap-2">
-              {words.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No words...</p>
+              {lexicons.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No lexicons...</p>
               ) : (
-                words.map((word) => (
-                  <Badge key={word} variant="outline">
-                    {word}
+                lexicons.map((lexicon) => (
+                  <Badge key={lexicon} variant="outline">
+                    {lexicon}
                     <Button
                       className="-mr-2 ml-0.5 h-6 w-6 rounded-full"
                       onClick={() =>
                         form.setValue(
-                          'words',
-                          words.filter((w) => w !== word),
+                          'lexicons',
+                          lexicons.filter((w) => w !== lexicon),
                         )
                       }
                       size="icon"
@@ -246,24 +244,24 @@ export default function CreateOrUpdateTrainingSessionForm({
             <div className="flex gap-2">
               <Input
                 className="flex-1"
-                id="words-input"
-                onChange={(e) => setWordsInputText(e.currentTarget.value)}
+                id="lexicons-input"
+                onChange={(e) => setLexiconsInputText(e.currentTarget.value)}
                 onKeyDown={(e) => {
                   if (e.code === 'Enter') {
                     e.preventDefault();
-                    handleExtractWords();
+                    handleExtractLexicons();
                   }
                 }}
-                placeholder="word1, word2, word3..."
-                ref={wordsInputFieldRef}
-                value={wordsInputText}
+                placeholder="Dog, Cat, Piece of cake, ..."
+                ref={lexiconsInputFieldRef}
+                value={lexiconsInputText}
               />
-              <Button onClick={handleExtractWords} type="button">
+              <Button onClick={handleExtractLexicons} type="button">
                 Add All
               </Button>
             </div>
-            <Button className="h-fit p-0" onClick={() => setShowExtractWordsModal(true)} type="button" variant="link">
-              Extract words and phrases from paragraph
+            <Button className="h-fit p-0" onClick={() => setShowExtracLexiconsModal(true)} type="button" variant="link">
+              Extract lexicons from paragraph
             </Button>
           </div>
           <Button disabled={isLoading} type="submit">
@@ -273,9 +271,9 @@ export default function CreateOrUpdateTrainingSessionForm({
         </form>
       </Form>
 
-      <ExtractWordsAndPhrasesFromParagraphDialog
-        onComplete={addWords}
-        onOpenChange={setShowExtractWordsModal}
+      <ExtractLexicondsAndPhrasesFromParagraphDialog
+        onComplete={addLexicons}
+        onOpenChange={setShowExtracLexiconsModal}
         open={showExtractWordsModal}
       />
     </>

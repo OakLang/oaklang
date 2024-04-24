@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, primaryKey, real, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgTable, primaryKey, real, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import type { AdapterAccount } from '@auth/core/adapters';
 import { relations } from 'drizzle-orm';
 
@@ -14,6 +14,7 @@ export const usersTable = pgTable('user', {
 
 export const usersRelations = relations(usersTable, ({ many, one }) => ({
   accounts: many(accountsTable),
+  lexiconSeens: many(lexiconSeensTable),
   trainingSessions: many(trainingSessionsTable),
   userPreference: one(userPreferencesTable, {
     fields: [usersTable.id],
@@ -93,7 +94,10 @@ export const verificationTokensRelations = relations(verificationTokensTable, ()
 export type VerificationToken = typeof verificationTokensTable.$inferSelect;
 
 export const userPreferencesTable = pgTable('user_preference', {
-  languageId: varchar('language_id').references(() => languagesTable.id, { onDelete: 'set null' }),
+  languageId: varchar('language_id')
+    .notNull()
+    .default('en')
+    .references(() => languagesTable.id, { onDelete: 'set default' }),
   userId: uuid('user_id')
     .primaryKey()
     .references(() => usersTable.id, { onDelete: 'cascade' }),
@@ -115,10 +119,13 @@ export type UserPreference = typeof userPreferencesTable.$inferSelect;
 export const trainingSessionsTable = pgTable('training_session', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   id: uuid('id').primaryKey().defaultRandom(),
-  languageId: varchar('language_id').references(() => languagesTable.id, { onDelete: 'set null' }),
+  languageId: varchar('language_id')
+    .notNull()
+    .default('en')
+    .references(() => languagesTable.id, { onDelete: 'set default' }),
+  numberOfLexiconsToTrain: integer('number_of_lexicons_to_train').notNull(),
   numberOfTimesToRepeat: integer('number_of_times_to_repeat').notNull(),
   numberOfTimesToTrain: integer('number_of_times_to_train').notNull(),
-  numberOfWordsToTrain: integer('number_of_words_to_train').notNull(),
   percentKnown: real('percent_known').notNull(),
   relatedPrecursor: boolean('related_precursor').notNull(),
   sentenceLength: integer('sentence_length'),
@@ -132,48 +139,75 @@ export const trainingSessionsRelations = relations(trainingSessionsTable, ({ one
     fields: [trainingSessionsTable.languageId],
     references: [languagesTable.id],
   }),
+  lexicons: many(lexiconsTable),
   user: one(usersTable, {
     fields: [trainingSessionsTable.userId],
     references: [usersTable.id],
   }),
-  words: many(wordsTable),
 }));
 
 export type TrainingSession = typeof trainingSessionsTable.$inferSelect;
 
-export const wordsTable = pgTable(
-  'word',
+export const lexiconsTable = pgTable(
+  'lexicon',
   {
     comprehensionProb: integer('comprehension_prob').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
+    id: uuid('id').primaryKey().defaultRandom(),
     languageId: varchar('language_id')
       .notNull()
-      .references(() => languagesTable.id),
+      .default('en')
+      .references(() => languagesTable.id, { onDelete: 'set default' }),
+    lexicon: varchar('lexicon').notNull(),
     markedKnown: boolean('marked_known').notNull().default(false),
     productionProb: integer('production_prob').notNull().default(0),
     repetitions: integer('repetitions').notNull().default(0),
     trainingSessionId: uuid('training_session_id')
       .notNull()
       .references(() => trainingSessionsTable.id, { onDelete: 'cascade' }),
-    word: varchar('word').notNull(),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.trainingSessionId, table.word] }),
+    uniqueIdx: uniqueIndex().on(table.trainingSessionId, table.lexicon),
   }),
 );
 
-export const wordsRelations = relations(wordsTable, ({ one }) => ({
+export const lexiconsRelations = relations(lexiconsTable, ({ one, many }) => ({
   language: one(languagesTable, {
-    fields: [wordsTable.languageId],
+    fields: [lexiconsTable.languageId],
     references: [languagesTable.id],
   }),
+  seens: many(lexiconSeensTable),
   trainingSession: one(trainingSessionsTable, {
-    fields: [wordsTable.trainingSessionId],
+    fields: [lexiconsTable.trainingSessionId],
     references: [trainingSessionsTable.id],
   }),
 }));
 
-export type Word = typeof wordsTable.$inferSelect;
+export type Lexicon = typeof lexiconsTable.$inferSelect;
+
+export const lexiconSeensTable = pgTable('lexicon_seen', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  lexiconId: uuid('lexicon_id')
+    .notNull()
+    .references(() => lexiconsTable.id, { onDelete: 'cascade' }),
+  seenAt: timestamp('created_at').notNull().defaultNow(),
+  seenById: uuid('seen_by_id')
+    .notNull()
+    .references(() => usersTable.id, { onDelete: 'cascade' }),
+});
+
+export const lexiconSeensRelations = relations(lexiconSeensTable, ({ one }) => ({
+  lexicon: one(lexiconsTable, {
+    fields: [lexiconSeensTable.lexiconId],
+    references: [lexiconsTable.id],
+  }),
+  seenBy: one(usersTable, {
+    fields: [lexiconSeensTable.seenById],
+    references: [usersTable.id],
+  }),
+}));
+
+export type LexiconSeen = typeof lexiconSeensTable.$inferSelect;
 
 export const languagesTable = pgTable('language', {
   id: varchar('id').primaryKey(), // ISO 639-1 Code
@@ -183,8 +217,8 @@ export const languagesTable = pgTable('language', {
 });
 
 export const languagesRelations = relations(languagesTable, ({ many }) => ({
+  lexicons: many(lexiconsTable),
   trainingSessions: many(trainingSessionsTable),
-  words: many(wordsTable),
 }));
 
 export type Language = typeof languagesTable.$inferSelect;

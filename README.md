@@ -19,6 +19,15 @@ npm run migrate
 npm run dev
 ```
 
+## Reset DB
+
+```
+psql -c 'DROP DATABASE oaklang;'
+psql -c "CREATE ROLE oaklang WITH LOGIN SUPERUSER PASSWORD 'oaklang';"
+psql -c "CREATE DATABASE oaklang WITH OWNER oaklang;"
+psql -d oaklang -c "CREATE EXTENSION citext;"
+```
+
 ## Tech Stack
 
 - [Next.js](https://nextjs.org)
