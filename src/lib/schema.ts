@@ -12,9 +12,13 @@ export const usersTable = pgTable('user', {
   name: varchar('name'),
 });
 
-export const usersRelations = relations(usersTable, ({ many }) => ({
+export const usersRelations = relations(usersTable, ({ many, one }) => ({
   accounts: many(accountsTable),
   trainingSessions: many(trainingSessionsTable),
+  userPreference: one(userPreferencesTable, {
+    fields: [usersTable.id],
+    references: [userPreferencesTable.userId],
+  }),
 }));
 
 export type User = typeof usersTable.$inferSelect;
@@ -88,12 +92,30 @@ export const verificationTokensRelations = relations(verificationTokensTable, ()
 
 export type VerificationToken = typeof verificationTokensTable.$inferSelect;
 
+export const userPreferencesTable = pgTable('user_preference', {
+  languageId: varchar('language_id').references(() => languagesTable.id, { onDelete: 'set null' }),
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => usersTable.id, { onDelete: 'cascade' }),
+});
+
+export const userPreferencesRelations = relations(userPreferencesTable, ({ one }) => ({
+  language: one(languagesTable, {
+    fields: [userPreferencesTable.languageId],
+    references: [languagesTable.id],
+  }),
+  user: one(usersTable, {
+    fields: [userPreferencesTable.userId],
+    references: [usersTable.id],
+  }),
+}));
+
+export type UserPreference = typeof userPreferencesTable.$inferSelect;
+
 export const trainingSessionsTable = pgTable('training_session', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   id: uuid('id').primaryKey().defaultRandom(),
-  languageId: varchar('language_id')
-    .notNull()
-    .references(() => languagesTable.id),
+  languageId: varchar('language_id').references(() => languagesTable.id, { onDelete: 'set null' }),
   numberOfTimesToRepeat: integer('number_of_times_to_repeat').notNull(),
   numberOfTimesToTrain: integer('number_of_times_to_train').notNull(),
   numberOfWordsToTrain: integer('number_of_words_to_train').notNull(),

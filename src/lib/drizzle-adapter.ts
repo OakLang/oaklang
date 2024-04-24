@@ -1,5 +1,5 @@
 import type { Adapter } from '@auth/core/adapters';
-import { accountsTable, sessionsTable, usersTable, verificationTokensTable } from './schema';
+import { accountsTable, sessionsTable, userPreferencesTable, usersTable, verificationTokensTable } from './schema';
 import { db } from './db';
 import { eq, and } from 'drizzle-orm';
 
@@ -16,6 +16,7 @@ export const drizzleAdapter: Adapter = {
     if (!user) {
       throw new Error('Failed to create user');
     }
+    await db.insert(userPreferencesTable).values({ userId: user.id });
     return user;
   },
   async createVerificationToken(token) {

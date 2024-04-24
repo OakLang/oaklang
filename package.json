@@ -68,7 +68,6 @@
     "core-js": "^3.36.1",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
-    "drizzle-kit": "^0.20.14",
     "drizzle-orm": "^0.30.7",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.1.4",
@@ -117,5 +116,8 @@
   "engines": {
     "node": "20.6.1",
     "npm": "9.8.1"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.20.17"
   }
 }
