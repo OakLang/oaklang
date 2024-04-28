@@ -1,10 +1,12 @@
 'use client';
 
+import { ArrowRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Button } from '~/components/ui/button';
 import { api } from '~/trpc/client';
+import InterlinearList from './InterlinearList';
 
 export default function TrainingSessionPage() {
   const session = useSession({ required: true });
@@ -21,10 +23,25 @@ export default function TrainingSessionPage() {
 
   return (
     <div>
-      <pre>{JSON.stringify(trainingSession.data, null, 2)}</pre>
-      <Button asChild>
-        <Link href={`/training/${trainingSessionId}/settings`}>Settings</Link>
-      </Button>
+      <div>
+        <Button asChild variant="link">
+          <Link href="/home">Home</Link>
+        </Button>
+        <Button asChild variant="link">
+          <Link href={`/training/${trainingSessionId}/settings`}>Settings</Link>
+        </Button>
+      </div>
+      <div className="container space-y-8 px-4">
+        <InterlinearList />
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+          <Button variant="outline">Help!</Button>
+          <Button variant="outline">100%!</Button>
+          <Button>
+            Next
+            <ArrowRight className="-mr-1 ml-2 h-5 w-5" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
