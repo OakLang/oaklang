@@ -7,7 +7,7 @@ import { Button } from '~/components/ui/button';
 
 export default function OAuthProviders() {
   const searchParams = useSearchParams();
-  const callbackUrl = useMemo(() => searchParams.get('callbackUrl') ?? '/', [searchParams]);
+  const callbackUrl = useMemo(() => searchParams.get('callbackUrl') ?? '/home', [searchParams]);
 
   return (
     <div className="flex flex-col gap-2">

@@ -17,6 +17,7 @@ import pluralize from 'pluralize';
 import { Switch } from './ui/switch';
 import type { PublicTrainingSession } from '~/utils/types';
 import ExtractLexicondsAndPhrasesFromParagraphDialog from './ExtractWordsAndPhrasesFromParagraphDialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 export default function CreateOrUpdateTrainingSessionForm({
   update,
@@ -45,6 +46,8 @@ export default function CreateOrUpdateTrainingSessionForm({
   const lexiconsInputFieldRef = useRef<HTMLInputElement>(null);
   const [showExtractWordsModal, setShowExtracLexiconsModal] = useState(false);
   const lexicons = form.watch('lexicons');
+
+  const languages = api.languages.getLanguages.useQuery();
 
   const createSessionMut = api.trainingSessions.createTrainingSession.useMutation({
     onError: (error) => {
@@ -113,7 +116,24 @@ export default function CreateOrUpdateTrainingSessionForm({
               <FormItem>
                 <FormLabel>Language</FormLabel>
                 <FormControl>
-                  <Input placeholder="en" {...field} />
+                  <Select
+                    {...field}
+                    onValueChange={(value) => {
+                      form.setValue(field.name, value);
+                    }}
+                    value={field.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languages.data?.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>

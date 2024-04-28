@@ -42,6 +42,12 @@ export const trainingSessionsRouter = router({
     }
     return deletedTrainingSession;
   }),
+  getCurrentUserTrainingSessions: protectedProcedure.query(async (opts) => {
+    const sessions = await opts.ctx.db.query.trainingSessionsTable.findMany({
+      where: eq(trainingSessionsTable.userId, opts.ctx.userId),
+    });
+    return sessions;
+  }),
   getTrainingSession: protectedProcedure.input(z.string()).query(async (opts) => {
     const trainingSessionId = opts.input;
     const trainingSession = await opts.ctx.db.query.trainingSessionsTable.findFirst({

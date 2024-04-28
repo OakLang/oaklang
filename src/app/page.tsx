@@ -1,34 +1,18 @@
-'use client';
-
-import { signIn, signOut, useSession } from 'next-auth/react';
-import { Button } from '~/components/ui/button';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { auth } from '~/lib/auth';
 
-export default function HomePage() {
-  const session = useSession();
+export default async function HomePage() {
+  const session = await auth();
 
-  if (session.status === 'loading') {
-    return <p>Loading...</p>;
+  if (session) {
+    redirect('/home');
   }
 
   return (
     <div>
-      {session.status === 'authenticated' ? (
-        <>
-          <p>Welcome, {session.data.user.name ?? 'there'} 👋</p>
-          <Button asChild>
-            <Link href="/training/new">Start Training</Link>
-          </Button>
-          <Button onClick={() => signOut()} variant="destructive">
-            Sign Out
-          </Button>
-        </>
-      ) : (
-        <>
-          <p>Welcome to Oaklang</p>
-          <Button onClick={() => signIn()}>Sign In</Button>
-        </>
-      )}
+      <p>Welcome to Oaklang</p>
+      <Link href="/login">Sign In</Link>
     </div>
   );
 }

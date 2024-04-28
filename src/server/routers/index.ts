@@ -2,6 +2,7 @@ import { publicProcedure, router } from 'src/server/trpc';
 import { usersRouter } from './users';
 import { trainingSessionsRouter } from './trainingSession';
 import { aiRouter } from './ai';
+import { languagesRouter } from './language';
 
 export const appRouter = router({
   ai: aiRouter,
@@ -10,6 +11,7 @@ export const appRouter = router({
       message: 'OK',
     };
   }),
+  languages: languagesRouter,
   trainingSessions: trainingSessionsRouter,
   users: usersRouter,
 });

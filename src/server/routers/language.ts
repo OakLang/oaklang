@@ -2,7 +2,7 @@ import { languagesTable } from '~/lib/schema';
 import { publicProcedure, router } from 'src/server/trpc';
 import { asc, eq } from 'drizzle-orm';
 
-export const languageRouter = router({
+export const languagesRouter = router({
   getLanguages: publicProcedure.query(async (opts) => {
     const languages = await opts.ctx.db
       .select()
