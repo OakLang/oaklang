@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Button } from '~/components/ui/button';
 import { api } from '~/trpc/client';
-import InterlinearList from './InterlinearList';
 
 export default function TrainingSessionPage() {
   const session = useSession({ required: true });
@@ -32,7 +31,7 @@ export default function TrainingSessionPage() {
         </Button>
       </div>
       <div className="container space-y-8 px-4">
-        <InterlinearList />
+        {/* <InterlinearList /> */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
           <Button variant="outline">Help!</Button>
           <Button variant="outline">100%!</Button>

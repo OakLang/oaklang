@@ -33,6 +33,7 @@ const config = {
     '@typescript-eslint/no-misused-promises': [2, { checksVoidReturn: { attributes: false } }],
     '@typescript-eslint/no-require-imports': 'error',
     '@typescript-eslint/no-unnecessary-condition': 'warn',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
     '@typescript-eslint/no-unsafe-enum-comparison': 'error',
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     '@typescript-eslint/prefer-enum-initializers': 'error',
@@ -45,9 +46,10 @@ const config = {
     '@typescript-eslint/type-annotation-spacing': 'error',
     curly: 'error',
     'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
-    indent: 'off',
-    // 'max-lines': ['error', { max: 300 }],
 
+    indent: 'off',
+
+    // 'max-lines': ['error', { max: 300 }],
     'no-relative-import-paths/no-relative-import-paths': ['error', { allowSameFolder: true }],
     // Let pretteir handle this
     'prettier/prettier': [
@@ -60,6 +62,7 @@ const config = {
     quotes: ['error', 'single', { avoidEscape: true }],
     'react-hooks/exhaustive-deps': 'error',
     'react-hooks/rules-of-hooks': 'error',
+
     'react/button-has-type': [
       'error',
       {
