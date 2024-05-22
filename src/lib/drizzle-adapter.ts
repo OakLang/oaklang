@@ -2,6 +2,7 @@ import type { Adapter } from '@auth/core/adapters';
 import { accountsTable, sessionsTable, userPreferencesTable, usersTable, verificationTokensTable } from './schema';
 import { db } from './db';
 import { eq, and } from 'drizzle-orm';
+import { ALLOWED_TESTER_EMAILS } from '~/utils/constants';
 
 export const drizzleAdapter: Adapter = {
   async createSession({ expires, sessionToken, userId }) {
@@ -12,6 +13,9 @@ export const drizzleAdapter: Adapter = {
     return session;
   },
   async createUser({ email, emailVerified, image, name }) {
+    if (!ALLOWED_TESTER_EMAILS.includes(email)) {
+      throw new Error('Access Denied: This email is not permitted to test this app. For assistance, please contact the developer.');
+    }
     const [user] = await db.insert(usersTable).values({ email, emailVerified, image, name }).returning();
     if (!user) {
       throw new Error('Failed to create user');

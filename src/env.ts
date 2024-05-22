@@ -8,6 +8,7 @@ export const env = createEnv({
   },
   runtimeEnv: {
     ADMIN_IDS: process.env.ADMIN_IDS,
+    ALLOWED_TESTER_EMAILS: process.env.ALLOWED_TESTER_EMAILS,
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
@@ -25,11 +26,12 @@ export const env = createEnv({
   },
   server: {
     ADMIN_IDS: z.string().optional(),
+    ALLOWED_TESTER_EMAILS: z.string().optional(),
     AUTH_GOOGLE_ID: z.string().min(1),
     AUTH_GOOGLE_SECRET: z.string().min(1),
     DATABASE_URL: z.string().url(),
     LOG_SQL: z.string().optional(),
-    OPEN_AI_API_KEY: z.string().min(1),
+    OPEN_AI_API_KEY: z.string().optional(),
     PORT: z.string().optional(),
     REDIS_HOST: z.string().optional(),
     REDIS_PASSWORD: z.string().optional(),
