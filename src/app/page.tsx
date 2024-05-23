@@ -2,14 +2,17 @@
 
 import { Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 import InterlinearList from '~/components/InterlinearList';
 import WordsList from '~/components/WordsList';
 import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
+import { api } from '~/trpc/client';
 import { range } from '~/utils/helpers';
 import type { GenerateSentenceApiResponse, GenerateSentenceBody, Sentence } from '~/validators/generate-sentence';
 
@@ -25,10 +28,6 @@ const languages = [
   {
     id: 'fr',
     name: 'French',
-  },
-  {
-    id: 'bn',
-    name: 'Bengali',
   },
 ];
 
@@ -51,6 +50,18 @@ export default function HomePage() {
   const [sentencesCount, setSentencesCount] = useState(2);
   const [isLoading, setIsLoading] = useState(false);
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
+  const [password, setPassword] = useState('');
+  const [canAccess, setCanAccess] = useState(false);
+  const checkPassMut = api.checkPassword.useMutation({
+    onSuccess: (data) => {
+      if (data) {
+        setCanAccess(true);
+        setPassword('');
+      } else {
+        toast('Wrong password');
+      }
+    },
+  });
 
   const handleStartTraining = useCallback(async () => {
     try {
@@ -84,11 +95,28 @@ export default function HomePage() {
     }
   }, [helpLanguage, knownVocabs, practiceLanguage, practiceVocabs, prompt, sentencesCount]);
 
+  if (!canAccess) {
+    return (
+      <div className="container my-16 max-w-screen-sm">
+        <form
+          className="space-y-6"
+          onSubmit={(e) => {
+            e.preventDefault();
+            checkPassMut.mutate(password);
+          }}
+        >
+          <Input onChange={(e) => setPassword(e.currentTarget.value)} placeholder="Password" type="text" value={password} />
+          <Button disabled={checkPassMut.isPending}>Log In</Button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="container my-8 px-4">
       <fieldset className="space-y-1">
         <Label htmlFor="prompt-template">Propmt Template</Label>
-        <Textarea id="prompt-template" onChange={(e) => setPrompt(e.target.value)} rows={10} value={prompt} />
+        <Textarea id="prompt-template" onChange={(e) => setPrompt(e.target.value)} rows={5} value={prompt} />
       </fieldset>
       <div className="my-4 flex items-end gap-4">
         <fieldset>
