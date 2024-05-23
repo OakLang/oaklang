@@ -10,8 +10,8 @@ import type { Metadata } from 'next';
 import { APP_NAME } from '~/utils/constants';
 import HolyLoader from 'holy-loader';
 import { TrpcProvider } from '~/providers/TrpcProvider';
-import { SessionProvider } from 'next-auth/react';
-import { auth } from '~/lib/auth';
+// import { SessionProvider } from 'next-auth/react';
+// import { auth } from '~/lib/auth';
 import { Toaster } from '~/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -20,9 +20,7 @@ export const metadata: Metadata = {
   title: APP_NAME,
 };
 
-export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth();
-
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body className={cn('flex min-h-screen flex-col bg-background text-foreground', inter.className)}>
@@ -30,7 +28,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <TrpcProvider>
           <ThemeProvider>
             <TooltipProvider>
-              <SessionProvider session={session}>{children}</SessionProvider>
+              {/* <SessionProvider session={session}>{children}</SessionProvider> */}
+              {children}
             </TooltipProvider>
             <Toaster />
           </ThemeProvider>

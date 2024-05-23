@@ -3,8 +3,10 @@
 import { Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import InterlinearList from '~/components/InterlinearList';
+import WordsList from '~/components/WordsList';
 import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
@@ -134,18 +136,32 @@ export default function HomePage() {
             </SelectContent>
           </Select>
         </fieldset>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="outline">Practice Vocabs</Button>
-          </TooltipTrigger>
-          <TooltipContent>{practiceVocabs.length ? practiceVocabs.join(', ') : 'No Practice Vocabs'}</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="outline">Known Vocabs</Button>
-          </TooltipTrigger>
-          <TooltipContent>{knownVocabs.length ? knownVocabs.join(', ') : 'No Known Vocabs'}</TooltipContent>
-        </Tooltip>
+        <Popover>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <Button variant="outline">Practice Vocabs</Button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent>{practiceVocabs.length ? practiceVocabs.join(', ') : 'No Practice Vocabs'}</TooltipContent>
+            <PopoverContent>
+              <WordsList onWordsChange={setPracticeVocabs} words={practiceVocabs} />
+            </PopoverContent>
+          </Tooltip>
+        </Popover>
+        <Popover>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <Button variant="outline">Known Vocabs</Button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent>{knownVocabs.length ? knownVocabs.join(', ') : 'No Known Vocabs'}</TooltipContent>
+            <PopoverContent>
+              <WordsList onWordsChange={setKnownVocabs} words={knownVocabs} />
+            </PopoverContent>
+          </Tooltip>
+        </Popover>
       </div>
       <div className="my-4">
         <Button disabled={isLoading} onClick={handleStartTraining}>

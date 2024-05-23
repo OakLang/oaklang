@@ -5,6 +5,7 @@ import type { Sentence } from '~/validators/generate-sentence';
 
 export default function InterlinearList({
   sentences,
+  onKnownWordsChange,
   knownWords,
 }: {
   knownWords: string[];
@@ -14,51 +15,48 @@ export default function InterlinearList({
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-6">
       {sentences.map((sentence, i) =>
-        sentence.lexicons.map((lexiocn, j) => {
+        sentence.lexicons.map((lexicon, j) => {
+          const isKnownVocab = knownWords.includes(lexicon.lemma);
           return (
             // eslint-disable-next-line react/no-array-index-key
-            <div className="flex flex-col" key={`${lexiocn.lexicon}-${i}-${j}`}>
+            <div className="flex flex-col" key={`${lexicon.lexicon}-${i}-${j}`}>
               <ContextMenu>
                 <ContextMenuTrigger asChild>
                   <button className="block text-left font-serif text-xl font-medium" type="button">
-                    {lexiocn.lexicon}
+                    {lexicon.lexicon}
                   </button>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
-                  <ContextMenuItem>Repeat word</ContextMenuItem>
-                  <ContextMenuItem>Mark word known</ContextMenuItem>
+                  {/* <ContextMenuItem>Repeat word</ContextMenuItem> */}
+                  {isKnownVocab ? (
+                    <ContextMenuItem onClick={() => onKnownWordsChange(knownWords.filter((word) => word !== lexicon.lemma))}>
+                      Mark word unknown
+                    </ContextMenuItem>
+                  ) : (
+                    <ContextMenuItem onClick={() => onKnownWordsChange([...knownWords, lexicon.lemma])}>Mark word known</ContextMenuItem>
+                  )}
                   <ContextMenuItem>
                     <Link
                       href={{
                         host: 'en.wiktionary.org/w/index.php',
                         query: {
-                          title: lexiocn.lexicon,
+                          title: lexicon.lexicon,
                         },
                       }}
                       rel="noopener nofollow"
                       target="_blank"
                     >
-                      Search Wiktionary for &apos;{lexiocn.lexicon}&apos;
+                      Search Wiktionary for &apos;{lexicon.lexicon}&apos;
                     </Link>
                   </ContextMenuItem>
-                  <ContextMenuItem>More Practice</ContextMenuItem>
+                  {/* <ContextMenuItem>More Practice</ContextMenuItem> */}
                 </ContextMenuContent>
               </ContextMenu>
-              <button
-                className={cn('block text-left font-serif text-muted-foreground transition-opacity', {
-                  'pointer-events-none opacity-0': knownWords.includes(lexiocn.ipa),
-                })}
-                type="button"
-              >
-                {lexiocn.ipa}
+              <button className={cn('block text-left font-serif text-muted-foreground transition-opacity')} type="button">
+                {lexicon.ipa}
               </button>
-              <button
-                className={cn('block text-left font-serif text-muted-foreground transition-opacity', {
-                  'pointer-events-none opacity-0': knownWords.includes(lexiocn.translation),
-                })}
-                type="button"
-              >
-                {lexiocn.translation}
+              <button className={cn('block text-left font-serif text-muted-foreground transition-opacity')} type="button">
+                {lexicon.translation}
               </button>
             </div>
           );

@@ -17,7 +17,7 @@ export const sentenceSchema = z.object({
     .array(
       z.object({
         ipa: z.string().describe('lexicon pronunciation in IPA format'),
-        lemma: z.string().describe('lemma form of the lexicon translated in HELP LANGUAGE'),
+        lemma: z.string().describe('lexicon in lemma form'),
         lexicon: z.string().describe('lexicon in PRACTICE LANGUAGE'),
         translation: z.string().describe('lexicon translation in HELP LANGUAGE'),
       }),
