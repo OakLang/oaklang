@@ -145,7 +145,7 @@ export default function HomePage() {
             </TooltipTrigger>
             <TooltipContent>{practiceVocabs.length ? practiceVocabs.join(', ') : 'No Practice Vocabs'}</TooltipContent>
             <PopoverContent>
-              <WordsList onWordsChange={setPracticeVocabs} words={practiceVocabs} />
+              <WordsList onWordsChange={setPracticeVocabs} title="Words" words={practiceVocabs} />
             </PopoverContent>
           </Tooltip>
         </Popover>
@@ -158,7 +158,7 @@ export default function HomePage() {
             </TooltipTrigger>
             <TooltipContent>{knownVocabs.length ? knownVocabs.join(', ') : 'No Known Vocabs'}</TooltipContent>
             <PopoverContent>
-              <WordsList onWordsChange={setKnownVocabs} words={knownVocabs} />
+              <WordsList onWordsChange={setKnownVocabs} title="Words" words={knownVocabs} />
             </PopoverContent>
           </Tooltip>
         </Popover>

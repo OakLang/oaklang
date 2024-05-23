@@ -7,7 +7,15 @@ import { Badge } from './ui/badge';
 import { XIcon } from 'lucide-react';
 import ExtractLexicondsAndPhrasesFromParagraphDialog from './ExtractWordsAndPhrasesFromParagraphDialog';
 
-export default function WordsList({ words, onWordsChange }: { onWordsChange: (words: string[]) => void; words: string[] }) {
+export default function WordsList({
+  words,
+  onWordsChange,
+  title,
+}: {
+  onWordsChange: (words: string[]) => void;
+  title: string;
+  words: string[];
+}) {
   const [input, setInput] = useState('');
   const [showExtractWordsModal, setShowExtractWordsModal] = useState(false);
   const id = useId();
@@ -28,7 +36,10 @@ export default function WordsList({ words, onWordsChange }: { onWordsChange: (wo
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>Wrods{words.length > 0 ? ` (${words.length.toFixed()} ${pluralize('word', words.length)})` : null}</Label>
+      <Label htmlFor={id}>
+        {title}
+        {words.length > 0 ? ` (${words.length.toFixed()} ${pluralize('word', words.length)})` : null}
+      </Label>
       <div className="flex flex-wrap gap-2">
         {words.length === 0 ? (
           <p className="text-sm text-muted-foreground">No words...</p>
