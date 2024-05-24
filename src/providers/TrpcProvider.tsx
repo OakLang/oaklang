@@ -20,8 +20,6 @@ const queryConfig: QueryClientConfig = {
   },
 };
 
-const url = env.NODE_ENV === 'production' ? 'https://oaklang.vercel.app' : 'http://localhost:3000/api/trpc/';
-
 export const TrpcProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [queryClient] = useState(() => new QueryClient(queryConfig));
   const [trpcClient] = useState(() =>
@@ -32,7 +30,7 @@ export const TrpcProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }),
         httpBatchLink({
           transformer,
-          url,
+          url: '/api/trpc',
         }),
       ],
     }),
