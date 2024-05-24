@@ -29,6 +29,18 @@ const languages = [
     id: 'fr',
     name: 'French',
   },
+  {
+    id: 'de',
+    name: 'German',
+  },
+  {
+    id: 'bg',
+    name: 'Bulgarian',
+  },
+  {
+    id: 'cs',
+    name: 'Czech',
+  },
 ];
 
 const DEFAULT_PROMPT = `Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an A1 HELP LANGUAGE student composing a story using each of the following words. I want to practice at least {{NUMBER_OF_TIME_TO_PRACTICE}} times using only words from PRACTICE VOCABS and the KNOWN VOCABS List below. Sentences should be constructed so it is hard to replace the focus word with another (ie, "the RED apple" is better than "the RED paper" since apples are often associated with the color red).
