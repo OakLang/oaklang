@@ -47,9 +47,9 @@ const languages = [
   },
 ];
 
-const DEFAULT_PROMPT = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentances to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary. 
+const DEFAULT_PROMPT = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary. 
 
-Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an A1 {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTIC_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list.
+Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an A1 {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTICE_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list.
 
 PRACTICE LANGUAGE: "{{PRACTICE_LANGUAGE}}"
 
