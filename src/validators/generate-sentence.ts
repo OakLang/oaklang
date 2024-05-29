@@ -1,13 +1,10 @@
 import { z } from 'zod';
+import { settingsSchema } from './settings';
 
 export const generateSentenceBody = z.object({
-  helpLanguage: z.string().min(1),
   knownVocabs: z.array(z.string().min(1)),
-  numberOfTimeToPractice: z.number().min(1).max(20),
-  practiceLanguage: z.string().min(1),
   practiceVocabs: z.array(z.string().min(1)),
-  prompt: z.string(),
-  sentencesCount: z.number().min(1).max(5),
+  settings: settingsSchema,
 });
 
 export type GenerateSentenceBody = z.infer<typeof generateSentenceBody>;
@@ -23,12 +20,6 @@ export const sentenceSchema = z.object({
       }),
     )
     .describe('list of lexicons to build the full sentence'),
-  // definitions: z.array(z.string()).describe('list of definitions that are direct translations to PRACTICE LANGUAGE.'),
-  // ipa: z.array(z.string()).describe('list of pronunciations in IPA format.'),
-  // lemmas: z.array(z.string()).describe('list of words in lemma form in HELP LANGUAGE'),
-  // translation: z.string().describe('the full translated sentence in HELP LANGUAGE.'),
-  // translations: z.array(z.string()).describe('list of words to build the translated full sentence in HELP LANGUAGE.'),
-  // words: z.array(z.string()).describe('list of words to build the full sentence in PRACTICE LANGUAGE.'),
   sentence: z.string().describe('the full sentence in PRACTICE LANGUAGE.'),
 });
 
@@ -39,8 +30,8 @@ export const generateSentenceObjectSchema = z.object({
 });
 
 export const generateSentenceApiResponse = z.object({
+  knownVocabs: z.array(z.string().min(1)),
   practiceVocabs: z.array(z.string().min(1)),
-  prompt: z.string(),
   sentences: z.array(sentenceSchema),
 });
 

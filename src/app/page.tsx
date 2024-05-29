@@ -1,73 +1,27 @@
+/* eslint-disable react/jsx-max-depth */
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { Loader2, SettingsIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import InterlinearList from '~/components/InterlinearList';
+import SettingsForm from '~/components/SettingsForm';
 import WordsList from '~/components/WordsList';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { Textarea } from '~/components/ui/textarea';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
 import { api } from '~/trpc/client';
-import { range } from '~/utils/helpers';
 import type { GenerateSentenceApiResponse, GenerateSentenceBody, Sentence } from '~/validators/generate-sentence';
-
-const languages = [
-  {
-    id: 'bg',
-    name: 'Bulgarian',
-  },
-  {
-    id: 'cs',
-    name: 'Czech',
-  },
-  {
-    id: 'en',
-    name: 'English',
-  },
-  {
-    id: 'fr',
-    name: 'French',
-  },
-  {
-    id: 'de',
-    name: 'German',
-  },
-  {
-    id: 'it',
-    name: 'Italian',
-  },
-  {
-    id: 'es',
-    name: 'Spanish',
-  },
-];
-
-const DEFAULT_PROMPT = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary. 
-
-Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an A1 {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTICE_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list.
-
-PRACTICE LANGUAGE: "{{PRACTICE_LANGUAGE}}"
-
-HELP LANGUAGE: "{{HELP_LANGUAGE}}"
-
-PRACTICE VOCABS: "{{PRACTICE_VOCABS}}"
-
-KNOWN VOCABS: "{{KNOWN_VOCABS}}"`;
+import { initialSettings } from '~/validators/settings';
 
 export default function HomePage() {
-  const [helpLanguage, setHelpLanguage] = useState(languages[0]!.id);
-  const [practiceLanguage, setPracticeLanguage] = useState(languages[1]!.id);
+  const [sentences, setSentences] = useState<Sentence[]>([]);
+  const [settings, setSettings] = useState(initialSettings);
   const [practiceVocabs, setPracticeVocabs] = useState<string[]>([]);
   const [knownVocabs, setKnownVocabs] = useState<string[]>([]);
-  const [sentences, setSentences] = useState<Sentence[]>([]);
-  const [sentencesCount, setSentencesCount] = useState(2);
   const [isLoading, setIsLoading] = useState(false);
-  const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
   const [password, setPassword] = useState('');
   const [canAccess, setCanAccess] = useState(false);
   const checkPassMut = api.checkPassword.useMutation({
@@ -86,13 +40,9 @@ export default function HomePage() {
       setIsLoading(true);
       const res = await fetch('/api/ai/generate-sentences', {
         body: JSON.stringify({
-          helpLanguage: languages.find((lang) => lang.id === helpLanguage)!.name,
           knownVocabs,
-          numberOfTimeToPractice: 5,
-          practiceLanguage: languages.find((lang) => lang.id === practiceLanguage)!.name,
           practiceVocabs,
-          prompt,
-          sentencesCount,
+          settings,
         } satisfies GenerateSentenceBody),
         headers: {
           'content-type': 'application/json',
@@ -111,7 +61,7 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [helpLanguage, knownVocabs, practiceLanguage, practiceVocabs, prompt, sentencesCount]);
+  }, [knownVocabs, practiceVocabs, settings]);
 
   if (!canAccess) {
     return (
@@ -131,98 +81,68 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container my-8 px-4">
-      <fieldset className="space-y-1">
-        <Label htmlFor="prompt-template">Propmt Template</Label>
-        <Textarea id="prompt-template" onChange={(e) => setPrompt(e.target.value)} rows={5} value={prompt} />
-      </fieldset>
-      <div className="my-4 flex items-end gap-4">
-        <fieldset>
-          <Label htmlFor="help-language">Help Language</Label>
-          <Select onValueChange={setHelpLanguage} value={helpLanguage}>
-            <SelectTrigger id="help-language">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {languages.map((language) => (
-                <SelectItem key={language.id} value={language.id}>
-                  {language.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </fieldset>
-        <fieldset>
-          <Label htmlFor="practice-language">Practice Language</Label>
-          <Select onValueChange={setPracticeLanguage} value={practiceLanguage}>
-            <SelectTrigger id="practice-language">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {languages.map((language) => (
-                <SelectItem key={language.id} value={language.id}>
-                  {language.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </fieldset>
-        <fieldset>
-          <Label htmlFor="practice-language">Num of Sentences</Label>
-          <Select onValueChange={(value) => setSentencesCount(Number(value))} value={String(sentencesCount)}>
-            <SelectTrigger id="practice-language">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {range(1, 5).map((count) => (
-                <SelectItem key={count} value={String(count)}>
-                  {count}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </fieldset>
-        <Popover>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <Button variant="outline">Practice Vocabs</Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent>{practiceVocabs.length ? practiceVocabs.join(', ') : 'No Practice Vocabs'}</TooltipContent>
-            <PopoverContent>
-              <WordsList onWordsChange={setPracticeVocabs} title="Practice Vocabs" words={practiceVocabs} />
-            </PopoverContent>
-          </Tooltip>
-        </Popover>
-        <Popover>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <Button variant="outline">Known Vocabs</Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent>{knownVocabs.length ? knownVocabs.join(', ') : 'No Known Vocabs'}</TooltipContent>
-            <PopoverContent>
-              <WordsList onWordsChange={setKnownVocabs} title="Known Vocabs" words={knownVocabs} />
-            </PopoverContent>
-          </Tooltip>
-        </Popover>
+    <>
+      <header>
+        <div className="container flex h-14 items-center gap-2 px-4">
+          <h1 className="text-lg font-semibold">Oaklang</h1>
+          <div className="flex-1" />
+          <Popover>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <Button variant="outline">Practice Vocabs</Button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>{practiceVocabs.length ? practiceVocabs.join(', ') : 'No Practice Vocabs'}</TooltipContent>
+              <PopoverContent className="max-w-lg">
+                <WordsList onWordsChange={setPracticeVocabs} title="Practice Vocabs" words={practiceVocabs} />
+              </PopoverContent>
+            </Tooltip>
+          </Popover>
+
+          <Popover>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <Button variant="outline">Known Vocabs</Button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>{knownVocabs.length ? knownVocabs.join(', ') : 'No Known Vocabs'}</TooltipContent>
+              <PopoverContent className="max-w-2xl">
+                <WordsList onWordsChange={setKnownVocabs} title="Known Vocabs" words={knownVocabs} />
+              </PopoverContent>
+            </Tooltip>
+          </Popover>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="icon" variant="outline">
+                <SettingsIcon className="h-5 w-5" />
+                <p className="sr-only">Settings</p>
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Settings</SheetTitle>
+              </SheetHeader>
+              <SettingsForm onChange={setSettings} settings={settings} />
+            </SheetContent>
+          </Sheet>
+        </div>
+      </header>
+
+      <div className="container my-8 px-4">
+        {sentences.length ? (
+          <InterlinearList knownWords={knownVocabs} onKnownWordsChange={setKnownVocabs} sentences={sentences} />
+        ) : (
+          <div className="my-8 flex items-center justify-center">
+            <Button disabled={isLoading} onClick={handleStartTraining}>
+              {isLoading ? <Loader2 className="-ml-1 mr-2 h-5 w-5 animate-spin" /> : null}
+              Start Training
+            </Button>
+          </div>
+        )}
       </div>
-      <div className="my-4">
-        <Button disabled={isLoading} onClick={handleStartTraining}>
-          {isLoading ? <Loader2 className="-ml-1 mr-2 h-5 w-5 animate-spin" /> : null}
-          Generate Sentences
-        </Button>
-      </div>
-      <div className="my-8">
-        <InterlinearList knownWords={knownVocabs} onKnownWordsChange={setKnownVocabs} sentences={sentences} />
-      </div>
-      <div className="my-8">
-        <pre className="overflow-x-auto rounded-md bg-secondary p-4">
-          {JSON.stringify({ knownVocabs, practiceVocabs, sentences }, null, 2)}
-        </pre>
-      </div>
-    </div>
+    </>
   );
 }

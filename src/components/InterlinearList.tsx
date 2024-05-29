@@ -22,7 +22,7 @@ export default function InterlinearList({
             <div className="flex flex-col" key={`${lexicon.lexicon}-${i}-${j}`}>
               <ContextMenu>
                 <ContextMenuTrigger asChild>
-                  <button className="block text-left font-serif text-xl font-medium" type="button">
+                  <button className="block text-left font-serif text-2xl font-medium" type="button">
                     {lexicon.lexicon}
                   </button>
                 </ContextMenuTrigger>
@@ -52,10 +52,10 @@ export default function InterlinearList({
                   {/* <ContextMenuItem>More Practice</ContextMenuItem> */}
                 </ContextMenuContent>
               </ContextMenu>
-              <button className={cn('block text-left font-serif text-muted-foreground transition-opacity')} type="button">
+              <button className={cn('block text-left font-serif text-lg text-muted-foreground transition-opacity')} type="button">
                 {lexicon.ipa}
               </button>
-              <button className={cn('block text-left font-serif text-muted-foreground transition-opacity')} type="button">
+              <button className={cn('block text-left font-serif text-lg text-muted-foreground transition-opacity')} type="button">
                 {lexicon.translation}
               </button>
             </div>
