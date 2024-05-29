@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-max-depth */
 'use client';
 
+import { useAtom, useSetAtom } from 'jotai';
 import { Loader2, SettingsIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -12,18 +13,21 @@ import { Input } from '~/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
+import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom, settingsAtom } from '~/store';
 import { api } from '~/trpc/client';
 import type { GenerateSentenceApiResponse, GenerateSentenceBody, Sentence } from '~/validators/generate-sentence';
-import { initialSettings } from '~/validators/settings';
 
 export default function HomePage() {
   const [sentences, setSentences] = useState<Sentence[]>([]);
-  const [settings, setSettings] = useState(initialSettings);
-  const [practiceVocabs, setPracticeVocabs] = useState<string[]>([]);
-  const [knownVocabs, setKnownVocabs] = useState<string[]>([]);
+  const [settings, setSettings] = useAtom(settingsAtom);
+  const [practiceVocabs, setPracticeVocabs] = useAtom(practiceVocabsAtom);
+  const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
   const [isLoading, setIsLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [canAccess, setCanAccess] = useState(false);
+  const setKnownIPAs = useSetAtom(knownIPAsAtom);
+  const setKnownTranslations = useSetAtom(knownTranslationsAtom);
+
   const checkPassMut = api.checkPassword.useMutation({
     onSuccess: (data) => {
       if (data) {
@@ -53,7 +57,6 @@ export default function HomePage() {
         throw res.statusText;
       }
       const data = (await res.json()) as GenerateSentenceApiResponse;
-      console.log(data);
       setPracticeVocabs(data.practiceVocabs);
       setSentences(data.sentences);
     } catch (error: unknown) {
@@ -61,7 +64,7 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [knownVocabs, practiceVocabs, settings]);
+  }, [knownVocabs, practiceVocabs, setPracticeVocabs, settings]);
 
   if (!canAccess) {
     return (
@@ -133,7 +136,21 @@ export default function HomePage() {
 
       <div className="container my-8 px-4">
         {sentences.length ? (
-          <InterlinearList knownWords={knownVocabs} onKnownWordsChange={setKnownVocabs} sentences={sentences} />
+          <div>
+            <InterlinearList sentences={sentences} />
+            <div className="mt-16 flex flex-wrap items-center justify-center gap-2">
+              <Button
+                onClick={() => {
+                  setKnownIPAs([]);
+                  setKnownTranslations([]);
+                }}
+                variant="outline"
+              >
+                Help 100%
+              </Button>
+              <Button>Next</Button>
+            </div>
+          </div>
         ) : (
           <div className="my-8 flex items-center justify-center">
             <Button disabled={isLoading} onClick={handleStartTraining}>
