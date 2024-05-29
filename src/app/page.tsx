@@ -18,12 +18,16 @@ import type { GenerateSentenceApiResponse, GenerateSentenceBody, Sentence } from
 
 const languages = [
   {
-    id: 'en',
-    name: 'English',
+    id: 'bg',
+    name: 'Bulgarian',
   },
   {
-    id: 'es',
-    name: 'Spanish',
+    id: 'cs',
+    name: 'Czech',
+  },
+  {
+    id: 'en',
+    name: 'English',
   },
   {
     id: 'fr',
@@ -34,16 +38,18 @@ const languages = [
     name: 'German',
   },
   {
-    id: 'bg',
-    name: 'Bulgarian',
+    id: 'it',
+    name: 'Italian',
   },
   {
-    id: 'cs',
-    name: 'Czech',
+    id: 'es',
+    name: 'Spanish',
   },
 ];
 
-const DEFAULT_PROMPT = `Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an A1 HELP LANGUAGE student composing a story using each of the following words. I want to practice at least {{NUMBER_OF_TIME_TO_PRACTICE}} times using only words from PRACTICE VOCABS and the KNOWN VOCABS List below. Sentences should be constructed so it is hard to replace the focus word with another (ie, "the RED apple" is better than "the RED paper" since apples are often associated with the color red).
+const DEFAULT_PROMPT = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentances to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary. 
+
+Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an A1 {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTIC_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list.
 
 PRACTICE LANGUAGE: "{{PRACTICE_LANGUAGE}}"
 
