@@ -101,6 +101,7 @@
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.13",
     "react": "18.2.0",
+    "react-csv-importer": "^0.8.1",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.51.2",
     "sonner": "^1.4.41",

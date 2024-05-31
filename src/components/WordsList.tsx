@@ -5,7 +5,9 @@ import { Button } from './ui/button';
 import pluralize from 'pluralize';
 import { Badge } from './ui/badge';
 import { XIcon } from 'lucide-react';
-import ExtractLexicondsAndPhrasesFromParagraphDialog from './ExtractWordsAndPhrasesFromParagraphDialog';
+import { Importer, ImporterField } from 'react-csv-importer';
+import 'react-csv-importer/dist/index.css';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 
 export default function WordsList({
   words,
@@ -17,7 +19,7 @@ export default function WordsList({
   words: string[];
 }) {
   const [input, setInput] = useState('');
-  const [showExtractWordsModal, setShowExtractWordsModal] = useState(false);
+  const [showCSVImporterModal, setShowCSVImporterModal] = useState(false);
   const id = useId();
 
   const handleAddWrods = useCallback(
@@ -80,15 +82,45 @@ export default function WordsList({
           Add All
         </Button>
       </div>
-      {/* <Button className="h-fit p-0" onClick={() => setShowExtracLexiconsModal(true)} type="button" variant="link">
-        Extract words from paragraph
-      </Button> */}
-
-      <ExtractLexicondsAndPhrasesFromParagraphDialog
-        onComplete={handleAddWrods}
-        onOpenChange={setShowExtractWordsModal}
-        open={showExtractWordsModal}
-      />
+      <div className="flex flex-wrap gap-2">
+        <Button className="h-fit p-0" onClick={() => setShowCSVImporterModal(true)} type="button" variant="link">
+          Import from CSV
+        </Button>
+        <Button className="h-fit p-0" onClick={() => onWordsChange([])} type="button" variant="link">
+          Clear List
+        </Button>
+      </div>
+      <Dialog onOpenChange={setShowCSVImporterModal} open={showCSVImporterModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import from CSV</DialogTitle>
+          </DialogHeader>
+          <CSVImporter
+            onComplete={(words) => {
+              handleAddWrods(words);
+              setShowCSVImporterModal(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+const CSVImporter = ({ onComplete }: { onComplete: (words: string[]) => void }) => {
+  const [words, setWords] = useState<string[]>([]);
+  return (
+    <Importer
+      dataHandler={(rows, { startIndex }) => {
+        console.log({ rows, startIndex });
+        const words = rows.map((row) => row.word as string);
+        setWords((list) => [...list, ...words]);
+      }}
+      onComplete={() => {
+        onComplete(words);
+      }}
+    >
+      <ImporterField label="Word" name="word" />
+    </Importer>
+  );
+};

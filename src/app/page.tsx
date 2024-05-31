@@ -112,9 +112,11 @@ export default function HomePage() {
         <div className="container flex h-14 items-center gap-2 px-4">
           <h1 className="text-lg font-semibold">Oaklang</h1>
           <div className="flex-1" />
-          <Button onClick={handleRestart} variant="outline">
-            Restart
-          </Button>
+          {trainingStarted ? (
+            <Button onClick={handleRestart} variant="outline">
+              Restart
+            </Button>
+          ) : null}
 
           <Popover>
             <Tooltip>
