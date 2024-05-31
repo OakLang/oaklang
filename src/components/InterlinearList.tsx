@@ -66,11 +66,11 @@ const ListItem = ({
   const [revealTranslation, setRevealTranslation] = useState(false);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-2">
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <button
-            className="block text-left font-serif text-2xl font-medium"
+            className="block text-left font-serif text-4xl font-medium"
             onClick={() => {
               setRevealIpa(true);
               setRevealTranslation(true);
@@ -105,7 +105,7 @@ const ListItem = ({
         </ContextMenuContent>
       </ContextMenu>
       <button
-        className={cn('block text-left font-serif text-lg text-muted-foreground transition-opacity', {
+        className={cn('block text-left font-serif text-xl text-muted-foreground transition-opacity', {
           invisible: ipaHidden && !revealIpa,
         })}
         onClick={() => {
@@ -117,7 +117,7 @@ const ListItem = ({
         {ipa}
       </button>
       <button
-        className={cn('block text-left font-serif text-lg text-muted-foreground transition-opacity', {
+        className={cn('block text-left font-serif text-xl text-muted-foreground transition-opacity', {
           invisible: translationHidden && !revealTranslation,
         })}
         onClick={() => {

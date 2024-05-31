@@ -2,7 +2,7 @@
 'use client';
 
 import { useAtom, useSetAtom } from 'jotai';
-import { Loader2, SettingsIcon } from 'lucide-react';
+import { SettingsIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import InterlinearList from '~/components/InterlinearList';
@@ -15,18 +15,28 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/co
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
 import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom, settingsAtom } from '~/store';
 import { api } from '~/trpc/client';
-import type { GenerateSentenceApiResponse, GenerateSentenceBody, Sentence } from '~/validators/generate-sentence';
+import type { Sentence } from '~/validators/generate-sentence';
 
 export default function HomePage() {
   const [sentences, setSentences] = useState<Sentence[]>([]);
   const [settings, setSettings] = useAtom(settingsAtom);
   const [practiceVocabs, setPracticeVocabs] = useAtom(practiceVocabsAtom);
   const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
-  const [isLoading, setIsLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [canAccess, setCanAccess] = useState(false);
   const setKnownIPAs = useSetAtom(knownIPAsAtom);
   const setKnownTranslations = useSetAtom(knownTranslationsAtom);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [trainingStarted, setTrainingStarted] = useState(false);
+
+  const generateSentencesMut = api.ai.generateSentences.useMutation({
+    onError: (error) => {
+      toast('Failed to generate Sentences', { description: error.message });
+    },
+    onSuccess: (data) => {
+      setSentences((sentences) => [...sentences, ...data.sentences]);
+    },
+  });
 
   const checkPassMut = api.checkPassword.useMutation({
     onSuccess: (data) => {
@@ -39,32 +49,45 @@ export default function HomePage() {
     },
   });
 
-  const handleStartTraining = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch('/api/ai/generate-sentences', {
-        body: JSON.stringify({
-          knownVocabs,
-          practiceVocabs,
-          settings,
-        } satisfies GenerateSentenceBody),
-        headers: {
-          'content-type': 'application/json',
-        },
-        method: 'POST',
-      });
-      if (res.status !== 200) {
-        throw res.statusText;
-      }
-      const data = (await res.json()) as GenerateSentenceApiResponse;
-      setPracticeVocabs(data.practiceVocabs);
-      setSentences(data.sentences);
-    } catch (error: unknown) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+  const handleGenerateSentences = useCallback(() => {
+    if (generateSentencesMut.isPending) {
+      return;
     }
-  }, [knownVocabs, practiceVocabs, setPracticeVocabs, settings]);
+    generateSentencesMut.mutate({ knownVocabs, practiceVocabs, settings });
+  }, [generateSentencesMut, knownVocabs, practiceVocabs, settings]);
+
+  const handleNext = useCallback(() => {
+    if (currentIndex >= sentences.length - 3) {
+      handleGenerateSentences();
+    }
+    if (currentIndex >= sentences.length) {
+      console.log('Can not go next');
+      return;
+    }
+    setCurrentIndex(currentIndex + 1);
+  }, [currentIndex, handleGenerateSentences, sentences.length]);
+
+  const handlePrevious = useCallback(() => {
+    if (currentIndex <= 0) {
+      return;
+    }
+    setCurrentIndex(currentIndex - 1);
+  }, [currentIndex]);
+
+  const handleStartTraining = useCallback(() => {
+    setTrainingStarted(true);
+    handleGenerateSentences();
+  }, [handleGenerateSentences]);
+
+  const handleRestart = () => {
+    setKnownIPAs([]);
+    setKnownTranslations([]);
+    setKnownVocabs([]);
+    setPracticeVocabs([]);
+    setSentences([]);
+    setCurrentIndex(0);
+    setTrainingStarted(false);
+  };
 
   if (!canAccess) {
     return (
@@ -89,6 +112,10 @@ export default function HomePage() {
         <div className="container flex h-14 items-center gap-2 px-4">
           <h1 className="text-lg font-semibold">Oaklang</h1>
           <div className="flex-1" />
+          <Button onClick={handleRestart} variant="outline">
+            Restart
+          </Button>
+
           <Popover>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -135,9 +162,9 @@ export default function HomePage() {
       </header>
 
       <div className="container my-8 px-4">
-        {sentences.length ? (
+        {trainingStarted ? (
           <div>
-            <InterlinearList sentences={sentences} />
+            {sentences[currentIndex] ? <InterlinearList sentences={[sentences[currentIndex]!]} /> : <p>Loading...</p>}
             <div className="mt-16 flex flex-wrap items-center justify-center gap-2">
               <Button
                 onClick={() => {
@@ -148,15 +175,17 @@ export default function HomePage() {
               >
                 Help 100%
               </Button>
-              <Button>Next</Button>
+              <Button onClick={handlePrevious}>Previous</Button>
+              <Button onClick={handleNext}>Next</Button>
             </div>
+            <p>
+              Total Sentences: {sentences.length}, Current Sentence: {currentIndex + 1}
+              {generateSentencesMut.isPending ? ', Generating more sentences...' : ''}
+            </p>
           </div>
         ) : (
           <div className="my-8 flex items-center justify-center">
-            <Button disabled={isLoading} onClick={handleStartTraining}>
-              {isLoading ? <Loader2 className="-ml-1 mr-2 h-5 w-5 animate-spin" /> : null}
-              Start Training
-            </Button>
+            <Button onClick={handleStartTraining}>Start Training</Button>
           </div>
         )}
       </div>
