@@ -34,7 +34,7 @@ export default function HomePage() {
       toast('Failed to generate Sentences', { description: error.message });
     },
     onSuccess: (data) => {
-      setSentences((sentences) => [...sentences, ...data.sentences]);
+      setSentences((sentences) => [...sentences, ...data]);
     },
   });
 

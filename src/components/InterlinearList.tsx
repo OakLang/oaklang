@@ -14,7 +14,7 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
 
   useEffect(() => {
     setPracticeVocabs((practiceVocabs) => {
-      const uniqueVocabs = sentence.lexicons.map((item) => item.lexicon).filter((vocab) => !practiceVocabs.includes(vocab));
+      const uniqueVocabs = sentence.lexicons.map((item) => item.lemma).filter((vocab) => !practiceVocabs.includes(vocab));
       return [...practiceVocabs, ...uniqueVocabs];
     });
   }, [sentence.lexicons, setPracticeVocabs]);

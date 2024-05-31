@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { protectedProcedure, publicProcedure, router } from 'src/server/trpc';
 import { extractLexiconsWithAI } from '~/utils/openai';
-import { generateSentenceApiResponse, generateSentenceBody, generateSentenceObjectSchema } from '~/validators/generate-sentence';
+import { generateSentenceBody, generateSentenceObjectSchema, sentenceSchema } from '~/validators/generate-sentence';
 import type { Settings } from '~/validators/settings';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
@@ -31,7 +31,7 @@ export const aiRouter = router({
   }),
   generateSentences: publicProcedure
     .input(generateSentenceBody)
-    .output(generateSentenceApiResponse)
+    .output(z.array(sentenceSchema))
     .mutation(async ({ input: { knownVocabs, practiceVocabs, settings } }) => {
       const prompt = buildPrompt({ knownVocabs, practiceVocabs, settings });
       const result = await generateObject({
@@ -40,12 +40,6 @@ export const aiRouter = router({
         schema: generateSentenceObjectSchema,
       });
 
-      const newVocabs = result.object.sentences.flatMap((sentence) => sentence.lexicons.flatMap((lexicon) => lexicon.lemma));
-      const uniqueVocabs = newVocabs.filter((vocab) => !practiceVocabs.includes(vocab));
-      return {
-        knownVocabs,
-        practiceVocabs: [...practiceVocabs, ...uniqueVocabs],
-        sentences: result.object.sentences,
-      };
+      return result.object.sentences;
     }),
 });
