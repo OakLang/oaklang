@@ -36,6 +36,16 @@ export default function WordsList({
     setInput('');
   }, [handleAddWrods, input]);
 
+  const handleDownloadCSV = useCallback(() => {
+    const content = ['Id,Word', ...words.map((word, i) => `${i + 1},${word}`)].join('\n');
+    const file = new Blob([content], { type: 'text/plan' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(file);
+    link.download = 'words.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }, [words]);
+
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>
@@ -83,6 +93,9 @@ export default function WordsList({
         </Button>
       </div>
       <div className="flex flex-wrap gap-2">
+        <Button className="h-fit p-0" onClick={() => handleDownloadCSV()} type="button" variant="link">
+          Download as CSV
+        </Button>
         <Button className="h-fit p-0" onClick={() => setShowCSVImporterModal(true)} type="button" variant="link">
           Import from CSV
         </Button>
