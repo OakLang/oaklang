@@ -1,40 +1,46 @@
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '~/components/ui/context-menu';
-import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom } from '~/store';
+import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom } from '~/store';
 import { cn } from '~/utils';
 import type { Sentence } from '~/validators/generate-sentence';
 
-export default function InterlinearList({ sentences }: { sentences: Sentence[] }) {
+export default function InterlinearList({ sentence }: { sentence: Sentence }) {
+  const setPracticeVocabs = useSetAtom(practiceVocabsAtom);
   const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
   const [knownIPAs, setKnownIPAs] = useAtom(knownIPAsAtom);
   const [knownTranslations, setKnownTranslations] = useAtom(knownTranslationsAtom);
 
+  useEffect(() => {
+    setPracticeVocabs((practiceVocabs) => {
+      const uniqueVocabs = sentence.lexicons.map((item) => item.lexicon).filter((vocab) => !practiceVocabs.includes(vocab));
+      return [...practiceVocabs, ...uniqueVocabs];
+    });
+  }, [sentence.lexicons, setPracticeVocabs]);
+
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-6">
-      {sentences.map((sentence, i) =>
-        sentence.lexicons.map((lexicon, j) => {
-          const id = `${lexicon.lexicon}-${i}-${j}`;
-          const vocabKnown = knownVocabs.includes(lexicon.lemma);
+      {sentence.lexicons.map((lexicon, i) => {
+        const id = `${lexicon.lexicon}-${i}`;
+        const vocabKnown = knownVocabs.includes(lexicon.lemma);
 
-          return (
-            <ListItem
-              ipa={lexicon.ipa}
-              ipaHidden={knownIPAs.includes(lexicon.ipa)}
-              key={id}
-              onHideIPA={() => setKnownIPAs([...knownIPAs, lexicon.ipa])}
-              onHideTranslation={() => setKnownTranslations([...knownTranslations, lexicon.translation])}
-              onMarkVocabKnown={() => setKnownVocabs([...knownVocabs, lexicon.lemma])}
-              onMarkVocabUnknown={() => setKnownVocabs(knownVocabs.filter((vocab) => vocab !== lexicon.lemma))}
-              translation={lexicon.translation}
-              translationHidden={knownTranslations.includes(lexicon.translation)}
-              vocab={lexicon.lexicon}
-              vocabKnown={vocabKnown}
-            />
-          );
-        }),
-      )}
+        return (
+          <ListItem
+            ipa={lexicon.ipa}
+            ipaHidden={knownIPAs.includes(lexicon.ipa)}
+            key={id}
+            onHideIPA={() => setKnownIPAs([...knownIPAs, lexicon.ipa])}
+            onHideTranslation={() => setKnownTranslations([...knownTranslations, lexicon.translation])}
+            onMarkVocabKnown={() => setKnownVocabs([...knownVocabs, lexicon.lemma])}
+            onMarkVocabUnknown={() => setKnownVocabs(knownVocabs.filter((vocab) => vocab !== lexicon.lemma))}
+            translation={lexicon.translation}
+            translationHidden={knownTranslations.includes(lexicon.translation)}
+            vocab={lexicon.lexicon}
+            vocabKnown={vocabKnown}
+          />
+        );
+      })}
     </div>
   );
 }

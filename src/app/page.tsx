@@ -166,7 +166,7 @@ export default function HomePage() {
       <div className="container my-8 px-4">
         {trainingStarted ? (
           <div>
-            {sentences[currentIndex] ? <InterlinearList sentences={[sentences[currentIndex]!]} /> : <p>Loading...</p>}
+            {sentences[currentIndex] ? <InterlinearList sentence={sentences[currentIndex]!} /> : <p>Loading...</p>}
             <div className="mt-16 flex flex-wrap items-center justify-center gap-2">
               <Button
                 onClick={() => {
