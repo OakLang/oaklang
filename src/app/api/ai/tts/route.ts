@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { openai } from '~/lib/openai';
 import { audioSettingsSchema } from '~/validators/audio-settings';
 
-export const bodySchema = z.object({
+const bodySchema = z.object({
   input: z.string().min(0).max(4096),
   settings: audioSettingsSchema,
 });

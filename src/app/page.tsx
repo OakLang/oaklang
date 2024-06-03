@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-max-depth */
 'use client';
 
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { SettingsIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -19,7 +19,7 @@ import type { Sentence } from '~/validators/generate-sentence';
 
 export default function HomePage() {
   const [sentences, setSentences] = useState<Sentence[]>([]);
-  const [settings, setSettings] = useAtom(settingsAtom);
+  const settings = useAtomValue(settingsAtom);
   const [practiceVocabs, setPracticeVocabs] = useAtom(practiceVocabsAtom);
   const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
   const [password, setPassword] = useState('');
@@ -157,7 +157,7 @@ export default function HomePage() {
               <SheetHeader>
                 <SheetTitle>Settings</SheetTitle>
               </SheetHeader>
-              <SettingsForm onChange={setSettings} settings={settings} />
+              <SettingsForm />
             </SheetContent>
           </Sheet>
         </div>
