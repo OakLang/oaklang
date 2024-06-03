@@ -10,17 +10,17 @@ export const generateSentenceBody = z.object({
 export type GenerateSentenceBody = z.infer<typeof generateSentenceBody>;
 
 export const sentenceSchema = z.object({
-  lexicons: z
+  sentence: z.string().describe('the full sentence in PRACTICE LANGUAGE.'),
+  words: z
     .array(
       z.object({
-        ipa: z.string().describe('lexicon pronunciation in IPA format'),
-        lemma: z.string().describe('lexicon in lemma form'),
-        lexicon: z.string().describe('lexicon in PRACTICE LANGUAGE'),
-        translation: z.string().describe('lexicon translation in HELP LANGUAGE'),
+        ipa: z.string().describe('word pronunciation in IPA format'),
+        lemma: z.string().describe('word in lemma form'),
+        translation: z.string().describe('word translation in HELP LANGUAGE'),
+        word: z.string().describe('word in PRACTICE LANGUAGE'),
       }),
     )
-    .describe('list of lexicons to build the full sentence'),
-  sentence: z.string().describe('the full sentence in PRACTICE LANGUAGE.'),
+    .describe('list of words to build the full sentence'),
 });
 
 export type Sentence = z.infer<typeof sentenceSchema>;

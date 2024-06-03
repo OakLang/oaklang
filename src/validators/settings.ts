@@ -30,5 +30,5 @@ export const initialSettings: Settings = {
   helpLanguage: 'English',
   practiceLanguage: 'Spanish',
   prompt: DEFAULT_PROMPT,
-  sentencesCount: 5,
+  sentencesCount: 3,
 };
