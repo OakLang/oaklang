@@ -13,17 +13,17 @@ import { Input } from '~/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
-import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom, settingsAtom } from '~/store';
+import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom, sentencesGeneratorSettingsAtom } from '~/store';
 import { api } from '~/trpc/client';
-import type { Sentence } from '~/validators/generate-sentence';
+import type { SentenceWithId } from '~/validators/generate-sentence';
 
 export default function HomePage() {
-  const [sentences, setSentences] = useState<Sentence[]>([]);
-  const settings = useAtomValue(settingsAtom);
+  const [sentences, setSentences] = useState<SentenceWithId[]>([]);
+  const sentencesGeneratorSettings = useAtomValue(sentencesGeneratorSettingsAtom);
   const [practiceVocabs, setPracticeVocabs] = useAtom(practiceVocabsAtom);
   const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
   const [password, setPassword] = useState('');
-  const [canAccess, setCanAccess] = useState(false);
+  const [canAccess, setCanAccess] = useState(process.env.NODE_ENV === 'development');
   const setKnownIPAs = useSetAtom(knownIPAsAtom);
   const setKnownTranslations = useSetAtom(knownTranslationsAtom);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -53,8 +53,8 @@ export default function HomePage() {
     if (generateSentencesMut.isPending) {
       return;
     }
-    generateSentencesMut.mutate({ knownVocabs, practiceVocabs, settings });
-  }, [generateSentencesMut, knownVocabs, practiceVocabs, settings]);
+    generateSentencesMut.mutate({ knownVocabs, practiceVocabs, settings: sentencesGeneratorSettings });
+  }, [generateSentencesMut, knownVocabs, practiceVocabs, sentencesGeneratorSettings]);
 
   const handleNext = useCallback(() => {
     if (currentIndex >= sentences.length - 3) {

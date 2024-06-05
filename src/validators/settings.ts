@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const complexityEnum = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 export type Complexity = z.infer<typeof complexityEnum>;
 
-export const settingsSchema = z.object({
+export const sentencesGeneratorSettingsSchema = z.object({
   complexity: complexityEnum,
   helpLanguage: z.string().min(1),
   practiceLanguage: z.string().min(1),
@@ -11,7 +11,7 @@ export const settingsSchema = z.object({
   sentencesCount: z.number().min(1).max(5),
 });
 
-export type Settings = z.infer<typeof settingsSchema>;
+export type SentencesGeneratorSettings = z.infer<typeof sentencesGeneratorSettingsSchema>;
 
 export const DEFAULT_PROMPT = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary. 
 
@@ -25,7 +25,7 @@ PRACTICE VOCABS: "{{PRACTICE_VOCABS}}"
 
 KNOWN VOCABS: "{{KNOWN_VOCABS}}"`;
 
-export const initialSettings: Settings = {
+export const initialSentencesGeneratorSettings: SentencesGeneratorSettings = {
   complexity: 'A1',
   helpLanguage: 'English',
   practiceLanguage: 'Spanish',

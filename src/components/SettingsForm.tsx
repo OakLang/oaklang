@@ -3,37 +3,52 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { complexityEnum } from '~/validators/settings';
-import type { Complexity, Settings } from '~/validators/settings';
+import type { Complexity, SentencesGeneratorSettings } from '~/validators/settings';
 import { LANGUAGES } from '~/utils/constants/languages';
 import { useAtom } from 'jotai';
-import { audioSettingsAtom, settingsAtom } from '~/store';
+import { audioSettingsAtom, sentencesGeneratorSettingsAtom } from '~/store';
 import { voiceEnum } from '~/validators/audio-settings';
 import { Slider } from './ui/slider';
+import { Switch } from './ui/switch';
+import { appSettingsAtom } from '~/store/app-settings';
 
 export type Props = {
-  onChange: (settings: Settings) => void;
-  settings: Settings;
+  onChange: (settings: SentencesGeneratorSettings) => void;
+  settings: SentencesGeneratorSettings;
 };
 
 const COMPLEXITIES: Complexity[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 export default function SettingsForm() {
-  const [settings, setSettings] = useAtom(settingsAtom);
+  const [sentencesGeneratorSettings, setSentencesGeneratorSettings] = useAtom(sentencesGeneratorSettingsAtom);
   const [audioSettings, setAudioSettings] = useAtom(audioSettingsAtom);
+  const [appSettings, setAppSettings] = useAtom(appSettingsAtom);
+
   return (
     <div className="space-y-4 py-4">
+      <fieldset className="space-y-1">
+        <Label htmlFor="auto-play">Auto Play</Label>
+        <Switch
+          checked={appSettings.autoPlay}
+          id="auto-play"
+          onCheckedChange={(autoPlay) => setAppSettings({ ...appSettings, autoPlay })}
+        />
+      </fieldset>
       <fieldset className="space-y-1">
         <Label htmlFor="prompt-template">Propmt Template</Label>
         <Textarea
           id="prompt-template"
-          onChange={(e) => setSettings({ ...settings, prompt: e.target.value })}
+          onChange={(e) => setSentencesGeneratorSettings({ ...sentencesGeneratorSettings, prompt: e.target.value })}
           rows={5}
-          value={settings.prompt}
+          value={sentencesGeneratorSettings.prompt}
         />
       </fieldset>
       <fieldset className="space-y-1">
         <Label htmlFor="help-language">Help Language</Label>
-        <Select onValueChange={(value) => setSettings({ ...settings, helpLanguage: value })} value={settings.helpLanguage}>
+        <Select
+          onValueChange={(value) => setSentencesGeneratorSettings({ ...sentencesGeneratorSettings, helpLanguage: value })}
+          value={sentencesGeneratorSettings.helpLanguage}
+        >
           <SelectTrigger id="help-language">
             <SelectValue />
           </SelectTrigger>
@@ -48,7 +63,10 @@ export default function SettingsForm() {
       </fieldset>
       <fieldset className="space-y-1">
         <Label htmlFor="practice-language">Practice Language</Label>
-        <Select onValueChange={(value) => setSettings({ ...settings, practiceLanguage: value })} value={settings.practiceLanguage}>
+        <Select
+          onValueChange={(value) => setSentencesGeneratorSettings({ ...sentencesGeneratorSettings, practiceLanguage: value })}
+          value={sentencesGeneratorSettings.practiceLanguage}
+        >
           <SelectTrigger id="practice-language">
             <SelectValue />
           </SelectTrigger>
@@ -64,8 +82,8 @@ export default function SettingsForm() {
       <fieldset className="space-y-1">
         <Label htmlFor="practice-language">Num of Sentences</Label>
         <Select
-          onValueChange={(value) => setSettings({ ...settings, sentencesCount: Number(value) })}
-          value={String(settings.sentencesCount)}
+          onValueChange={(value) => setSentencesGeneratorSettings({ ...sentencesGeneratorSettings, sentencesCount: Number(value) })}
+          value={String(sentencesGeneratorSettings.sentencesCount)}
         >
           <SelectTrigger id="practice-language">
             <SelectValue />
@@ -82,8 +100,10 @@ export default function SettingsForm() {
       <fieldset className="space-y-1">
         <Label htmlFor="complexity">Complexity</Label>
         <Select
-          onValueChange={(value) => setSettings({ ...settings, complexity: complexityEnum.parse(value) })}
-          value={settings.complexity}
+          onValueChange={(value) =>
+            setSentencesGeneratorSettings({ ...sentencesGeneratorSettings, complexity: complexityEnum.parse(value) })
+          }
+          value={sentencesGeneratorSettings.complexity}
         >
           <SelectTrigger id="complexity">
             <SelectValue />

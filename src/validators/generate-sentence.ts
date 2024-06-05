@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { settingsSchema } from './settings';
+import { sentencesGeneratorSettingsSchema } from './settings';
 
 export const generateSentenceBody = z.object({
   knownVocabs: z.array(z.string().min(1)),
   practiceVocabs: z.array(z.string().min(1)),
-  settings: settingsSchema,
+  settings: sentencesGeneratorSettingsSchema,
 });
 
 export type GenerateSentenceBody = z.infer<typeof generateSentenceBody>;
@@ -24,6 +24,9 @@ export const sentenceSchema = z.object({
 });
 
 export type Sentence = z.infer<typeof sentenceSchema>;
+export type SentenceWithId = Sentence & {
+  id: string;
+};
 
 export const generateSentenceObjectSchema = z.object({
   sentences: z.array(sentenceSchema),

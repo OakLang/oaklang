@@ -1,10 +1,12 @@
 import { z } from 'zod';
 import { protectedProcedure, publicProcedure, router } from 'src/server/trpc';
 import { extractLexiconsWithAI } from '~/utils/openai';
-import { generateSentenceBody, generateSentenceObjectSchema, sentenceSchema } from '~/validators/generate-sentence';
-import type { Settings } from '~/validators/settings';
+import { generateSentenceBody, generateSentenceObjectSchema } from '~/validators/generate-sentence';
+import type { SentenceWithId } from '~/validators/generate-sentence';
+import type { SentencesGeneratorSettings } from '~/validators/settings';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { nanoid } from 'nanoid';
 
 const buildPrompt = ({
   knownVocabs,
@@ -13,7 +15,7 @@ const buildPrompt = ({
 }: {
   knownVocabs: string[];
   practiceVocabs: string[];
-  settings: Settings;
+  settings: SentencesGeneratorSettings;
 }) => {
   return settings.prompt
     .replaceAll('{{SENTENCE_COUNT}}', String(settings.sentencesCount))
@@ -29,17 +31,14 @@ export const aiRouter = router({
     const lexicons = await extractLexiconsWithAI(otps.input);
     return lexicons;
   }),
-  generateSentences: publicProcedure
-    .input(generateSentenceBody)
-    .output(z.array(sentenceSchema))
-    .mutation(async ({ input: { knownVocabs, practiceVocabs, settings } }) => {
-      const prompt = buildPrompt({ knownVocabs, practiceVocabs, settings });
-      const result = await generateObject({
-        model: openai('gpt-4o'),
-        prompt,
-        schema: generateSentenceObjectSchema,
-      });
+  generateSentences: publicProcedure.input(generateSentenceBody).mutation(async ({ input: { knownVocabs, practiceVocabs, settings } }) => {
+    const prompt = buildPrompt({ knownVocabs, practiceVocabs, settings });
+    const result = await generateObject({
+      model: openai('gpt-4o'),
+      prompt,
+      schema: generateSentenceObjectSchema,
+    });
 
-      return result.object.sentences;
-    }),
+    return result.object.sentences.map<SentenceWithId>((sentence) => ({ ...sentence, id: nanoid() }));
+  }),
 });

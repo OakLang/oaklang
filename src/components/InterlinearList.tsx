@@ -1,75 +1,81 @@
+import { useQuery } from '@tanstack/react-query';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Loader2, PlayIcon, SquareIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import type { TTSBodyParams } from '~/app/api/ai/tts/route';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '~/components/ui/context-menu';
 import { audioSettingsAtom, knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom } from '~/store';
+import { appSettingsAtom } from '~/store/app-settings';
 import { cn } from '~/utils';
-import type { Sentence } from '~/validators/generate-sentence';
+import type { AudioSettings } from '~/validators/audio-settings';
+import type { SentenceWithId } from '~/validators/generate-sentence';
 
-export default function InterlinearList({ sentence }: { sentence: Sentence }) {
+const generateAudioAsync = async ({ input, settings }: { input: string; settings: AudioSettings }) => {
+  console.log('Fetching Audio...');
+  const body: TTSBodyParams = {
+    input,
+    settings,
+  };
+  const res = await fetch('/api/ai/tts', {
+    body: JSON.stringify(body),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  });
+  if (!res.ok) {
+    throw res.statusText;
+  }
+  const buffer = await res.arrayBuffer();
+  const blob = new Blob([buffer], { type: 'audio/mp3' });
+  return URL.createObjectURL(blob);
+};
+
+export default function InterlinearList({ sentence }: { sentence: SentenceWithId }) {
   const setPracticeVocabs = useSetAtom(practiceVocabsAtom);
   const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
   const [knownIPAs, setKnownIPAs] = useAtom(knownIPAsAtom);
   const [knownTranslations, setKnownTranslations] = useAtom(knownTranslationsAtom);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const [isAudioGenerated, setIsAudioGenerated] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
   const audioSettings = useAtomValue(audioSettingsAtom);
-
+  const appSettings = useAtomValue(appSettingsAtom);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const [playCount, setPlayCount] = useState(0);
 
-  const handlePlayClick = useCallback(async () => {
+  const audioQuery = useQuery({
+    enabled: appSettings.autoPlay,
+    queryFn: () => generateAudioAsync({ input: sentence.sentence, settings: audioSettings }),
+    queryKey: [sentence.sentence, audioSettings],
+    staleTime: 1000 * 60 * 60, // 1h
+  });
+
+  const playAudio = useCallback(async () => {
     if (!audioRef.current) {
       return;
     }
 
-    if (!isAudioGenerated) {
-      setIsLoadingAudio(true);
-      console.log('Generating TTS');
-      try {
-        const input = sentence.sentence;
-        const body: TTSBodyParams = {
-          input,
-          settings: audioSettings,
-        };
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
-        const res = await fetch('/api/ai/tts', {
-          body: JSON.stringify(body),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          throw res.statusText;
-        }
-        const buffer = await res.arrayBuffer();
-        const blob = new Blob([buffer], { type: 'audio/mp3' });
-        const url = URL.createObjectURL(blob);
-        audioRef.current.src = url;
-        setIsAudioGenerated(true);
-      } catch (error: unknown) {
-        toast('Failed to generate TTS', { description: (error as { message?: string }).message });
-        return;
-      } finally {
-        setIsLoadingAudio(false);
-      }
+    let audioUrl: string | undefined = audioQuery.data;
+    if (!audioUrl && audioQuery.fetchStatus === 'idle') {
+      const { data } = await audioQuery.refetch();
+      audioUrl = data;
     }
 
-    if (audioRef.current.paused) {
-      audioRef.current.currentTime = 0;
-      void audioRef.current.play();
-    } else {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+    if (!audioUrl) {
+      return;
     }
-  }, [audioSettings, isAudioGenerated, sentence.sentence]);
+
+    audioRef.current.src = audioUrl;
+    audioRef.current.currentTime = 0;
+    void audioRef.current.play();
+  }, [audioQuery]);
+
+  const pauseAudio = useCallback(() => {
+    if (!audioRef.current) {
+      return;
+    }
+    audioRef.current.pause();
+  }, []);
 
   useEffect(() => {
     setPracticeVocabs((practiceVocabs) => {
@@ -85,6 +91,7 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
     }
 
     const onPlay = () => {
+      setPlayCount((count) => count + 1);
       setIsPaused(false);
     };
 
@@ -99,25 +106,35 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
       audioEl.removeEventListener('play', onPlay);
       audioEl.removeEventListener('pause', onPause);
     };
-  }, [sentence.sentence]);
+  }, []);
 
   useEffect(() => {
-    setIsAudioGenerated(false);
-    setIsPaused(true);
-    audioRef.current?.pause();
-    abortControllerRef.current?.abort();
-  }, [sentence.sentence, audioSettings.speed, audioSettings.voice]);
+    setPlayCount(0);
+    pauseAudio();
+  }, [pauseAudio, sentence.id]);
+
+  useEffect(() => {
+    if (audioQuery.data && appSettings.autoPlay && playCount === 0) {
+      void playAudio();
+    }
+  }, [appSettings.autoPlay, audioQuery.data, playAudio, playCount]);
 
   return (
     <div className="flex gap-4">
-      <audio key={sentence.sentence} ref={audioRef} />
+      <audio ref={audioRef} />
       <button
         className="flex h-12 w-12 items-center justify-center rounded-full border hover:bg-secondary"
-        disabled={isLoadingAudio}
-        onClick={handlePlayClick}
+        disabled={audioQuery.isFetching}
+        onClick={() => {
+          if (isPaused) {
+            void playAudio();
+          } else {
+            pauseAudio();
+          }
+        }}
         type="button"
       >
-        {isLoadingAudio ? (
+        {audioQuery.isFetching ? (
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : isPaused ? (
           <PlayIcon className="h-5 w-5" />

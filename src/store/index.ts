@@ -1,10 +1,10 @@
 import { atom } from 'jotai';
 import { initialAudioSettings } from '~/validators/audio-settings';
 import type { AudioSettings } from '~/validators/audio-settings';
-import { initialSettings } from '~/validators/settings';
-import type { Settings } from '~/validators/settings';
+import { initialSentencesGeneratorSettings } from '~/validators/settings';
+import type { SentencesGeneratorSettings } from '~/validators/settings';
 
-export const settingsAtom = atom<Settings>(initialSettings);
+export const sentencesGeneratorSettingsAtom = atom<SentencesGeneratorSettings>(initialSentencesGeneratorSettings);
 
 export const practiceVocabsAtom = atom<string[]>([]);
 
