@@ -10,6 +10,9 @@ import { appSettingsAtom } from '~/store/app-settings';
 import { cn } from '~/utils';
 import type { AudioSettings } from '~/validators/audio-settings';
 import type { SentenceWithId } from '~/validators/generate-sentence';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { useHotkeysTooltipProps } from '~/hooks/useHotkeysTooltipProps';
 
 const generateAudioAsync = async ({ input, settings }: { input: string; settings: AudioSettings }) => {
   console.log('Fetching Audio...');
@@ -42,6 +45,7 @@ export default function InterlinearList({ sentence }: { sentence: SentenceWithId
   const appSettings = useAtomValue(appSettingsAtom);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playCount, setPlayCount] = useState(0);
+  const playBtmTooltipProps = useHotkeysTooltipProps();
 
   const audioQuery = useQuery({
     enabled: appSettings.autoPlay,
@@ -76,6 +80,10 @@ export default function InterlinearList({ sentence }: { sentence: SentenceWithId
     }
     audioRef.current.pause();
   }, []);
+
+  useHotkeys('r', () => {
+    void playAudio();
+  });
 
   useEffect(() => {
     setPracticeVocabs((practiceVocabs) => {
@@ -122,26 +130,31 @@ export default function InterlinearList({ sentence }: { sentence: SentenceWithId
   return (
     <div className="flex gap-4">
       <audio ref={audioRef} />
-      <button
-        className="flex h-12 w-12 items-center justify-center rounded-full border hover:bg-secondary"
-        disabled={audioQuery.isFetching}
-        onClick={() => {
-          if (isPaused) {
-            void playAudio();
-          } else {
-            pauseAudio();
-          }
-        }}
-        type="button"
-      >
-        {audioQuery.isFetching ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : isPaused ? (
-          <PlayIcon className="h-5 w-5" />
-        ) : (
-          <SquareIcon className="h-5 w-5" />
-        )}
-      </button>
+      <Tooltip {...playBtmTooltipProps}>
+        <TooltipTrigger asChild>
+          <button
+            className="flex h-12 w-12 items-center justify-center rounded-full border hover:bg-secondary"
+            disabled={audioQuery.isFetching}
+            onClick={() => {
+              if (isPaused) {
+                void playAudio();
+              } else {
+                pauseAudio();
+              }
+            }}
+            type="button"
+          >
+            {audioQuery.isFetching ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : isPaused ? (
+              <PlayIcon className="h-5 w-5" />
+            ) : (
+              <SquareIcon className="h-5 w-5" />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Hotkey: R(eplay)</TooltipContent>
+      </Tooltip>
       <div className="relative flex flex-1 flex-wrap gap-x-4 gap-y-6">
         {sentence.words.map((item, i) => {
           const id = `${item.word}-${i}`;

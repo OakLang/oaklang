@@ -4,6 +4,7 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { SettingsIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { toast } from 'sonner';
 import InterlinearList from '~/components/InterlinearList';
 import SettingsForm from '~/components/SettingsForm';
@@ -13,7 +14,9 @@ import { Input } from '~/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
+import { useHotkeysTooltipProps } from '~/hooks/useHotkeysTooltipProps';
 import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom, sentencesGeneratorSettingsAtom } from '~/store';
+import { showHotkeysAtom } from '~/store/show-tooltips';
 import { api } from '~/trpc/client';
 import type { SentenceWithId } from '~/validators/generate-sentence';
 
@@ -28,6 +31,13 @@ export default function HomePage() {
   const setKnownTranslations = useSetAtom(knownTranslationsAtom);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [trainingStarted, setTrainingStarted] = useState(false);
+  const startBtnTooltipProps = useHotkeysTooltipProps();
+  const nextBtnTooltipProps = useHotkeysTooltipProps();
+  const previousBtnTooltipProps = useHotkeysTooltipProps();
+  const helpBtnTooltipProps = useHotkeysTooltipProps();
+  const settingsBtnTooltipProps = useHotkeysTooltipProps();
+  const setShowHotkeys = useSetAtom(showHotkeysAtom);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const generateSentencesMut = api.ai.generateSentences.useMutation({
     onError: (error) => {
@@ -89,6 +99,67 @@ export default function HomePage() {
     setTrainingStarted(false);
   };
 
+  const handleHelp = useCallback(() => {
+    setKnownIPAs([]);
+    setKnownTranslations([]);
+  }, [setKnownIPAs, setKnownTranslations]);
+
+  useHotkeys(
+    'space',
+    () => {
+      handleStartTraining();
+    },
+    { enabled: !settingsOpen && !trainingStarted },
+  );
+
+  useHotkeys(
+    'ctrl',
+    () => {
+      setShowHotkeys(true);
+    },
+    { enabled: !settingsOpen, keydown: true },
+  );
+
+  useHotkeys(
+    'ctrl',
+    () => {
+      setShowHotkeys(false);
+    },
+    { enabled: !settingsOpen, keyup: true },
+  );
+
+  useHotkeys(
+    'n',
+    () => {
+      void handleNext();
+    },
+    { enabled: !settingsOpen },
+  );
+
+  useHotkeys(
+    'p',
+    () => {
+      void handlePrevious();
+    },
+    { enabled: !settingsOpen },
+  );
+
+  useHotkeys(
+    'h',
+    () => {
+      void handleHelp();
+    },
+    { enabled: !settingsOpen },
+  );
+
+  useHotkeys(
+    's',
+    () => {
+      setSettingsOpen(true);
+    },
+    { enabled: !settingsOpen },
+  );
+
   if (!canAccess) {
     return (
       <div className="container my-16 max-w-screen-sm">
@@ -146,13 +217,18 @@ export default function HomePage() {
             </Tooltip>
           </Popover>
 
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="outline">
-                <SettingsIcon className="h-5 w-5" />
-                <p className="sr-only">Settings</p>
-              </Button>
-            </SheetTrigger>
+          <Sheet onOpenChange={setSettingsOpen} open={settingsOpen}>
+            <Tooltip {...settingsBtnTooltipProps}>
+              <TooltipTrigger asChild>
+                <SheetTrigger asChild>
+                  <Button size="icon" variant="outline">
+                    <SettingsIcon className="h-5 w-5" />
+                    <p className="sr-only">Settings</p>
+                  </Button>
+                </SheetTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Hotkey: S(ettings)</TooltipContent>
+            </Tooltip>
             <SheetContent className="overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Settings</SheetTitle>
@@ -167,18 +243,27 @@ export default function HomePage() {
         {trainingStarted ? (
           <div>
             {sentences[currentIndex] ? <InterlinearList sentence={sentences[currentIndex]!} /> : <p>Loading...</p>}
-            <div className="mt-16 flex flex-wrap items-center justify-center gap-2">
-              <Button
-                onClick={() => {
-                  setKnownIPAs([]);
-                  setKnownTranslations([]);
-                }}
-                variant="outline"
-              >
-                Help 100%
-              </Button>
-              <Button onClick={handlePrevious}>Previous</Button>
-              <Button onClick={handleNext}>Next</Button>
+            <div className="mt-16 flex flex-wrap items-center justify-center gap-10">
+              <Tooltip {...helpBtnTooltipProps}>
+                <TooltipTrigger asChild>
+                  <Button onClick={handleHelp} variant="outline">
+                    Help 100%
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Hotkey: H(elp)</TooltipContent>
+              </Tooltip>
+              <Tooltip {...previousBtnTooltipProps}>
+                <TooltipTrigger asChild>
+                  <Button onClick={handlePrevious}>Previous</Button>
+                </TooltipTrigger>
+                <TooltipContent>Hotkey: P(revious)</TooltipContent>
+              </Tooltip>
+              <Tooltip {...nextBtnTooltipProps}>
+                <TooltipTrigger asChild>
+                  <Button onClick={handleNext}>Next</Button>
+                </TooltipTrigger>
+                <TooltipContent>Hotkey: N(ext)</TooltipContent>
+              </Tooltip>
             </div>
             <p>
               Total Sentences: {sentences.length}, Current Sentence: {currentIndex + 1}
@@ -187,7 +272,12 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="my-8 flex items-center justify-center">
-            <Button onClick={handleStartTraining}>Start Training</Button>
+            <Tooltip {...startBtnTooltipProps}>
+              <TooltipTrigger asChild>
+                <Button onClick={handleStartTraining}>Start Training</Button>
+              </TooltipTrigger>
+              <TooltipContent>Hotkey: Space</TooltipContent>
+            </Tooltip>
           </div>
         )}
       </div>
