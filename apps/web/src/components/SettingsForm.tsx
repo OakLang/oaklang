@@ -7,12 +7,13 @@ import { audioSettingsAtom, sentencesGeneratorSettingsAtom } from '~/store';
 import { Slider } from './ui/slider';
 import { Switch } from './ui/switch';
 import { appSettingsAtom } from '~/store/app-settings';
-import { Complexity, SentencesGeneratorSettings, complexityEnum, voiceEnum } from '@acme/validators';
+import type { Complexity, SentencesGeneratorSettings } from '@acme/validators';
+import { complexityEnum, voiceEnum } from '@acme/validators';
 
-export type Props = {
+export interface Props {
   onChange: (settings: SentencesGeneratorSettings) => void;
   settings: SentencesGeneratorSettings;
-};
+}
 
 const COMPLEXITIES: Complexity[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 

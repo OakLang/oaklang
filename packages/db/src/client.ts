@@ -8,7 +8,7 @@ export * from 'drizzle-orm';
 export { alias } from 'drizzle-orm/pg-core';
 
 
-export const ssl = process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined;
+export const ssl = env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined;
 
 const client = postgres(env.DATABASE_URL, { ssl });
 
@@ -22,8 +22,8 @@ class MyLogger implements Logger {
   }
 }
 
-export const db = globalForDb.db ?? drizzle(client, { logger: process.env.LOG_SQL ? new MyLogger() : false, schema });
+export const db = globalForDb.db ?? drizzle(client, { logger: env.LOG_SQL ? new MyLogger() : false, schema });
 
-if (process.env.NODE_ENV !== 'production') {
+if (env.NODE_ENV !== 'production') {
   globalForDb.db = db;
 }

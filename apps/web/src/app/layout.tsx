@@ -12,11 +12,12 @@ import HolyLoader from 'holy-loader';
 import { Toaster } from '~/components/ui/sonner';
 import { TRPCReactProvider } from '~/trpc/react';
 import { ThemeProvider } from 'next-themes';
+import { env } from '~/env';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://oaklang.com' : 'http://localhost:3000'),
+  metadataBase: new URL(env.NODE_ENV === 'production' ? 'https://oaklang.com' : 'http://localhost:3000'),
   title: 'Oaklang',
   // description: "Simple monorepo with shared backend for web & mobile apps",
   // openGraph: {

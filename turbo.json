@@ -24,6 +24,9 @@
     "clean": {
       "cache": false
     },
+    "format": {
+      "outputs": ["node_modules/.cache/.prettiercache"]
+    },
     "lint": {
       "dependsOn": ["^lint"]
     }

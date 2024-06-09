@@ -1,8 +1,8 @@
 import { atom } from 'jotai';
 
-export type AppSettings = {
+export interface AppSettings {
   autoPlay: boolean;
-};
+}
 
 export const initAppSettings: AppSettings = {
   autoPlay: true,

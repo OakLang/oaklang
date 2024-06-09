@@ -1,7 +1,7 @@
-/* eslint-disable react/jsx-max-depth */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 'use client';
 
-import { SentenceWithId } from '@acme/validators';
+import type { SentenceWithId } from '@acme/validators';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { SettingsIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
@@ -15,6 +15,7 @@ import { Input } from '~/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
+import { env } from '~/env';
 import { useHotkeysTooltipProps } from '~/hooks/useHotkeysTooltipProps';
 import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom, sentencesGeneratorSettingsAtom } from '~/store';
 import { showHotkeysAtom } from '~/store/show-tooltips';
@@ -26,7 +27,7 @@ export default function HomePage() {
   const [practiceVocabs, setPracticeVocabs] = useAtom(practiceVocabsAtom);
   const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
   const [password, setPassword] = useState('');
-  const [canAccess, setCanAccess] = useState(process.env.NODE_ENV === 'development');
+  const [canAccess, setCanAccess] = useState(env.NODE_ENV === 'development');
   const setKnownIPAs = useSetAtom(knownIPAsAtom);
   const setKnownTranslations = useSetAtom(knownTranslationsAtom);
   const [currentIndex, setCurrentIndex] = useState(0);

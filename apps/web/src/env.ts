@@ -1,6 +1,5 @@
 /* eslint-disable no-restricted-properties */
 import { createEnv } from '@t3-oss/env-nextjs';
-import { z } from 'zod';
 
 import { env as authEnv } from '@acme/auth/env';
 import { env as dbEnv } from '@acme/db/env';
@@ -8,9 +7,7 @@ import { env as apiEnv } from '@acme/api/env';
 
 export const env = createEnv({
   extends: [authEnv, dbEnv, apiEnv],
-  shared: {
-    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  },
+  shared: {},
   /**
    * Specify your server-side environment variables schema here.
    * This way you can ensure the app isn't built with invalid env vars.

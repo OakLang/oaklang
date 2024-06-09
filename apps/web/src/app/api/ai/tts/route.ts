@@ -12,6 +12,7 @@ const bodySchema = z.object({
 export type TTSBodyParams = z.infer<typeof bodySchema>;
 
 export const POST = async (req: NextRequest) => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const body = await req.json();
   console.log(body);
   const {

@@ -11,7 +11,7 @@ import { cn } from '~/utils';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { useHotkeysTooltipProps } from '~/hooks/useHotkeysTooltipProps';
-import { AudioSettings, SentenceWithId } from '@acme/validators';
+import type { AudioSettings, SentenceWithId } from '@acme/validators';
 
 const generateAudioAsync = async ({ input, settings }: { input: string; settings: AudioSettings }) => {
   console.log('Fetching Audio...');

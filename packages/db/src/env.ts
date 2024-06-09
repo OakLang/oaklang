@@ -5,8 +5,14 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
+    LOG_SQL: z.string().optional(),
   },
   client: {},
-  experimental__runtimeEnv: {},
+  shared: {
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  },
+  experimental__runtimeEnv: {
+    NODE_ENV: process.env.NODE_ENV
+  },
   skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
 });

@@ -88,12 +88,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -101,10 +97,7 @@
       "compositePrimaryKeys": {
         "account_provider_provider_account_id_pk": {
           "name": "account_provider_provider_account_id_pk",
-          "columns": [
-            "provider",
-            "provider_account_id"
-          ]
+          "columns": ["provider", "provider_account_id"]
         }
       },
       "uniqueConstraints": {}
@@ -181,12 +174,8 @@
           "name": "lexicon_seen_lexicon_id_lexicon_id_fk",
           "tableFrom": "lexicon_seen",
           "tableTo": "lexicon",
-          "columnsFrom": [
-            "lexicon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lexicon_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -194,12 +183,8 @@
           "name": "lexicon_seen_seen_by_id_user_id_fk",
           "tableFrom": "lexicon_seen",
           "tableTo": "user",
-          "columnsFrom": [
-            "seen_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["seen_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -301,12 +286,8 @@
           "name": "lexicon_language_id_language_id_fk",
           "tableFrom": "lexicon",
           "tableTo": "language",
-          "columnsFrom": [
-            "language_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["language_id"],
+          "columnsTo": ["id"],
           "onDelete": "set default",
           "onUpdate": "no action"
         },
@@ -314,12 +295,8 @@
           "name": "lexicon_training_session_id_training_session_id_fk",
           "tableFrom": "lexicon",
           "tableTo": "training_session",
-          "columnsFrom": [
-            "training_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["training_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -363,12 +340,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -450,12 +423,8 @@
           "name": "training_session_language_id_language_id_fk",
           "tableFrom": "training_session",
           "tableTo": "language",
-          "columnsFrom": [
-            "language_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["language_id"],
+          "columnsTo": ["id"],
           "onDelete": "set default",
           "onUpdate": "no action"
         },
@@ -463,12 +432,8 @@
           "name": "training_session_user_id_user_id_fk",
           "tableFrom": "training_session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -500,12 +465,8 @@
           "name": "user_preference_language_id_language_id_fk",
           "tableFrom": "user_preference",
           "tableTo": "language",
-          "columnsFrom": [
-            "language_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["language_id"],
+          "columnsTo": ["id"],
           "onDelete": "set default",
           "onUpdate": "no action"
         },
@@ -513,12 +474,8 @@
           "name": "user_preference_user_id_user_id_fk",
           "tableFrom": "user_preference",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -583,9 +540,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       }
     },
@@ -624,10 +579,7 @@
       "compositePrimaryKeys": {
         "verification_token_identifier_token_pk": {
           "name": "verification_token_identifier_token_pk",
-          "columns": [
-            "identifier",
-            "token"
-          ]
+          "columns": ["identifier", "token"]
         }
       },
       "uniqueConstraints": {}

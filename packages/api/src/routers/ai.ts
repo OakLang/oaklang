@@ -2,7 +2,8 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { nanoid } from 'nanoid';
 import { createTRPCRouter, publicProcedure } from '../trpc';
-import { SentenceWithId, SentencesGeneratorSettings, generateSentenceBody, generateSentenceObjectSchema } from '@acme/validators'
+import type { SentenceWithId, SentencesGeneratorSettings} from '@acme/validators';
+import { generateSentenceBody, generateSentenceObjectSchema } from '@acme/validators'
 
 const buildPrompt = ({
   knownVocabs,
