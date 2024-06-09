@@ -1,24 +1,28 @@
-import 'core-js/features/array/to-reversed';
-import 'core-js/features/array/to-spliced';
-import 'core-js/features/array/to-sorted';
+import "core-js/features/array/to-reversed";
+import "core-js/features/array/to-spliced";
+import "core-js/features/array/to-sorted";
+import "~/styles/globals.css";
 
-import '~/styles/globals.css';
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import HolyLoader from "holy-loader";
+import { ThemeProvider } from "next-themes";
 
-import { TooltipProvider } from '~/components/ui/tooltip';
-import { cn } from '~/utils';
-import { Inter } from 'next/font/google';
-import type { Metadata, Viewport } from 'next';
-import HolyLoader from 'holy-loader';
-import { Toaster } from '~/components/ui/sonner';
-import { TRPCReactProvider } from '~/trpc/react';
-import { ThemeProvider } from 'next-themes';
-import { env } from '~/env';
+import { Toaster } from "~/components/ui/sonner";
+import { TooltipProvider } from "~/components/ui/tooltip";
+import { env } from "~/env";
+import { TRPCReactProvider } from "~/trpc/react";
+import { cn } from "~/utils";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(env.NODE_ENV === 'production' ? 'https://oaklang.com' : 'http://localhost:3000'),
-  title: 'Oaklang',
+  metadataBase: new URL(
+    env.NODE_ENV === "production"
+      ? "https://oaklang.com"
+      : "http://localhost:3000",
+  ),
+  title: "Oaklang",
   // description: "Simple monorepo with shared backend for web & mobile apps",
   // openGraph: {
   //   title: "Oaklang",
@@ -35,15 +39,22 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
+    { media: "(prefers-color-scheme: light)", color: "white" },
+    { media: "(prefers-color-scheme: dark)", color: "black" },
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn('flex min-h-screen flex-col bg-background text-foreground', inter.className)}>
+      <body
+        className={cn(
+          "bg-background text-foreground flex min-h-screen flex-col",
+          inter.className,
+        )}
+      >
         <HolyLoader color="#2666FF" height={3} showSpinner={false} />
         <TRPCReactProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

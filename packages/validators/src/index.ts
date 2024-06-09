@@ -1,8 +1,8 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-export * from './audio-settings'
-export * from './generate-sentence'
-export * from './settings'
+export * from "./audio-settings";
+export * from "./generate-sentence";
+export * from "./settings";
 
 export const createTrainingSessionInput = z.object({
   languageId: z.string().min(1).max(100),
@@ -14,9 +14,15 @@ export const createTrainingSessionInput = z.object({
   relatedPrecursor: z.boolean(),
   sentenceLength: z.number().nullish(),
 });
-export type CreateTrainingSessionInput = z.infer<typeof createTrainingSessionInput>;
+export type CreateTrainingSessionInput = z.infer<
+  typeof createTrainingSessionInput
+>;
 
-export const updateTrainingSessionInput = createTrainingSessionInput.partial().extend({
-  id: z.string().uuid(),
-});
-export type UpdateTrainingSessionInput = z.infer<typeof updateTrainingSessionInput>;
+export const updateTrainingSessionInput = createTrainingSessionInput
+  .partial()
+  .extend({
+    id: z.string().uuid(),
+  });
+export type UpdateTrainingSessionInput = z.infer<
+  typeof updateTrainingSessionInput
+>;

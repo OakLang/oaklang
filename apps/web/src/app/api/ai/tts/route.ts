@@ -1,8 +1,9 @@
-import { audioSettingsSchema } from '@acme/validators';
-import { openai } from '@acme/api/openai';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { z } from 'zod';
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+import { openai } from "@acme/api/openai";
+import { audioSettingsSchema } from "@acme/validators";
 
 const bodySchema = z.object({
   input: z.string().min(0).max(4096),
@@ -19,7 +20,12 @@ export const POST = async (req: NextRequest) => {
     input,
     settings: { speed, voice },
   } = await bodySchema.parseAsync(body);
-  const mp3 = await openai.audio.speech.create({ input, model: 'tts-1', speed, voice });
+  const mp3 = await openai.audio.speech.create({
+    input,
+    model: "tts-1",
+    speed,
+    voice,
+  });
   const buffer = Buffer.from(await mp3.arrayBuffer());
   return new NextResponse(buffer);
 };

@@ -1,13 +1,16 @@
-import React, { useCallback, useId, useState } from 'react';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-import pluralize from 'pluralize';
-import { Badge } from './ui/badge';
-import { XIcon } from 'lucide-react';
-import { Importer, ImporterField } from 'react-csv-importer';
-import 'react-csv-importer/dist/index.css';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import React, { useCallback, useId, useState } from "react";
+import { XIcon } from "lucide-react";
+import pluralize from "pluralize";
+import { Importer, ImporterField } from "react-csv-importer";
+
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+
+import "react-csv-importer/dist/index.css";
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 
 export default function WordsList({
   words,
@@ -18,7 +21,7 @@ export default function WordsList({
   title: string;
   words: string[];
 }) {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [showCSVImporterModal, setShowCSVImporterModal] = useState(false);
   const id = useId();
 
@@ -31,17 +34,20 @@ export default function WordsList({
   );
 
   const handleAddAll = useCallback(() => {
-    const newWords = input.split(',').map((e) => e.trim());
+    const newWords = input.split(",").map((e) => e.trim());
     handleAddWrods(newWords);
-    setInput('');
+    setInput("");
   }, [handleAddWrods, input]);
 
   const handleDownloadCSV = useCallback(() => {
-    const content = ['Id,Word', ...words.map((word, i) => `${i + 1},${word}`)].join('\n');
-    const file = new Blob([content], { type: 'text/plan' });
-    const link = document.createElement('a');
+    const content = [
+      "Id,Word",
+      ...words.map((word, i) => `${i + 1},${word}`),
+    ].join("\n");
+    const file = new Blob([content], { type: "text/plan" });
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(file);
-    link.download = 'words.csv';
+    link.download = "words.csv";
     link.click();
     URL.revokeObjectURL(link.href);
   }, [words]);
@@ -50,11 +56,13 @@ export default function WordsList({
     <div className="space-y-2">
       <Label htmlFor={id}>
         {title}
-        {words.length > 0 ? ` (${words.length.toFixed()} ${pluralize('word', words.length)})` : null}
+        {words.length > 0
+          ? ` (${words.length.toFixed()} ${pluralize("word", words.length)})`
+          : null}
       </Label>
       <div className="flex flex-wrap gap-2">
         {words.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No words...</p>
+          <p className="text-muted-foreground text-sm">No words...</p>
         ) : (
           words.map((word) => (
             <Badge key={word} variant="outline">
@@ -80,7 +88,7 @@ export default function WordsList({
           id={id}
           onChange={(e) => setInput(e.currentTarget.value)}
           onKeyDown={(e) => {
-            if (e.code === 'Enter') {
+            if (e.code === "Enter") {
               e.preventDefault();
               handleAddAll();
             }
@@ -93,17 +101,35 @@ export default function WordsList({
         </Button>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button className="h-fit p-0" onClick={() => handleDownloadCSV()} type="button" variant="link">
+        <Button
+          className="h-fit p-0"
+          onClick={() => handleDownloadCSV()}
+          type="button"
+          variant="link"
+        >
           Download as CSV
         </Button>
-        <Button className="h-fit p-0" onClick={() => setShowCSVImporterModal(true)} type="button" variant="link">
+        <Button
+          className="h-fit p-0"
+          onClick={() => setShowCSVImporterModal(true)}
+          type="button"
+          variant="link"
+        >
           Import from CSV
         </Button>
-        <Button className="h-fit p-0" onClick={() => onWordsChange([])} type="button" variant="link">
+        <Button
+          className="h-fit p-0"
+          onClick={() => onWordsChange([])}
+          type="button"
+          variant="link"
+        >
           Clear List
         </Button>
       </div>
-      <Dialog onOpenChange={setShowCSVImporterModal} open={showCSVImporterModal}>
+      <Dialog
+        onOpenChange={setShowCSVImporterModal}
+        open={showCSVImporterModal}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Import from CSV</DialogTitle>
@@ -120,7 +146,11 @@ export default function WordsList({
   );
 }
 
-const CSVImporter = ({ onComplete }: { onComplete: (words: string[]) => void }) => {
+const CSVImporter = ({
+  onComplete,
+}: {
+  onComplete: (words: string[]) => void;
+}) => {
   const [words, setWords] = useState<string[]>([]);
   return (
     <Importer

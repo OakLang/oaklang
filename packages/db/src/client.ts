@@ -1,29 +1,19 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema';
-import type { Logger } from 'drizzle-orm';
-import { env } from './env';
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
-export * from 'drizzle-orm';
-export { alias } from 'drizzle-orm/pg-core';
+import { env } from "./env";
+import * as schema from "./schema";
 
+const client = postgres(env.DATABASE_URL);
 
-export const ssl = env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined;
-
-const client = postgres(env.DATABASE_URL, { ssl });
+export type DB = ReturnType<typeof drizzle<typeof schema>>;
 
 const globalForDb = globalThis as unknown as {
-  db: ReturnType<typeof drizzle<typeof schema>> | undefined;
+  db: DB | undefined;
 };
 
-class MyLogger implements Logger {
-  logQuery(query: string, params: unknown[]): void {
-    console.log({ params, query });
-  }
-}
+export const db = globalForDb.db ?? drizzle(client, { schema });
 
-export const db = globalForDb.db ?? drizzle(client, { logger: env.LOG_SQL ? new MyLogger() : false, schema });
-
-if (env.NODE_ENV !== 'production') {
+if (env.NODE_ENV !== "production") {
   globalForDb.db = db;
 }

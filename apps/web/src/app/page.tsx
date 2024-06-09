@@ -1,33 +1,57 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-'use client';
+"use client";
 
-import type { SentenceWithId } from '@acme/validators';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { SettingsIcon } from 'lucide-react';
-import { useCallback, useState } from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { toast } from 'sonner';
-import InterlinearList from '~/components/InterlinearList';
-import SettingsForm from '~/components/SettingsForm';
-import WordsList from '~/components/WordsList';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '~/components/ui/sheet';
-import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
-import { env } from '~/env';
-import { useHotkeysTooltipProps } from '~/hooks/useHotkeysTooltipProps';
-import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom, sentencesGeneratorSettingsAtom } from '~/store';
-import { showHotkeysAtom } from '~/store/show-tooltips';
-import { api } from '~/trpc/react';
+import { useCallback, useState } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { SettingsIcon } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
+import { toast } from "sonner";
+
+import type { SentenceWithId } from "@acme/validators";
+
+import InterlinearList from "~/components/InterlinearList";
+import SettingsForm from "~/components/SettingsForm";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "~/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
+import WordsList from "~/components/WordsList";
+import { env } from "~/env";
+import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
+import {
+  knownIPAsAtom,
+  knownTranslationsAtom,
+  knownVocabsAtom,
+  practiceVocabsAtom,
+  sentencesGeneratorSettingsAtom,
+} from "~/store";
+import { showHotkeysAtom } from "~/store/show-tooltips";
+import { api } from "~/trpc/react";
 
 export default function HomePage() {
   const [sentences, setSentences] = useState<SentenceWithId[]>([]);
-  const sentencesGeneratorSettings = useAtomValue(sentencesGeneratorSettingsAtom);
+  const sentencesGeneratorSettings = useAtomValue(
+    sentencesGeneratorSettingsAtom,
+  );
   const [practiceVocabs, setPracticeVocabs] = useAtom(practiceVocabsAtom);
   const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
-  const [password, setPassword] = useState('');
-  const [canAccess, setCanAccess] = useState(env.NODE_ENV === 'development');
+  const [password, setPassword] = useState("");
+  const [canAccess, setCanAccess] = useState(env.NODE_ENV === "development");
   const setKnownIPAs = useSetAtom(knownIPAsAtom);
   const setKnownTranslations = useSetAtom(knownTranslationsAtom);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -42,7 +66,7 @@ export default function HomePage() {
 
   const generateSentencesMut = api.ai.generateSentences.useMutation({
     onError: (error) => {
-      toast('Failed to generate Sentences', { description: error.message });
+      toast("Failed to generate Sentences", { description: error.message });
     },
     onSuccess: (data) => {
       setSentences((sentences) => [...sentences, ...data]);
@@ -53,9 +77,9 @@ export default function HomePage() {
     onSuccess: (data) => {
       if (data) {
         setCanAccess(true);
-        setPassword('');
+        setPassword("");
       } else {
-        toast('Wrong password');
+        toast("Wrong password");
       }
     },
   });
@@ -64,15 +88,24 @@ export default function HomePage() {
     if (generateSentencesMut.isPending) {
       return;
     }
-    generateSentencesMut.mutate({ knownVocabs, practiceVocabs, settings: sentencesGeneratorSettings });
-  }, [generateSentencesMut, knownVocabs, practiceVocabs, sentencesGeneratorSettings]);
+    generateSentencesMut.mutate({
+      knownVocabs,
+      practiceVocabs,
+      settings: sentencesGeneratorSettings,
+    });
+  }, [
+    generateSentencesMut,
+    knownVocabs,
+    practiceVocabs,
+    sentencesGeneratorSettings,
+  ]);
 
   const handleNext = useCallback(() => {
     if (currentIndex >= sentences.length - 3) {
       handleGenerateSentences();
     }
     if (currentIndex >= sentences.length) {
-      console.log('Can not go next');
+      console.log("Can not go next");
       return;
     }
     setCurrentIndex(currentIndex + 1);
@@ -106,7 +139,7 @@ export default function HomePage() {
   }, [setKnownIPAs, setKnownTranslations]);
 
   useHotkeys(
-    'space',
+    "space",
     () => {
       handleStartTraining();
     },
@@ -114,7 +147,7 @@ export default function HomePage() {
   );
 
   useHotkeys(
-    'ctrl',
+    "ctrl",
     () => {
       setShowHotkeys(true);
     },
@@ -122,7 +155,7 @@ export default function HomePage() {
   );
 
   useHotkeys(
-    'ctrl',
+    "ctrl",
     () => {
       setShowHotkeys(false);
     },
@@ -130,7 +163,7 @@ export default function HomePage() {
   );
 
   useHotkeys(
-    'n',
+    "n",
     () => {
       void handleNext();
     },
@@ -138,7 +171,7 @@ export default function HomePage() {
   );
 
   useHotkeys(
-    'p',
+    "p",
     () => {
       void handlePrevious();
     },
@@ -146,7 +179,7 @@ export default function HomePage() {
   );
 
   useHotkeys(
-    'h',
+    "h",
     () => {
       void handleHelp();
     },
@@ -154,7 +187,7 @@ export default function HomePage() {
   );
 
   useHotkeys(
-    's',
+    "s",
     () => {
       setSettingsOpen(true);
     },
@@ -171,7 +204,12 @@ export default function HomePage() {
             checkPassMut.mutate(password);
           }}
         >
-          <Input onChange={(e) => setPassword(e.currentTarget.value)} placeholder="Password" type="text" value={password} />
+          <Input
+            onChange={(e) => setPassword(e.currentTarget.value)}
+            placeholder="Password"
+            type="text"
+            value={password}
+          />
           <Button disabled={checkPassMut.isPending}>Log In</Button>
         </form>
       </div>
@@ -197,9 +235,17 @@ export default function HomePage() {
                   <Button variant="outline">Practice Vocabs</Button>
                 </PopoverTrigger>
               </TooltipTrigger>
-              <TooltipContent>{practiceVocabs.length ? practiceVocabs.join(', ') : 'No Practice Vocabs'}</TooltipContent>
+              <TooltipContent>
+                {practiceVocabs.length
+                  ? practiceVocabs.join(", ")
+                  : "No Practice Vocabs"}
+              </TooltipContent>
               <PopoverContent className="max-w-lg">
-                <WordsList onWordsChange={setPracticeVocabs} title="Practice Vocabs" words={practiceVocabs} />
+                <WordsList
+                  onWordsChange={setPracticeVocabs}
+                  title="Practice Vocabs"
+                  words={practiceVocabs}
+                />
               </PopoverContent>
             </Tooltip>
           </Popover>
@@ -211,9 +257,17 @@ export default function HomePage() {
                   <Button variant="outline">Known Vocabs</Button>
                 </PopoverTrigger>
               </TooltipTrigger>
-              <TooltipContent>{knownVocabs.length ? knownVocabs.join(', ') : 'No Known Vocabs'}</TooltipContent>
+              <TooltipContent>
+                {knownVocabs.length
+                  ? knownVocabs.join(", ")
+                  : "No Known Vocabs"}
+              </TooltipContent>
               <PopoverContent className="max-w-2xl">
-                <WordsList onWordsChange={setKnownVocabs} title="Known Vocabs" words={knownVocabs} />
+                <WordsList
+                  onWordsChange={setKnownVocabs}
+                  title="Known Vocabs"
+                  words={knownVocabs}
+                />
               </PopoverContent>
             </Tooltip>
           </Popover>
@@ -243,7 +297,11 @@ export default function HomePage() {
       <div className="container my-8 px-4">
         {trainingStarted ? (
           <div>
-            {sentences[currentIndex] ? <InterlinearList sentence={sentences[currentIndex]!} /> : <p>Loading...</p>}
+            {sentences[currentIndex] ? (
+              <InterlinearList sentence={sentences[currentIndex]!} />
+            ) : (
+              <p>Loading...</p>
+            )}
             <div className="mt-16 flex flex-wrap items-center justify-center gap-10">
               <Tooltip {...helpBtnTooltipProps}>
                 <TooltipTrigger asChild>
@@ -267,8 +325,11 @@ export default function HomePage() {
               </Tooltip>
             </div>
             <p>
-              Total Sentences: {sentences.length}, Current Sentence: {currentIndex + 1}
-              {generateSentencesMut.isPending ? ', Generating more sentences...' : ''}
+              Total Sentences: {sentences.length}, Current Sentence:{" "}
+              {currentIndex + 1}
+              {generateSentencesMut.isPending
+                ? ", Generating more sentences..."
+                : ""}
             </p>
           </div>
         ) : (

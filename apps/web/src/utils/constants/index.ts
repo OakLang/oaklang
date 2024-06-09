@@ -1,1 +1,1 @@
-export const APP_NAME = 'Oaklang';
+export const APP_NAME = "Oaklang";

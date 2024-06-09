@@ -1,44 +1,69 @@
-import { useQuery } from '@tanstack/react-query';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { Loader2, PlayIcon, SquareIcon } from 'lucide-react';
-import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { TTSBodyParams } from '~/app/api/ai/tts/route';
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '~/components/ui/context-menu';
-import { audioSettingsAtom, knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom } from '~/store';
-import { appSettingsAtom } from '~/store/app-settings';
-import { cn } from '~/utils';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { useHotkeysTooltipProps } from '~/hooks/useHotkeysTooltipProps';
-import type { AudioSettings, SentenceWithId } from '@acme/validators';
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Loader2, PlayIcon, SquareIcon } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
 
-const generateAudioAsync = async ({ input, settings }: { input: string; settings: AudioSettings }) => {
-  console.log('Fetching Audio...');
+import type { AudioSettings, SentenceWithId } from "@acme/validators";
+
+import type { TTSBodyParams } from "~/app/api/ai/tts/route";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "~/components/ui/context-menu";
+import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
+import {
+  audioSettingsAtom,
+  knownIPAsAtom,
+  knownTranslationsAtom,
+  knownVocabsAtom,
+  practiceVocabsAtom,
+} from "~/store";
+import { appSettingsAtom } from "~/store/app-settings";
+import { cn } from "~/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+
+const generateAudioAsync = async ({
+  input,
+  settings,
+}: {
+  input: string;
+  settings: AudioSettings;
+}) => {
+  console.log("Fetching Audio...");
   const body: TTSBodyParams = {
     input,
     settings,
   };
-  const res = await fetch('/api/ai/tts', {
+  const res = await fetch("/api/ai/tts", {
     body: JSON.stringify(body),
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    method: 'POST',
+    method: "POST",
   });
   if (!res.ok) {
     throw res.statusText;
   }
   const buffer = await res.arrayBuffer();
-  const blob = new Blob([buffer], { type: 'audio/mp3' });
+  const blob = new Blob([buffer], { type: "audio/mp3" });
   return URL.createObjectURL(blob);
 };
 
-export default function InterlinearList({ sentence }: { sentence: SentenceWithId }) {
+export default function InterlinearList({
+  sentence,
+}: {
+  sentence: SentenceWithId;
+}) {
   const setPracticeVocabs = useSetAtom(practiceVocabsAtom);
   const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
   const [knownIPAs, setKnownIPAs] = useAtom(knownIPAsAtom);
-  const [knownTranslations, setKnownTranslations] = useAtom(knownTranslationsAtom);
+  const [knownTranslations, setKnownTranslations] = useAtom(
+    knownTranslationsAtom,
+  );
   const [isPaused, setIsPaused] = useState(true);
   const audioSettings = useAtomValue(audioSettingsAtom);
   const appSettings = useAtomValue(appSettingsAtom);
@@ -48,7 +73,8 @@ export default function InterlinearList({ sentence }: { sentence: SentenceWithId
 
   const audioQuery = useQuery({
     enabled: appSettings.autoPlay,
-    queryFn: () => generateAudioAsync({ input: sentence.sentence, settings: audioSettings }),
+    queryFn: () =>
+      generateAudioAsync({ input: sentence.sentence, settings: audioSettings }),
     queryKey: [sentence.sentence, audioSettings],
     staleTime: 1000 * 60 * 60, // 1h
   });
@@ -59,7 +85,7 @@ export default function InterlinearList({ sentence }: { sentence: SentenceWithId
     }
 
     let audioUrl: string | undefined = audioQuery.data;
-    if (!audioUrl && audioQuery.fetchStatus === 'idle') {
+    if (!audioUrl && audioQuery.fetchStatus === "idle") {
       const { data } = await audioQuery.refetch();
       audioUrl = data;
     }
@@ -80,13 +106,15 @@ export default function InterlinearList({ sentence }: { sentence: SentenceWithId
     audioRef.current.pause();
   }, []);
 
-  useHotkeys('r', () => {
+  useHotkeys("r", () => {
     void playAudio();
   });
 
   useEffect(() => {
     setPracticeVocabs((practiceVocabs) => {
-      const uniqueVocabs = sentence.words.map((item) => item.lemma).filter((vocab) => !practiceVocabs.includes(vocab));
+      const uniqueVocabs = sentence.words
+        .map((item) => item.lemma)
+        .filter((vocab) => !practiceVocabs.includes(vocab));
       return [...practiceVocabs, ...uniqueVocabs];
     });
   }, [sentence.words, setPracticeVocabs]);
@@ -106,12 +134,12 @@ export default function InterlinearList({ sentence }: { sentence: SentenceWithId
       setIsPaused(true);
     };
 
-    audioEl.addEventListener('play', onPlay);
-    audioEl.addEventListener('pause', onPause);
+    audioEl.addEventListener("play", onPlay);
+    audioEl.addEventListener("pause", onPause);
 
     return () => {
-      audioEl.removeEventListener('play', onPlay);
-      audioEl.removeEventListener('pause', onPause);
+      audioEl.removeEventListener("play", onPlay);
+      audioEl.removeEventListener("pause", onPause);
     };
   }, []);
 
@@ -132,7 +160,7 @@ export default function InterlinearList({ sentence }: { sentence: SentenceWithId
       <Tooltip {...playBtmTooltipProps}>
         <TooltipTrigger asChild>
           <button
-            className="flex h-12 w-12 items-center justify-center rounded-full border hover:bg-secondary"
+            className="hover:bg-secondary flex h-12 w-12 items-center justify-center rounded-full border"
             disabled={audioQuery.isFetching}
             onClick={() => {
               if (isPaused) {
@@ -164,9 +192,17 @@ export default function InterlinearList({ sentence }: { sentence: SentenceWithId
               ipaHidden={knownIPAs.includes(item.ipa)}
               key={id}
               onHideIPA={() => setKnownIPAs([...knownIPAs, item.ipa])}
-              onHideTranslation={() => setKnownTranslations([...knownTranslations, item.translation])}
-              onMarkVocabKnown={() => setKnownVocabs([...knownVocabs, item.lemma])}
-              onMarkVocabUnknown={() => setKnownVocabs(knownVocabs.filter((vocab) => vocab !== item.lemma))}
+              onHideTranslation={() =>
+                setKnownTranslations([...knownTranslations, item.translation])
+              }
+              onMarkVocabKnown={() =>
+                setKnownVocabs([...knownVocabs, item.lemma])
+              }
+              onMarkVocabUnknown={() =>
+                setKnownVocabs(
+                  knownVocabs.filter((vocab) => vocab !== item.lemma),
+                )
+              }
               translation={item.translation}
               translationHidden={knownTranslations.includes(item.translation)}
               vocab={item.word}
@@ -223,14 +259,18 @@ const ListItem = ({
         <ContextMenuContent>
           {/* <ContextMenuItem>Repeat word</ContextMenuItem> */}
           {vocabKnown ? (
-            <ContextMenuItem onClick={onMarkVocabUnknown}>Mark word unknown</ContextMenuItem>
+            <ContextMenuItem onClick={onMarkVocabUnknown}>
+              Mark word unknown
+            </ContextMenuItem>
           ) : (
-            <ContextMenuItem onClick={onMarkVocabKnown}>Mark word known</ContextMenuItem>
+            <ContextMenuItem onClick={onMarkVocabKnown}>
+              Mark word known
+            </ContextMenuItem>
           )}
           <ContextMenuItem>
             <Link
               href={{
-                host: 'en.wiktionary.org/w/index.php',
+                host: "en.wiktionary.org/w/index.php",
                 query: {
                   title: vocab,
                 },
@@ -245,9 +285,12 @@ const ListItem = ({
         </ContextMenuContent>
       </ContextMenu>
       <button
-        className={cn('block text-left font-serif text-xl text-muted-foreground transition-opacity', {
-          invisible: ipaHidden && !revealIpa,
-        })}
+        className={cn(
+          "text-muted-foreground block text-left font-serif text-xl transition-opacity",
+          {
+            invisible: ipaHidden && !revealIpa,
+          },
+        )}
         onClick={() => {
           onHideIPA();
           setRevealIpa(false);
@@ -257,9 +300,12 @@ const ListItem = ({
         {ipa}
       </button>
       <button
-        className={cn('block text-left font-serif text-xl text-muted-foreground transition-opacity', {
-          invisible: translationHidden && !revealTranslation,
-        })}
+        className={cn(
+          "text-muted-foreground block text-left font-serif text-xl transition-opacity",
+          {
+            invisible: translationHidden && !revealTranslation,
+          },
+        )}
         onClick={() => {
           onHideTranslation();
           setRevealTranslation(false);

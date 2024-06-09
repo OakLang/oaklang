@@ -12,8 +12,7 @@
     "migrate": "pnpm -F db migrate",
     "studio": "pnpm -F db studio",
     "dev": "turbo run dev --parallel",
-    "clean": "git clean -xdf .turbo node_modules",
-    "clean:workspaces": "turbo clean",
+    "clean": "turbo clean && git clean -xdf .turbo node_modules",
     "postinstall": "husky install"
   },
   "license": "ISC",
