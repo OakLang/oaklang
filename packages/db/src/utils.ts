@@ -1,9 +1,6 @@
-import crypto from "crypto";
-import KSUID from "ksuid";
+import { createId } from "@paralleldrive/cuid2";
 
-export const prefixedKSUID = (prefix: string) => {
-  const date = Date.now();
-  const payload = crypto.randomBytes(16);
-  const ksuid = KSUID.fromParts(date, payload);
-  return `${prefix}_${ksuid.string}`;
+export const createPrefixedId = (prefix: string) => {
+  const cuid = createId();
+  return `${prefix}_${cuid}`;
 };

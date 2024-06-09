@@ -1,21 +1,27 @@
 import type { AdapterAccountType } from "next-auth/adapters";
+import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
-  pgEnum,
   pgTable,
   primaryKey,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { prefixedKSUID } from "./utils";
+import { createPrefixedId } from "./utils";
 
 export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => prefixedKSUID("user")),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    .$defaultFn(() => createPrefixedId("user")),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => sql`now()`),
   name: text("name"),
   email: text("email").notNull(),
   emailVerified: timestamp("email_verified", { mode: "date" }),
@@ -25,7 +31,13 @@ export const users = pgTable("user", {
 export const accounts = pgTable(
   "account",
   {
-    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => sql`now()`),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -48,7 +60,9 @@ export const accounts = pgTable(
 );
 
 export const sessions = pgTable("session", {
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+    .notNull()
+    .defaultNow(),
   sessionToken: text("session_token").primaryKey(),
   userId: text("user_id")
     .notNull()
@@ -59,7 +73,9 @@ export const sessions = pgTable("session", {
 export const verificationTokens = pgTable(
   "verification_token",
   {
-    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow(),
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
     expires: timestamp("expires", { mode: "date" }).notNull(),
@@ -74,7 +90,9 @@ export const verificationTokens = pgTable(
 export const authenticators = pgTable(
   "authenticator",
   {
-    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
+      .notNull()
+      .defaultNow(),
     credentialID: text("credential_id").notNull().unique(),
     userId: text("user_id")
       .notNull()
@@ -89,36 +107,6 @@ export const authenticators = pgTable(
   (authenticator) => ({
     compositePK: primaryKey({
       columns: [authenticator.userId, authenticator.credentialID],
-    }),
-  }),
-);
-
-export const teams = pgTable("team", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => prefixedKSUID("team")),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-  name: text("name"),
-  slug: text("slug").notNull().unique(),
-});
-
-export const teamMemberRole = pgEnum("team_member_role", ["owner", "member"]);
-
-export const teamMembers = pgTable(
-  "team_member",
-  {
-    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-    role: teamMemberRole("role").notNull().default("member"),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    teamId: text("team_id")
-      .notNull()
-      .references(() => teams.id, { onDelete: "cascade" }),
-  },
-  (teamMember) => ({
-    compoundKey: primaryKey({
-      columns: [teamMember.teamId, teamMember.userId],
     }),
   }),
 );
