@@ -5,13 +5,20 @@
     "build": "turbo run build",
     "start": "turbo run start",
     "lint": "turbo run lint",
+    "generate": "pnpm -F db generate",
+    "migrate": "pnpm -F db migrate",
+    "studio": "pnpm -F db studio",
     "dev": "turbo run dev --parallel",
+    "clean": "git clean -xdf node_modules",
+    "clean:workspaces": "turbo clean",
     "postinstall": "husky install"
   },
   "license": "ISC",
   "devDependencies": {
+    "@acme/prettier-config": "workspace:*",
     "turbo": "^2.0.3",
     "husky": "^9.0.11"
   },
-  "packageManager": "pnpm@8.14.1"
+  "packageManager": "pnpm@8.14.1",
+  "prettier": "@acme/prettier-config"
 }

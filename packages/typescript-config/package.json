@@ -1,0 +1,8 @@
+{
+  "name": "@acme/tsconfig",
+  "version": "1.0.0",
+  "license": "ISC",
+  "files": [
+    "*.json"
+  ]
+}
