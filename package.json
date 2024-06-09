@@ -4,6 +4,7 @@
   "scripts": {
     "build": "turbo run build",
     "start": "turbo run start",
+    "lint": "turbo run lint",
     "dev": "turbo run dev --parallel",
     "postinstall": "husky install"
   },
