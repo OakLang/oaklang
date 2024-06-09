@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-max-depth */
 'use client';
 
+import { SentenceWithId } from '@acme/validators';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { SettingsIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
@@ -17,8 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip
 import { useHotkeysTooltipProps } from '~/hooks/useHotkeysTooltipProps';
 import { knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom, sentencesGeneratorSettingsAtom } from '~/store';
 import { showHotkeysAtom } from '~/store/show-tooltips';
-import { api } from '~/trpc/client';
-import type { SentenceWithId } from '~/validators/generate-sentence';
+import { api } from '~/trpc/react';
 
 export default function HomePage() {
   const [sentences, setSentences] = useState<SentenceWithId[]>([]);

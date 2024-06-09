@@ -1,16 +1,13 @@
-import { range } from '~/utils/helpers';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
-import { complexityEnum } from '~/validators/settings';
-import type { Complexity, SentencesGeneratorSettings } from '~/validators/settings';
 import { LANGUAGES } from '~/utils/constants/languages';
 import { useAtom } from 'jotai';
 import { audioSettingsAtom, sentencesGeneratorSettingsAtom } from '~/store';
-import { voiceEnum } from '~/validators/audio-settings';
 import { Slider } from './ui/slider';
 import { Switch } from './ui/switch';
 import { appSettingsAtom } from '~/store/app-settings';
+import { Complexity, SentencesGeneratorSettings, complexityEnum, voiceEnum } from '@acme/validators';
 
 export type Props = {
   onChange: (settings: SentencesGeneratorSettings) => void;
@@ -89,7 +86,7 @@ export default function SettingsForm() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {range(1, 5).map((count) => (
+            {[1, 2, 3, 4, 5].map((count) => (
               <SelectItem key={count} value={String(count)}>
                 {count}
               </SelectItem>

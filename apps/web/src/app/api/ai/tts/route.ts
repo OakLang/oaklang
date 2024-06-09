@@ -1,8 +1,8 @@
+import { audioSettingsSchema } from '@acme/validators';
+import { openai } from '@acme/api/openai';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { openai } from '~/lib/openai';
-import { audioSettingsSchema } from '~/validators/audio-settings';
 
 const bodySchema = z.object({
   input: z.string().min(0).max(4096),

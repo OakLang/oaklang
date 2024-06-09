@@ -1,8 +1,5 @@
+import { SentencesGeneratorSettings, initialSentencesGeneratorSettings, AudioSettings, initialAudioSettings } from '@acme/validators';
 import { atom } from 'jotai';
-import { initialAudioSettings } from '~/validators/audio-settings';
-import type { AudioSettings } from '~/validators/audio-settings';
-import { initialSentencesGeneratorSettings } from '~/validators/settings';
-import type { SentencesGeneratorSettings } from '~/validators/settings';
 
 export const sentencesGeneratorSettingsAtom = atom<SentencesGeneratorSettings>(initialSentencesGeneratorSettings);
 

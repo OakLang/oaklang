@@ -27,5 +27,11 @@
     "lint": {
       "dependsOn": ["^lint"]
     }
-  }
+  },
+  "globalEnv": [
+    "DATABASE_URL",
+    "AUTH_GOOGLE_ID",
+    "AUTH_GOOGLE_SECRET",
+    "AUTH_SECRET"
+  ]
 }

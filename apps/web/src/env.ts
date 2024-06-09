@@ -1,47 +1,36 @@
+/* eslint-disable no-restricted-properties */
 import { createEnv } from '@t3-oss/env-nextjs';
 import { z } from 'zod';
 
+import { env as authEnv } from '@acme/auth/env';
+import { env as dbEnv } from '@acme/db/env';
+import { env as apiEnv } from '@acme/api/env';
+
 export const env = createEnv({
-  client: {
-    NEXT_PUBLIC_BASE_URL: z.string().optional(),
-    NEXT_PUBLIC_VERCEL_URL: z.string().optional(),
-  },
-  runtimeEnv: {
-    ADMIN_IDS: process.env.ADMIN_IDS,
-    ALLOWED_TESTER_EMAILS: process.env.ALLOWED_TESTER_EMAILS,
-    AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
-    AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
-    DATABASE_URL: process.env.DATABASE_URL,
-    LOG_SQL: process.env.LOG_SQL,
-    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
-    NEXT_PUBLIC_VERCEL_URL: process.env.NEXT_PUBLIC_VERCEL_URL,
-    NODE_ENV: process.env.NODE_ENV,
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    PASSWORD: process.env.PASSWORD,
-    PORT: process.env.PORT,
-    REDIS_HOST: process.env.REDIS_HOST,
-    REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-    REDIS_PORT: process.env.REDIS_PORT,
-    REDIS_USERNAME: process.env.REDIS_USERNAME,
-    VERCEL_URL: process.env.VERCEL_URL,
-  },
-  server: {
-    ADMIN_IDS: z.string().optional(),
-    ALLOWED_TESTER_EMAILS: z.string().optional(),
-    AUTH_GOOGLE_ID: z.string().min(1),
-    AUTH_GOOGLE_SECRET: z.string().min(1),
-    DATABASE_URL: z.string().url(),
-    LOG_SQL: z.string().optional(),
-    OPENAI_API_KEY: z.string().optional(),
-    PASSWORD: z.string().min(1),
-    PORT: z.string().optional(),
-    REDIS_HOST: z.string().optional(),
-    REDIS_PASSWORD: z.string().optional(),
-    REDIS_PORT: z.string().optional(),
-    REDIS_USERNAME: z.string().optional(),
-    VERCEL_URL: z.string().optional(),
-  },
+  extends: [authEnv, dbEnv, apiEnv],
   shared: {
-    NODE_ENV: z.enum(['development', 'test', 'production']),
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   },
+  /**
+   * Specify your server-side environment variables schema here.
+   * This way you can ensure the app isn't built with invalid env vars.
+   */
+  server: {},
+
+  /**
+   * Specify your client-side environment variables schema here.
+   * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
+   */
+  client: {
+    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+  },
+  /**
+   * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
+   */
+  experimental__runtimeEnv: {
+    NODE_ENV: process.env.NODE_ENV,
+
+    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+  },
+  skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION || process.env.npm_lifecycle_event === 'lint',
 });

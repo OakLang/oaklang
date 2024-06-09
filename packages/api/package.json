@@ -1,5 +1,5 @@
 {
-  "name": "@acme/db",
+  "name": "@acme/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,13 +8,9 @@
       "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
     },
-    "./client": {
-      "types": "./dist/client.d.ts",
-      "default": "./src/client.ts"
-    },
-    "./schema": {
-      "types": "./dist/schema.d.ts",
-      "default": "./src/schema.ts"
+    "./openai": {
+      "types": "./dist/libs/openai.d.ts",
+      "default": "./src/libs/openai.ts"
     },
     "./env": "./src/env.ts"
   },
@@ -25,27 +21,24 @@
     "clean": "rm -rf dist .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
-    "migrate": "pnpm with-env drizzle-kit migrate",
-    "generate": "pnpm with-env drizzle-kit generate",
-    "studio": "pnpm with-env drizzle-kit studio",
-    "check": "pnpm with-env drizzle-kit check:pg",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "with-env": "dotenv -e ../../.env --"
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@t3-oss/env-core": "^0.10.1",
-    "@t3-oss/env-nextjs": "^0.10.1",
-    "drizzle-orm": "^0.31.2",
-    "drizzle-zod": "^0.5.1",
-    "postgres": "3.4.4",
+    "@acme/auth": "workspace:*",
+    "@acme/db": "workspace:*",
+    "@acme/validators": "workspace:*",
+    "@ai-sdk/openai": "^0.0.24",
+    "@trpc/server": "11.0.0-rc.364",
+    "ai": "^3.1.30",
+    "nanoid": "^5.0.7",
+    "openai": "^4.49.1",
+    "superjson": "2.2.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
-    "dotenv-cli": "^7.4.2",
-    "drizzle-kit": "^0.22.6",
     "eslint": "^9.2.0",
     "prettier": "^3.2.5",
     "typescript": "^5.4.5"

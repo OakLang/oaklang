@@ -1,39 +1,55 @@
 import 'core-js/features/array/to-reversed';
 import 'core-js/features/array/to-spliced';
 import 'core-js/features/array/to-sorted';
+
 import '~/styles/globals.css';
+
 import { TooltipProvider } from '~/components/ui/tooltip';
-import ThemeProvider from '~/providers/ThemeProvider';
 import { cn } from '~/utils';
 import { Inter } from 'next/font/google';
-import type { Metadata } from 'next';
-import { APP_NAME } from '~/utils/constants';
+import type { Metadata, Viewport } from 'next';
 import HolyLoader from 'holy-loader';
-import { TrpcProvider } from '~/providers/TrpcProvider';
-// import { SessionProvider } from 'next-auth/react';
-// import { auth } from '~/lib/auth';
 import { Toaster } from '~/components/ui/sonner';
+import { TRPCReactProvider } from '~/trpc/react';
+import { ThemeProvider } from 'next-themes';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: APP_NAME,
+  metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://oaklang.com' : 'http://localhost:3000'),
+  title: 'Oaklang',
+  // description: "Simple monorepo with shared backend for web & mobile apps",
+  // openGraph: {
+  //   title: "Oaklang",
+  //   description: "Simple monorepo with shared backend for web & mobile apps",
+  //   url: "https://create-t3-turbo.vercel.app",
+  //   siteName: "Oaklang",
+  // },
+  // twitter: {
+  //   card: "summary_large_image",
+  //   site: "@jullerino",
+  //   creator: "@jullerino",
+  // },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: 'white' },
+    { media: '(prefers-color-scheme: dark)', color: 'black' },
+  ],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={cn('flex min-h-screen flex-col bg-background text-foreground', inter.className)}>
         <HolyLoader color="#2666FF" height={3} showSpinner={false} />
-        <TrpcProvider>
-          <ThemeProvider>
-            <TooltipProvider>
-              {/* <SessionProvider session={session}>{children}</SessionProvider> */}
-              {children}
-            </TooltipProvider>
+        <TRPCReactProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <TooltipProvider>{children}</TooltipProvider>
             <Toaster />
           </ThemeProvider>
-        </TrpcProvider>
+        </TRPCReactProvider>
       </body>
     </html>
   );

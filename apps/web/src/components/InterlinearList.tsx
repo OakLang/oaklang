@@ -8,11 +8,10 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } 
 import { audioSettingsAtom, knownIPAsAtom, knownTranslationsAtom, knownVocabsAtom, practiceVocabsAtom } from '~/store';
 import { appSettingsAtom } from '~/store/app-settings';
 import { cn } from '~/utils';
-import type { AudioSettings } from '~/validators/audio-settings';
-import type { SentenceWithId } from '~/validators/generate-sentence';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { useHotkeysTooltipProps } from '~/hooks/useHotkeysTooltipProps';
+import { AudioSettings, SentenceWithId } from '@acme/validators';
 
 const generateAudioAsync = async ({ input, settings }: { input: string; settings: AudioSettings }) => {
   console.log('Fetching Audio...');
