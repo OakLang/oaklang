@@ -8,19 +8,23 @@
     "format:fix": "turbo format --continue -- --write --cache --cache-location node_modules/.cache/.prettiercache",
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
-    "generate": "pnpm -F db generate",
-    "migrate": "pnpm -F db migrate",
-    "studio": "pnpm -F db studio",
+    "generate": "npm run --workspace=@acme/db generate",
+    "migrate": "npm run --workspace=@acme/db migrate",
+    "studio": "npm run --workspace=@acme/db studio",
     "dev": "turbo run dev --parallel",
     "clean": "turbo clean && git clean -xdf .turbo node_modules",
     "postinstall": "husky install"
   },
   "license": "ISC",
   "devDependencies": {
-    "@acme/prettier-config": "workspace:*",
+    "@acme/prettier-config": "*",
     "turbo": "^2.0.3",
     "husky": "^9.0.11"
   },
-  "packageManager": "pnpm@8.14.1",
-  "prettier": "@acme/prettier-config"
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "prettier": "@acme/prettier-config",
+  "packageManager": "npm@10.5.0"
 }

@@ -4,6 +4,7 @@
 import { useCallback, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SettingsIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
@@ -44,6 +45,7 @@ import { showHotkeysAtom } from "~/store/show-tooltips";
 import { api } from "~/trpc/react";
 
 export default function HomePage() {
+  const session = useSession();
   const [sentences, setSentences] = useState<SentenceWithId[]>([]);
   const sentencesGeneratorSettings = useAtomValue(
     sentencesGeneratorSettingsAtom,
@@ -217,7 +219,7 @@ export default function HomePage() {
   }
 
   return (
-    <>
+    <div>
       <header>
         <div className="container flex h-14 items-center gap-2 px-4">
           <h1 className="text-lg font-semibold">Oaklang</h1>
@@ -343,6 +345,8 @@ export default function HomePage() {
           </div>
         )}
       </div>
-    </>
+
+      <pre>{JSON.stringify(session, null, 2)}</pre>
+    </div>
   );
 }

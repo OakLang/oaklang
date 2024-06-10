@@ -12,6 +12,13 @@ export const env = createEnv({
         : z.string().min(1).optional(),
   },
   client: {},
-  experimental__runtimeEnv: {},
+  shared: {
+    NODE_ENV: z
+      .enum(["development", "production", "test"])
+      .default("development"),
+  },
+  experimental__runtimeEnv: {
+    NODE_ENV: process.env.NODE_ENV,
+  },
   skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
 });

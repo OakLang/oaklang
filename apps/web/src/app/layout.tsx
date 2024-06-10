@@ -6,7 +6,10 @@ import "~/styles/globals.css";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import HolyLoader from "holy-loader";
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
+
+import { auth } from "@acme/auth";
 
 import { Toaster } from "~/components/ui/sonner";
 import { TooltipProvider } from "~/components/ui/tooltip";
@@ -44,9 +47,10 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const session = await auth();
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -56,12 +60,14 @@ export default function RootLayout({
         )}
       >
         <HolyLoader color="#2666FF" height={3} showSpinner={false} />
-        <TRPCReactProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <TooltipProvider>{children}</TooltipProvider>
-            <Toaster />
-          </ThemeProvider>
-        </TRPCReactProvider>
+        <SessionProvider session={session}>
+          <TRPCReactProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <TooltipProvider>{children}</TooltipProvider>
+              <Toaster />
+            </ThemeProvider>
+          </TRPCReactProvider>
+        </SessionProvider>
       </body>
     </html>
   );

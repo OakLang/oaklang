@@ -1,32 +1,23 @@
 {
   "name": "@acme/api",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
-    },
-    "./openai": {
-      "types": "./dist/libs/openai.d.ts",
-      "default": "./src/libs/openai.ts"
-    },
+    ".": "./src/index.ts",
+    "./openai": "./src/libs/openai.ts",
     "./env": "./src/env.ts"
   },
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "clean": "rm -rf dist .turbo node_modules",
+    "clean": "git clean -xdf .turbo node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@acme/auth": "workspace:*",
-    "@acme/db": "workspace:*",
-    "@acme/validators": "workspace:*",
+    "@acme/auth": "*",
+    "@acme/db": "*",
+    "@acme/validators": "*",
     "@ai-sdk/openai": "^0.0.24",
     "@trpc/server": "11.0.0-rc.364",
     "ai": "^3.1.30",
@@ -36,11 +27,11 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
-    "eslint": "^9.2.0",
-    "prettier": "^3.2.5",
+    "@acme/eslint-config": "*",
+    "@acme/prettier-config": "*",
+    "@acme/tsconfig": "*",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.1",
     "typescript": "^5.4.5"
   },
   "prettier": "@acme/prettier-config"

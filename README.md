@@ -14,9 +14,9 @@ psql -c "CREATE ROLE oaklang WITH LOGIN SUPERUSER PASSWORD 'oaklang';"
 psql -c "CREATE DATABASE oaklang WITH OWNER oaklang;"
 psql -d oaklang -c "CREATE EXTENSION citext;"
 cp .env.example .env
-pnpm i
-pnpm run migrate
-pnpm run dev
+npm i
+npm run migrate
+npm run dev
 ```
 
 ## Reset DB
