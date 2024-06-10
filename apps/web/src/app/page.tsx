@@ -4,7 +4,7 @@
 import { useCallback, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SettingsIcon } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
@@ -293,6 +293,13 @@ export default function HomePage() {
               <SettingsForm />
             </SheetContent>
           </Sheet>
+          {session.status === "authenticated" ? (
+            <Button variant="outline" onClick={() => signOut()}>
+              Sing Out
+            </Button>
+          ) : (
+            <Button onClick={() => signIn()}>Sign In</Button>
+          )}
         </div>
       </header>
 

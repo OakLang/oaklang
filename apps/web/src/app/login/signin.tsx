@@ -8,7 +8,9 @@ export default function SignIn() {
   return (
     <div>
       <h1>Log In</h1>
-      <Button onClick={() => signIn()}>Log in with Google</Button>
+      <Button onClick={() => signIn("google", { callbackUrl: "/" })}>
+        Log in with Google
+      </Button>
     </div>
   );
 }
