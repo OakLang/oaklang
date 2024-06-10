@@ -4,7 +4,7 @@
 import { useCallback, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { SettingsIcon } from "lucide-react";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
@@ -13,7 +13,6 @@ import type { SentenceWithId } from "@acme/validators";
 import InterlinearList from "~/components/InterlinearList";
 import SettingsForm from "~/components/SettingsForm";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -32,7 +31,6 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import WordsList from "~/components/WordsList";
-import { env } from "~/env";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
 import {
   knownIPAsAtom,
@@ -45,15 +43,15 @@ import { showHotkeysAtom } from "~/store/show-tooltips";
 import { api } from "~/trpc/react";
 
 export default function HomePage() {
-  const session = useSession();
+  const session = useSession({
+    required: true,
+  });
   const [sentences, setSentences] = useState<SentenceWithId[]>([]);
   const sentencesGeneratorSettings = useAtomValue(
     sentencesGeneratorSettingsAtom,
   );
   const [practiceVocabs, setPracticeVocabs] = useAtom(practiceVocabsAtom);
   const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
-  const [password, setPassword] = useState("");
-  const [canAccess, setCanAccess] = useState(env.NODE_ENV === "development");
   const setKnownIPAs = useSetAtom(knownIPAsAtom);
   const setKnownTranslations = useSetAtom(knownTranslationsAtom);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -72,17 +70,6 @@ export default function HomePage() {
     },
     onSuccess: (data) => {
       setSentences((sentences) => [...sentences, ...data]);
-    },
-  });
-
-  const checkPassMut = api.checkPassword.useMutation({
-    onSuccess: (data) => {
-      if (data) {
-        setCanAccess(true);
-        setPassword("");
-      } else {
-        toast("Wrong password");
-      }
     },
   });
 
@@ -196,26 +183,8 @@ export default function HomePage() {
     { enabled: !settingsOpen },
   );
 
-  if (!canAccess) {
-    return (
-      <div className="container my-16 max-w-screen-sm">
-        <form
-          className="space-y-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            checkPassMut.mutate(password);
-          }}
-        >
-          <Input
-            onChange={(e) => setPassword(e.currentTarget.value)}
-            placeholder="Password"
-            type="text"
-            value={password}
-          />
-          <Button disabled={checkPassMut.isPending}>Log In</Button>
-        </form>
-      </div>
-    );
+  if (session.status === "loading") {
+    return <p>Loading...</p>;
   }
 
   return (
@@ -293,13 +262,10 @@ export default function HomePage() {
               <SettingsForm />
             </SheetContent>
           </Sheet>
-          {session.status === "authenticated" ? (
-            <Button variant="outline" onClick={() => signOut()}>
-              Sing Out
-            </Button>
-          ) : (
-            <Button onClick={() => signIn()}>Sign In</Button>
-          )}
+
+          <Button variant="outline" onClick={() => signOut()}>
+            Sing Out
+          </Button>
         </div>
       </header>
 
