@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    POSTGRES_URL: z.string().url(),
+    DATABASE_URL: z.string().url().optional(),
     LOG_SQL: z.string().optional(),
   },
   client: {},

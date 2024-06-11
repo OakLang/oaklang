@@ -10,7 +10,7 @@ const globalForDb = globalThis as unknown as {
   db: DB | undefined;
 };
 
-const client = postgres(env.POSTGRES_URL);
+const client = postgres(env.DATABASE_URL ?? "");
 
 export const db = globalForDb.db ?? drizzle(client, { schema });
 
