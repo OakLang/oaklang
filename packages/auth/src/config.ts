@@ -1,5 +1,4 @@
 import type { NextAuthConfig, Session as NextAuthSession } from "next-auth";
-import { skipCSRFCheck } from "@auth/core";
 import Google from "next-auth/providers/google";
 
 import { adapter } from "./adapter";
@@ -9,8 +8,6 @@ export const isSecureContext = env.NODE_ENV !== "development";
 
 export const authConfig = {
   adapter,
-  skipCSRFCheck: isSecureContext ? undefined : skipCSRFCheck,
-  trustHost: !isSecureContext,
   secret: env.AUTH_SECRET,
   providers: [Google],
   pages: {
