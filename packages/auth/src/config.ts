@@ -17,7 +17,7 @@ export const authConfig = {
   callbacks: {
     redirect({ url, baseUrl }) {
       // eslint-disable-next-line no-restricted-properties
-      console.log({ baseUrl, nextAuthUrl: process.env.NEXTAUTH_URL });
+      console.log({ url, baseUrl, env: process.env });
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
