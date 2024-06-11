@@ -11,7 +11,7 @@ import {
   generateSentenceObjectSchema,
 } from "@acme/validators";
 
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 const buildPrompt = ({
   knownVocabs,
@@ -32,19 +32,24 @@ const buildPrompt = ({
 };
 
 export const aiRouter = createTRPCRouter({
-  generateSentences: publicProcedure
+  generateSentences: protectedProcedure
     .input(generateSentenceBody)
-    .mutation(async ({ input: { knownVocabs, practiceVocabs, settings } }) => {
-      const prompt = buildPrompt({ knownVocabs, practiceVocabs, settings });
-      const result = await generateObject({
-        model: openai("gpt-4o"),
-        prompt,
-        schema: generateSentenceObjectSchema,
-      });
+    .mutation(
+      async ({
+        input: { knownVocabs, practiceVocabs, settings },
+        ctx: { session },
+      }) => {
+        const prompt = buildPrompt({ knownVocabs, practiceVocabs, settings });
+        const result = await generateObject({
+          model: openai("gpt-4o", { user: session.user.id }),
+          prompt,
+          schema: generateSentenceObjectSchema,
+        });
 
-      return result.object.sentences.map<SentenceWithId>((sentence) => ({
-        ...sentence,
-        id: nanoid(),
-      }));
-    }),
+        return result.object.sentences.map<SentenceWithId>((sentence) => ({
+          ...sentence,
+          id: nanoid(),
+        }));
+      },
+    ),
 });
