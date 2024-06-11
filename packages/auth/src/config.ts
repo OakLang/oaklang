@@ -8,6 +8,7 @@ export const isSecureContext = env.NODE_ENV !== "development";
 
 export const authConfig = {
   adapter,
+  trustHost: true,
   secret: env.AUTH_SECRET,
   providers: [Google],
   pages: {
