@@ -14,6 +14,15 @@ export const authConfig = {
   pages: {
     signIn: "/login",
   },
+  callbacks: {
+    redirect({ url, baseUrl }) {
+      // eslint-disable-next-line no-restricted-properties
+      console.log({ baseUrl, nextAuthUrl: process.env.NEXTAUTH_URL });
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
+  },
 } satisfies NextAuthConfig;
 
 export const validateToken = async (
