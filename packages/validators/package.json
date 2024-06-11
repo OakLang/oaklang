@@ -12,9 +12,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
+    "zod": "^3.23.8",
     "@acme/eslint-config": "*",
     "@acme/prettier-config": "*",
     "@acme/tsconfig": "*",
