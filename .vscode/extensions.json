@@ -5,6 +5,8 @@
     "esbenp.prettier-vscode",
     "austenc.tailwind-docs",
     "dbaeumer.vscode-eslint",
-    "amatiasq.sort-imports"
+    "amatiasq.sort-imports",
+    "expo.vscode-expo-tools",
+    "yoavbls.pretty-ts-errors"
   ]
 }

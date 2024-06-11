@@ -1,0 +1,19 @@
+import { fileURLToPath } from "url";
+import createJiti from "jiti";
+
+createJiti(fileURLToPath(import.meta.url))("./src/env");
+
+/** @type {import("next").NextConfig} */
+const config = {
+  reactStrictMode: true,
+  transpilePackages: [
+    "@acme/api",
+    "@acme/auth",
+    "@acme/db",
+    "@acme/validators",
+  ],
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
+};
+
+export default config;
