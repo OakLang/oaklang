@@ -25,8 +25,6 @@ export const wordSchema = z.object({
     ),
 });
 
-export type Word = z.infer<typeof wordSchema>;
-
 export const sentenceSchema = z.object({
   sentence: z.string().describe(`the full sentence in PRACTICE LANGUAGE.`),
   translation: z
@@ -37,11 +35,13 @@ export const sentenceSchema = z.object({
     .describe(`list of words to build the full sentence`),
 });
 
-export type Sentence = z.infer<typeof sentenceSchema>;
-
 export const generateSentenceObjectSchema = z.object({
   sentences: z.array(sentenceSchema),
 });
+
+export type GenerateSentenceObject = z.infer<
+  typeof generateSentenceObjectSchema
+>;
 
 export const generateSentenceApiResponse = z.object({
   knownVocabs: z.array(z.string().min(1)),

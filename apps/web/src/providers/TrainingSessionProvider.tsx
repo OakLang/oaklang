@@ -7,30 +7,16 @@ import type { TrainingSession } from "@acme/db/schema";
 
 import { api } from "~/trpc/react";
 
-export type TrainingSessionContextValue =
-  | {
-      status: "pending";
-      error: null;
-      trainingSession: null;
-    }
-  | {
-      status: "error";
-      error: string;
-      trainingSession: null;
-    }
-  | {
-      status: "success";
-      error: null;
-      trainingSession: TrainingSession;
-    };
+export interface TrainingSessionContextValue {
+  trainingSession: TrainingSession;
+}
 
 export const TrainingSessionContext =
   createContext<TrainingSessionContextValue | null>(null);
 
 export interface TrainingSessionProviderProps {
-  trainingSessionId: string;
   children: ReactNode;
-  trainingSession?: TrainingSession;
+  trainingSession: TrainingSession;
 }
 
 export default function TrainingSessionProvider(
@@ -38,7 +24,7 @@ export default function TrainingSessionProvider(
 ) {
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     {
-      trainingSessionId: props.trainingSessionId,
+      trainingSessionId: props.trainingSession.id,
     },
     {
       initialData: props.trainingSession,
@@ -47,21 +33,7 @@ export default function TrainingSessionProvider(
 
   return (
     <TrainingSessionContext.Provider
-      value={
-        trainingSessionQuery.isPending
-          ? { status: "pending", error: null, trainingSession: null }
-          : trainingSessionQuery.isError
-            ? {
-                status: "error",
-                error: trainingSessionQuery.error.message,
-                trainingSession: null,
-              }
-            : {
-                status: "success",
-                error: null,
-                trainingSession: trainingSessionQuery.data,
-              }
-      }
+      value={{ trainingSession: trainingSessionQuery.data }}
     >
       {props.children}
     </TrainingSessionContext.Provider>

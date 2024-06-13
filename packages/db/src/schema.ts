@@ -1,6 +1,5 @@
 import type { AdapterAccountType } from "next-auth/adapters";
 import type { z } from "zod";
-import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -12,25 +11,15 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 
-import type { Word } from "@acme/validators";
+import type { GenerateSentenceObject } from "@acme/validators";
 
 import { createPrefixedId } from "./utils";
-
-const createdAt = timestamp("created_at", { mode: "date", withTimezone: true })
-  .notNull()
-  .defaultNow();
-
-const updatedAt = timestamp("updated_at", { mode: "date", withTimezone: true })
-  .notNull()
-  .defaultNow()
-  .$onUpdate(() => sql`NOW()`);
 
 export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => createPrefixedId("user")),
-  createdAt,
-  updatedAt,
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   name: text("name"),
   email: text("email").notNull(),
   emailVerified: timestamp("email_verified", { mode: "date" }),
@@ -40,8 +29,7 @@ export const users = pgTable("user", {
 export const accounts = pgTable(
   "account",
   {
-    createdAt,
-    updatedAt,
+    createdAt: timestamp("created_at").notNull().defaultNow(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -64,8 +52,7 @@ export const accounts = pgTable(
 );
 
 export const sessions = pgTable("session", {
-  createdAt,
-  updatedAt,
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   sessionToken: text("session_token").primaryKey(),
   userId: text("user_id")
     .notNull()
@@ -76,8 +63,7 @@ export const sessions = pgTable("session", {
 export const verificationTokens = pgTable(
   "verification_token",
   {
-    createdAt,
-    updatedAt,
+    createdAt: timestamp("created_at").notNull().defaultNow(),
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
     expires: timestamp("expires", { mode: "date" }).notNull(),
@@ -92,8 +78,7 @@ export const verificationTokens = pgTable(
 export const authenticators = pgTable(
   "authenticator",
   {
-    createdAt,
-    updatedAt,
+    createdAt: timestamp("created_at").notNull().defaultNow(),
     credentialID: text("credential_id").notNull().unique(),
     userId: text("user_id")
       .notNull()
@@ -113,8 +98,7 @@ export const authenticators = pgTable(
 );
 
 export const languages = pgTable("language", {
-  createdAt,
-  updatedAt,
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   code: text("code").notNull().primaryKey(),
   name: text("name").notNull(),
 });
@@ -123,8 +107,7 @@ export const trainingSessions = pgTable("training_session", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => createPrefixedId("ts")),
-  createdAt,
-  updatedAt,
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -169,21 +152,22 @@ export const sentences = pgTable("sentence", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => createPrefixedId("sent")),
-  createdAt,
-  updatedAt,
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   trainingSessionId: text("training_session_id")
     .notNull()
     .references(() => trainingSessions.id, { onDelete: "cascade" }),
   sentence: text("sentence").notNull(),
   translation: text("sentence").notNull(),
-  words: jsonb("words").notNull().$type<Word[]>(),
+  words: jsonb("words")
+    .notNull()
+    .$type<GenerateSentenceObject["sentences"][number]["words"]>(),
 });
+export type Sentence = typeof sentences.$inferSelect;
 
 export const words = pgTable(
   "word",
   {
-    createdAt,
-    updatedAt,
+    createdAt: timestamp("created_at").notNull().defaultNow(),
     trainingSessionId: text("training_session_id")
       .notNull()
       .references(() => trainingSessions.id, { onDelete: "cascade" }),
@@ -196,3 +180,4 @@ export const words = pgTable(
     }),
   }),
 );
+export type Word = typeof words.$inferSelect;

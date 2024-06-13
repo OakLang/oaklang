@@ -15,6 +15,20 @@
       "when": 1718255736691,
       "tag": "0001_massive_rick_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1718273149154,
+      "tag": "0002_tranquil_red_skull",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1718273352191,
+      "tag": "0003_mighty_blacklash",
+      "breakpoints": true
     }
   ]
 }

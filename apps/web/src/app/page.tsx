@@ -1,69 +1,42 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Loader2Icon, SettingsIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
-import type { Sentence } from "@acme/validators";
-
-import InterlinearList from "~/components/InterlinearList";
-import SettingsForm from "~/components/SettingsForm";
 import { Button } from "~/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "~/components/ui/sheet";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import WordsList from "~/components/WordsList";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
-import {
-  knownIPAsAtom,
-  knownTranslationsAtom,
-  knownVocabsAtom,
-  practiceVocabsAtom,
-  sentencesGeneratorSettingsAtom,
-} from "~/store";
-import { showHotkeysAtom } from "~/store/show-tooltips";
 import { api } from "~/trpc/react";
 
 export default function HomePage() {
   const session = useSession({
     required: true,
   });
-  const [sentences, setSentences] = useState<(Sentence & { id: string })[]>([]);
-  const sentencesGeneratorSettings = useAtomValue(
-    sentencesGeneratorSettingsAtom,
-  );
-  const [practiceVocabs, setPracticeVocabs] = useAtom(practiceVocabsAtom);
-  const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
-  const setKnownIPAs = useSetAtom(knownIPAsAtom);
-  const setKnownTranslations = useSetAtom(knownTranslationsAtom);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [trainingStarted, setTrainingStarted] = useState(false);
+  // const [sentences, setSentences] = useState<((Gene) & { id: string })[]>([]);
+  // const sentencesGeneratorSettings = useAtomValue(
+  //   sentencesGeneratorSettingsAtom,
+  // );
+  // const [practiceVocabs, setPracticeVocabs] = useAtom(practiceVocabsAtom);
+  // const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
+  // const setKnownIPAs = useSetAtom(knownIPAsAtom);
+  // const setKnownTranslations = useSetAtom(knownTranslationsAtom);
+  // const [currentIndex, setCurrentIndex] = useState(0);
+  // const [trainingStarted, setTrainingStarted] = useState(false);
   const startBtnTooltipProps = useHotkeysTooltipProps();
-  const nextBtnTooltipProps = useHotkeysTooltipProps();
-  const previousBtnTooltipProps = useHotkeysTooltipProps();
-  const helpBtnTooltipProps = useHotkeysTooltipProps();
-  const settingsBtnTooltipProps = useHotkeysTooltipProps();
-  const setShowHotkeys = useSetAtom(showHotkeysAtom);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  // const nextBtnTooltipProps = useHotkeysTooltipProps();
+  // const previousBtnTooltipProps = useHotkeysTooltipProps();
+  // const helpBtnTooltipProps = useHotkeysTooltipProps();
+  // const settingsBtnTooltipProps = useHotkeysTooltipProps();
+  // const setShowHotkeys = useSetAtom(showHotkeysAtom);
+  // const [settingsOpen, setSettingsOpen] = useState(false);
   const router = useRouter();
 
   const startTrainingSession =
@@ -78,142 +51,204 @@ export default function HomePage() {
       },
     });
 
-  const generateSentencesMut = api.ai.generateSentences.useMutation({
-    onError: (error) => {
-      toast("Failed to generate Sentences", { description: error.message });
-    },
-    onSuccess: (data) => {
-      setSentences((sentences) => [...sentences, ...data]);
-    },
-  });
+  // const generateSentencesMut = api.ai.generateSentences.useMutation({
+  //   onError: (error) => {
+  //     toast("Failed to generate Sentences", { description: error.message });
+  //   },
+  //   onSuccess: (data) => {
+  //     setSentences((sentences) => [...sentences, ...data]);
+  //   },
+  // });
 
-  const handleGenerateSentences = useCallback(() => {
-    if (generateSentencesMut.isPending) {
-      return;
-    }
-    generateSentencesMut.mutate({
-      knownVocabs,
-      practiceVocabs,
-      settings: sentencesGeneratorSettings,
-    });
-  }, [
-    generateSentencesMut,
-    knownVocabs,
-    practiceVocabs,
-    sentencesGeneratorSettings,
-  ]);
+  // const handleGenerateSentences = useCallback(() => {
+  //   if (generateSentencesMut.isPending) {
+  //     return;
+  //   }
+  //   generateSentencesMut.mutate({
+  //     knownVocabs,
+  //     practiceVocabs,
+  //     settings: sentencesGeneratorSettings,
+  //   });
+  // }, [
+  //   generateSentencesMut,
+  //   knownVocabs,
+  //   practiceVocabs,
+  //   sentencesGeneratorSettings,
+  // ]);
 
-  const handleNext = useCallback(() => {
-    if (currentIndex >= sentences.length - 3) {
-      handleGenerateSentences();
-    }
-    if (currentIndex >= sentences.length) {
-      console.log("Can not go next");
-      return;
-    }
-    setCurrentIndex(currentIndex + 1);
-  }, [currentIndex, handleGenerateSentences, sentences.length]);
+  // const handleNext = useCallback(() => {
+  //   if (currentIndex >= sentences.length - 3) {
+  //     handleGenerateSentences();
+  //   }
+  //   if (currentIndex >= sentences.length) {
+  //     console.log("Can not go next");
+  //     return;
+  //   }
+  //   setCurrentIndex(currentIndex + 1);
+  // }, [currentIndex, handleGenerateSentences, sentences.length]);
 
-  const handlePrevious = useCallback(() => {
-    if (currentIndex <= 0) {
-      return;
-    }
-    setCurrentIndex(currentIndex - 1);
-  }, [currentIndex]);
+  // const handlePrevious = useCallback(() => {
+  //   if (currentIndex <= 0) {
+  //     return;
+  //   }
+  //   setCurrentIndex(currentIndex - 1);
+  // }, [currentIndex]);
 
   const handleStartTraining = useCallback(() => {
-    setTrainingStarted(true);
-    handleGenerateSentences();
-  }, [handleGenerateSentences]);
+    startTrainingSession.mutate({ helpLanguage: "en", practiceLanguage: "es" });
+  }, [startTrainingSession]);
 
-  const handleRestart = () => {
-    setKnownIPAs([]);
-    setKnownTranslations([]);
-    setKnownVocabs([]);
-    setPracticeVocabs([]);
-    setSentences([]);
-    setCurrentIndex(0);
-    setTrainingStarted(false);
-  };
+  // const handleRestart = () => {
+  //   setKnownIPAs([]);
+  //   setKnownTranslations([]);
+  //   setKnownVocabs([]);
+  //   setPracticeVocabs([]);
+  //   setSentences([]);
+  //   setCurrentIndex(0);
+  //   setTrainingStarted(false);
+  // };
 
-  const handleHelp = useCallback(() => {
-    setKnownIPAs([]);
-    setKnownTranslations([]);
-  }, [setKnownIPAs, setKnownTranslations]);
+  // const handleHelp = useCallback(() => {
+  //   setKnownIPAs([]);
+  //   setKnownTranslations([]);
+  // }, [setKnownIPAs, setKnownTranslations]);
 
   useHotkeys(
     "space",
     () => {
       handleStartTraining();
     },
-    { enabled: !settingsOpen && !trainingStarted },
+    { enabled: startTrainingSession.isPending },
   );
 
-  useHotkeys(
-    "ctrl",
-    () => {
-      setShowHotkeys(true);
-    },
-    { enabled: !settingsOpen, keydown: true },
-  );
+  // useHotkeys(
+  //   "ctrl",
+  //   () => {
+  //     setShowHotkeys(true);
+  //   },
+  //   { enabled: !settingsOpen, keydown: true },
+  // );
 
-  useHotkeys(
-    "ctrl",
-    () => {
-      setShowHotkeys(false);
-    },
-    { enabled: !settingsOpen, keyup: true },
-  );
+  // useHotkeys(
+  //   "ctrl",
+  //   () => {
+  //     setShowHotkeys(false);
+  //   },
+  //   { enabled: !settingsOpen, keyup: true },
+  // );
 
-  useHotkeys(
-    "n",
-    () => {
-      void handleNext();
-    },
-    { enabled: !settingsOpen },
-  );
+  // useHotkeys(
+  //   "n",
+  //   () => {
+  //     void handleNext();
+  //   },
+  //   { enabled: !settingsOpen },
+  // );
 
-  useHotkeys(
-    "p",
-    () => {
-      void handlePrevious();
-    },
-    { enabled: !settingsOpen },
-  );
+  // useHotkeys(
+  //   "p",
+  //   () => {
+  //     void handlePrevious();
+  //   },
+  //   { enabled: !settingsOpen },
+  // );
 
-  useHotkeys(
-    "h",
-    () => {
-      void handleHelp();
-    },
-    { enabled: !settingsOpen },
-  );
+  // useHotkeys(
+  //   "h",
+  //   () => {
+  //     void handleHelp();
+  //   },
+  //   { enabled: !settingsOpen },
+  // );
 
-  useHotkeys(
-    "s",
-    () => {
-      setSettingsOpen(true);
-    },
-    { enabled: !settingsOpen },
-  );
+  // useHotkeys(
+  //   "s",
+  //   () => {
+  //     setSettingsOpen(true);
+  //   },
+  //   { enabled: !settingsOpen },
+  // );
 
   if (session.status === "loading") {
     return <p>Loading...</p>;
   }
 
+  // return (
+  //   <div>
+
+  //     <div className="container my-8 px-4">
+  //       {trainingStarted ? (
+  //         <div>
+  //           {sentences[currentIndex] ? (
+  //             <InterlinearList sentence={sentences[currentIndex]} />
+  //           ) : (
+  //             <p>Loading...</p>
+  //           )}
+  //           <div className="mt-16 flex flex-wrap items-center justify-center gap-10">
+  //             <Tooltip {...helpBtnTooltipProps}>
+  //               <TooltipTrigger asChild>
+  //                 <Button onClick={handleHelp} variant="outline">
+  //                   Help 100%
+  //                 </Button>
+  //               </TooltipTrigger>
+  //               <TooltipContent>Hotkey: H(elp)</TooltipContent>
+  //             </Tooltip>
+  //             <Tooltip {...previousBtnTooltipProps}>
+  //               <TooltipTrigger asChild>
+  //                 <Button onClick={handlePrevious}>Previous</Button>
+  //               </TooltipTrigger>
+  //               <TooltipContent>Hotkey: P(revious)</TooltipContent>
+  //             </Tooltip>
+  //             <Tooltip {...nextBtnTooltipProps}>
+  //               <TooltipTrigger asChild>
+  //                 <Button onClick={handleNext}>Next</Button>
+  //               </TooltipTrigger>
+  //               <TooltipContent>Hotkey: N(ext)</TooltipContent>
+  //             </Tooltip>
+  //           </div>
+  //           <p>
+  //             Total Sentences: {sentences.length}, Current Sentence:{" "}
+  //             {currentIndex + 1}
+  //             {generateSentencesMut.isPending
+  //               ? ", Generating more sentences..."
+  //               : ""}
+  //           </p>
+  //         </div>
+  //       ) : (
+  //         <div className="my-8 flex items-center justify-center">
+  //           <Tooltip {...startBtnTooltipProps}>
+  //             <TooltipTrigger asChild>
+  //               <Button
+  //                 onClick={() =>
+  //                   startTrainingSession.mutate({
+  //                     helpLanguage: "en",
+  //                     practiceLanguage: "es",
+  //                   })
+  //                 }
+  //                 disabled={startTrainingSession.isPending}
+  //               >
+  //                 {startTrainingSession.isPending && (
+  //                   <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+  //                 )}
+  //                 Start Training
+  //               </Button>
+  //             </TooltipTrigger>
+  //             <TooltipContent>Hotkey: Space</TooltipContent>
+  //           </Tooltip>
+  //         </div>
+  //       )}
+  //     </div>
+  //   </div>
+  // );
+
   return (
-    <div>
+    <>
       <header>
         <div className="container flex h-14 items-center gap-2 px-4">
           <h1 className="text-lg font-semibold">Oaklang</h1>
           <div className="flex-1" />
-          {trainingStarted ? (
-            <Button onClick={handleRestart} variant="outline">
-              Restart
-            </Button>
-          ) : null}
 
-          <Popover>
+          {/* <Popover>
             <Tooltip>
               <TooltipTrigger asChild>
                 <PopoverTrigger asChild>
@@ -275,76 +310,29 @@ export default function HomePage() {
               </SheetHeader>
               <SettingsForm />
             </SheetContent>
-          </Sheet>
+          </Sheet> */}
 
           <Button variant="outline" onClick={() => signOut()}>
             Sing Out
           </Button>
         </div>
       </header>
-
-      <div className="container my-8 px-4">
-        {trainingStarted ? (
-          <div>
-            {sentences[currentIndex] ? (
-              <InterlinearList sentence={sentences[currentIndex]!} />
-            ) : (
-              <p>Loading...</p>
-            )}
-            <div className="mt-16 flex flex-wrap items-center justify-center gap-10">
-              <Tooltip {...helpBtnTooltipProps}>
-                <TooltipTrigger asChild>
-                  <Button onClick={handleHelp} variant="outline">
-                    Help 100%
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Hotkey: H(elp)</TooltipContent>
-              </Tooltip>
-              <Tooltip {...previousBtnTooltipProps}>
-                <TooltipTrigger asChild>
-                  <Button onClick={handlePrevious}>Previous</Button>
-                </TooltipTrigger>
-                <TooltipContent>Hotkey: P(revious)</TooltipContent>
-              </Tooltip>
-              <Tooltip {...nextBtnTooltipProps}>
-                <TooltipTrigger asChild>
-                  <Button onClick={handleNext}>Next</Button>
-                </TooltipTrigger>
-                <TooltipContent>Hotkey: N(ext)</TooltipContent>
-              </Tooltip>
-            </div>
-            <p>
-              Total Sentences: {sentences.length}, Current Sentence:{" "}
-              {currentIndex + 1}
-              {generateSentencesMut.isPending
-                ? ", Generating more sentences..."
-                : ""}
-            </p>
-          </div>
-        ) : (
-          <div className="my-8 flex items-center justify-center">
-            <Tooltip {...startBtnTooltipProps}>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() =>
-                    startTrainingSession.mutate({
-                      helpLanguage: "en",
-                      practiceLanguage: "es",
-                    })
-                  }
-                  disabled={startTrainingSession.isPending}
-                >
-                  {startTrainingSession.isPending && (
-                    <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Start Training
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Hotkey: Space</TooltipContent>
-            </Tooltip>
-          </div>
-        )}
+      <div className="my-8 flex items-center justify-center">
+        <Tooltip {...startBtnTooltipProps}>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={handleStartTraining}
+              disabled={startTrainingSession.isPending}
+            >
+              {startTrainingSession.isPending && (
+                <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+              )}
+              Start Training
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Hotkey: Space</TooltipContent>
+        </Tooltip>
       </div>
-    </div>
+    </>
   );
 }

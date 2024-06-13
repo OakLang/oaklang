@@ -1,16 +1,9 @@
-import { api } from "~/trpc/server";
+import AppBar from "./app-bar";
 
-export default async function TrainingSession({
-  params,
-}: {
-  params: { trainingSessionId: string };
-}) {
-  const trainingSession = await api.trainingSessions.getTrainingSession({
-    trainingSessionId: params.trainingSessionId,
-  });
+export default function TrainingSession() {
   return (
     <div>
-      <pre>{JSON.stringify(trainingSession, null, 2)}</pre>
+      <AppBar />
     </div>
   );
 }

@@ -15,10 +15,7 @@ export default async function TrainingLayout({
   });
 
   return (
-    <TrainingSessionProvider
-      trainingSessionId={params.trainingSessionId}
-      trainingSession={trainingSession}
-    >
+    <TrainingSessionProvider trainingSession={trainingSession}>
       {children}
     </TrainingSessionProvider>
   );
