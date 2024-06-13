@@ -5,7 +5,7 @@ export interface AppSettings {
 }
 
 export const initAppSettings: AppSettings = {
-  autoPlay: true,
+  autoPlay: false,
 };
 
 export const appSettingsAtom = atom(initAppSettings);

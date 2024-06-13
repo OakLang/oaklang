@@ -102,6 +102,7 @@ export const languages = pgTable("language", {
   code: text("code").notNull().primaryKey(),
   name: text("name").notNull(),
 });
+export type Language = typeof languages.$inferSelect;
 
 export const trainingSessions = pgTable("training_session", {
   id: text("id")
@@ -111,7 +112,7 @@ export const trainingSessions = pgTable("training_session", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  sentenceIndex: integer("sentence_index").default(0),
+  sentenceIndex: integer("sentence_index").notNull().default(0),
   complexity: text("complexity", { enum: ["A1", "A2", "B1", "B2", "C1", "C2"] })
     .notNull()
     .default("A1"),
@@ -145,6 +146,7 @@ export const updateTrainingSessionInput = createInsertSchema(trainingSessions)
     helpLanguage: true,
     practiceLanguage: true,
     sentencesCount: true,
+    sentenceIndex: true,
   });
 export type UpdateTrainingSession = z.infer<typeof updateTrainingSessionInput>;
 
@@ -157,7 +159,7 @@ export const sentences = pgTable("sentence", {
     .notNull()
     .references(() => trainingSessions.id, { onDelete: "cascade" }),
   sentence: text("sentence").notNull(),
-  translation: text("sentence").notNull(),
+  translation: text("translation").notNull(),
   words: jsonb("words")
     .notNull()
     .$type<GenerateSentenceObject["sentences"][number]["words"]>(),

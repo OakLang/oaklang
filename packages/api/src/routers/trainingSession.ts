@@ -9,21 +9,17 @@ import {
 } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { getTrainingSessionOrThrow } from "../utils";
 
 export const trainingSessionsRouter = createTRPCRouter({
   getTrainingSession: protectedProcedure
     .input(z.object({ trainingSessionId: z.string() }))
     .query(async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
-      const [trainingSession] = await db
-        .select()
-        .from(trainingSessions)
-        .where(eq(trainingSessions.id, trainingSessionId));
-      if (!trainingSession || trainingSession.userId !== session.user.id) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Training Session not found!",
-        });
-      }
+      const trainingSession = await getTrainingSessionOrThrow(
+        trainingSessionId,
+        db,
+        session,
+      );
       return trainingSession;
     }),
   getTrainingSessions: protectedProcedure.query(
@@ -64,20 +60,15 @@ export const trainingSessionsRouter = createTRPCRouter({
     )
     .mutation(
       async ({ ctx: { db, session }, input: { data, trainingSessionId } }) => {
-        const [trainingSession] = await db
-          .select()
-          .from(trainingSessions)
-          .where(eq(trainingSessions.id, trainingSessionId));
-        if (!trainingSession || trainingSession.userId !== session.user.id) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Training Session not found!",
-          });
-        }
+        const trainingSession = await getTrainingSessionOrThrow(
+          trainingSessionId,
+          db,
+          session,
+        );
         const [updatedTrainingSession] = await db
           .update(trainingSessions)
           .set(data)
-          .where(eq(trainingSessions.id, trainingSessionId))
+          .where(eq(trainingSessions.id, trainingSession.id))
           .returning();
         if (!updatedTrainingSession) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -93,19 +84,14 @@ export const trainingSessionsRouter = createTRPCRouter({
     )
     .mutation(
       async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
-        const [trainingSession] = await db
-          .select()
-          .from(trainingSessions)
-          .where(eq(trainingSessions.id, trainingSessionId));
-        if (!trainingSession || trainingSession.userId !== session.user.id) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Training Session not found!",
-          });
-        }
+        const trainingSession = await getTrainingSessionOrThrow(
+          trainingSessionId,
+          db,
+          session,
+        );
         const [deletedTrainingSession] = await db
           .delete(trainingSessions)
-          .where(eq(trainingSessions.id, trainingSessionId))
+          .where(eq(trainingSessions.id, trainingSession.id))
           .returning();
         if (!deletedTrainingSession) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

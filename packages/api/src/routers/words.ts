@@ -1,53 +1,45 @@
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { and, eq, inArray, sql } from "@acme/db";
-import { trainingSessions, words } from "@acme/db/schema";
+import { and, asc, eq, inArray, sql } from "@acme/db";
+import { words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { getTrainingSessionOrThrow } from "../utils";
 
 export const wordsRouter = createTRPCRouter({
   getWords: protectedProcedure
     .input(z.object({ trainingSessionId: z.string() }))
     .query(async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
-      const [trainingSession] = await db
-        .select()
-        .from(trainingSessions)
-        .where(eq(trainingSessions.id, trainingSessionId));
-      if (!trainingSession || trainingSession.userId !== session.user.id) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Training Session not found!",
-        });
-      }
+      const trainingSession = await getTrainingSessionOrThrow(
+        trainingSessionId,
+        db,
+        session,
+      );
       const practiceWords = await db
         .select()
         .from(words)
-        .where(eq(words.trainingSessionId, trainingSessionId));
+        .where(eq(words.trainingSessionId, trainingSession.id))
+        .orderBy(asc(words.createdAt));
       return practiceWords;
     }),
   getKnownWords: protectedProcedure
     .input(z.object({ trainingSessionId: z.string() }))
     .query(async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
-      const [trainingSession] = await db
-        .select()
-        .from(trainingSessions)
-        .where(eq(trainingSessions.id, trainingSessionId));
-      if (!trainingSession || trainingSession.userId !== session.user.id) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Training Session not found!",
-        });
-      }
+      const trainingSession = await getTrainingSessionOrThrow(
+        trainingSessionId,
+        db,
+        session,
+      );
       const knownWords = await db
         .select()
         .from(words)
         .where(
           and(
-            eq(words.trainingSessionId, trainingSessionId),
+            eq(words.trainingSessionId, trainingSession.id),
             eq(words.isKnown, true),
           ),
-        );
+        )
+        .orderBy(asc(words.createdAt));
       return knownWords;
     }),
   createWords: protectedProcedure
@@ -63,20 +55,19 @@ export const wordsRouter = createTRPCRouter({
         ctx: { db, session },
         input: { trainingSessionId, words: wordsToCreate, isKnown },
       }) => {
-        const [trainingSession] = await db
-          .select()
-          .from(trainingSessions)
-          .where(eq(trainingSessions.id, trainingSessionId));
-        if (!trainingSession || trainingSession.userId !== session.user.id) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Training Session not found!",
-          });
-        }
+        const trainingSession = await getTrainingSessionOrThrow(
+          trainingSessionId,
+          db,
+          session,
+        );
         const newWords = await db
           .insert(words)
           .values(
-            wordsToCreate.map((word) => ({ word, trainingSessionId, isKnown })),
+            wordsToCreate.map((word) => ({
+              word,
+              trainingSessionId: trainingSession.id,
+              isKnown,
+            })),
           )
           .onConflictDoUpdate({
             target: [words.trainingSessionId, words.word],
@@ -100,23 +91,17 @@ export const wordsRouter = createTRPCRouter({
         ctx: { db, session },
         input: { trainingSessionId, words: wordsToDelete },
       }) => {
-        const [trainingSession] = await db
-          .select()
-          .from(trainingSessions)
-          .where(eq(trainingSessions.id, trainingSessionId));
-
-        if (!trainingSession || trainingSession.userId !== session.user.id) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Training Session not found!",
-          });
-        }
+        const trainingSession = await getTrainingSessionOrThrow(
+          trainingSessionId,
+          db,
+          session,
+        );
 
         const deletedWords = await db
           .delete(words)
           .where(
             and(
-              eq(words.trainingSessionId, trainingSessionId),
+              eq(words.trainingSessionId, trainingSession.id),
               inArray(words.word, wordsToDelete),
             ),
           )
@@ -138,17 +123,11 @@ export const wordsRouter = createTRPCRouter({
         ctx: { db, session },
         input: { trainingSessionId, words: wordsToUpdate, data },
       }) => {
-        const [trainingSession] = await db
-          .select()
-          .from(trainingSessions)
-          .where(eq(trainingSessions.id, trainingSessionId));
-
-        if (!trainingSession || trainingSession.userId !== session.user.id) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Training Session not found!",
-          });
-        }
+        const trainingSession = await getTrainingSessionOrThrow(
+          trainingSessionId,
+          db,
+          session,
+        );
 
         const updatedWords = await db
           .update(words)
@@ -159,7 +138,7 @@ export const wordsRouter = createTRPCRouter({
           })
           .where(
             and(
-              eq(words.trainingSessionId, trainingSessionId),
+              eq(words.trainingSessionId, trainingSession.id),
               inArray(words.word, wordsToUpdate),
             ),
           )

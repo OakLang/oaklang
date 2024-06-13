@@ -36,7 +36,7 @@ export const sentenceSchema = z.object({
 });
 
 export const generateSentenceObjectSchema = z.object({
-  sentences: z.array(sentenceSchema),
+  sentences: z.array(sentenceSchema).describe("list of sentences"),
 });
 
 export type GenerateSentenceObject = z.infer<

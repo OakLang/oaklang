@@ -7,6 +7,7 @@ import { signOut, useSession } from "next-auth/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
+import { ThemeToggle } from "~/components/ThemeToggle";
 import { Button } from "~/components/ui/button";
 import {
   Tooltip,
@@ -118,24 +119,8 @@ export default function HomePage() {
     () => {
       handleStartTraining();
     },
-    { enabled: startTrainingSession.isPending },
+    { enabled: !startTrainingSession.isPending },
   );
-
-  // useHotkeys(
-  //   "ctrl",
-  //   () => {
-  //     setShowHotkeys(true);
-  //   },
-  //   { enabled: !settingsOpen, keydown: true },
-  // );
-
-  // useHotkeys(
-  //   "ctrl",
-  //   () => {
-  //     setShowHotkeys(false);
-  //   },
-  //   { enabled: !settingsOpen, keyup: true },
-  // );
 
   // useHotkeys(
   //   "n",
@@ -247,74 +232,10 @@ export default function HomePage() {
         <div className="container flex h-14 items-center gap-2 px-4">
           <h1 className="text-lg font-semibold">Oaklang</h1>
           <div className="flex-1" />
-
-          {/* <Popover>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button variant="outline">Practice Vocabs</Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent>
-                {practiceVocabs.length
-                  ? practiceVocabs.join(", ")
-                  : "No Practice Vocabs"}
-              </TooltipContent>
-              <PopoverContent className="max-w-lg">
-                <WordsList
-                  onWordsChange={setPracticeVocabs}
-                  title="Practice Vocabs"
-                  words={practiceVocabs}
-                />
-              </PopoverContent>
-            </Tooltip>
-          </Popover>
-
-          <Popover>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button variant="outline">Known Vocabs</Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent>
-                {knownVocabs.length
-                  ? knownVocabs.join(", ")
-                  : "No Known Vocabs"}
-              </TooltipContent>
-              <PopoverContent className="max-w-2xl">
-                <WordsList
-                  onWordsChange={setKnownVocabs}
-                  title="Known Vocabs"
-                  words={knownVocabs}
-                />
-              </PopoverContent>
-            </Tooltip>
-          </Popover>
-
-          <Sheet onOpenChange={setSettingsOpen} open={settingsOpen}>
-            <Tooltip {...settingsBtnTooltipProps}>
-              <TooltipTrigger asChild>
-                <SheetTrigger asChild>
-                  <Button size="icon" variant="outline">
-                    <SettingsIcon className="h-5 w-5" />
-                    <p className="sr-only">Settings</p>
-                  </Button>
-                </SheetTrigger>
-              </TooltipTrigger>
-              <TooltipContent>Hotkey: S(ettings)</TooltipContent>
-            </Tooltip>
-            <SheetContent className="overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Settings</SheetTitle>
-              </SheetHeader>
-              <SettingsForm />
-            </SheetContent>
-          </Sheet> */}
-
           <Button variant="outline" onClick={() => signOut()}>
             Sing Out
           </Button>
+          <ThemeToggle />
         </div>
       </header>
       <div className="my-8 flex items-center justify-center">
