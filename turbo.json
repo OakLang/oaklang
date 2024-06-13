@@ -30,6 +30,7 @@
     }
   },
   "globalEnv": [
+    "SKIP_ENV_VALIDATION",
     "DATABASE_URL",
     "AUTH_GOOGLE_ID",
     "AUTH_GOOGLE_SECRET",
@@ -39,5 +40,10 @@
     "PORT",
     "OPENAI_API_KEY"
   ],
-  "globalPassThroughEnv": ["NODE_ENV", "PUBLIC_URL", "npm_lifecycle_event"]
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "CI",
+    "PUBLIC_URL",
+    "npm_lifecycle_event"
+  ]
 }
