@@ -18,25 +18,24 @@
     "studio": "npm run with-env drizzle-kit studio",
     "check": "npm run with-env drizzle-kit check:pg",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "with-env": "dotenv -e ../../.env --"
+    "with-env": "dotenv -e ../../.env -c --"
   },
   "dependencies": {
-    "@paralleldrive/cuid2": "^2.2.2",
-    "@t3-oss/env-core": "^0.10.1",
-    "@t3-oss/env-nextjs": "^0.10.1",
-    "drizzle-orm": "0.31.2",
-    "drizzle-zod": "^0.5.1",
-    "postgres": "^3.4.4",
-    "zod": "^3.23.8",
     "@acme/eslint-config": "*",
     "@acme/prettier-config": "*",
     "@acme/tsconfig": "*",
-    "@types/pg": "^8.11.6",
+    "@t3-oss/env-core": "^0.10.1",
+    "@t3-oss/env-nextjs": "^0.10.1",
     "dotenv-cli": "^7.4.2",
     "drizzle-kit": "0.22.6",
+    "drizzle-orm": "0.31.2",
+    "drizzle-zod": "^0.5.1",
     "eslint": "^8.57.0",
+    "ksuid": "^3.0.0",
+    "postgres": "^3.4.4",
     "prettier": "^3.3.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "zod": "^3.23.8"
   },
   "prettier": "@acme/prettier-config"
 }
