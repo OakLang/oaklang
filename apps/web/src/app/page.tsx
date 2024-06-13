@@ -2,13 +2,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { SettingsIcon } from "lucide-react";
+import { Loader2Icon, SettingsIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
-import type { SentenceWithId } from "@acme/validators";
+import type { Sentence } from "@acme/validators";
 
 import InterlinearList from "~/components/InterlinearList";
 import SettingsForm from "~/components/SettingsForm";
@@ -46,7 +47,7 @@ export default function HomePage() {
   const session = useSession({
     required: true,
   });
-  const [sentences, setSentences] = useState<SentenceWithId[]>([]);
+  const [sentences, setSentences] = useState<(Sentence & { id: string })[]>([]);
   const sentencesGeneratorSettings = useAtomValue(
     sentencesGeneratorSettingsAtom,
   );
@@ -63,6 +64,19 @@ export default function HomePage() {
   const settingsBtnTooltipProps = useHotkeysTooltipProps();
   const setShowHotkeys = useSetAtom(showHotkeysAtom);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const router = useRouter();
+
+  const startTrainingSession =
+    api.trainingSessions.createTrainingSession.useMutation({
+      onSuccess: (data) => {
+        router.push(`/sessions/${data.id}`);
+      },
+      onError: (error) => {
+        toast("Faield to create a new training session", {
+          description: error.message,
+        });
+      },
+    });
 
   const generateSentencesMut = api.ai.generateSentences.useMutation({
     onError: (error) => {
@@ -311,7 +325,20 @@ export default function HomePage() {
           <div className="my-8 flex items-center justify-center">
             <Tooltip {...startBtnTooltipProps}>
               <TooltipTrigger asChild>
-                <Button onClick={handleStartTraining}>Start Training</Button>
+                <Button
+                  onClick={() =>
+                    startTrainingSession.mutate({
+                      helpLanguage: "en",
+                      practiceLanguage: "es",
+                    })
+                  }
+                  disabled={startTrainingSession.isPending}
+                >
+                  {startTrainingSession.isPending && (
+                    <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Start Training
+                </Button>
               </TooltipTrigger>
               <TooltipContent>Hotkey: Space</TooltipContent>
             </Tooltip>

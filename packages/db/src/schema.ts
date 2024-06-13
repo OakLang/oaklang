@@ -1,27 +1,36 @@
 import type { AdapterAccountType } from "next-auth/adapters";
+import type { z } from "zod";
 import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+
+import type { Word } from "@acme/validators";
 
 import { createPrefixedId } from "./utils";
+
+const createdAt = timestamp("created_at", { mode: "date", withTimezone: true })
+  .notNull()
+  .defaultNow();
+
+const updatedAt = timestamp("updated_at", { mode: "date", withTimezone: true })
+  .notNull()
+  .defaultNow()
+  .$onUpdate(() => sql`NOW()`);
 
 export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => createPrefixedId("user")),
-  createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => sql`now()`),
+  createdAt,
+  updatedAt,
   name: text("name"),
   email: text("email").notNull(),
   emailVerified: timestamp("email_verified", { mode: "date" }),
@@ -31,13 +40,8 @@ export const users = pgTable("user", {
 export const accounts = pgTable(
   "account",
   {
-    createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
-      .notNull()
-      .defaultNow()
-      .$onUpdate(() => sql`now()`),
+    createdAt,
+    updatedAt,
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -60,9 +64,8 @@ export const accounts = pgTable(
 );
 
 export const sessions = pgTable("session", {
-  createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  createdAt,
+  updatedAt,
   sessionToken: text("session_token").primaryKey(),
   userId: text("user_id")
     .notNull()
@@ -73,9 +76,8 @@ export const sessions = pgTable("session", {
 export const verificationTokens = pgTable(
   "verification_token",
   {
-    createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt,
+    updatedAt,
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
     expires: timestamp("expires", { mode: "date" }).notNull(),
@@ -90,9 +92,8 @@ export const verificationTokens = pgTable(
 export const authenticators = pgTable(
   "authenticator",
   {
-    createdAt: timestamp("created_at", { mode: "date", withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt,
+    updatedAt,
     credentialID: text("credential_id").notNull().unique(),
     userId: text("user_id")
       .notNull()
@@ -107,6 +108,89 @@ export const authenticators = pgTable(
   (authenticator) => ({
     compositePK: primaryKey({
       columns: [authenticator.userId, authenticator.credentialID],
+    }),
+  }),
+);
+
+export const languages = pgTable("language", {
+  createdAt,
+  updatedAt,
+  code: text("code").notNull().primaryKey(),
+  name: text("name").notNull(),
+});
+
+export const trainingSessions = pgTable("training_session", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createPrefixedId("ts")),
+  createdAt,
+  updatedAt,
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  sentenceIndex: integer("sentence_index").default(0),
+  complexity: text("complexity", { enum: ["A1", "A2", "B1", "B2", "C1", "C2"] })
+    .notNull()
+    .default("A1"),
+  helpLanguage: text("help_langauge")
+    .notNull()
+    .references(() => languages.code, { onDelete: "cascade" }),
+  practiceLanguage: text("practice_language")
+    .notNull()
+    .references(() => languages.code, { onDelete: "cascade" }),
+  sentencesCount: integer("sentences_count").notNull().default(5),
+});
+
+export const createTrainingSessionInput = createInsertSchema(
+  trainingSessions,
+).pick({
+  complexity: true,
+  helpLanguage: true,
+  practiceLanguage: true,
+  sentencesCount: true,
+});
+export type CreateTrainingSessionInput = z.infer<
+  typeof createTrainingSessionInput
+>;
+
+export const updateTrainingSessionInput = createInsertSchema(trainingSessions)
+  .partial()
+  .pick({
+    complexity: true,
+    helpLanguage: true,
+    practiceLanguage: true,
+    sentencesCount: true,
+  });
+export type UpdateTrainingSession = z.infer<typeof updateTrainingSessionInput>;
+
+export const sentences = pgTable("sentence", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createPrefixedId("sent")),
+  createdAt,
+  updatedAt,
+  trainingSessionId: text("training_session_id")
+    .notNull()
+    .references(() => trainingSessions.id, { onDelete: "cascade" }),
+  sentence: text("sentence").notNull(),
+  translation: text("sentence").notNull(),
+  words: jsonb("words").notNull().$type<Word[]>(),
+});
+
+export const words = pgTable(
+  "word",
+  {
+    createdAt,
+    updatedAt,
+    trainingSessionId: text("training_session_id")
+      .notNull()
+      .references(() => trainingSessions.id, { onDelete: "cascade" }),
+    word: text("word").notNull(),
+    isKnown: boolean("is_known").notNull().default(false),
+  },
+  (table) => ({
+    uniqueIdx: primaryKey({
+      columns: [table.trainingSessionId, table.word],
     }),
   }),
 );
