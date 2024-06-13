@@ -1,14 +1,15 @@
 import React, { useCallback, useId, useState } from "react";
-import { XIcon } from "lucide-react";
+import { CopyIcon, DownloadIcon, UploadIcon, XIcon } from "lucide-react";
 import pluralize from "pluralize";
 import { Importer, ImporterField } from "react-csv-importer";
 
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 
 import "react-csv-importer/dist/index.css";
+
+import { toast } from "sonner";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 
@@ -34,7 +35,10 @@ export default function WordsList({
   );
 
   const handleAddAll = useCallback(() => {
-    const newWords = input.split(",").map((e) => e.trim());
+    const newWords = input
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
     handleAddWrods(newWords);
     setInput("");
   }, [handleAddWrods, input]);
@@ -52,23 +56,43 @@ export default function WordsList({
     URL.revokeObjectURL(link.href);
   }, [words]);
 
+  const handleCopyToClipboard = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(words.join(", "));
+      toast("Copied to clipboard!");
+    } catch (error) {
+      toast("Faield to copy!", {
+        description:
+          (error as { message?: string }).message ?? "Something went wrong!",
+      });
+    }
+  }, [words]);
+
+  const handleClearList = useCallback(() => {
+    onWordsChange([]);
+  }, [onWordsChange]);
+
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>
+    <div className="space-y-4">
+      <h3 className="text-foreground font-semibold">
         {title}
         {words.length > 0
           ? ` (${words.length.toFixed()} ${pluralize("word", words.length)})`
           : null}
-      </Label>
+      </h3>
       <div className="flex flex-wrap gap-2">
         {words.length === 0 ? (
           <p className="text-muted-foreground text-sm">No words...</p>
         ) : (
           words.map((word) => (
-            <Badge key={word} variant="outline">
+            <Badge
+              key={word}
+              variant="outline"
+              className="px-3 py-1 text-sm font-medium"
+            >
               {word}
               <Button
-                className="-mr-2 ml-0.5 h-6 w-6 rounded-full"
+                className="text-muted-foreground hover:text-foreground -mr-2 ml-1 h-6 w-6 rounded-full"
                 onClick={() => {
                   onWordsChange(words.filter((w) => w !== word));
                 }}
@@ -82,47 +106,39 @@ export default function WordsList({
           ))
         )}
       </div>
-      <div className="flex gap-2">
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleAddAll();
+        }}
+      >
         <Input
-          className="flex-1"
+          className="text-foreground flex-1"
           id={id}
           onChange={(e) => setInput(e.currentTarget.value)}
-          onKeyDown={(e) => {
-            if (e.code === "Enter") {
-              e.preventDefault();
-              handleAddAll();
-            }
-          }}
           placeholder="Dog, Cat, Piece of cake, ..."
           value={input}
+          autoFocus
         />
-        <Button onClick={handleAddAll} type="button">
-          Add All
-        </Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          className="h-fit p-0"
-          onClick={() => handleDownloadCSV()}
-          type="button"
-          variant="link"
-        >
-          Download as CSV
-        </Button>
-        <Button
-          className="h-fit p-0"
-          onClick={() => setShowCSVImporterModal(true)}
-          type="button"
-          variant="link"
-        >
+        <Button type="submit">Add All</Button>
+      </form>
+      <hr className="bg-border my-4 h-px" />
+      <div className="grid gap-2">
+        <Button onClick={() => setShowCSVImporterModal(true)} variant="outline">
+          <UploadIcon className="-ml-1 mr-2 h-4 w-4" />
           Import from CSV
         </Button>
-        <Button
-          className="h-fit p-0"
-          onClick={() => onWordsChange([])}
-          type="button"
-          variant="link"
-        >
+        <Button onClick={() => handleDownloadCSV()} variant="outline">
+          <DownloadIcon className="-ml-1 mr-2 h-4 w-4" />
+          Download as CSV
+        </Button>
+        <Button onClick={handleCopyToClipboard} variant="outline">
+          <CopyIcon className="-ml-1 mr-2 h-4 w-4" />
+          Copy to Clipboard
+        </Button>
+        <Button onClick={handleClearList} variant="outline">
+          <XIcon className="-ml-1 mr-2 h-4 w-4" />
           Clear List
         </Button>
       </div>

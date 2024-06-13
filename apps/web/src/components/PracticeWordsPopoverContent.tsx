@@ -85,7 +85,7 @@ export default function PracticeWordsPopoverContent({
     <WordsList
       words={wordsQuery.data.map((word) => word.word)}
       onWordsChange={handleOnWordsChange}
-      title="Practice Words"
+      title="Practice Vocabs"
     />
   );
 }

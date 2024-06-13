@@ -88,7 +88,7 @@ export default function KnownWordsPopoverContent({
     <WordsList
       words={knownWordsQuery.data.map((word) => word.word)}
       onWordsChange={handleOnWordsChange}
-      title="Known Words"
+      title="Known Vocabs"
     />
   );
 }

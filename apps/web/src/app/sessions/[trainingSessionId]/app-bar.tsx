@@ -50,7 +50,7 @@ export default function AppBar() {
           <PopoverTrigger asChild>
             <Button variant="outline">Practice Vocabs</Button>
           </PopoverTrigger>
-          <PopoverContent className="max-w-2xl">
+          <PopoverContent className="w-72">
             <PracticeWordsPopoverContent
               trainingSessionId={trainingSession.id}
             />
@@ -61,7 +61,7 @@ export default function AppBar() {
           <PopoverTrigger asChild>
             <Button variant="outline">Known Vocabs</Button>
           </PopoverTrigger>
-          <PopoverContent className="max-w-2xl">
+          <PopoverContent className="w-72">
             <KnownWordsPopoverContent trainingSessionId={trainingSession.id} />
           </PopoverContent>
         </Popover>
