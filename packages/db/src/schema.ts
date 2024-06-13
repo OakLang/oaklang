@@ -141,6 +141,8 @@ export const trainingSessions = pgTable("training_session", {
   sentencesCount: integer("sentences_count").notNull().default(5),
 });
 
+export type TrainingSession = typeof trainingSessions.$inferSelect;
+
 export const createTrainingSessionInput = createInsertSchema(
   trainingSessions,
 ).pick({
