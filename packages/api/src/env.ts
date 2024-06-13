@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-properties */
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
@@ -6,7 +7,8 @@ export const env = createEnv({
     OPENAI_API_KEY: z.string().optional(),
   },
   client: {},
-  experimental__runtimeEnv: {},
-  // eslint-disable-next-line no-restricted-properties
+  runtimeEnv: {
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  },
   skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
 });

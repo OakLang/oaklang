@@ -13,7 +13,9 @@ export const env = createEnv({
       .enum(["development", "production", "test"])
       .default("development"),
   },
-  experimental__runtimeEnv: {
+  runtimeEnv: {
+    DATABASE_URL: process.env.DATABASE_URL,
+    LOG_SQL: process.env.LOG_SQL,
     NODE_ENV: process.env.NODE_ENV,
   },
   skipValidation: !!process.env.CI || !!process.env.SKIP_ENV_VALIDATION,
