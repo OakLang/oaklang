@@ -4,9 +4,11 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    AUTH_GOOGLE_ID: z.string().optional(),
-    AUTH_GOOGLE_SECRET: z.string().optional(),
-    AUTH_SECRET: z.string().optional(),
+    AUTH_URL: z.string().url().optional(),
+    AUTH_TRUST_HOST: z.enum(["true", "false"]).optional(),
+    AUTH_GOOGLE_ID: z.string().min(1),
+    AUTH_GOOGLE_SECRET: z.string().min(1),
+    AUTH_SECRET: z.string().min(1),
   },
   client: {},
   shared: {
