@@ -318,8 +318,6 @@ export default function HomePage() {
           </div>
         )}
       </div>
-
-      <pre>{JSON.stringify(session, null, 2)}</pre>
     </div>
   );
 }

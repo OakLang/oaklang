@@ -8,9 +8,9 @@
     "format:fix": "turbo format --continue -- --write --cache --cache-location node_modules/.cache/.prettiercache",
     "lint": "turbo lint --continue -- --cache --cache-location node_modules/.cache/.eslintcache",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
-    "generate": "npm run --workspace=@acme/db generate",
-    "migrate": "npm run --workspace=@acme/db migrate",
-    "studio": "npm run --workspace=@acme/db studio",
+    "generate": "npm run generate --workspace=@acme/db",
+    "migrate": "npm run migrate --workspace=@acme/db",
+    "studio": "npm run studio --workspace=@acme/db",
     "dev": "turbo run dev --parallel",
     "clean": "turbo clean && git clean -xdf .turbo node_modules",
     "postinstall": "husky install"

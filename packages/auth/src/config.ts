@@ -1,28 +1,49 @@
-import type { NextAuthConfig, Session as NextAuthSession } from "next-auth";
+import type {
+  DefaultSession,
+  NextAuthConfig,
+  Session as NextAuthSession,
+} from "next-auth";
+import { skipCSRFCheck } from "@auth/core";
 import Google from "next-auth/providers/google";
 
 import { adapter } from "./adapter";
 import { env } from "./env";
 
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+    } & DefaultSession["user"];
+  }
+}
+
 export const isSecureContext = env.NODE_ENV !== "development";
 
 export const authConfig = {
   adapter,
-  trustHost: true,
   secret: env.AUTH_SECRET,
   providers: [Google],
+  ...(!isSecureContext
+    ? {
+        skipCSRFCheck: skipCSRFCheck,
+        trustHost: true,
+      }
+    : {}),
   pages: {
     signIn: "/login",
   },
   callbacks: {
-    redirect({ url, baseUrl }) {
-      // eslint-disable-next-line no-restricted-properties
-      console.log({ url, baseUrl, env: process.env });
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
+    session: ({ session, user }) => {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+        },
+      };
     },
   },
+  debug: !isSecureContext,
 } satisfies NextAuthConfig;
 
 export const validateToken = async (

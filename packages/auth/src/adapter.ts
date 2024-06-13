@@ -1,4 +1,3 @@
-import type { DefaultSession } from "next-auth";
 import type {
   Adapter,
   AdapterAccount,
@@ -17,14 +16,6 @@ import {
   users,
   verificationTokens,
 } from "@acme/db/schema";
-
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-    } & DefaultSession["user"];
-  }
-}
 
 export const adapter: Adapter = {
   async createUser(data: AdapterUser) {
