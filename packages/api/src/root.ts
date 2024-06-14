@@ -1,7 +1,7 @@
 import { aiRouter } from "./routers/ai";
 import { languagesRouter } from "./routers/language";
 import { sentencesRouter } from "./routers/sentences";
-import { trainingSessionsRouter } from "./routers/trainingSession";
+import { trainingSessionsRouter } from "./routers/trainingSessions";
 import { usersRouter } from "./routers/users";
 import { wordsRouter } from "./routers/words";
 import { createTRPCRouter, publicProcedure } from "./trpc";
