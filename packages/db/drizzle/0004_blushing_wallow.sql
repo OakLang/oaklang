@@ -1,0 +1,1 @@
+ALTER TABLE "sentence" ADD COLUMN "translation" text NOT NULL;

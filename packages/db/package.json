@@ -21,6 +21,7 @@
     "with-env": "dotenv -e ../../.env -c --"
   },
   "dependencies": {
+    "@acme/validators": "*",
     "@acme/eslint-config": "*",
     "@acme/prettier-config": "*",
     "@acme/tsconfig": "*",

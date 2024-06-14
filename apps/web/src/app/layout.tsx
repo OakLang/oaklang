@@ -11,6 +11,7 @@ import { ThemeProvider } from "next-themes";
 
 import { auth } from "@acme/auth";
 
+import ListenForTooltipHotkey from "~/components/ListenForTooltipHotkey";
 import { Toaster } from "~/components/ui/sonner";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import { env } from "~/env";
@@ -60,6 +61,7 @@ export default async function RootLayout({
           inter.className,
         )}
       >
+        <ListenForTooltipHotkey />
         <HolyLoader color="#2666FF" height={3} showSpinner={false} />
         <SessionProvider session={session}>
           <TRPCReactProvider>

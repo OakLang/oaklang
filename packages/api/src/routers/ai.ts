@@ -2,10 +2,7 @@ import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { nanoid } from "nanoid";
 
-import type {
-  SentencesGeneratorSettings,
-  SentenceWithId,
-} from "@acme/validators";
+import type { Sentence, SentencesGeneratorSettings } from "@acme/validators";
 import {
   generateSentenceBody,
   generateSentenceObjectSchema,
@@ -46,10 +43,12 @@ export const aiRouter = createTRPCRouter({
           schema: generateSentenceObjectSchema,
         });
 
-        return result.object.sentences.map<SentenceWithId>((sentence) => ({
-          ...sentence,
-          id: nanoid(),
-        }));
+        return result.object.sentences.map<Sentence & { id: string }>(
+          (sentence) => ({
+            ...sentence,
+            id: nanoid(),
+          }),
+        );
       },
     ),
 });

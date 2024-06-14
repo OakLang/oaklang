@@ -1,7 +1,9 @@
 import { aiRouter } from "./routers/ai";
 import { languagesRouter } from "./routers/language";
+import { sentencesRouter } from "./routers/sentences";
 import { trainingSessionsRouter } from "./routers/trainingSession";
 import { usersRouter } from "./routers/users";
+import { wordsRouter } from "./routers/words";
 import { createTRPCRouter, publicProcedure } from "./trpc";
 
 export const appRouter = createTRPCRouter({
@@ -14,6 +16,8 @@ export const appRouter = createTRPCRouter({
   languages: languagesRouter,
   trainingSessions: trainingSessionsRouter,
   users: usersRouter,
+  words: wordsRouter,
+  sentences: sentencesRouter,
 });
 
 // export type definition of API
