@@ -1,14 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { SettingsIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { useHotkeys } from "react-hotkeys-hook";
 
 import KnownWordsPopoverContent from "~/components/KnownWordsPopoverContent";
 import PracticeWordsPopoverContent from "~/components/PracticeWordsPopoverContent";
-import SettingsForm from "~/components/SettingsForm";
 import { ThemeToggle } from "~/components/ThemeToggle";
 import { Button } from "~/components/ui/button";
 import {
@@ -16,32 +12,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "~/components/ui/sheet";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "~/components/ui/tooltip";
-import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
 
 export default function AppBar() {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const settingsBtnTooltipProps = useHotkeysTooltipProps();
-
-  useHotkeys(
-    "s",
-    () => {
-      setSettingsOpen(true);
-    },
-    { enabled: !settingsOpen },
-  );
-
   return (
     <header>
       <div className="container flex h-14 items-center gap-2 px-4">
@@ -68,7 +40,7 @@ export default function AppBar() {
           </PopoverContent>
         </Popover>
 
-        <Sheet onOpenChange={setSettingsOpen} open={settingsOpen}>
+        {/* <Sheet onOpenChange={setSettingsOpen} open={settingsOpen}>
           <Tooltip {...settingsBtnTooltipProps}>
             <TooltipTrigger asChild>
               <SheetTrigger asChild>
@@ -86,7 +58,7 @@ export default function AppBar() {
             </SheetHeader>
             <SettingsForm />
           </SheetContent>
-        </Sheet>
+        </Sheet> */}
 
         <Button variant="outline" onClick={() => signOut()}>
           Sing Out

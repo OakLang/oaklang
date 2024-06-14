@@ -1,5 +1,5 @@
 import { aiRouter } from "./routers/ai";
-import { languagesRouter } from "./routers/language";
+import { languagesRouter } from "./routers/languages";
 import { sentencesRouter } from "./routers/sentences";
 import { trainingSessionsRouter } from "./routers/trainingSessions";
 import { usersRouter } from "./routers/users";

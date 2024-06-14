@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
+import LanguagePicker from "~/components/LanguagePicker";
 import { ThemeToggle } from "~/components/ThemeToggle";
 import { Button } from "~/components/ui/button";
+import { Label } from "~/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +25,8 @@ export default function HomePage() {
   });
   const startBtnTooltipProps = useHotkeysTooltipProps();
   const router = useRouter();
+  const [helpLanguage, setHelpLanguage] = useState("en");
+  const [practiceLanguage, setPracticeLanguage] = useState("es");
 
   const startTrainingSession =
     api.trainingSessions.createTrainingSession.useMutation({
@@ -37,8 +41,11 @@ export default function HomePage() {
     });
 
   const handleStartTraining = useCallback(() => {
-    startTrainingSession.mutate({ helpLanguage: "en", practiceLanguage: "es" });
-  }, [startTrainingSession]);
+    if (!helpLanguage || !practiceLanguage) {
+      return;
+    }
+    startTrainingSession.mutate({ helpLanguage, practiceLanguage });
+  }, [helpLanguage, practiceLanguage, startTrainingSession]);
 
   useHotkeys(
     "space",
@@ -64,21 +71,37 @@ export default function HomePage() {
           <ThemeToggle />
         </div>
       </header>
-      <div className="my-8 flex items-center justify-center">
-        <Tooltip {...startBtnTooltipProps}>
-          <TooltipTrigger asChild>
-            <Button
-              onClick={handleStartTraining}
-              disabled={startTrainingSession.isPending}
-            >
-              {startTrainingSession.isPending && (
-                <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
-              )}
-              Start Training
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Hotkey: Space</TooltipContent>
-        </Tooltip>
+      <div className="container my-8 max-w-sm">
+        <div className="flex flex-col gap-4">
+          <fieldset>
+            <Label>Help Language</Label>
+            <LanguagePicker
+              value={helpLanguage}
+              onValueChange={setHelpLanguage}
+            />
+          </fieldset>
+          <fieldset>
+            <Label>Practice Language</Label>
+            <LanguagePicker
+              value={practiceLanguage}
+              onValueChange={setPracticeLanguage}
+            />
+          </fieldset>
+          <Tooltip {...startBtnTooltipProps}>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={handleStartTraining}
+                disabled={startTrainingSession.isPending}
+              >
+                {startTrainingSession.isPending && (
+                  <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+                )}
+                Start Training
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Hotkey: Space</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     </>
   );
