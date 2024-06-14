@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
+import { notFound, redirect, RedirectType } from "next/navigation";
+
+import { auth } from "@acme/auth";
+import { and, eq } from "@acme/db";
+import { db } from "@acme/db/client";
+import { trainingSessions } from "@acme/db/schema";
 
 import TrainingSessionProvider from "~/providers/TrainingSessionProvider";
-import { api } from "~/trpc/server";
 
 export default async function TrainingLayout({
   children,
@@ -10,9 +15,24 @@ export default async function TrainingLayout({
   children: ReactNode;
   params: { trainingSessionId: string };
 }) {
-  const trainingSession = await api.trainingSessions.getTrainingSession({
-    trainingSessionId: params.trainingSessionId,
-  });
+  const session = await auth();
+  if (!session) {
+    redirect("/login", RedirectType.replace);
+  }
+
+  const [trainingSession] = await db
+    .select()
+    .from(trainingSessions)
+    .where(
+      and(
+        eq(trainingSessions.id, params.trainingSessionId),
+        eq(trainingSessions.userId, session.user.id),
+      ),
+    );
+
+  if (!trainingSession) {
+    notFound();
+  }
 
   return (
     <TrainingSessionProvider trainingSession={trainingSession}>

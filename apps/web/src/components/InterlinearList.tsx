@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { Loader2, PlayIcon, SquareIcon } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import type { AudioSettings, SentenceWithId } from "@acme/validators";
+import type { Sentence } from "@acme/db/schema";
+import type { AudioSettings } from "@acme/validators";
 
 import type { TTSBodyParams } from "~/app/api/ai/tts/route";
 import {
@@ -15,12 +16,11 @@ import {
   ContextMenuTrigger,
 } from "~/components/ui/context-menu";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
+import { useTrainingSession } from "~/providers/TrainingSessionProvider";
 import {
   audioSettingsAtom,
   knownIPAsAtom,
   knownTranslationsAtom,
-  knownVocabsAtom,
-  practiceVocabsAtom,
 } from "~/store";
 import { appSettingsAtom } from "~/store/app-settings";
 import { cn } from "~/utils";
@@ -53,13 +53,9 @@ const generateAudioAsync = async ({
   return URL.createObjectURL(blob);
 };
 
-export default function InterlinearList({
-  sentence,
-}: {
-  sentence: SentenceWithId;
-}) {
-  const setPracticeVocabs = useSetAtom(practiceVocabsAtom);
-  const [knownVocabs, setKnownVocabs] = useAtom(knownVocabsAtom);
+export default function InterlinearList({ sentence }: { sentence: Sentence }) {
+  const { knownWords, setKnownWords, practiceWords, setPracticeWords } =
+    useTrainingSession();
   const [knownIPAs, setKnownIPAs] = useAtom(knownIPAsAtom);
   const [knownTranslations, setKnownTranslations] = useAtom(
     knownTranslationsAtom,
@@ -70,6 +66,8 @@ export default function InterlinearList({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playCount, setPlayCount] = useState(0);
   const playBtmTooltipProps = useHotkeysTooltipProps();
+  const [addedWordsToPracticeList, setAddedWordsToPracticeList] =
+    useState(false);
 
   const audioQuery = useQuery({
     enabled: appSettings.autoPlay,
@@ -111,13 +109,21 @@ export default function InterlinearList({
   });
 
   useEffect(() => {
-    setPracticeVocabs((practiceVocabs) => {
-      const uniqueVocabs = sentence.words
-        .map((item) => item.lemma)
-        .filter((vocab) => !practiceVocabs.includes(vocab));
-      return [...practiceVocabs, ...uniqueVocabs];
-    });
-  }, [sentence.words, setPracticeVocabs]);
+    if (addedWordsToPracticeList) {
+      return;
+    }
+    const uniqueWords = sentence.words
+      .map((item) => item.lemma)
+      .filter((word) => !practiceWords.includes(word));
+    console.log({ practiceWords, uniqueWords });
+    setPracticeWords([...practiceWords, ...uniqueWords]);
+    setAddedWordsToPracticeList(true);
+  }, [
+    addedWordsToPracticeList,
+    practiceWords,
+    sentence.words,
+    setPracticeWords,
+  ]);
 
   useEffect(() => {
     const audioEl = audioRef.current;
@@ -144,6 +150,7 @@ export default function InterlinearList({
   }, []);
 
   useEffect(() => {
+    setAddedWordsToPracticeList(false);
     setPlayCount(0);
     pauseAudio();
   }, [pauseAudio, sentence.id]);
@@ -185,7 +192,7 @@ export default function InterlinearList({
       <div className="relative flex flex-1 flex-wrap gap-x-4 gap-y-6">
         {sentence.words.map((item, i) => {
           const id = `${item.word}-${i}`;
-          const vocabKnown = knownVocabs.includes(item.lemma);
+          const vocabKnown = knownWords.includes(item.lemma);
           return (
             <ListItem
               ipa={item.ipa}
@@ -196,12 +203,10 @@ export default function InterlinearList({
                 setKnownTranslations([...knownTranslations, item.translation])
               }
               onMarkVocabKnown={() =>
-                setKnownVocabs([...knownVocabs, item.lemma])
+                setKnownWords([...knownWords, item.lemma])
               }
               onMarkVocabUnknown={() =>
-                setKnownVocabs(
-                  knownVocabs.filter((vocab) => vocab !== item.lemma),
-                )
+                setKnownWords(knownWords.filter((word) => word !== item.lemma))
               }
               translation={item.translation}
               translationHidden={knownTranslations.includes(item.translation)}

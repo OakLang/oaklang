@@ -36,6 +36,20 @@
       "when": 1718278197983,
       "tag": "0004_blushing_wallow",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1718346299105,
+      "tag": "0005_yellow_bullseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1718346869584,
+      "tag": "0006_green_hawkeye",
+      "breakpoints": true
     }
   ]
 }

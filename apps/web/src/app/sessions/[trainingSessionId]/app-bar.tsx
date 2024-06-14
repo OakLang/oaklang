@@ -29,10 +29,8 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
-import { useTrainingSession } from "~/providers/TrainingSessionProvider";
 
 export default function AppBar() {
-  const { trainingSession } = useTrainingSession();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsBtnTooltipProps = useHotkeysTooltipProps();
 
@@ -57,9 +55,7 @@ export default function AppBar() {
             <Button variant="outline">Practice Vocabs</Button>
           </PopoverTrigger>
           <PopoverContent className="w-72">
-            <PracticeWordsPopoverContent
-              trainingSessionId={trainingSession.id}
-            />
+            <PracticeWordsPopoverContent />
           </PopoverContent>
         </Popover>
 
@@ -68,7 +64,7 @@ export default function AppBar() {
             <Button variant="outline">Known Vocabs</Button>
           </PopoverTrigger>
           <PopoverContent className="w-72">
-            <KnownWordsPopoverContent trainingSessionId={trainingSession.id} />
+            <KnownWordsPopoverContent />
           </PopoverContent>
         </Popover>
 

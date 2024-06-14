@@ -25,7 +25,7 @@ export const sentencesRouter = createTRPCRouter({
         .select()
         .from(sentences)
         .where(eq(sentences.trainingSessionId, trainingSession.id))
-        .orderBy(desc(sentences.id));
+        .orderBy(asc(sentences.index));
       return sentencesList;
     }),
   getSentence: protectedProcedure
@@ -67,19 +67,25 @@ export const sentencesRouter = createTRPCRouter({
           prompt,
           schema: generateSentenceObjectSchema,
         });
+        const [lastSentence] = await db
+          .select({ index: sentences.index })
+          .from(sentences)
+          .where(eq(sentences.trainingSessionId, trainingSession.id))
+          .orderBy(desc(sentences.index));
         const values = result.object.sentences.map<
           typeof sentences.$inferInsert
-        >((sentence) => ({
+        >((sentence, index) => ({
           sentence: sentence.sentence,
           translation: sentence.translation,
           words: sentence.words,
           trainingSessionId: trainingSession.id,
+          index: (lastSentence?.index ?? 0) + 1 + index,
         }));
-        console.log(values);
         if (values.length) {
           const newSentences = await db
             .insert(sentences)
             .values(values)
+            .onConflictDoNothing()
             .returning();
           return newSentences;
         }
@@ -90,7 +96,7 @@ export const sentencesRouter = createTRPCRouter({
 
 const PROMPT = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary. 
 
-Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an {{COMPLEXITY}} {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTICE_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list.
+Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an {{COMPLEXITY}} {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTICE_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list. Also make sure not to regenerate previously generated sentences.
 
 PRACTICE LANGUAGE: "{{PRACTICE_LANGUAGE}}"
 
@@ -107,10 +113,10 @@ PREVIOUSLY GENERATED SENTENCES: """
 
 const buildPrompt = async (trainingSession: TrainingSession, db: DB) => {
   const sentencesList = await db
-    .select({ sentence: sentences.sentence })
+    .select({ sentence: sentences.sentence, index: sentences.index })
     .from(sentences)
     .where(eq(sentences.trainingSessionId, trainingSession.id))
-    .orderBy(asc(sentences.createdAt));
+    .orderBy(asc(sentences.index));
 
   const [helpLanguage] = await db
     .select()
@@ -156,6 +162,8 @@ const buildPrompt = async (trainingSession: TrainingSession, db: DB) => {
     .replaceAll("{{COMPLEXITY}}", trainingSession.complexity)
     .replaceAll(
       "{{PREVIOUSLY_GENERATED_SENTENCES}}",
-      sentencesList.map((sentence) => sentence.sentence).join(",\n"),
+      sentencesList
+        .map((sentence) => `${sentence.index}. ${sentence.sentence}`)
+        .join("\n"),
     );
 };

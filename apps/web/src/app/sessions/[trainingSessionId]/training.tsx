@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -121,6 +122,7 @@ export default function Training() {
 
   return (
     <div className="container my-8 px-4">
+      <p>Sentence Index: {trainingSession.sentenceIndex + 1}</p>
       {sentencesQuery.isPending ? (
         <p>Loading...</p>
       ) : sentencesQuery.isError ? (
@@ -129,7 +131,7 @@ export default function Training() {
         <>
           {sentencesQuery.data[trainingSession.sentenceIndex] ? (
             <InterlinearList
-              sentence={sentencesQuery.data[trainingSession.sentenceIndex]}
+              sentence={sentencesQuery.data[trainingSession.sentenceIndex]!}
             />
           ) : (
             <p>Generating sentences...</p>

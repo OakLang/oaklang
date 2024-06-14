@@ -8,6 +8,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  unique,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 
@@ -150,20 +151,27 @@ export const updateTrainingSessionInput = createInsertSchema(trainingSessions)
   });
 export type UpdateTrainingSession = z.infer<typeof updateTrainingSessionInput>;
 
-export const sentences = pgTable("sentence", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createPrefixedId("sent")),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  trainingSessionId: text("training_session_id")
-    .notNull()
-    .references(() => trainingSessions.id, { onDelete: "cascade" }),
-  sentence: text("sentence").notNull(),
-  translation: text("translation").notNull(),
-  words: jsonb("words")
-    .notNull()
-    .$type<GenerateSentenceObject["sentences"][number]["words"]>(),
-});
+export const sentences = pgTable(
+  "sentence",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createPrefixedId("sent")),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    trainingSessionId: text("training_session_id")
+      .notNull()
+      .references(() => trainingSessions.id, { onDelete: "cascade" }),
+    sentence: text("sentence").notNull(),
+    translation: text("translation").notNull(),
+    words: jsonb("words")
+      .notNull()
+      .$type<GenerateSentenceObject["sentences"][number]["words"]>(),
+    index: integer("index").notNull(),
+  },
+  (table) => ({
+    uniqueIdx: unique().on(table.trainingSessionId, table.index),
+  }),
+);
 export type Sentence = typeof sentences.$inferSelect;
 
 export const words = pgTable(
@@ -177,7 +185,7 @@ export const words = pgTable(
     isKnown: boolean("is_known").notNull().default(false),
   },
   (table) => ({
-    uniqueIdx: primaryKey({
+    compoundKey: primaryKey({
       columns: [table.trainingSessionId, table.word],
     }),
   }),
