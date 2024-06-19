@@ -4,12 +4,13 @@ import type { ReactNode } from "react";
 import { createContext, useCallback, useContext } from "react";
 import { toast } from "sonner";
 
-import type { TrainingSession } from "@acme/db/schema";
+import type { TrainingSession, UpdateTrainingSession } from "@acme/db/schema";
 
 import { api } from "~/trpc/react";
 
 export interface TrainingSessionContextValue {
   trainingSession: TrainingSession;
+  updateTrainingSession: (_: UpdateTrainingSession) => void;
   changeSentenceIndex: (index: number) => void;
   practiceWords: string[];
   knownWords: string[];
@@ -68,13 +69,21 @@ export default function TrainingSessionProvider(
     },
   });
 
-  const updateTrainingSession =
-    api.trainingSessions.updateTrainingSession.useMutation();
+  const updateTrainingSessionMut =
+    api.trainingSessions.updateTrainingSession.useMutation({
+      onSuccess: (newTrainingSession) => {
+        utils.trainingSessions.getTrainingSession.setData(
+          { trainingSessionId: newTrainingSession.id },
+          newTrainingSession,
+        );
+        void utils.trainingSessions.getTrainingSession.invalidate();
+      },
+    });
 
   const changeSentenceIndex: TrainingSessionContextValue["changeSentenceIndex"] =
     useCallback(
       (index) => {
-        updateTrainingSession.mutate({
+        updateTrainingSessionMut.mutate({
           trainingSessionId: trainingSessionQuery.data.id,
           data: {
             sentenceIndex: index,
@@ -90,7 +99,7 @@ export default function TrainingSessionProvider(
       },
       [
         trainingSessionQuery.data,
-        updateTrainingSession,
+        updateTrainingSessionMut,
         utils.trainingSessions.getTrainingSession,
       ],
     );
@@ -186,6 +195,25 @@ export default function TrainingSessionProvider(
       ],
     );
 
+  const updateTrainingSession = useCallback(
+    (data: UpdateTrainingSession) => {
+      updateTrainingSessionMut.mutate({
+        trainingSessionId: trainingSessionQuery.data.id,
+        data,
+      });
+      utils.trainingSessions.getTrainingSession.setData(
+        { trainingSessionId: trainingSessionQuery.data.id },
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        (oldData) => ({ ...oldData!, ...data }),
+      );
+    },
+    [
+      trainingSessionQuery.data.id,
+      updateTrainingSessionMut,
+      utils.trainingSessions.getTrainingSession,
+    ],
+  );
+
   return (
     <TrainingSessionContext.Provider
       value={{
@@ -195,6 +223,7 @@ export default function TrainingSessionProvider(
         practiceWords: (practiceWordsQuery.data ?? []).map((w) => w.word),
         setKnownWords,
         setPracticeWords,
+        updateTrainingSession,
       }}
     >
       {props.children}

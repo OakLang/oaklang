@@ -1,11 +1,22 @@
+import { useState } from "react";
 import { useAtom } from "jotai";
+import { ExpandIcon } from "lucide-react";
 
-import type { Complexity, SentencesGeneratorSettings } from "@acme/validators";
-import { complexityEnum, voiceEnum } from "@acme/validators";
+import type { TrainingSession } from "@acme/db/schema";
+import { voiceEnum } from "@acme/validators";
 
-import { audioSettingsAtom, sentencesGeneratorSettingsAtom } from "~/store";
-import { appSettingsAtom } from "~/store/app-settings";
-import { LANGUAGES } from "~/utils/constants/languages";
+import { useTrainingSession } from "~/providers/TrainingSessionProvider";
+import { audioSettingsAtom, promptAtom } from "~/store";
+import LanguagePicker from "./LanguagePicker";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 import { Label } from "./ui/label";
 import {
   Select,
@@ -17,109 +28,82 @@ import {
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-export interface Props {
-  onChange: (settings: SentencesGeneratorSettings) => void;
-  settings: SentencesGeneratorSettings;
-}
-
-const COMPLEXITIES: Complexity[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const COMPLEXITIES: TrainingSession["complexity"][] = [
+  "A1",
+  "A2",
+  "B1",
+  "B2",
+  "C1",
+  "C2",
+];
 
 export default function SettingsForm() {
-  const [sentencesGeneratorSettings, setSentencesGeneratorSettings] = useAtom(
-    sentencesGeneratorSettingsAtom,
-  );
   const [audioSettings, setAudioSettings] = useAtom(audioSettingsAtom);
-  const [appSettings, setAppSettings] = useAtom(appSettingsAtom);
+  const { trainingSession, updateTrainingSession } = useTrainingSession();
+  const [prompt, setPrompt] = useAtom(promptAtom);
+  const [promptInputExpaned, setPromptInputExpaned] = useState(false);
 
   return (
     <div className="space-y-4 py-4">
       <fieldset className="space-y-1">
-        <Label htmlFor="auto-play">Auto Play</Label>
-        <Switch
-          checked={appSettings.autoPlay}
-          id="auto-play"
-          onCheckedChange={(autoPlay) =>
-            setAppSettings({ ...appSettings, autoPlay })
-          }
-        />
-      </fieldset>
-      <fieldset className="space-y-1">
-        <Label htmlFor="prompt-template">Propmt Template</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="prompt-template">Propmt Template</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="hover:text-foreground text-muted-foreground p-1"
+                onClick={() => setPromptInputExpaned(true)}
+              >
+                <ExpandIcon className="h-4 w-4" />
+                <p className="sr-only">Expand</p>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Expand</TooltipContent>
+          </Tooltip>
+        </div>
         <Textarea
           id="prompt-template"
-          onChange={(e) =>
-            setSentencesGeneratorSettings({
-              ...sentencesGeneratorSettings,
-              prompt: e.target.value,
-            })
-          }
+          onChange={(e) => setPrompt(e.currentTarget.value)}
           rows={5}
-          value={sentencesGeneratorSettings.prompt}
+          value={prompt}
         />
       </fieldset>
       <fieldset className="space-y-1">
         <Label htmlFor="help-language">Help Language</Label>
-        <Select
-          onValueChange={(value) =>
-            setSentencesGeneratorSettings({
-              ...sentencesGeneratorSettings,
-              helpLanguage: value,
-            })
+        <LanguagePicker
+          value={trainingSession.helpLanguage}
+          onValueChange={(helpLanguage) =>
+            updateTrainingSession({ helpLanguage })
           }
-          value={sentencesGeneratorSettings.helpLanguage}
-        >
-          <SelectTrigger id="help-language">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {LANGUAGES.map((language) => (
-              <SelectItem key={language} value={language}>
-                {language}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        />
       </fieldset>
       <fieldset className="space-y-1">
         <Label htmlFor="practice-language">Practice Language</Label>
-        <Select
-          onValueChange={(value) =>
-            setSentencesGeneratorSettings({
-              ...sentencesGeneratorSettings,
-              practiceLanguage: value,
-            })
+        <LanguagePicker
+          value={trainingSession.practiceLanguage}
+          onValueChange={(practiceLanguage) =>
+            updateTrainingSession({ practiceLanguage })
           }
-          value={sentencesGeneratorSettings.practiceLanguage}
-        >
-          <SelectTrigger id="practice-language">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {LANGUAGES.map((language) => (
-              <SelectItem key={language} value={language}>
-                {language}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        />
       </fieldset>
       <fieldset className="space-y-1">
         <Label htmlFor="practice-language">Num of Sentences</Label>
         <Select
           onValueChange={(value) =>
-            setSentencesGeneratorSettings({
-              ...sentencesGeneratorSettings,
+            updateTrainingSession({
               sentencesCount: Number(value),
             })
           }
-          value={String(sentencesGeneratorSettings.sentencesCount)}
+          value={String(trainingSession.sentencesCount)}
         >
           <SelectTrigger id="practice-language">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {[1, 2, 3, 4, 5].map((count) => (
+            {[3, 4, 5, 6, 7, 8].map((count) => (
               <SelectItem key={count} value={String(count)}>
                 {count}
               </SelectItem>
@@ -131,12 +115,11 @@ export default function SettingsForm() {
         <Label htmlFor="complexity">Complexity</Label>
         <Select
           onValueChange={(value) =>
-            setSentencesGeneratorSettings({
-              ...sentencesGeneratorSettings,
-              complexity: complexityEnum.parse(value),
+            updateTrainingSession({
+              complexity: value as TrainingSession["complexity"],
             })
           }
-          value={sentencesGeneratorSettings.complexity}
+          value={trainingSession.complexity}
         >
           <SelectTrigger id="complexity">
             <SelectValue />
@@ -151,6 +134,17 @@ export default function SettingsForm() {
         </Select>
       </fieldset>
       <p className="pt-4 font-semibold">Audio Settings</p>
+      <fieldset className="flex items-center justify-between">
+        <Label htmlFor="auto-play">Auto Play</Label>
+        <Switch
+          checked={audioSettings.autoPlay}
+          id="auto-play"
+          onCheckedChange={(autoPlay) =>
+            setAudioSettings({ ...audioSettings, autoPlay })
+          }
+        />
+      </fieldset>
+
       <fieldset className="space-y-1">
         <Label htmlFor="voice">Voice</Label>
         <Select
@@ -186,6 +180,25 @@ export default function SettingsForm() {
           value={[audioSettings.speed]}
         />
       </fieldset>
+
+      <Dialog open={promptInputExpaned} onOpenChange={setPromptInputExpaned}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Edit Prompt Template</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            onChange={(e) => setPrompt(e.currentTarget.value)}
+            rows={20}
+            value={prompt}
+            className="resize-none"
+          />
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Done</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

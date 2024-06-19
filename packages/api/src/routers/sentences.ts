@@ -51,16 +51,20 @@ export const sentencesRouter = createTRPCRouter({
     .input(
       z.object({
         trainingSessionId: z.string(),
+        promptTemplate: z.string().min(1).max(1000),
       }),
     )
     .mutation(
-      async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
+      async ({
+        ctx: { db, session },
+        input: { trainingSessionId, promptTemplate },
+      }) => {
         const trainingSession = await getTrainingSessionOrThrow(
           trainingSessionId,
           db,
           session,
         );
-        const prompt = await buildPrompt(trainingSession, db);
+        const prompt = await buildPrompt(trainingSession, db, promptTemplate);
         console.log(prompt);
         const result = await generateObject({
           model: openai("gpt-4o", { user: session.user.id }),
@@ -94,24 +98,28 @@ export const sentencesRouter = createTRPCRouter({
     ),
 });
 
-const PROMPT = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary. 
+// const PROMPT = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary.
 
-Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an {{COMPLEXITY}} {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTICE_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list. Also make sure not to regenerate previously generated sentences.
+// Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an {{COMPLEXITY}} {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTICE_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list. Also make sure not to regenerate previously generated sentences.
 
-PRACTICE LANGUAGE: "{{PRACTICE_LANGUAGE}}"
+// PRACTICE LANGUAGE: "{{PRACTICE_LANGUAGE}}"
 
-HELP LANGUAGE: "{{HELP_LANGUAGE}}"
+// HELP LANGUAGE: "{{HELP_LANGUAGE}}"
 
-PRACTICE VOCABS: "{{PRACTICE_VOCABS}}"
+// PRACTICE VOCABS: "{{PRACTICE_VOCABS}}"
 
-KNOWN VOCABS: "{{KNOWN_VOCABS}}"
+// KNOWN VOCABS: "{{KNOWN_VOCABS}}"
 
-PREVIOUSLY GENERATED SENTENCES: """
-{{PREVIOUSLY_GENERATED_SENTENCES}}
-"""
-`;
+// PREVIOUSLY GENERATED SENTENCES: """
+// {{PREVIOUSLY_GENERATED_SENTENCES}}
+// """
+// `;
 
-const buildPrompt = async (trainingSession: TrainingSession, db: DB) => {
+const buildPrompt = async (
+  trainingSession: TrainingSession,
+  db: DB,
+  promptTemplate: string,
+) => {
   const sentencesList = await db
     .select({ sentence: sentences.sentence, index: sentences.index })
     .from(sentences)
@@ -151,10 +159,8 @@ const buildPrompt = async (trainingSession: TrainingSession, db: DB) => {
     .map((word) => word.word)
     .join(", ");
 
-  return PROMPT.replaceAll(
-    "{{SENTENCE_COUNT}}",
-    String(trainingSession.sentencesCount),
-  )
+  return promptTemplate
+    .replaceAll("{{SENTENCE_COUNT}}", String(trainingSession.sentencesCount))
     .replaceAll("{{PRACTICE_LANGUAGE}}", practiceLanguage.name)
     .replaceAll("{{HELP_LANGUAGE}}", helpLanguage.name)
     .replaceAll("{{PRACTICE_VOCABS}}", practiceVocabs)

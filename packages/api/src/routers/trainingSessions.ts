@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { eq } from "@acme/db";
+import { desc, eq } from "@acme/db";
 import {
   createTrainingSessionInput,
   trainingSessions,
@@ -27,7 +27,8 @@ export const trainingSessionsRouter = createTRPCRouter({
       const trainingSessionList = await db
         .select()
         .from(trainingSessions)
-        .where(eq(trainingSessions.userId, session.user.id));
+        .where(eq(trainingSessions.userId, session.user.id))
+        .orderBy(desc(trainingSessions.id));
       return trainingSessionList;
     },
   ),

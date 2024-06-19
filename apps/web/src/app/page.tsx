@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
 import { Loader2Icon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -27,6 +29,8 @@ export default function HomePage() {
   const router = useRouter();
   const [helpLanguage, setHelpLanguage] = useState("en");
   const [practiceLanguage, setPracticeLanguage] = useState("es");
+  const trainingSessionsQuery =
+    api.trainingSessions.getTrainingSessions.useQuery();
 
   const startTrainingSession =
     api.trainingSessions.createTrainingSession.useMutation({
@@ -71,8 +75,8 @@ export default function HomePage() {
           <ThemeToggle />
         </div>
       </header>
-      <div className="container my-8 max-w-sm">
-        <div className="flex flex-col gap-4">
+      <div className="container my-8 max-w-screen-sm">
+        <div className="flex flex-col gap-4 p-4">
           <fieldset>
             <Label>Help Language</Label>
             <LanguagePicker
@@ -101,6 +105,30 @@ export default function HomePage() {
             </TooltipTrigger>
             <TooltipContent>Hotkey: Space</TooltipContent>
           </Tooltip>
+        </div>
+        <div className="bg-border my-4 h-px"></div>
+        <div>
+          <div className="p-4">
+            <p className="text-lg font-medium">Sessions</p>
+          </div>
+          {trainingSessionsQuery.isPending ? (
+            <p>Loading...</p>
+          ) : trainingSessionsQuery.isError ? (
+            <p>{trainingSessionsQuery.error.message}</p>
+          ) : (
+            trainingSessionsQuery.data.map((item) => (
+              <Link
+                key={item.id}
+                href={`/sessions/${item.id}`}
+                className="hover:bg-secondary/50 block border-b p-4"
+              >
+                <p className="text-muted-foreground text-sm">
+                  {formatDistanceToNow(item.createdAt, { addSuffix: true })}
+                </p>
+                <p>{item.id}</p>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </>

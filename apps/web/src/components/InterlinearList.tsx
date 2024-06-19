@@ -22,7 +22,6 @@ import {
   knownIPAsAtom,
   knownTranslationsAtom,
 } from "~/store";
-import { appSettingsAtom } from "~/store/app-settings";
 import { cn } from "~/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
@@ -62,7 +61,6 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
   );
   const [isPaused, setIsPaused] = useState(true);
   const audioSettings = useAtomValue(audioSettingsAtom);
-  const appSettings = useAtomValue(appSettingsAtom);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playCount, setPlayCount] = useState(0);
   const playBtmTooltipProps = useHotkeysTooltipProps();
@@ -70,7 +68,7 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
     useState(false);
 
   const audioQuery = useQuery({
-    enabled: appSettings.autoPlay,
+    enabled: audioSettings.autoPlay,
     queryFn: () =>
       generateAudioAsync({ input: sentence.sentence, settings: audioSettings }),
     queryKey: [sentence.sentence, audioSettings],
@@ -156,10 +154,10 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
   }, [pauseAudio, sentence.id]);
 
   useEffect(() => {
-    if (audioQuery.data && appSettings.autoPlay && playCount === 0) {
+    if (audioQuery.data && audioSettings.autoPlay && playCount === 0) {
       void playAudio();
     }
-  }, [appSettings.autoPlay, audioQuery.data, playAudio, playCount]);
+  }, [audioSettings.autoPlay, audioQuery.data, playAudio, playCount]);
 
   return (
     <div className="flex gap-4">

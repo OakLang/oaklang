@@ -2,7 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
@@ -15,7 +15,7 @@ import {
 } from "~/components/ui/tooltip";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
-import { knownIPAsAtom, knownTranslationsAtom } from "~/store";
+import { knownIPAsAtom, knownTranslationsAtom, promptAtom } from "~/store";
 import { api } from "~/trpc/react";
 
 export default function Training() {
@@ -25,14 +25,18 @@ export default function Training() {
 
   const setKnownIPAs = useSetAtom(knownIPAsAtom);
   const setKnownTranslations = useSetAtom(knownTranslationsAtom);
+  const promptTemplate = useAtomValue(promptAtom);
 
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
     useState(false);
+
   const { trainingSession, changeSentenceIndex } = useTrainingSession();
+
   const utils = api.useUtils();
   const sentencesQuery = api.sentences.getSentences.useQuery({
     trainingSessionId: trainingSession.id,
   });
+
   const generateMoreSentencesMut =
     api.sentences.generateMoreSentences.useMutation({
       onSuccess: (data, { trainingSessionId }) => {
@@ -55,6 +59,7 @@ export default function Training() {
     ) {
       generateMoreSentencesMut.mutate({
         trainingSessionId: trainingSession.id,
+        promptTemplate,
       });
     }
     if (trainingSession.sentenceIndex >= sentencesQuery.data.length) {
@@ -69,6 +74,7 @@ export default function Training() {
     sentencesQuery.isSuccess,
     trainingSession.id,
     trainingSession.sentenceIndex,
+    promptTemplate,
   ]);
 
   const handlePrevious = useCallback(() => {
@@ -110,6 +116,7 @@ export default function Training() {
       setInitialGenerateSentencesCalled(true);
       generateMoreSentencesMut.mutate({
         trainingSessionId: trainingSession.id,
+        promptTemplate,
       });
     }
   }, [
@@ -118,6 +125,7 @@ export default function Training() {
     sentencesQuery.data?.length,
     sentencesQuery.isSuccess,
     trainingSession.id,
+    promptTemplate,
   ]);
 
   return (
