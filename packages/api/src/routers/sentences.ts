@@ -155,7 +155,7 @@ const buildPrompt = async (
     .orderBy(asc(words.createdAt));
   const practiceVocabs = allWords.map((word) => word.word).join(", ");
   const knownVocabs = allWords
-    .filter((word) => word.isKnown)
+    .filter((word) => word.markedKnownAt)
     .map((word) => word.word)
     .join(", ");
 

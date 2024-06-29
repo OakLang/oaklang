@@ -16,7 +16,12 @@ import {
 } from "~/components/ui/tooltip";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
-import { knownIPAsAtom, knownTranslationsAtom, promptAtom } from "~/store";
+import {
+  knownIPAsAtom,
+  knownTranslationsAtom,
+  knownWordsPopoverOpen,
+  promptAtom,
+} from "~/store";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 
@@ -31,6 +36,7 @@ export default function Training() {
   const setKnownIPAs = useSetAtom(knownIPAsAtom);
   const setKnownTranslations = useSetAtom(knownTranslationsAtom);
   const promptTemplate = useAtomValue(promptAtom);
+  const setKnownWordsPopoverOpen = useSetAtom(knownWordsPopoverOpen);
 
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
     useState(false);
@@ -112,33 +118,46 @@ export default function Training() {
     }
     const words = sentence.words.map((word) => word.lemma);
     const uniqueWords = words.filter((word) => !knownWords.includes(word));
-    setKnownWords([...knownWords, ...uniqueWords]);
+    if (uniqueWords.length) {
+      setKnownWords([...knownWords, ...uniqueWords]);
+      toast(`${uniqueWords.length} new words added to known words list.`);
+      setKnownWordsPopoverOpen(true);
+    } else {
+      toast("All words in this sentence is already in your known words list.");
+    }
   }, [
     knownWords,
     sentencesQuery.data,
     sentencesQuery.isSuccess,
     setKnownWords,
+    setKnownWordsPopoverOpen,
     trainingSession.sentenceIndex,
   ]);
 
-  useHotkeys("n", () => {
-    handleNext();
+  useHotkeys(
+    "n",
+    () => {
+      handleNext();
+    },
+    {
+      preventDefault: true,
+    },
+  );
+
+  useHotkeys("p", handlePrevious, {
+    preventDefault: true,
   });
 
-  useHotkeys("p", () => {
-    handlePrevious();
+  useHotkeys("h", handleHelp, {
+    preventDefault: true,
   });
 
-  useHotkeys("h", () => {
-    handleHelp();
+  useHotkeys("t", toggleShowTranslation, {
+    preventDefault: true,
   });
 
-  useHotkeys("t", () => {
-    toggleShowTranslation();
-  });
-
-  useHotkeys("k", () => {
-    handleAllWordsKnown();
+  useHotkeys("k", handleAllWordsKnown, {
+    preventDefault: true,
   });
 
   useEffect(() => {

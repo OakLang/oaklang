@@ -25,3 +25,6 @@ KNOWN VOCABS: "{{KNOWN_VOCABS}}"
 PREVIOUSLY GENERATED SENTENCES: """
 {{PREVIOUSLY_GENERATED_SENTENCES}}
 """`);
+
+export const practiceWordsPopoverOpen = atom(false);
+export const knownWordsPopoverOpen = atom(false);

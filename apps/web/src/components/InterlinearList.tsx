@@ -200,12 +200,12 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
               onHideTranslation={() =>
                 setKnownTranslations([...knownTranslations, item.translation])
               }
-              onMarkVocabKnown={() =>
-                setKnownWords([...knownWords, item.lemma])
-              }
-              onMarkVocabUnknown={() =>
-                setKnownWords(knownWords.filter((word) => word !== item.lemma))
-              }
+              onMarkVocabKnown={() => {
+                setKnownWords([...knownWords, item.lemma]);
+              }}
+              onMarkVocabUnknown={() => {
+                setKnownWords(knownWords.filter((word) => word !== item.lemma));
+              }}
               translation={item.translation}
               translationHidden={knownTranslations.includes(item.translation)}
               vocab={item.word}

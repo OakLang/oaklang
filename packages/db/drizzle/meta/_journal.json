@@ -50,6 +50,13 @@
       "when": 1718346869584,
       "tag": "0006_green_hawkeye",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1719684857903,
+      "tag": "0007_sparkling_moon_knight",
+      "breakpoints": true
     }
   ]
 }

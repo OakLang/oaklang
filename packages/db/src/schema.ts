@@ -182,7 +182,7 @@ export const words = pgTable(
       .notNull()
       .references(() => trainingSessions.id, { onDelete: "cascade" }),
     word: text("word").notNull(),
-    isKnown: boolean("is_known").notNull().default(false),
+    markedKnownAt: timestamp("marked_known_at", { mode: "date" }),
   },
   (table) => ({
     compoundKey: primaryKey({

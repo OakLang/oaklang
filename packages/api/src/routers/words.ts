@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { and, asc, eq, inArray, sql } from "@acme/db";
+import { and, asc, eq, inArray, isNull, not, sql } from "@acme/db";
 import { words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -36,10 +36,10 @@ export const wordsRouter = createTRPCRouter({
         .where(
           and(
             eq(words.trainingSessionId, trainingSession.id),
-            eq(words.isKnown, true),
+            not(isNull(words.markedKnownAt)),
           ),
         )
-        .orderBy(asc(words.createdAt));
+        .orderBy(asc(words.markedKnownAt));
       return knownWords;
     }),
   createWords: protectedProcedure
@@ -66,13 +66,13 @@ export const wordsRouter = createTRPCRouter({
             wordsToCreate.map((word) => ({
               word,
               trainingSessionId: trainingSession.id,
-              isKnown,
+              markedKnownAt: isKnown ? new Date() : null,
             })),
           )
           .onConflictDoUpdate({
             target: [words.trainingSessionId, words.word],
             set: {
-              isKnown: sql.raw(`excluded.${words.isKnown.name}`),
+              markedKnownAt: sql.raw(`excluded.${words.markedKnownAt.name}`),
             },
           })
           .returning();
@@ -133,7 +133,7 @@ export const wordsRouter = createTRPCRouter({
           .update(words)
           .set({
             ...(typeof data.isKnown !== "undefined"
-              ? { isKnown: data.isKnown }
+              ? { markedKnownAt: data.isKnown ? new Date() : null }
               : {}),
           })
           .where(
