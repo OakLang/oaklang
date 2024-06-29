@@ -167,45 +167,54 @@ export default function Training() {
     <>
       <div className="container max-w-screen-xl flex-1 px-4">
         {sentencesQuery.isPending ? (
-          <div className="flex flex-1 items-center justify-center">
+          <div className="flex h-48 items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : sentencesQuery.isError ? (
           <div className="py-4">
             <p>{sentencesQuery.error.message}</p>
           </div>
-        ) : sentencesQuery.data[trainingSession.sentenceIndex] ? (
+        ) : (
           <>
-            <div className="my-16">
-              <p
-                className={cn(
-                  "pointer-events-none text-center font-serif text-3xl font-medium opacity-0 transition-opacity duration-300",
-                  {
-                    "pointer-events-auto opacity-100": showTranslation,
-                  },
-                )}
-              >
-                {sentencesQuery.data[trainingSession.sentenceIndex]!.sentence}
-              </p>
-            </div>
-            <InterlinearList
-              sentence={sentencesQuery.data[trainingSession.sentenceIndex]!}
-            />
-            <div className="my-16">
-              <p
-                className={cn(
-                  "pointer-events-none text-center font-serif text-3xl font-medium opacity-0 transition-opacity duration-300",
-                  {
-                    "pointer-events-auto opacity-100": showTranslation,
-                  },
-                )}
-              >
-                {
-                  sentencesQuery.data[trainingSession.sentenceIndex]!
-                    .translation
-                }
-              </p>
-            </div>
+            {sentencesQuery.data[trainingSession.sentenceIndex] ? (
+              <>
+                <div className="my-16">
+                  <p
+                    className={cn(
+                      "pointer-events-none text-center font-serif text-3xl font-medium opacity-0 transition-opacity duration-300",
+                      {
+                        "pointer-events-auto opacity-100": showTranslation,
+                      },
+                    )}
+                  >
+                    {
+                      sentencesQuery.data[trainingSession.sentenceIndex]!
+                        .sentence
+                    }
+                  </p>
+                </div>
+                <InterlinearList
+                  sentence={sentencesQuery.data[trainingSession.sentenceIndex]!}
+                />
+                <div className="my-16">
+                  <p
+                    className={cn(
+                      "pointer-events-none text-center font-serif text-3xl font-medium opacity-0 transition-opacity duration-300",
+                      {
+                        "pointer-events-auto opacity-100": showTranslation,
+                      },
+                    )}
+                  >
+                    {
+                      sentencesQuery.data[trainingSession.sentenceIndex]!
+                        .translation
+                    }
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p>Generating sentences...</p>
+            )}
 
             <div className="my-4 flex items-center justify-center gap-4">
               <Tooltip {...previousBtnTooltipProps}>
@@ -268,8 +277,6 @@ export default function Training() {
               </Tooltip>
             </div>
           </>
-        ) : (
-          <p>Generating sentences...</p>
         )}
       </div>
     </>

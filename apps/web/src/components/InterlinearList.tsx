@@ -9,12 +9,6 @@ import type { Sentence } from "@acme/db/schema";
 import type { AudioSettings } from "@acme/validators";
 
 import type { TTSBodyParams } from "~/app/api/ai/tts/route";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "~/components/ui/context-menu";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
 import {
@@ -23,6 +17,13 @@ import {
   knownTranslationsAtom,
 } from "~/store";
 import { cn } from "~/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const generateAudioAsync = async ({
@@ -242,34 +243,62 @@ const ListItem = ({
 }) => {
   const [revealIpa, setRevealIpa] = useState(false);
   const [revealTranslation, setRevealTranslation] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const toggleHideOrHelpTranslation = useCallback(() => {
+    const _ipaHidden = !!ipaHidden && !revealIpa;
+    const _translationHidden = !!translationHidden && !revealTranslation;
+    console.log({ _ipaHidden, _translationHidden });
+    if (_ipaHidden || _translationHidden) {
+      setRevealIpa(true);
+      setRevealTranslation(true);
+    } else {
+      onHideIPA();
+      setRevealIpa(false);
+      onHideTranslation();
+      setRevealTranslation(false);
+    }
+  }, [
+    ipaHidden,
+    onHideIPA,
+    onHideTranslation,
+    revealIpa,
+    revealTranslation,
+    translationHidden,
+  ]);
 
   return (
     <div className="flex flex-col gap-3">
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
+      <DropdownMenu
+        modal={false}
+        onOpenChange={setDropdownOpen}
+        open={dropdownOpen}
+      >
+        <DropdownMenuTrigger asChild>
           <button
-            className="block text-left font-serif text-5xl font-semibold"
-            onClick={() => {
-              setRevealIpa(true);
-              setRevealTranslation(true);
-            }}
+            className={cn("block text-left font-serif text-5xl font-semibold", {
+              "bg-blue-500 text-white": dropdownOpen,
+            })}
             type="button"
           >
             {vocab}
           </button>
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          {/* <ContextMenuItem>Repeat word</ContextMenuItem> */}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="bottom">
+          <DropdownMenuItem onClick={toggleHideOrHelpTranslation}>
+            Show/Hide Translation
+          </DropdownMenuItem>
           {vocabKnown ? (
-            <ContextMenuItem onClick={onMarkVocabUnknown}>
-              Mark word unknown
-            </ContextMenuItem>
+            <DropdownMenuItem onClick={onMarkVocabUnknown}>
+              Mark Word Unknown
+            </DropdownMenuItem>
           ) : (
-            <ContextMenuItem onClick={onMarkVocabKnown}>
-              Mark word known
-            </ContextMenuItem>
+            <DropdownMenuItem onClick={onMarkVocabKnown}>
+              Mark Word Known
+            </DropdownMenuItem>
           )}
-          <ContextMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
             <Link
               href={{
                 host: "en.wiktionary.org/w/index.php",
@@ -282,10 +311,14 @@ const ListItem = ({
             >
               Search Wiktionary for &apos;{vocab}&apos;
             </Link>
-          </ContextMenuItem>
-          {/* <ContextMenuItem>More Practice</ContextMenuItem> */}
-        </ContextMenuContent>
-      </ContextMenu>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => navigator.clipboard.writeText(vocab)}
+          >
+            Copy to Clipboard
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <button
         className={cn(
           "text-muted-foreground block text-left font-serif text-2xl italic transition-opacity",
