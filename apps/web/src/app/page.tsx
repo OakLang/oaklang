@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2Icon } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
@@ -18,6 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import UserButton from "~/components/UserButton";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
 import { api } from "~/trpc/react";
 
@@ -65,14 +66,14 @@ export default function HomePage() {
 
   return (
     <>
-      <header>
-        <div className="container flex h-14 items-center gap-2 px-4">
-          <h1 className="text-lg font-semibold">Oaklang</h1>
+      <header className="bg-card border-b">
+        <div className="flex h-16 items-center gap-2 px-4">
+          <h1 className="text-lg font-semibold">
+            <Link href="/">Oaklang</Link>
+          </h1>
           <div className="flex-1" />
-          <Button variant="outline" onClick={() => signOut()}>
-            Sing Out
-          </Button>
           <ThemeToggle />
+          <UserButton />
         </div>
       </header>
       <div className="container my-8 max-w-screen-sm">

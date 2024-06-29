@@ -56,6 +56,7 @@ export default function SettingsForm() {
                 type="button"
                 className="hover:text-foreground text-muted-foreground p-1"
                 onClick={() => setPromptInputExpaned(true)}
+                tabIndex={-1}
               >
                 <ExpandIcon className="h-4 w-4" />
                 <p className="sr-only">Expand</p>

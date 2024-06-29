@@ -113,7 +113,6 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
     const uniqueWords = sentence.words
       .map((item) => item.lemma)
       .filter((word) => !practiceWords.includes(word));
-    console.log({ practiceWords, uniqueWords });
     setPracticeWords([...practiceWords, ...uniqueWords]);
     setAddedWordsToPracticeList(true);
   }, [
@@ -160,12 +159,12 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
   }, [audioSettings.autoPlay, audioQuery.data, playAudio, playCount]);
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-6">
       <audio ref={audioRef} />
       <Tooltip {...playBtmTooltipProps}>
         <TooltipTrigger asChild>
           <button
-            className="hover:bg-secondary flex h-12 w-12 items-center justify-center rounded-full border"
+            className="hover:bg-secondary border-foreground flex h-12 w-12 items-center justify-center rounded-full border-2"
             disabled={audioQuery.isFetching}
             onClick={() => {
               if (isPaused) {
@@ -245,11 +244,11 @@ const ListItem = ({
   const [revealTranslation, setRevealTranslation] = useState(false);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <button
-            className="block text-left font-serif text-4xl font-medium"
+            className="block text-left font-serif text-5xl font-semibold"
             onClick={() => {
               setRevealIpa(true);
               setRevealTranslation(true);
@@ -289,7 +288,7 @@ const ListItem = ({
       </ContextMenu>
       <button
         className={cn(
-          "text-muted-foreground block text-left font-serif text-xl transition-opacity",
+          "text-muted-foreground block text-left font-serif text-2xl italic transition-opacity",
           {
             invisible: ipaHidden && !revealIpa,
           },
@@ -304,7 +303,7 @@ const ListItem = ({
       </button>
       <button
         className={cn(
-          "text-muted-foreground block text-left font-serif text-xl transition-opacity",
+          "text-muted-foreground block text-left font-serif text-2xl transition-opacity",
           {
             invisible: translationHidden && !revealTranslation,
           },
