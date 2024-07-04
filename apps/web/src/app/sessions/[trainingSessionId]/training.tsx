@@ -188,8 +188,9 @@ export default function Training() {
     <>
       <div className="container max-w-screen-xl flex-1 px-4">
         {sentencesQuery.isPending ? (
-          <div className="flex h-48 items-center justify-center">
+          <div className="flex h-[448px] flex-col items-center justify-center gap-4">
             <Loader2 className="h-6 w-6 animate-spin" />
+            <p>Loading...</p>
           </div>
         ) : sentencesQuery.isError ? (
           <div className="py-4">
@@ -234,7 +235,10 @@ export default function Training() {
                 </div>
               </>
             ) : (
-              <p>Generating sentences...</p>
+              <div className="flex h-[448px] flex-col items-center justify-center gap-4">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <p>Generating sentences...</p>
+              </div>
             )}
 
             <div className="my-4 flex items-center justify-center gap-4">

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { toast } from "sonner";
 
 import type {
@@ -15,6 +15,7 @@ import { api } from "~/trpc/react";
 export interface TrainingSessionContextValue {
   trainingSession: TrainingSession;
   updateTrainingSession: (_: UpdateTrainingSession) => void;
+  sentenceIndex: number;
   changeSentenceIndex: (index: number) => void;
   practiceWords: Word[];
   knownWords: Word[];
@@ -39,6 +40,9 @@ export default function TrainingSessionProvider(
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId: props.trainingSession.id },
     { initialData: props.trainingSession },
+  );
+  const [sentenceIndex, setSentenceIndex] = useState(
+    trainingSessionQuery.data.sentenceIndex,
   );
 
   const practiceWordsQuery = api.words.getWords.useQuery(
@@ -72,25 +76,15 @@ export default function TrainingSessionProvider(
   const changeSentenceIndex: TrainingSessionContextValue["changeSentenceIndex"] =
     useCallback(
       (index) => {
+        setSentenceIndex(index);
         updateTrainingSessionMut.mutate({
           trainingSessionId: trainingSessionQuery.data.id,
           data: {
             sentenceIndex: index,
           },
         });
-        utils.trainingSessions.getTrainingSession.setData(
-          { trainingSessionId: trainingSessionQuery.data.id },
-          (trainingSession) => ({
-            ...(trainingSession ?? trainingSessionQuery.data),
-            sentenceIndex: index,
-          }),
-        );
       },
-      [
-        trainingSessionQuery.data,
-        updateTrainingSessionMut,
-        utils.trainingSessions.getTrainingSession,
-      ],
+      [trainingSessionQuery.data, updateTrainingSessionMut],
     );
 
   const setKnownWords: TrainingSessionContextValue["setKnownWords"] =
@@ -229,6 +223,7 @@ export default function TrainingSessionProvider(
     <TrainingSessionContext.Provider
       value={{
         trainingSession: trainingSessionQuery.data,
+        sentenceIndex,
         changeSentenceIndex,
         knownWords: knownWordsQuery.data,
         practiceWords: practiceWordsQuery.data,
