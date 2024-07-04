@@ -49,16 +49,7 @@ export default function TrainingSessionProvider(
     { trainingSessionId: props.trainingSession.id, isKnown: true },
     { initialData: props.knownWords, refetchOnMount: false },
   );
-
-  const createWordsMut = api.words.createWords.useMutation({
-    onSettled: (_, __, { trainingSessionId }) => {
-      void utils.words.getWords.invalidate({ trainingSessionId });
-    },
-    onError: (error) => {
-      toast("Error", { description: error.message });
-    },
-  });
-  const updateWordsMut = api.words.updateWords.useMutation({
+  const createOrUpdateWordsMut = api.words.createOrUpdateWords.useMutation({
     onSettled: (_, __, { trainingSessionId }) => {
       void utils.words.getWords.invalidate({ trainingSessionId });
     },
@@ -111,25 +102,50 @@ export default function TrainingSessionProvider(
           (w) => !newWordsList.includes(w),
         );
         if (newWords.length) {
-          createWordsMut.mutate({
+          createOrUpdateWordsMut.mutate({
             words: newWords,
             trainingSessionId: trainingSessionQuery.data.id,
             isKnown: true,
           });
         }
         if (removedWords.length) {
-          updateWordsMut.mutate({
+          createOrUpdateWordsMut.mutate({
             trainingSessionId: trainingSessionQuery.data.id,
             words: removedWords,
-            data: { isKnown: false },
+            isKnown: false,
           });
         }
+        utils.words.getWords.setData(
+          {
+            trainingSessionId: trainingSessionQuery.data.id,
+            isKnown: true,
+          },
+          (words = []) =>
+            [
+              ...words.filter((word) => !removedWords.includes(word.word)),
+              ...newWords.map(
+                (word) =>
+                  ({
+                    word,
+                    trainingSessionId: trainingSessionQuery.data.id,
+                    createdAt: new Date(),
+                    isKnown: true,
+                    isPracticing: false,
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-expect-error
+                    _isTemp: true,
+                  }) satisfies Word,
+              ),
+            ].sort((a, b) =>
+              a.word.toLowerCase().localeCompare(b.word.toLocaleLowerCase()),
+            ),
+        );
       },
       [
-        createWordsMut,
+        createOrUpdateWordsMut,
         knownWordsQuery.data,
         trainingSessionQuery.data.id,
-        updateWordsMut,
+        utils.words.getWords,
       ],
     );
 
@@ -142,25 +158,51 @@ export default function TrainingSessionProvider(
           (w) => !newWordsList.includes(w),
         );
         if (newWords.length) {
-          createWordsMut.mutate({
+          createOrUpdateWordsMut.mutate({
             words: newWords,
             trainingSessionId: trainingSessionQuery.data.id,
             isPracticing: true,
           });
         }
         if (removedWords.length) {
-          updateWordsMut.mutate({
+          createOrUpdateWordsMut.mutate({
             trainingSessionId: trainingSessionQuery.data.id,
             words: removedWords,
-            data: { isPracticing: false },
+            isPracticing: false,
           });
         }
+
+        utils.words.getWords.setData(
+          {
+            trainingSessionId: trainingSessionQuery.data.id,
+            isPracticing: true,
+          },
+          (words = []) =>
+            [
+              ...words.filter((word) => !removedWords.includes(word.word)),
+              ...newWords.map(
+                (word) =>
+                  ({
+                    word,
+                    trainingSessionId: trainingSessionQuery.data.id,
+                    createdAt: new Date(),
+                    isPracticing: true,
+                    isKnown: false,
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-expect-error
+                    _isTemp: true,
+                  }) satisfies Word,
+              ),
+            ].sort((a, b) =>
+              a.word.toLowerCase().localeCompare(b.word.toLocaleLowerCase()),
+            ),
+        );
       },
       [
-        createWordsMut,
+        createOrUpdateWordsMut,
         practiceWordsQuery.data,
         trainingSessionQuery.data.id,
-        updateWordsMut,
+        utils.words.getWords,
       ],
     );
 

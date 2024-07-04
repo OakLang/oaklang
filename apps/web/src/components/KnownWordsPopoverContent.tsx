@@ -8,7 +8,7 @@ export default function KnownWordsPopoverContent() {
 
   return (
     <WordsList
-      words={knownWords.map((item) => item.word)}
+      words={knownWords}
       onWordsChange={setKnownWords}
       title="Known Vocabs"
     />

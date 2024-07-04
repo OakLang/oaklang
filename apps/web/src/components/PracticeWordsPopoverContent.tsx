@@ -7,7 +7,7 @@ export default function PracticeWordsPopoverContent() {
   const { practiceWords, setPracticeWords } = useTrainingSession();
   return (
     <WordsList
-      words={practiceWords.map((item) => item.word)}
+      words={practiceWords}
       onWordsChange={setPracticeWords}
       title="Practice Vocabs"
     />

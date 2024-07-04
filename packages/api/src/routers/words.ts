@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { and, asc, eq, inArray } from "@acme/db";
+import { and, asc, eq, inArray, sql } from "@acme/db";
 import { words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -39,11 +39,11 @@ export const wordsRouter = createTRPCRouter({
                 : []),
             ),
           )
-          .orderBy(asc(words.createdAt));
+          .orderBy(asc(words.word));
         return practiceWords;
       },
     ),
-  createWords: protectedProcedure
+  createOrUpdateWords: protectedProcedure
     .input(
       z.object({
         trainingSessionId: z.string(),
@@ -55,26 +55,17 @@ export const wordsRouter = createTRPCRouter({
     .mutation(
       async ({
         ctx: { db, session },
-        input: {
-          trainingSessionId,
-          words: wordsToCreate,
-          isKnown,
-          isPracticing,
-        },
+        input: { trainingSessionId, words: wordsList, isKnown, isPracticing },
       }) => {
-        const trainingSession = await getTrainingSessionOrThrow(
-          trainingSessionId,
-          db,
-          session,
-        );
+        await getTrainingSessionOrThrow(trainingSessionId, db, session);
         const newWords = await db
           .insert(words)
           .values(
-            wordsToCreate.map(
+            wordsList.map(
               (word) =>
                 ({
+                  trainingSessionId,
                   word,
-                  trainingSessionId: trainingSession.id,
                   isKnown,
                   isPracticing,
                 }) satisfies typeof words.$inferInsert,
@@ -83,8 +74,14 @@ export const wordsRouter = createTRPCRouter({
           .onConflictDoUpdate({
             target: [words.trainingSessionId, words.word],
             set: {
-              isKnown,
-              isPracticing,
+              isKnown:
+                typeof isKnown === "undefined"
+                  ? sql`${words.isKnown}`
+                  : isKnown,
+              isPracticing:
+                typeof isPracticing === "undefined"
+                  ? sql`${words.isPracticing}`
+                  : isPracticing,
             },
           })
           .returning();
@@ -101,7 +98,7 @@ export const wordsRouter = createTRPCRouter({
     .mutation(
       async ({
         ctx: { db, session },
-        input: { trainingSessionId, words: wordsToDelete },
+        input: { trainingSessionId, words: wordsList },
       }) => {
         const trainingSession = await getTrainingSessionOrThrow(
           trainingSessionId,
@@ -114,50 +111,12 @@ export const wordsRouter = createTRPCRouter({
           .where(
             and(
               eq(words.trainingSessionId, trainingSession.id),
-              inArray(words.word, wordsToDelete),
+              inArray(words.word, wordsList),
             ),
           )
           .returning();
 
         return deletedWords;
-      },
-    ),
-  updateWords: protectedProcedure
-    .input(
-      z.object({
-        trainingSessionId: z.string(),
-        words: z.array(z.string()).min(1).max(100),
-        data: z.object({
-          isKnown: z.boolean().optional(),
-          isPracticing: z.boolean().optional(),
-        }),
-      }),
-    )
-    .mutation(
-      async ({
-        ctx: { db, session },
-        input: { trainingSessionId, words: wordsToUpdate, data },
-      }) => {
-        const trainingSession = await getTrainingSessionOrThrow(
-          trainingSessionId,
-          db,
-          session,
-        );
-
-        const updatedWords = await db
-          .update(words)
-          .set({
-            isKnown: data.isKnown,
-            isPracticing: data.isPracticing,
-          })
-          .where(
-            and(
-              eq(words.trainingSessionId, trainingSession.id),
-              inArray(words.word, wordsToUpdate),
-            ),
-          )
-          .returning();
-        return updatedWords;
       },
     ),
 });

@@ -11,6 +11,9 @@ import "react-csv-importer/dist/index.css";
 
 import { toast } from "sonner";
 
+import type { Word } from "@acme/db/schema";
+
+import { cn } from "~/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 
 export default function WordsList({
@@ -20,7 +23,7 @@ export default function WordsList({
 }: {
   onWordsChange: (words: string[]) => void;
   title: string;
-  words: string[];
+  words: Word[];
 }) {
   const [input, setInput] = useState("");
   const [showCSVImporterModal, setShowCSVImporterModal] = useState(false);
@@ -28,8 +31,9 @@ export default function WordsList({
 
   const handleAddWrods = useCallback(
     (newWords: string[]) => {
-      const uniqueWords = newWords.filter((w) => !words.includes(w));
-      onWordsChange([...words, ...uniqueWords]);
+      const _words = words.map((item) => item.word);
+      const uniqueWords = newWords.filter((w) => !_words.includes(w));
+      onWordsChange([..._words, ...uniqueWords]);
     },
     [onWordsChange, words],
   );
@@ -46,7 +50,7 @@ export default function WordsList({
   const handleDownloadCSV = useCallback(() => {
     const content = [
       "Id,Word",
-      ...words.map((word, i) => `${i + 1},${word}`),
+      ...words.map((word, i) => `${i + 1},${word.word}`),
     ].join("\n");
     const file = new Blob([content], { type: "text/plan" });
     const link = document.createElement("a");
@@ -84,17 +88,29 @@ export default function WordsList({
         {words.length === 0 ? (
           <p className="text-muted-foreground text-sm">No words...</p>
         ) : (
-          words.map((word) => (
+          words.map((item) => (
             <Badge
-              key={word}
+              key={item.word}
               variant="outline"
-              className="px-3 py-1 text-sm font-medium"
+              className={cn(
+                "px-3 py-1 text-sm font-medium transition-colors duration-1000",
+                {
+                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                  // @ts-expect-error
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                  "bg-indigo-500/20": item._isTemp,
+                },
+              )}
             >
-              {word}
+              {item.word}
               <Button
                 className="text-muted-foreground hover:text-foreground -mr-2 ml-1 h-6 w-6 rounded-full"
                 onClick={() => {
-                  onWordsChange(words.filter((w) => w !== word));
+                  onWordsChange(
+                    words
+                      .map((item) => item.word)
+                      .filter((w) => w !== item.word),
+                  );
                 }}
                 size="icon"
                 type="button"
