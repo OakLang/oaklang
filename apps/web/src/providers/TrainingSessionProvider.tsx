@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext } from "react";
-import { compareAsc } from "date-fns";
 import { toast } from "sonner";
 
 import type {
@@ -17,8 +16,8 @@ export interface TrainingSessionContextValue {
   trainingSession: TrainingSession;
   updateTrainingSession: (_: UpdateTrainingSession) => void;
   changeSentenceIndex: (index: number) => void;
-  practiceWords: string[];
-  knownWords: string[];
+  practiceWords: Word[];
+  knownWords: Word[];
   setKnownWords: (words: string[]) => void;
   setPracticeWords: (words: string[]) => void;
 }
@@ -43,23 +42,17 @@ export default function TrainingSessionProvider(
   );
 
   const practiceWordsQuery = api.words.getWords.useQuery(
-    {
-      trainingSessionId: props.trainingSession.id,
-    },
-    {
-      initialData: props.practiceWords,
-    },
+    { trainingSessionId: props.trainingSession.id, isPracticing: true },
+    { initialData: props.practiceWords, refetchOnMount: false },
   );
-  const knownWordsQuery = api.words.getKnownWords.useQuery(
-    {
-      trainingSessionId: props.trainingSession.id,
-    },
-    { initialData: props.knownWords },
+  const knownWordsQuery = api.words.getWords.useQuery(
+    { trainingSessionId: props.trainingSession.id, isKnown: true },
+    { initialData: props.knownWords, refetchOnMount: false },
   );
+
   const createWordsMut = api.words.createWords.useMutation({
     onSettled: (_, __, { trainingSessionId }) => {
       void utils.words.getWords.invalidate({ trainingSessionId });
-      void utils.words.getKnownWords.invalidate({ trainingSessionId });
     },
     onError: (error) => {
       toast("Error", { description: error.message });
@@ -68,16 +61,6 @@ export default function TrainingSessionProvider(
   const updateWordsMut = api.words.updateWords.useMutation({
     onSettled: (_, __, { trainingSessionId }) => {
       void utils.words.getWords.invalidate({ trainingSessionId });
-      void utils.words.getKnownWords.invalidate({ trainingSessionId });
-    },
-    onError: (error) => {
-      toast("Error", { description: error.message });
-    },
-  });
-  const deleteWordsMut = api.words.deleteWords.useMutation({
-    onSettled: (_, __, { trainingSessionId }) => {
-      void utils.words.getWords.invalidate({ trainingSessionId });
-      void utils.words.getKnownWords.invalidate({ trainingSessionId });
     },
     onError: (error) => {
       toast("Error", { description: error.message });
@@ -124,10 +107,9 @@ export default function TrainingSessionProvider(
       (newWordsList) => {
         const existingWords = knownWordsQuery.data.map((w) => w.word);
         const newWords = newWordsList.filter((w) => !existingWords.includes(w));
-        const deletedWords = existingWords.filter(
+        const removedWords = existingWords.filter(
           (w) => !newWordsList.includes(w),
         );
-        console.log({ newWords, deletedWords });
         if (newWords.length) {
           createWordsMut.mutate({
             words: newWords,
@@ -135,35 +117,19 @@ export default function TrainingSessionProvider(
             isKnown: true,
           });
         }
-        if (deletedWords.length) {
+        if (removedWords.length) {
           updateWordsMut.mutate({
             trainingSessionId: trainingSessionQuery.data.id,
-            words: deletedWords,
+            words: removedWords,
             data: { isKnown: false },
           });
         }
-        utils.words.getKnownWords.setData(
-          { trainingSessionId: trainingSessionQuery.data.id },
-          (words) =>
-            [
-              ...(words ?? []).filter((w) => !deletedWords.includes(w.word)),
-              ...newWords.map((word) => ({
-                word,
-                trainingSessionId: trainingSessionQuery.data.id,
-                markedKnownAt: new Date(),
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              })),
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            ].sort((a, b) => compareAsc(a.markedKnownAt!, b.markedKnownAt!)),
-        );
       },
       [
         createWordsMut,
         knownWordsQuery.data,
         trainingSessionQuery.data.id,
         updateWordsMut,
-        utils.words.getKnownWords,
       ],
     );
 
@@ -172,43 +138,29 @@ export default function TrainingSessionProvider(
       (newWordsList) => {
         const existingWords = practiceWordsQuery.data.map((w) => w.word);
         const newWords = newWordsList.filter((w) => !existingWords.includes(w));
-        const deletedWords = existingWords.filter(
+        const removedWords = existingWords.filter(
           (w) => !newWordsList.includes(w),
         );
         if (newWords.length) {
           createWordsMut.mutate({
             words: newWords,
             trainingSessionId: trainingSessionQuery.data.id,
+            isPracticing: true,
           });
         }
-        if (deletedWords.length) {
-          deleteWordsMut.mutate({
+        if (removedWords.length) {
+          updateWordsMut.mutate({
             trainingSessionId: trainingSessionQuery.data.id,
-            words: deletedWords,
+            words: removedWords,
+            data: { isPracticing: false },
           });
         }
-        utils.words.getWords.setData(
-          { trainingSessionId: trainingSessionQuery.data.id },
-          (words) =>
-            [
-              ...(words ?? []).filter((w) => !deletedWords.includes(w.word)),
-              ...newWords.map((word) => ({
-                word,
-                markedKnownAt: new Date(),
-                trainingSessionId: trainingSessionQuery.data.id,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              })),
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            ].sort((a, b) => compareAsc(a.markedKnownAt!, b.markedKnownAt!)),
-        );
       },
       [
         createWordsMut,
-        deleteWordsMut,
         practiceWordsQuery.data,
         trainingSessionQuery.data.id,
-        utils.words.getWords,
+        updateWordsMut,
       ],
     );
 
@@ -236,8 +188,8 @@ export default function TrainingSessionProvider(
       value={{
         trainingSession: trainingSessionQuery.data,
         changeSentenceIndex,
-        knownWords: knownWordsQuery.data.map((w) => w.word),
-        practiceWords: practiceWordsQuery.data.map((w) => w.word),
+        knownWords: knownWordsQuery.data,
+        practiceWords: practiceWordsQuery.data,
         setKnownWords,
         setPracticeWords,
         updateTrainingSession,

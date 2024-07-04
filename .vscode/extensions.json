@@ -3,10 +3,7 @@
     "bradlc.vscode-tailwindcss",
     "wakatime.vscode-wakatime",
     "esbenp.prettier-vscode",
-    "austenc.tailwind-docs",
     "dbaeumer.vscode-eslint",
-    "amatiasq.sort-imports",
-    "expo.vscode-expo-tools",
     "yoavbls.pretty-ts-errors"
   ]
 }

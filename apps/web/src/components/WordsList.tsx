@@ -1,4 +1,4 @@
-import React, { useCallback, useId, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { CopyIcon, DownloadIcon, UploadIcon, XIcon } from "lucide-react";
 import pluralize from "pluralize";
 import { Importer, ImporterField } from "react-csv-importer";

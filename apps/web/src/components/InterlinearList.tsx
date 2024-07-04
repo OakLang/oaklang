@@ -113,8 +113,11 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
     }
     const uniqueWords = sentence.words
       .map((item) => item.lemma)
-      .filter((word) => !practiceWords.includes(word));
-    setPracticeWords([...practiceWords, ...uniqueWords]);
+      .filter((word) => !practiceWords.find((item) => item.word === word));
+    setPracticeWords([
+      ...practiceWords.map((item) => item.word),
+      ...uniqueWords,
+    ]);
     setAddedWordsToPracticeList(true);
   }, [
     addedWordsToPracticeList,
@@ -190,7 +193,9 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
       <div className="relative flex flex-1 flex-wrap gap-x-4 gap-y-6">
         {sentence.words.map((item, i) => {
           const id = `${item.word}-${i}`;
-          const vocabKnown = knownWords.includes(item.lemma);
+          const vocabKnown = !!knownWords.find(
+            (word) => word.word === item.lemma,
+          );
           return (
             <ListItem
               ipa={item.ipa}
@@ -201,10 +206,17 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
                 setKnownTranslations([...knownTranslations, item.translation])
               }
               onMarkVocabKnown={() => {
-                setKnownWords([...knownWords, item.lemma]);
+                setKnownWords([
+                  ...knownWords.map((item) => item.word),
+                  item.lemma,
+                ]);
               }}
               onMarkVocabUnknown={() => {
-                setKnownWords(knownWords.filter((word) => word !== item.lemma));
+                setKnownWords(
+                  knownWords
+                    .map((item) => item.word)
+                    .filter((word) => word !== item.lemma),
+                );
               }}
               translation={item.translation}
               translationHidden={knownTranslations.includes(item.translation)}

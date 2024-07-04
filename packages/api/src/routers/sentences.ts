@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import type { DB } from "@acme/db/client";
 import type { TrainingSession } from "@acme/db/schema";
-import { asc, desc, eq } from "@acme/db";
+import { and, asc, desc, eq } from "@acme/db";
 import { languages, sentences, words } from "@acme/db/schema";
 import { generateSentenceObjectSchema } from "@acme/validators";
 
@@ -148,23 +148,36 @@ const buildPrompt = async (
     });
   }
 
-  const allWords = await db
+  const knownWords = await db
     .select()
     .from(words)
-    .where(eq(words.trainingSessionId, trainingSession.id))
+    .where(
+      and(
+        eq(words.trainingSessionId, trainingSession.id),
+        eq(words.isKnown, true),
+      ),
+    )
     .orderBy(asc(words.createdAt));
-  const practiceVocabs = allWords.map((word) => word.word).join(", ");
-  const knownVocabs = allWords
-    .filter((word) => word.markedKnownAt)
-    .map((word) => word.word)
-    .join(", ");
+  const practicingWords = await db
+    .select()
+    .from(words)
+    .where(
+      and(
+        eq(words.trainingSessionId, trainingSession.id),
+        eq(words.isPracticing, true),
+      ),
+    )
+    .orderBy(asc(words.createdAt));
 
   return promptTemplate
     .replaceAll("{{SENTENCE_COUNT}}", String(trainingSession.sentencesCount))
     .replaceAll("{{PRACTICE_LANGUAGE}}", practiceLanguage.name)
     .replaceAll("{{HELP_LANGUAGE}}", helpLanguage.name)
-    .replaceAll("{{PRACTICE_VOCABS}}", practiceVocabs)
-    .replaceAll("{{KNOWN_VOCABS}}", knownVocabs)
+    .replaceAll(
+      "{{PRACTICE_VOCABS}}",
+      practicingWords.map((i) => i.word).join(", "),
+    )
+    .replaceAll("{{KNOWN_VOCABS}}", knownWords.map((i) => i.word).join(", "))
     .replaceAll("{{COMPLEXITY}}", trainingSession.complexity)
     .replaceAll(
       "{{PREVIOUSLY_GENERATED_SENTENCES}}",

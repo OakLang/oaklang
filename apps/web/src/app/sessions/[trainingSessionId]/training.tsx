@@ -117,9 +117,11 @@ export default function Training() {
       return;
     }
     const words = sentence.words.map((word) => word.lemma);
-    const uniqueWords = words.filter((word) => !knownWords.includes(word));
+    const uniqueWords = words.filter(
+      (word) => !knownWords.find((item) => item.word === word),
+    );
     if (uniqueWords.length) {
-      setKnownWords([...knownWords, ...uniqueWords]);
+      setKnownWords([...knownWords.map((item) => item.word), ...uniqueWords]);
       toast(`${uniqueWords.length} new words added to known words list.`);
       setKnownWordsPopoverOpen(true);
     } else {

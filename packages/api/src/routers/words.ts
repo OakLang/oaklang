@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { and, asc, eq, inArray, isNull, not, sql } from "@acme/db";
+import { and, asc, eq, inArray } from "@acme/db";
 import { words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -8,52 +8,59 @@ import { getTrainingSessionOrThrow } from "../utils";
 
 export const wordsRouter = createTRPCRouter({
   getWords: protectedProcedure
-    .input(z.object({ trainingSessionId: z.string() }))
-    .query(async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
-      const trainingSession = await getTrainingSessionOrThrow(
-        trainingSessionId,
-        db,
-        session,
-      );
-      const practiceWords = await db
-        .select()
-        .from(words)
-        .where(eq(words.trainingSessionId, trainingSession.id))
-        .orderBy(asc(words.createdAt));
-      return practiceWords;
-    }),
-  getKnownWords: protectedProcedure
-    .input(z.object({ trainingSessionId: z.string() }))
-    .query(async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
-      const trainingSession = await getTrainingSessionOrThrow(
-        trainingSessionId,
-        db,
-        session,
-      );
-      const knownWords = await db
-        .select()
-        .from(words)
-        .where(
-          and(
-            eq(words.trainingSessionId, trainingSession.id),
-            not(isNull(words.markedKnownAt)),
-          ),
-        )
-        .orderBy(asc(words.markedKnownAt));
-      return knownWords;
-    }),
+    .input(
+      z.object({
+        trainingSessionId: z.string(),
+        isKnown: z.boolean().optional(),
+        isPracticing: z.boolean().optional(),
+      }),
+    )
+    .query(
+      async ({
+        ctx: { db, session },
+        input: { trainingSessionId, isKnown, isPracticing },
+      }) => {
+        const trainingSession = await getTrainingSessionOrThrow(
+          trainingSessionId,
+          db,
+          session,
+        );
+        const practiceWords = await db
+          .select()
+          .from(words)
+          .where(
+            and(
+              eq(words.trainingSessionId, trainingSession.id),
+              ...(typeof isPracticing !== "undefined"
+                ? [eq(words.isPracticing, isPracticing)]
+                : []),
+              ...(typeof isKnown !== "undefined"
+                ? [eq(words.isKnown, isKnown)]
+                : []),
+            ),
+          )
+          .orderBy(asc(words.createdAt));
+        return practiceWords;
+      },
+    ),
   createWords: protectedProcedure
     .input(
       z.object({
         trainingSessionId: z.string(),
         words: z.array(z.string()).min(1).max(100),
         isKnown: z.boolean().optional(),
+        isPracticing: z.boolean().optional(),
       }),
     )
     .mutation(
       async ({
         ctx: { db, session },
-        input: { trainingSessionId, words: wordsToCreate, isKnown },
+        input: {
+          trainingSessionId,
+          words: wordsToCreate,
+          isKnown,
+          isPracticing,
+        },
       }) => {
         const trainingSession = await getTrainingSessionOrThrow(
           trainingSessionId,
@@ -63,16 +70,21 @@ export const wordsRouter = createTRPCRouter({
         const newWords = await db
           .insert(words)
           .values(
-            wordsToCreate.map((word) => ({
-              word,
-              trainingSessionId: trainingSession.id,
-              markedKnownAt: isKnown ? new Date() : null,
-            })),
+            wordsToCreate.map(
+              (word) =>
+                ({
+                  word,
+                  trainingSessionId: trainingSession.id,
+                  isKnown,
+                  isPracticing,
+                }) satisfies typeof words.$inferInsert,
+            ),
           )
           .onConflictDoUpdate({
             target: [words.trainingSessionId, words.word],
             set: {
-              markedKnownAt: sql.raw(`excluded.${words.markedKnownAt.name}`),
+              isKnown,
+              isPracticing,
             },
           })
           .returning();
@@ -115,7 +127,10 @@ export const wordsRouter = createTRPCRouter({
       z.object({
         trainingSessionId: z.string(),
         words: z.array(z.string()).min(1).max(100),
-        data: z.object({ isKnown: z.boolean().optional() }),
+        data: z.object({
+          isKnown: z.boolean().optional(),
+          isPracticing: z.boolean().optional(),
+        }),
       }),
     )
     .mutation(
@@ -132,9 +147,8 @@ export const wordsRouter = createTRPCRouter({
         const updatedWords = await db
           .update(words)
           .set({
-            ...(typeof data.isKnown !== "undefined"
-              ? { markedKnownAt: data.isKnown ? new Date() : null }
-              : {}),
+            isKnown: data.isKnown,
+            isPracticing: data.isPracticing,
           })
           .where(
             and(

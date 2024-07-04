@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 import { notFound, redirect, RedirectType } from "next/navigation";
-import { compareAsc } from "date-fns";
 
 import { auth } from "@acme/auth";
-import { and, desc, eq } from "@acme/db";
+import { and, asc, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import { trainingSessions, words } from "@acme/db/schema";
 
@@ -38,12 +37,23 @@ export default async function TrainingLayout({
   const practiceWords = await db
     .select()
     .from(words)
-    .where(eq(words.trainingSessionId, trainingSession.id))
-    .orderBy(desc(words.createdAt));
-  const knownWords = practiceWords
-    .filter((w) => w.markedKnownAt)
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    .sort((a, b) => compareAsc(a.markedKnownAt!, b.markedKnownAt!));
+    .where(
+      and(
+        eq(words.trainingSessionId, trainingSession.id),
+        eq(words.isPracticing, true),
+      ),
+    )
+    .orderBy(asc(words.createdAt));
+  const knownWords = await db
+    .select()
+    .from(words)
+    .where(
+      and(
+        eq(words.trainingSessionId, trainingSession.id),
+        eq(words.isKnown, true),
+      ),
+    )
+    .orderBy(asc(words.createdAt));
 
   return (
     <TrainingSessionProvider

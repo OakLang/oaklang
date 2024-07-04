@@ -57,6 +57,13 @@
       "when": 1719684857903,
       "tag": "0007_sparkling_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1720106376921,
+      "tag": "0008_quick_george_stacy",
+      "breakpoints": true
     }
   ]
 }
