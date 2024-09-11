@@ -5,64 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1717954458183,
-      "tag": "0000_mute_vargas",
+      "when": 1726064803888,
+      "tag": "0000_flaky_major_mapleleaf",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1718255736691,
-      "tag": "0001_massive_rick_jones",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1718273149154,
-      "tag": "0002_tranquil_red_skull",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1718273352191,
-      "tag": "0003_mighty_blacklash",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1718278197983,
-      "tag": "0004_blushing_wallow",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1718346299105,
-      "tag": "0005_yellow_bullseye",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1718346869584,
-      "tag": "0006_green_hawkeye",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1719684857903,
-      "tag": "0007_sparkling_moon_knight",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1720106376921,
-      "tag": "0008_quick_george_stacy",
+      "when": 1726066198395,
+      "tag": "0001_bitter_revanche",
       "breakpoints": true
     }
   ]

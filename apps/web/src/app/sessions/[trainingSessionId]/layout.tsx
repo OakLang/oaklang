@@ -37,22 +37,13 @@ export default async function TrainingLayout({
   const practiceWords = await db
     .select()
     .from(words)
-    .where(
-      and(
-        eq(words.trainingSessionId, trainingSession.id),
-        eq(words.isPracticing, true),
-      ),
-    )
+    .where(and(eq(words.userId, session.user.id), eq(words.isPracticing, true)))
     .orderBy(asc(words.createdAt));
+
   const knownWords = await db
     .select()
     .from(words)
-    .where(
-      and(
-        eq(words.trainingSessionId, trainingSession.id),
-        eq(words.isKnown, true),
-      ),
-    )
+    .where(and(eq(words.userId, session.user.id), eq(words.isKnown, true)))
     .orderBy(asc(words.createdAt));
 
   return (

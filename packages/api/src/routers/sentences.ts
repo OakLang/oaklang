@@ -152,10 +152,7 @@ const buildPrompt = async (
     .select()
     .from(words)
     .where(
-      and(
-        eq(words.trainingSessionId, trainingSession.id),
-        eq(words.isKnown, true),
-      ),
+      and(eq(words.userId, trainingSession.userId), eq(words.isKnown, true)),
     )
     .orderBy(asc(words.createdAt));
   const practicingWords = await db
@@ -163,7 +160,7 @@ const buildPrompt = async (
     .from(words)
     .where(
       and(
-        eq(words.trainingSessionId, trainingSession.id),
+        eq(words.userId, trainingSession.userId),
         eq(words.isPracticing, true),
       ),
     )

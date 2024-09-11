@@ -12,16 +12,18 @@ import {
 export default function LanguagePicker({
   onValueChange,
   value,
+  disabled,
 }: {
   value?: string;
   onValueChange?: (value: string) => void;
+  disabled?: boolean;
 }) {
   const languagesQuery = api.languages.getLanguages.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
 
   return (
-    <Select onValueChange={onValueChange} value={value}>
+    <Select onValueChange={onValueChange} value={value} disabled={disabled}>
       <SelectTrigger id="help-language">
         <SelectValue />
       </SelectTrigger>

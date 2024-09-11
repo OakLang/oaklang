@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useState } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
 import type {
@@ -36,6 +37,7 @@ export interface TrainingSessionProviderProps {
 export default function TrainingSessionProvider(
   props: TrainingSessionProviderProps,
 ) {
+  const { data: session } = useSession();
   const utils = api.useUtils();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId: props.trainingSession.id },
@@ -90,6 +92,10 @@ export default function TrainingSessionProvider(
   const setKnownWords: TrainingSessionContextValue["setKnownWords"] =
     useCallback(
       (newWordsList) => {
+        if (!session) {
+          return;
+        }
+
         const existingWords = knownWordsQuery.data.map((w) => w.word);
         const newWords = newWordsList.filter((w) => !existingWords.includes(w));
         const removedWords = existingWords.filter(
@@ -121,7 +127,7 @@ export default function TrainingSessionProvider(
                 (word) =>
                   ({
                     word,
-                    trainingSessionId: trainingSessionQuery.data.id,
+                    userId: session.user.id,
                     createdAt: new Date(),
                     isKnown: true,
                     isPracticing: false,
@@ -138,6 +144,7 @@ export default function TrainingSessionProvider(
       [
         createOrUpdateWordsMut,
         knownWordsQuery.data,
+        session,
         trainingSessionQuery.data.id,
         utils.words.getWords,
       ],
@@ -146,6 +153,10 @@ export default function TrainingSessionProvider(
   const setPracticeWords: TrainingSessionContextValue["setPracticeWords"] =
     useCallback(
       (newWordsList) => {
+        if (!session) {
+          return;
+        }
+
         const existingWords = practiceWordsQuery.data.map((w) => w.word);
         const newWords = newWordsList.filter((w) => !existingWords.includes(w));
         const removedWords = existingWords.filter(
@@ -178,7 +189,7 @@ export default function TrainingSessionProvider(
                 (word) =>
                   ({
                     word,
-                    trainingSessionId: trainingSessionQuery.data.id,
+                    userId: session.user.id,
                     createdAt: new Date(),
                     isPracticing: true,
                     isKnown: false,
@@ -195,6 +206,7 @@ export default function TrainingSessionProvider(
       [
         createOrUpdateWordsMut,
         practiceWordsQuery.data,
+        session,
         trainingSessionQuery.data.id,
         utils.words.getWords,
       ],

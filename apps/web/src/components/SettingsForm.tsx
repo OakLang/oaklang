@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
 import { ExpandIcon } from "lucide-react";
+import { useDebounceCallback } from "usehooks-ts";
 
 import type { TrainingSession } from "@acme/db/schema";
 import { voiceEnum } from "@acme/validators";
@@ -17,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import {
   Select,
@@ -45,8 +47,85 @@ export default function SettingsForm() {
   const [prompt, setPrompt] = useAtom(promptAtom);
   const [promptInputExpaned, setPromptInputExpaned] = useState(false);
 
+  const debouncedSetTitle = useDebounceCallback((newTitle: string) => {
+    updateTrainingSession({ title: newTitle });
+  }, 300);
+
   return (
     <div className="space-y-4 py-4">
+      <p className="pt-4 font-semibold">Training Session Settings</p>
+
+      <fieldset className="space-y-1">
+        <Label htmlFor="help-language">Title</Label>
+        <Input
+          defaultValue={trainingSession.title ?? ""}
+          placeholder="Learn Spanish"
+          onChange={(e) => {
+            debouncedSetTitle(e.currentTarget.value);
+          }}
+        />
+      </fieldset>
+
+      <div className="grid grid-cols-2 gap-4">
+        <fieldset className="space-y-1">
+          <Label htmlFor="help-language">Help Language</Label>
+          <LanguagePicker value={trainingSession.helpLanguage} disabled />
+        </fieldset>
+        <fieldset className="space-y-1">
+          <Label htmlFor="practice-language">Practice Language</Label>
+          <LanguagePicker value={trainingSession.practiceLanguage} disabled />
+        </fieldset>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <fieldset className="space-y-1">
+          <Label htmlFor="practice-language">Num of Sentences</Label>
+          <Select
+            onValueChange={(value) =>
+              updateTrainingSession({
+                sentencesCount: Number(value),
+              })
+            }
+            value={String(trainingSession.sentencesCount)}
+          >
+            <SelectTrigger id="practice-language">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[3, 4, 5, 6, 7, 8].map((count) => (
+                <SelectItem key={count} value={String(count)}>
+                  {count}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </fieldset>
+        <fieldset className="space-y-1">
+          <Label htmlFor="complexity">Complexity</Label>
+          <Select
+            onValueChange={(value) =>
+              updateTrainingSession({
+                complexity: value as TrainingSession["complexity"],
+              })
+            }
+            value={trainingSession.complexity}
+          >
+            <SelectTrigger id="complexity">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {COMPLEXITIES.map((complexity) => (
+                <SelectItem key={complexity} value={String(complexity)}>
+                  {complexity}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </fieldset>
+      </div>
+
+      <p className="pt-4 font-semibold">User Settings</p>
+
       <fieldset className="space-y-1">
         <div className="flex items-center justify-between">
           <Label htmlFor="prompt-template">Propmt Template</Label>
@@ -72,69 +151,9 @@ export default function SettingsForm() {
           value={prompt}
         />
       </fieldset>
-      <fieldset className="space-y-1">
-        <Label htmlFor="help-language">Help Language</Label>
-        <LanguagePicker
-          value={trainingSession.helpLanguage}
-          onValueChange={(helpLanguage) =>
-            updateTrainingSession({ helpLanguage })
-          }
-        />
-      </fieldset>
-      <fieldset className="space-y-1">
-        <Label htmlFor="practice-language">Practice Language</Label>
-        <LanguagePicker
-          value={trainingSession.practiceLanguage}
-          onValueChange={(practiceLanguage) =>
-            updateTrainingSession({ practiceLanguage })
-          }
-        />
-      </fieldset>
-      <fieldset className="space-y-1">
-        <Label htmlFor="practice-language">Num of Sentences</Label>
-        <Select
-          onValueChange={(value) =>
-            updateTrainingSession({
-              sentencesCount: Number(value),
-            })
-          }
-          value={String(trainingSession.sentencesCount)}
-        >
-          <SelectTrigger id="practice-language">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[3, 4, 5, 6, 7, 8].map((count) => (
-              <SelectItem key={count} value={String(count)}>
-                {count}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </fieldset>
-      <fieldset className="space-y-1">
-        <Label htmlFor="complexity">Complexity</Label>
-        <Select
-          onValueChange={(value) =>
-            updateTrainingSession({
-              complexity: value as TrainingSession["complexity"],
-            })
-          }
-          value={trainingSession.complexity}
-        >
-          <SelectTrigger id="complexity">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {COMPLEXITIES.map((complexity) => (
-              <SelectItem key={complexity} value={String(complexity)}>
-                {complexity}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </fieldset>
+
       <p className="pt-4 font-semibold">Audio Settings</p>
+
       <fieldset className="flex items-center justify-between">
         <Label htmlFor="auto-play">Auto Play</Label>
         <Switch
@@ -169,6 +188,7 @@ export default function SettingsForm() {
           </SelectContent>
         </Select>
       </fieldset>
+
       <fieldset className="space-y-1">
         <Label htmlFor="speed">Speed ({audioSettings.speed}x)</Label>
         <Slider

@@ -49,7 +49,10 @@ export default function HomePage() {
     if (!helpLanguage || !practiceLanguage) {
       return;
     }
-    startTrainingSession.mutate({ helpLanguage, practiceLanguage });
+    startTrainingSession.mutate({
+      helpLanguage,
+      practiceLanguage,
+    });
   }, [helpLanguage, practiceLanguage, startTrainingSession]);
 
   useHotkeys(
@@ -123,10 +126,17 @@ export default function HomePage() {
                 href={`/sessions/${item.id}`}
                 className="hover:bg-secondary/50 block border-b p-4"
               >
+                <p>{item.title ?? "Untitled"}</p>
                 <p className="text-muted-foreground text-sm">
-                  {formatDistanceToNow(item.createdAt, { addSuffix: true })}
+                  <span>
+                    Started{" "}
+                    {formatDistanceToNow(item.createdAt, { addSuffix: true })}
+                  </span>
+                  {" • "}
+                  <span>Language: {item.practiceLanguageName}</span>
+                  {" • "}
+                  <span>Complexity: {item.complexity}</span>
                 </p>
-                <p>{item.id}</p>
               </Link>
             ))
           )}

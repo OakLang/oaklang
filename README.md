@@ -28,6 +28,13 @@ psql -c "CREATE DATABASE oaklang WITH OWNER oaklang;"
 psql -d oaklang -c "CREATE EXTENSION citext;"
 ```
 
+## Seed
+
+```
+Supported Languages
+npm run seed
+```
+
 ## Tech Stack
 
 - [Next.js](https://nextjs.org)

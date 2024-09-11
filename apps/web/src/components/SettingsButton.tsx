@@ -6,12 +6,12 @@ import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
 import SettingsForm from "./SettingsForm";
 import { Button } from "./ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "./ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function SettingsButton() {
@@ -23,24 +23,24 @@ export default function SettingsButton() {
   });
 
   return (
-    <Sheet onOpenChange={setSettingsOpen} open={settingsOpen}>
+    <Dialog onOpenChange={setSettingsOpen} open={settingsOpen}>
       <Tooltip {...settingsBtnTooltipProps}>
         <TooltipTrigger asChild>
-          <SheetTrigger asChild>
+          <DialogTrigger asChild>
             <Button size="icon" variant="outline">
               <SettingsIcon className="h-5 w-5" />
               <p className="sr-only">Settings</p>
             </Button>
-          </SheetTrigger>
+          </DialogTrigger>
         </TooltipTrigger>
         <TooltipContent>Hotkey: S(ettings)</TooltipContent>
       </Tooltip>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Settings</SheetTitle>
-        </SheetHeader>
+      <DialogContent className="max-h-[calc(100vh-48px)] overflow-y-auto sm:max-w-[678px]">
+        <DialogHeader>
+          <DialogTitle>Settings</DialogTitle>
+        </DialogHeader>
         <SettingsForm />
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

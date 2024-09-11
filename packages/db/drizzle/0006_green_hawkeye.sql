@@ -1,1 +1,0 @@
-ALTER TABLE "sentence" ADD CONSTRAINT "sentence_training_session_id_index_unique" UNIQUE("training_session_id","index");

@@ -1,15 +1,5 @@
 import { z } from "zod";
 
-import { sentencesGeneratorSettingsSchema } from "./settings";
-
-export const generateSentenceBody = z.object({
-  knownVocabs: z.array(z.string().min(1)),
-  practiceVocabs: z.array(z.string().min(1)),
-  settings: sentencesGeneratorSettingsSchema,
-});
-
-export type GenerateSentenceBody = z.infer<typeof generateSentenceBody>;
-
 export const wordSchema = z.object({
   ipa: z.string().describe("word pronunciation in IPA format"),
   pronunciation: z

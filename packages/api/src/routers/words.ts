@@ -4,7 +4,6 @@ import { and, asc, eq, inArray, sql } from "@acme/db";
 import { words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getTrainingSessionOrThrow } from "../utils";
 
 export const wordsRouter = createTRPCRouter({
   getWords: protectedProcedure
@@ -16,21 +15,13 @@ export const wordsRouter = createTRPCRouter({
       }),
     )
     .query(
-      async ({
-        ctx: { db, session },
-        input: { trainingSessionId, isKnown, isPracticing },
-      }) => {
-        const trainingSession = await getTrainingSessionOrThrow(
-          trainingSessionId,
-          db,
-          session,
-        );
+      async ({ ctx: { db, session }, input: { isKnown, isPracticing } }) => {
         const practiceWords = await db
           .select()
           .from(words)
           .where(
             and(
-              eq(words.trainingSessionId, trainingSession.id),
+              eq(words.userId, session.user.id),
               ...(typeof isPracticing !== "undefined"
                 ? [eq(words.isPracticing, isPracticing)]
                 : []),
@@ -55,16 +46,15 @@ export const wordsRouter = createTRPCRouter({
     .mutation(
       async ({
         ctx: { db, session },
-        input: { trainingSessionId, words: wordsList, isKnown, isPracticing },
+        input: { words: wordsList, isKnown, isPracticing },
       }) => {
-        await getTrainingSessionOrThrow(trainingSessionId, db, session);
         const newWords = await db
           .insert(words)
           .values(
             wordsList.map(
               (word) =>
                 ({
-                  trainingSessionId,
+                  userId: session.user.id,
                   word,
                   isKnown,
                   isPracticing,
@@ -72,7 +62,7 @@ export const wordsRouter = createTRPCRouter({
             ),
           )
           .onConflictDoUpdate({
-            target: [words.trainingSessionId, words.word],
+            target: [words.userId, words.word],
             set: {
               isKnown:
                 typeof isKnown === "undefined"
@@ -95,28 +85,17 @@ export const wordsRouter = createTRPCRouter({
         words: z.array(z.string()).min(1).max(100),
       }),
     )
-    .mutation(
-      async ({
-        ctx: { db, session },
-        input: { trainingSessionId, words: wordsList },
-      }) => {
-        const trainingSession = await getTrainingSessionOrThrow(
-          trainingSessionId,
-          db,
-          session,
-        );
+    .mutation(async ({ ctx: { db, session }, input: { words: wordsList } }) => {
+      const deletedWords = await db
+        .delete(words)
+        .where(
+          and(
+            eq(words.userId, session.user.id),
+            inArray(words.word, wordsList),
+          ),
+        )
+        .returning();
 
-        const deletedWords = await db
-          .delete(words)
-          .where(
-            and(
-              eq(words.trainingSessionId, trainingSession.id),
-              inArray(words.word, wordsList),
-            ),
-          )
-          .returning();
-
-        return deletedWords;
-      },
-    ),
+      return deletedWords;
+    }),
 });
