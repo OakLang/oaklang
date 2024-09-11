@@ -8,6 +8,7 @@ import { voiceEnum } from "@acme/validators";
 
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
 import { audioSettingsAtom, promptAtom } from "~/store";
+import { APP_NAME } from "~/utils/constants";
 import LanguagePicker from "./LanguagePicker";
 import { Button } from "./ui/button";
 import {
@@ -49,6 +50,7 @@ export default function SettingsForm() {
 
   const debouncedSetTitle = useDebounceCallback((newTitle: string) => {
     updateTrainingSession({ title: newTitle });
+    window.document.title = `${newTitle || "Untitled"} - ${APP_NAME}`;
   }, 300);
 
   return (

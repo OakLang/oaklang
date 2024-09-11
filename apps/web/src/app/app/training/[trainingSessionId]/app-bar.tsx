@@ -26,7 +26,7 @@ export default function AppBar() {
   return (
     <header className="bg-card border-b">
       <div className="flex h-16 items-center gap-2 px-4">
-        <Link className="text-lg font-semibold" href="/">
+        <Link className="text-lg font-semibold" href="/app">
           Oaklang
         </Link>
         <div className="flex-1" />
