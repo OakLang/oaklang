@@ -1,16 +1,17 @@
+import type { ZodString } from "zod";
 import { openai } from "@ai-sdk/openai";
 import { TRPCError } from "@trpc/server";
 import { generateObject } from "ai";
 import { z } from "zod";
 
+import type { InterlinearLine } from "@acme/core/validators";
 import type { DB } from "@acme/db/client";
 import type { TrainingSession } from "@acme/db/schema";
 import { and, asc, desc, eq } from "@acme/db";
 import { languages, sentences, words } from "@acme/db/schema";
-import { generateSentenceObjectSchema } from "@acme/validators";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getTrainingSessionOrThrow } from "../utils";
+import { getInterlinearLines, getTrainingSessionOrThrow } from "../utils";
 
 export const sentencesRouter = createTRPCRouter({
   getSentences: protectedProcedure
@@ -65,11 +66,13 @@ export const sentencesRouter = createTRPCRouter({
           session,
         );
         const prompt = await buildPrompt(trainingSession, db, promptTemplate);
-        console.log(prompt);
+
+        const interlinearLines = await getInterlinearLines(session.user.id, db);
+
         const result = await generateObject({
           model: openai("gpt-4o", { user: session.user.id }),
           prompt,
-          schema: generateSentenceObjectSchema,
+          schema: buildSchema(interlinearLines),
         });
         const [lastSentence] = await db
           .select({ index: sentences.index })
@@ -182,4 +185,30 @@ const buildPrompt = async (
         .map((sentence) => `${sentence.index}. ${sentence.sentence}`)
         .join("\n"),
     );
+};
+
+const buildSchema = (interlinearLines: InterlinearLine[]) => {
+  const wordSchemaObject: Record<string, ZodString> = {};
+  interlinearLines.forEach((line) => {
+    if (line.name && line.description) {
+      wordSchemaObject[line.name] = z.string().describe(line.description);
+    }
+  });
+  const wordSchema = z.object(wordSchemaObject);
+
+  const sentenceSchema = z.object({
+    sentence: z.string().describe(`the full sentence in PRACTICE LANGUAGE.`),
+    translation: z
+      .string()
+      .describe(`the full sentence translation in HELP LANGUAGE`),
+    words: z
+      .array(wordSchema)
+      .describe(`list of words to build the full sentence`),
+  });
+
+  const generateSentenceObjectSchema = z.object({
+    sentences: z.array(sentenceSchema).describe("list of sentences"),
+  });
+
+  return generateSentenceObjectSchema;
 };

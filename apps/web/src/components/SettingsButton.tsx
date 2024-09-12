@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SettingsIcon } from "lucide-react";
+import { SettingsIcon, XIcon } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
@@ -7,6 +7,7 @@ import SettingsForm from "./SettingsForm";
 import { Button } from "./ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -35,9 +36,18 @@ export default function SettingsButton() {
         </TooltipTrigger>
         <TooltipContent>Hotkey: S(ettings)</TooltipContent>
       </Tooltip>
-      <DialogContent className="max-h-[calc(100vh-48px)] overflow-y-auto sm:max-w-[678px]">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[min(768px,calc(100vh-48px))] max-w-3xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="bg-card sticky top-0 z-40 flex-shrink-0 border-b p-6">
           <DialogTitle>Settings</DialogTitle>
+          <DialogClose asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute right-4 top-2"
+            >
+              <XIcon className="h-5 w-5" />
+            </Button>
+          </DialogClose>
         </DialogHeader>
         <SettingsForm />
       </DialogContent>

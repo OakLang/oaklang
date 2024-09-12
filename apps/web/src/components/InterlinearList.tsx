@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
 import { Loader2, PlayIcon, SquareIcon } from "lucide-react";
@@ -17,13 +16,7 @@ import {
   knownTranslationsAtom,
 } from "~/store";
 import { cn } from "~/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const generateAudioAsync = async ({
@@ -107,24 +100,24 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
     void playAudio();
   });
 
-  useEffect(() => {
-    if (addedWordsToPracticeList) {
-      return;
-    }
-    const uniqueWords = sentence.words
-      .map((item) => item.lemma)
-      .filter((word) => !practiceWords.find((item) => item.word === word));
-    setPracticeWords([
-      ...practiceWords.map((item) => item.word),
-      ...uniqueWords,
-    ]);
-    setAddedWordsToPracticeList(true);
-  }, [
-    addedWordsToPracticeList,
-    practiceWords,
-    sentence.words,
-    setPracticeWords,
-  ]);
+  // useEffect(() => {
+  //   if (addedWordsToPracticeList) {
+  //     return;
+  //   }
+  //   const uniqueWords = sentence.words
+  //     .map((item) => item.lemma)
+  //     .filter((word) => !practiceWords.find((item) => item.word === word));
+  //   setPracticeWords([
+  //     ...practiceWords.map((item) => item.word),
+  //     ...uniqueWords,
+  //   ]);
+  //   setAddedWordsToPracticeList(true);
+  // }, [
+  //   addedWordsToPracticeList,
+  //   practiceWords,
+  //   sentence.words,
+  //   setPracticeWords,
+  // ]);
 
   useEffect(() => {
     const audioEl = audioRef.current;
@@ -198,30 +191,33 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
           );
           return (
             <ListItem
-              ipa={item.ipa}
-              ipaHidden={knownIPAs.includes(item.ipa)}
               key={id}
-              onHideIPA={() => setKnownIPAs([...knownIPAs, item.ipa])}
-              onHideTranslation={() =>
-                setKnownTranslations([...knownTranslations, item.translation])
-              }
-              onMarkVocabKnown={() => {
-                setKnownWords([
-                  ...knownWords.map((item) => item.word),
-                  item.lemma,
-                ]);
-              }}
-              onMarkVocabUnknown={() => {
-                setKnownWords(
-                  knownWords
-                    .map((item) => item.word)
-                    .filter((word) => word !== item.lemma),
-                );
-              }}
-              translation={item.translation}
-              translationHidden={knownTranslations.includes(item.translation)}
-              vocab={item.word}
-              vocabKnown={vocabKnown}
+              item={item}
+              // ipa={item.ipa}
+              // ipaHidden={knownIPAs.includes(item.ipa)}
+              // key={id}
+              // onHideIPA={() => setKnownIPAs([...knownIPAs, item.ipa])}
+              // onHideTranslation={() =>
+              //   setKnownTranslations([...knownTranslations, item.translation])
+              // }
+              // onMarkVocabKnown={() => {
+              //   setKnownWords([
+              //     ...knownWords.map((item) => item.word),
+              //     item.lemma,
+              //   ]);
+              // }}
+              // onMarkVocabUnknown={() => {
+              //   setKnownWords(
+              //     knownWords
+              //       .map((item) => item.word)
+              //       .filter((word) => word !== item.lemma),
+              //   );
+              // }}
+              // translation={item.translation}
+              // translationHidden={knownTranslations.includes(item.translation)}
+              // vocab={item.word}
+
+              // vocabKnown={vocabKnown}
             />
           );
         })}
@@ -231,53 +227,51 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
 }
 
 const ListItem = ({
-  ipa,
-  onHideIPA,
-  onHideTranslation,
-  translation,
-  vocab,
-  ipaHidden,
-  translationHidden,
-  onMarkVocabKnown,
-  onMarkVocabUnknown,
-  vocabKnown,
+  item,
+  // onHideIPA,
+  // onHideTranslation,
+  // translation,
+  // vocab,
+  // ipaHidden,
+  // translationHidden,
+  // onMarkVocabKnown,
+  // onMarkVocabUnknown,
+  // vocabKnown,
 }: {
-  ipa: string;
-  ipaHidden?: boolean;
-  onHideIPA: () => void;
-  onHideTranslation: () => void;
-  onMarkVocabKnown: () => void;
-  onMarkVocabUnknown: () => void;
-  translation: string;
-  translationHidden?: boolean;
-  vocab: string;
-  vocabKnown?: boolean;
+  item: Record<string, string>;
+  // ipaHidden?: boolean;
+  // onHideIPA: () => void;
+  // onHideTranslation: () => void;
+  // onMarkVocabKnown: () => void;
+  // onMarkVocabUnknown: () => void;
+  // translationHidden?: boolean;
+  // vocabKnown?: boolean;
 }) => {
-  const [revealIpa, setRevealIpa] = useState(false);
-  const [revealTranslation, setRevealTranslation] = useState(false);
+  // const [revealIpa, setRevealIpa] = useState(false);
+  // const [revealTranslation, setRevealTranslation] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const toggleHideOrHelpTranslation = useCallback(() => {
-    const _ipaHidden = !!ipaHidden && !revealIpa;
-    const _translationHidden = !!translationHidden && !revealTranslation;
-    console.log({ _ipaHidden, _translationHidden });
-    if (_ipaHidden || _translationHidden) {
-      setRevealIpa(true);
-      setRevealTranslation(true);
-    } else {
-      onHideIPA();
-      setRevealIpa(false);
-      onHideTranslation();
-      setRevealTranslation(false);
-    }
-  }, [
-    ipaHidden,
-    onHideIPA,
-    onHideTranslation,
-    revealIpa,
-    revealTranslation,
-    translationHidden,
-  ]);
+  // const toggleHideOrHelpTranslation = useCallback(() => {
+  //   const _ipaHidden = !!ipaHidden && !revealIpa;
+  //   const _translationHidden = !!translationHidden && !revealTranslation;
+  //   console.log({ _ipaHidden, _translationHidden });
+  //   if (_ipaHidden || _translationHidden) {
+  //     setRevealIpa(true);
+  //     setRevealTranslation(true);
+  //   } else {
+  //     onHideIPA();
+  //     setRevealIpa(false);
+  //     onHideTranslation();
+  //     setRevealTranslation(false);
+  //   }
+  // }, [
+  //   ipaHidden,
+  //   onHideIPA,
+  //   onHideTranslation,
+  //   revealIpa,
+  //   revealTranslation,
+  //   translationHidden,
+  // ]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -293,10 +287,10 @@ const ListItem = ({
             })}
             type="button"
           >
-            {vocab}
+            {item.word}
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" side="bottom">
+        {/* <DropdownMenuContent align="start" side="bottom">
           <DropdownMenuItem onClick={toggleHideOrHelpTranslation}>
             Show/Hide Translation
           </DropdownMenuItem>
@@ -329,38 +323,28 @@ const ListItem = ({
           >
             Copy to Clipboard
           </DropdownMenuItem>
-        </DropdownMenuContent>
+        </DropdownMenuContent> */}
       </DropdownMenu>
-      <button
-        className={cn(
-          "text-muted-foreground block text-left font-serif text-2xl italic transition-opacity",
-          {
-            invisible: ipaHidden && !revealIpa,
-          },
-        )}
-        onClick={() => {
-          onHideIPA();
-          setRevealIpa(false);
-        }}
-        type="button"
-      >
-        {ipa}
-      </button>
-      <button
-        className={cn(
-          "text-muted-foreground block text-left font-serif text-2xl transition-opacity",
-          {
-            invisible: translationHidden && !revealTranslation,
-          },
-        )}
-        onClick={() => {
-          onHideTranslation();
-          setRevealTranslation(false);
-        }}
-        type="button"
-      >
-        {translation}
-      </button>
+
+      {Object.entries(item).map((entry) => {
+        if (entry[0] === "word") {
+          return null;
+        }
+        return (
+          <button
+            key={entry[0]}
+            className={cn(
+              "text-muted-foreground block text-left font-serif text-2xl italic transition-opacity",
+              // {
+              //   invisible: ipaHidden && !revealIpa,
+              // },
+            )}
+            type="button"
+          >
+            {entry[1]}
+          </button>
+        );
+      })}
     </div>
   );
 };

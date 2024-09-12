@@ -7,8 +7,6 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
-import type { GenerateSentenceObject } from "@acme/validators";
-
 import { createPrefixedId } from "../utils";
 import { trainingSessions } from "./training";
 
@@ -24,9 +22,7 @@ export const sentences = pgTable(
       .references(() => trainingSessions.id, { onDelete: "cascade" }),
     sentence: text("sentence").notNull(),
     translation: text("translation").notNull(),
-    words: jsonb("words")
-      .notNull()
-      .$type<GenerateSentenceObject["sentences"][number]["words"]>(),
+    words: jsonb("words").notNull().$type<Record<string, string>[]>(),
     index: integer("index").notNull(),
   },
   (table) => ({

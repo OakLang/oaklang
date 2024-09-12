@@ -10,6 +10,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
 import LanguagePicker from "~/components/LanguagePicker";
+import SettingsButton from "~/components/SettingsButton";
 import { ThemeToggle } from "~/components/ThemeToggle";
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
@@ -75,26 +76,29 @@ export default function AppPage() {
             <Link href="/app">Oaklang</Link>
           </h1>
           <div className="flex-1" />
+          <SettingsButton />
           <ThemeToggle />
           <UserButton />
         </div>
       </header>
       <div className="container my-8 max-w-screen-sm">
         <div className="flex flex-col gap-4 p-4">
-          <fieldset>
-            <Label>Help Language</Label>
-            <LanguagePicker
-              value={helpLanguage}
-              onValueChange={setHelpLanguage}
-            />
-          </fieldset>
-          <fieldset>
-            <Label>Practice Language</Label>
-            <LanguagePicker
-              value={practiceLanguage}
-              onValueChange={setPracticeLanguage}
-            />
-          </fieldset>
+          <div className="grid grid-cols-2 gap-4">
+            <fieldset>
+              <Label>Help Language</Label>
+              <LanguagePicker
+                value={helpLanguage}
+                onValueChange={setHelpLanguage}
+              />
+            </fieldset>
+            <fieldset>
+              <Label>Practice Language</Label>
+              <LanguagePicker
+                value={practiceLanguage}
+                onValueChange={setPracticeLanguage}
+              />
+            </fieldset>
+          </div>
           <Tooltip {...startBtnTooltipProps}>
             <TooltipTrigger asChild>
               <Button
@@ -124,7 +128,7 @@ export default function AppPage() {
               <Link
                 key={item.id}
                 href={`/app/training/${item.id}`}
-                className="hover:bg-secondary/50 block border-b p-4"
+                className="hover:bg-secondary/50 block rounded-md p-4"
               >
                 <p>{item.title ?? "Untitled"}</p>
                 <p className="text-muted-foreground text-sm">

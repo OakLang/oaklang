@@ -1,24 +1,22 @@
-import { useState } from "react";
+import type { ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import { useAtom } from "jotai";
-import { ExpandIcon } from "lucide-react";
+import { toast } from "sonner";
 import { useDebounceCallback } from "usehooks-ts";
 
+import type { InterlinearLine } from "@acme/core/validators";
 import type { TrainingSession } from "@acme/db/schema";
 import { voiceEnum } from "@acme/validators";
 
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
 import { audioSettingsAtom, promptAtom } from "~/store";
+import { api } from "~/trpc/react";
+import { cn } from "~/utils";
 import { APP_NAME } from "~/utils/constants";
+import InterlinearLineEditor from "./InterlinearLineEditor";
 import LanguagePicker from "./LanguagePicker";
 import { Button } from "./ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import {
@@ -31,132 +29,131 @@ import {
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-const COMPLEXITIES: TrainingSession["complexity"][] = [
-  "A1",
-  "A2",
-  "B1",
-  "B2",
-  "C1",
-  "C2",
-];
+const InterlinearLinesPagee = () => {
+  const [interlinearLines, setInterlinearLines] = useState<InterlinearLine[]>(
+    [],
+  );
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-export default function SettingsForm() {
-  const [audioSettings, setAudioSettings] = useAtom(audioSettingsAtom);
-  const { trainingSession, updateTrainingSession } = useTrainingSession();
-  const [prompt, setPrompt] = useAtom(promptAtom);
-  const [promptInputExpaned, setPromptInputExpaned] = useState(false);
+  const interlinearLinesQuery = api.userSettings.getInterlinearLines.useQuery();
 
-  const debouncedSetTitle = useDebounceCallback((newTitle: string) => {
-    updateTrainingSession({ title: newTitle });
-    window.document.title = `${newTitle || "Untitled"} - ${APP_NAME}`;
-  }, 300);
+  const updateInterlinearLinesMut =
+    api.userSettings.updateInterlinearLines.useMutation({
+      onSuccess: () => {
+        toast("Saved Changes");
+      },
+      onError: (error) => {
+        toast(error.message);
+      },
+    });
+  const resetInterlinearLinesMut =
+    api.userSettings.resetInterlinearLines.useMutation({
+      onError: (error) => {
+        toast(error.message);
+      },
+      onSuccess: (value) => {
+        setInterlinearLines(value);
+      },
+    });
+
+  const addNewInterlinearLineMut =
+    api.userSettings.addNewInterlinearLine.useMutation({
+      onError: (error) => {
+        toast(error.message);
+      },
+      onSuccess: (value) => {
+        setInterlinearLines(value);
+      },
+    });
+
+  const debouncedChange = useCallback(
+    (value: InterlinearLine[]) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        updateInterlinearLinesMut.mutate(value);
+      }, 300);
+    },
+    [updateInterlinearLinesMut],
+  );
+
+  const handleChange = useCallback(
+    (value: InterlinearLine[]) => {
+      setInterlinearLines(value);
+      debouncedChange(value);
+    },
+    [debouncedChange],
+  );
+
+  useEffect(() => {
+    setInterlinearLines(interlinearLinesQuery.data ?? []);
+  }, [interlinearLinesQuery.data]);
 
   return (
-    <div className="space-y-4 py-4">
-      <p className="pt-4 font-semibold">Training Session Settings</p>
-
-      <fieldset className="space-y-1">
-        <Label htmlFor="help-language">Title</Label>
-        <Input
-          defaultValue={trainingSession.title ?? ""}
-          placeholder="Learn Spanish"
-          onChange={(e) => {
-            debouncedSetTitle(e.currentTarget.value);
-          }}
+    <div className="">
+      {interlinearLinesQuery.isPending ? (
+        <p>Loading...</p>
+      ) : interlinearLinesQuery.isError ? (
+        <p>{interlinearLinesQuery.error.message}</p>
+      ) : (
+        <InterlinearLineEditor
+          interlinearLines={interlinearLines}
+          onChange={handleChange}
         />
-      </fieldset>
-
-      <div className="grid grid-cols-2 gap-4">
-        <fieldset className="space-y-1">
-          <Label htmlFor="help-language">Help Language</Label>
-          <LanguagePicker value={trainingSession.helpLanguage} disabled />
-        </fieldset>
-        <fieldset className="space-y-1">
-          <Label htmlFor="practice-language">Practice Language</Label>
-          <LanguagePicker value={trainingSession.practiceLanguage} disabled />
-        </fieldset>
+      )}
+      <div className="flex flex-wrap gap-4 pt-4">
+        <Button
+          onClick={() => addNewInterlinearLineMut.mutate()}
+          disabled={
+            resetInterlinearLinesMut.isPending ||
+            updateInterlinearLinesMut.isPending ||
+            addNewInterlinearLineMut.isPending
+          }
+        >
+          Add New Line
+        </Button>
+        <Button
+          variant="destructive"
+          onClick={() => resetInterlinearLinesMut.mutate()}
+          disabled={
+            resetInterlinearLinesMut.isPending ||
+            updateInterlinearLinesMut.isPending ||
+            addNewInterlinearLineMut.isPending
+          }
+        >
+          Reset List
+        </Button>
       </div>
+    </div>
+  );
+};
 
-      <div className="grid grid-cols-2 gap-4">
-        <fieldset className="space-y-1">
-          <Label htmlFor="practice-language">Num of Sentences</Label>
-          <Select
-            onValueChange={(value) =>
-              updateTrainingSession({
-                sentencesCount: Number(value),
-              })
-            }
-            value={String(trainingSession.sentencesCount)}
-          >
-            <SelectTrigger id="practice-language">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[3, 4, 5, 6, 7, 8].map((count) => (
-                <SelectItem key={count} value={String(count)}>
-                  {count}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </fieldset>
-        <fieldset className="space-y-1">
-          <Label htmlFor="complexity">Complexity</Label>
-          <Select
-            onValueChange={(value) =>
-              updateTrainingSession({
-                complexity: value as TrainingSession["complexity"],
-              })
-            }
-            value={trainingSession.complexity}
-          >
-            <SelectTrigger id="complexity">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {COMPLEXITIES.map((complexity) => (
-                <SelectItem key={complexity} value={String(complexity)}>
-                  {complexity}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </fieldset>
-      </div>
+const UserSettings = () => {
+  const [prompt, setPrompt] = useAtom(promptAtom);
 
-      <p className="pt-4 font-semibold">User Settings</p>
-
-      <fieldset className="space-y-1">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="prompt-template">Propmt Template</Label>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="hover:text-foreground text-muted-foreground p-1"
-                onClick={() => setPromptInputExpaned(true)}
-                tabIndex={-1}
-              >
-                <ExpandIcon className="h-4 w-4" />
-                <p className="sr-only">Expand</p>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Expand</TooltipContent>
-          </Tooltip>
-        </div>
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <fieldset className="col-span-full space-y-1">
+        <Label htmlFor="prompt-template">Propmt Template</Label>
         <Textarea
           id="prompt-template"
           onChange={(e) => setPrompt(e.currentTarget.value)}
-          rows={5}
+          rows={10}
           value={prompt}
         />
       </fieldset>
+    </div>
+  );
+};
 
-      <p className="pt-4 font-semibold">Audio Settings</p>
+const AudioSettings = () => {
+  const [audioSettings, setAudioSettings] = useAtom(audioSettingsAtom);
 
-      <fieldset className="flex items-center justify-between">
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <fieldset className="col-span-full flex items-center justify-between">
         <Label htmlFor="auto-play">Auto Play</Label>
         <Switch
           checked={audioSettings.autoPlay}
@@ -167,7 +164,7 @@ export default function SettingsForm() {
         />
       </fieldset>
 
-      <fieldset className="space-y-1">
+      <fieldset className="col-span-full space-y-1">
         <Label htmlFor="voice">Voice</Label>
         <Select
           onValueChange={(value) =>
@@ -191,7 +188,7 @@ export default function SettingsForm() {
         </Select>
       </fieldset>
 
-      <fieldset className="space-y-1">
+      <fieldset className="col-span-full space-y-1">
         <Label htmlFor="speed">Speed ({audioSettings.speed}x)</Label>
         <Slider
           max={4}
@@ -203,25 +200,162 @@ export default function SettingsForm() {
           value={[audioSettings.speed]}
         />
       </fieldset>
+    </div>
+  );
+};
 
-      <Dialog open={promptInputExpaned} onOpenChange={setPromptInputExpaned}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Edit Prompt Template</DialogTitle>
-          </DialogHeader>
-          <Textarea
-            onChange={(e) => setPrompt(e.currentTarget.value)}
-            rows={20}
-            value={prompt}
-            className="resize-none"
-          />
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button>Done</Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+const COMPLEXITIES: TrainingSession["complexity"][] = [
+  "A1",
+  "A2",
+  "B1",
+  "B2",
+  "C1",
+  "C2",
+];
+
+const TrainingSessionSettings = () => {
+  const { trainingSession, updateTrainingSession } = useTrainingSession();
+
+  const debouncedSetTitle = useDebounceCallback((newTitle: string) => {
+    updateTrainingSession({ title: newTitle });
+    window.document.title = `${newTitle || "Untitled"} - ${APP_NAME}`;
+  }, 300);
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <fieldset className="col-span-full space-y-1">
+        <Label htmlFor="help-language">Title</Label>
+        <Input
+          defaultValue={trainingSession.title ?? ""}
+          placeholder="Learn Spanish"
+          onChange={(e) => {
+            debouncedSetTitle(e.currentTarget.value);
+          }}
+        />
+      </fieldset>
+
+      <fieldset className="space-y-1">
+        <Label htmlFor="help-language">Help Language</Label>
+        <LanguagePicker value={trainingSession.helpLanguage} disabled />
+      </fieldset>
+      <fieldset className="space-y-1">
+        <Label htmlFor="practice-language">Practice Language</Label>
+        <LanguagePicker value={trainingSession.practiceLanguage} disabled />
+      </fieldset>
+
+      <fieldset className="space-y-1">
+        <Label htmlFor="practice-language">Num of Sentences</Label>
+        <Select
+          onValueChange={(value) =>
+            updateTrainingSession({
+              sentencesCount: Number(value),
+            })
+          }
+          value={String(trainingSession.sentencesCount)}
+        >
+          <SelectTrigger id="practice-language">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[3, 4, 5, 6, 7, 8].map((count) => (
+              <SelectItem key={count} value={String(count)}>
+                {count}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </fieldset>
+
+      <fieldset className="space-y-1">
+        <Label htmlFor="complexity">Complexity</Label>
+        <Select
+          onValueChange={(value) =>
+            updateTrainingSession({
+              complexity: value as TrainingSession["complexity"],
+            })
+          }
+          value={trainingSession.complexity}
+        >
+          <SelectTrigger id="complexity">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {COMPLEXITIES.map((complexity) => (
+              <SelectItem key={complexity} value={String(complexity)}>
+                {complexity}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </fieldset>
+    </div>
+  );
+};
+
+interface NavItem {
+  id: string;
+  name: string;
+  content: ReactNode;
+}
+
+export default function SettingsForm() {
+  const { trainingSessionId } = useParams<{ trainingSessionId?: string }>();
+
+  const navItems: NavItem[] = useMemo(
+    () => [
+      {
+        id: "general",
+        name: "General",
+        content: <UserSettings />,
+      },
+      {
+        id: "interlinear_lines",
+        name: "Interlinear Lines",
+        content: <InterlinearLinesPagee />,
+      },
+      {
+        id: "audio",
+        name: "Audio",
+        content: <AudioSettings />,
+      },
+      ...(trainingSessionId
+        ? [
+            {
+              id: "training_session_settings",
+              name: "Training Session",
+              content: <TrainingSessionSettings />,
+            } satisfies NavItem,
+          ]
+        : []),
+    ],
+    [trainingSessionId],
+  );
+
+  const [navId, setNavId] = useState(navItems[0]?.id ?? "");
+  const navItem = useMemo(
+    () => navItems.find((item) => item.id === navId)?.content ?? null,
+    [navId, navItems],
+  );
+
+  return (
+    <div className="flex flex-1 overflow-hidden">
+      <div className="w-48 flex-shrink-0 p-4 pr-0">
+        <div className="grid gap-1">
+          {navItems.map((item) => (
+            <Button
+              key={item.id}
+              onClick={() => setNavId(item.id)}
+              className={cn("text-muted-foreground justify-start text-left", {
+                "bg-secondary text-foreground": item.id === navId,
+              })}
+              variant="ghost"
+            >
+              {item.name}
+            </Button>
+          ))}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto p-6">{navItem}</div>
     </div>
   );
 }
