@@ -1,35 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAtom, useAtomValue } from "jotai";
+// import { useAtom } from "jotai";
 import { Loader2, PlayIcon, SquareIcon } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 
 import type { Sentence } from "@acme/db/schema";
-import type { AudioSettings } from "@acme/validators";
 
 import type { TTSBodyParams } from "~/app/api/ai/tts/route";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
-import { useTrainingSession } from "~/providers/TrainingSessionProvider";
-import {
-  audioSettingsAtom,
-  knownIPAsAtom,
-  knownTranslationsAtom,
-} from "~/store";
-import { cn } from "~/utils";
-import { DropdownMenu, DropdownMenuTrigger } from "./ui/dropdown-menu";
+// import { useTrainingSession } from "~/providers/TrainingSessionProvider";
+// import { knownIPAsAtom, knownTranslationsAtom } from "~/store";
+import { api } from "~/trpc/react";
+import { getCSSStyleForInterlinearLine } from "~/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-const generateAudioAsync = async ({
-  input,
-  settings,
-}: {
-  input: string;
-  settings: AudioSettings;
-}) => {
+const generateAudioAsync = async ({ input }: { input: string }) => {
   console.log("Fetching Audio...");
   const body: TTSBodyParams = {
     input,
-    settings,
   };
   const res = await fetch("/api/ai/tts", {
     body: JSON.stringify(body),
@@ -47,25 +35,22 @@ const generateAudioAsync = async ({
 };
 
 export default function InterlinearList({ sentence }: { sentence: Sentence }) {
-  const { knownWords, setKnownWords, practiceWords, setPracticeWords } =
-    useTrainingSession();
-  const [knownIPAs, setKnownIPAs] = useAtom(knownIPAsAtom);
-  const [knownTranslations, setKnownTranslations] = useAtom(
-    knownTranslationsAtom,
-  );
+  // const { knownWords, setKnownWords, practiceWords, setPracticeWords } =
+  //   useTrainingSession();
+  // const [knownIPAs, setKnownIPAs] = useAtom(knownIPAsAtom);
+  // const [knownTranslations, setKnownTranslations] = useAtom(
+  //   knownTranslationsAtom,
+  // );
   const [isPaused, setIsPaused] = useState(true);
-  const audioSettings = useAtomValue(audioSettingsAtom);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playCount, setPlayCount] = useState(0);
   const playBtmTooltipProps = useHotkeysTooltipProps();
-  const [addedWordsToPracticeList, setAddedWordsToPracticeList] =
-    useState(false);
+  const userSettings = api.userSettings.getUserSettings.useQuery();
 
   const audioQuery = useQuery({
-    enabled: audioSettings.autoPlay,
-    queryFn: () =>
-      generateAudioAsync({ input: sentence.sentence, settings: audioSettings }),
-    queryKey: [sentence.sentence, audioSettings],
+    enabled: userSettings.data?.autoPlayAudio,
+    queryFn: () => generateAudioAsync({ input: sentence.sentence }),
+    queryKey: [sentence.sentence, userSettings.data?.autoPlayAudio],
     staleTime: 1000 * 60 * 60, // 1h
   });
 
@@ -143,17 +128,21 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
     };
   }, []);
 
-  useEffect(() => {
-    setAddedWordsToPracticeList(false);
-    setPlayCount(0);
-    pauseAudio();
-  }, [pauseAudio, sentence.id]);
+  // useEffect(() => {
+  //   setAddedWordsToPracticeList(false);
+  //   setPlayCount(0);
+  //   pauseAudio();
+  // }, [pauseAudio, sentence.id]);
 
   useEffect(() => {
-    if (audioQuery.data && audioSettings.autoPlay && playCount === 0) {
+    if (
+      audioQuery.data &&
+      userSettings.data?.autoPlayAudio &&
+      playCount === 0
+    ) {
       void playAudio();
     }
-  }, [audioSettings.autoPlay, audioQuery.data, playAudio, playCount]);
+  }, [userSettings.data?.autoPlayAudio, audioQuery.data, playAudio, playCount]);
 
   return (
     <div className="flex gap-6">
@@ -186,9 +175,9 @@ export default function InterlinearList({ sentence }: { sentence: Sentence }) {
       <div className="relative flex flex-1 flex-wrap gap-x-4 gap-y-6">
         {sentence.words.map((item, i) => {
           const id = `${item.word}-${i}`;
-          const vocabKnown = !!knownWords.find(
-            (word) => word.word === item.lemma,
-          );
+          // const vocabKnown = !!knownWords.find(
+          //   (word) => word.word === item.lemma,
+          // );
           return (
             <ListItem
               key={id}
@@ -249,7 +238,8 @@ const ListItem = ({
 }) => {
   // const [revealIpa, setRevealIpa] = useState(false);
   // const [revealTranslation, setRevealTranslation] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  // const [dropdownOpen, setDropdownOpen] = useState(false);
+  const userSettings = api.userSettings.getUserSettings.useQuery();
 
   // const toggleHideOrHelpTranslation = useCallback(() => {
   //   const _ipaHidden = !!ipaHidden && !revealIpa;
@@ -273,24 +263,36 @@ const ListItem = ({
   //   translationHidden,
   // ]);
 
+  if (userSettings.isPending) {
+    return <p>Loading...</p>;
+  }
+  if (userSettings.isError) {
+    return <p>{userSettings.error.message}</p>;
+  }
+
   return (
     <div className="flex flex-col gap-3">
-      <DropdownMenu
+      {/* <DropdownMenu
         modal={false}
         onOpenChange={setDropdownOpen}
         open={dropdownOpen}
       >
         <DropdownMenuTrigger asChild>
           <button
-            className={cn("block text-left font-serif text-5xl font-semibold", {
-              "bg-blue-500 text-white": dropdownOpen,
-            })}
+            // className={cn("block text-left font-serif text-5xl font-semibold", {
+            //   "bg-blue-500 text-white": dropdownOpen,
+            // })}
             type="button"
+            style={getCSSStyleForInterlinearLine(
+              userSettings.data.interlinearLines.find(
+                (item) => item.id === "word",
+              )?.style ?? {},
+            )}
           >
             {item.word}
           </button>
         </DropdownMenuTrigger>
-        {/* <DropdownMenuContent align="start" side="bottom">
+        <DropdownMenuContent align="start" side="bottom">
           <DropdownMenuItem onClick={toggleHideOrHelpTranslation}>
             Show/Hide Translation
           </DropdownMenuItem>
@@ -323,25 +325,19 @@ const ListItem = ({
           >
             Copy to Clipboard
           </DropdownMenuItem>
-        </DropdownMenuContent> */}
-      </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu> */}
 
-      {Object.entries(item).map((entry) => {
-        if (entry[0] === "word") {
-          return null;
-        }
+      {userSettings.data.interlinearLines.map((line) => {
+        const value = item[line.name];
+
         return (
           <button
-            key={entry[0]}
-            className={cn(
-              "text-muted-foreground block text-left font-serif text-2xl italic transition-opacity",
-              // {
-              //   invisible: ipaHidden && !revealIpa,
-              // },
-            )}
+            key={line.id}
             type="button"
+            style={getCSSStyleForInterlinearLine(line.style)}
           >
-            {entry[1]}
+            {value ?? "-"}
           </button>
         );
       })}

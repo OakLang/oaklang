@@ -7,13 +7,13 @@ import { useDebounceCallback } from "usehooks-ts";
 
 import type { InterlinearLine } from "@acme/core/validators";
 import type { TrainingSession } from "@acme/db/schema";
-import { voiceEnum } from "@acme/validators";
 
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
-import { audioSettingsAtom, promptAtom } from "~/store";
+import { promptAtom } from "~/store";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 import { APP_NAME } from "~/utils/constants";
+import { AudioSettings } from "./AudioSettings";
 import InterlinearLineEditor from "./InterlinearLineEditor";
 import LanguagePicker from "./LanguagePicker";
 import { Button } from "./ui/button";
@@ -26,8 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Slider } from "./ui/slider";
-import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
 
 const InterlinearLinesPagee = () => {
@@ -35,13 +33,14 @@ const InterlinearLinesPagee = () => {
     [],
   );
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const interlinearLinesQuery = api.userSettings.getInterlinearLines.useQuery();
+  const interlinearLinesQuery = api.userSettings.getUserSettings.useQuery();
+  const utils = api.useUtils();
 
   const updateInterlinearLinesMut =
-    api.userSettings.updateInterlinearLines.useMutation({
+    api.userSettings.updateUserSettings.useMutation({
       onSuccess: () => {
         toast("Saved Changes");
+        void utils.userSettings.getUserSettings.invalidate();
       },
       onError: (error) => {
         toast(error.message);
@@ -73,7 +72,7 @@ const InterlinearLinesPagee = () => {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        updateInterlinearLinesMut.mutate(value);
+        updateInterlinearLinesMut.mutate({ interlinearLines: value });
       }, 300);
     },
     [updateInterlinearLinesMut],
@@ -88,7 +87,7 @@ const InterlinearLinesPagee = () => {
   );
 
   useEffect(() => {
-    setInterlinearLines(interlinearLinesQuery.data ?? []);
+    setInterlinearLines(interlinearLinesQuery.data?.interlinearLines ?? []);
   }, [interlinearLinesQuery.data]);
 
   return (
@@ -148,61 +147,14 @@ const UserSettings = () => {
   );
 };
 
-const AudioSettings = () => {
-  const [audioSettings, setAudioSettings] = useAtom(audioSettingsAtom);
-
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      <fieldset className="col-span-full flex items-center justify-between">
-        <Label htmlFor="auto-play">Auto Play</Label>
-        <Switch
-          checked={audioSettings.autoPlay}
-          id="auto-play"
-          onCheckedChange={(autoPlay) =>
-            setAudioSettings({ ...audioSettings, autoPlay })
-          }
-        />
-      </fieldset>
-
-      <fieldset className="col-span-full space-y-1">
-        <Label htmlFor="voice">Voice</Label>
-        <Select
-          onValueChange={(value) =>
-            setAudioSettings({
-              ...audioSettings,
-              voice: voiceEnum.parse(value),
-            })
-          }
-          value={audioSettings.voice}
-        >
-          <SelectTrigger id="voice">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.values(voiceEnum.Values).map((voice) => (
-              <SelectItem key={voice} value={String(voice)}>
-                {voice}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </fieldset>
-
-      <fieldset className="col-span-full space-y-1">
-        <Label htmlFor="speed">Speed ({audioSettings.speed}x)</Label>
-        <Slider
-          max={4}
-          min={0.25}
-          onValueChange={(values) =>
-            setAudioSettings({ ...audioSettings, speed: values[0] ?? 1 })
-          }
-          step={0.1}
-          value={[audioSettings.speed]}
-        />
-      </fieldset>
-    </div>
-  );
-};
+export const voices: { voice: string; name: string }[] = [
+  { voice: "alloy", name: "Alloy" },
+  { voice: "echo", name: "Echo" },
+  { voice: "fable", name: "Fable" },
+  { voice: "onyx", name: "Onyx" },
+  { voice: "nova", name: "Nova" },
+  { voice: "shimmer", name: "Shimmer" },
+];
 
 const COMPLEXITIES: TrainingSession["complexity"][] = [
   "A1",

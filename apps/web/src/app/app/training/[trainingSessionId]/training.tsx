@@ -16,12 +16,7 @@ import {
 } from "~/components/ui/tooltip";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
-import {
-  knownIPAsAtom,
-  knownTranslationsAtom,
-  knownWordsPopoverOpen,
-  promptAtom,
-} from "~/store";
+import { knownIPAsAtom, knownTranslationsAtom, promptAtom } from "~/store";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 
@@ -36,13 +31,12 @@ export default function Training() {
   const setKnownIPAs = useSetAtom(knownIPAsAtom);
   const setKnownTranslations = useSetAtom(knownTranslationsAtom);
   const promptTemplate = useAtomValue(promptAtom);
-  const setKnownWordsPopoverOpen = useSetAtom(knownWordsPopoverOpen);
+  // const setKnownWordsPopoverOpen = useSetAtom(knownWordsPopoverOpen);
 
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
     useState(false);
 
-  const { trainingSession, changeSentenceIndex, setKnownWords, knownWords } =
-    useTrainingSession();
+  const { trainingSession, changeSentenceIndex } = useTrainingSession();
 
   const utils = api.useUtils();
   const sentencesQuery = api.sentences.getSentences.useQuery({
@@ -111,30 +105,24 @@ export default function Training() {
   }, [showTranslation]);
 
   const handleAllWordsKnown = useCallback(() => {
-    if (!sentencesQuery.isSuccess) return;
-    const sentence = sentencesQuery.data[trainingSession.sentenceIndex];
-    if (!sentence) {
-      return;
-    }
-    const words = sentence.words.map((word) => word.lemma);
-    const uniqueWords = words.filter(
-      (word) => !knownWords.find((item) => item.word === word),
-    );
-    if (uniqueWords.length) {
-      setKnownWords([...knownWords.map((item) => item.word), ...uniqueWords]);
-      toast(`${uniqueWords.length} new words added to known words list.`);
-      setKnownWordsPopoverOpen(true);
-    } else {
-      toast("All words in this sentence is already in your known words list.");
-    }
-  }, [
-    knownWords,
-    sentencesQuery.data,
-    sentencesQuery.isSuccess,
-    setKnownWords,
-    setKnownWordsPopoverOpen,
-    trainingSession.sentenceIndex,
-  ]);
+    toast("Unimplemented!");
+    // if (!sentencesQuery.isSuccess) return;
+    // const sentence = sentencesQuery.data[trainingSession.sentenceIndex];
+    // if (!sentence) {
+    //   return;
+    // }
+    // const words = sentence.words.map((word) => word.lemma);
+    // const uniqueWords = words.filter(
+    //   (word) => !knownWords.find((item) => item.word === word),
+    // );
+    // if (uniqueWords.length) {
+    //   setKnownWords([...knownWords.map((item) => item.word), ...uniqueWords]);
+    //   toast(`${uniqueWords.length} new words added to known words list.`);
+    //   setKnownWordsPopoverOpen(true);
+    // } else {
+    //   toast("All words in this sentence is already in your known words list.");
+    // }
+  }, []);
 
   useHotkeys(
     "n",

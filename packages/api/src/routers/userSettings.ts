@@ -1,14 +1,35 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { InterlinearLine } from "@acme/core/validators";
 import { interlinearLine } from "@acme/core/validators";
 import { createPrefixedId, eq } from "@acme/db";
-import { getDefaultInterlinearLines, userSettings } from "@acme/db/schema";
+import {
+  getDefaultInterlinearLines,
+  updateUserSettingsSchema,
+  userSettings,
+} from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getInterlinearLines } from "../utils";
+import { getInterlinearLines, getUserSettings } from "../utils";
 
 export const userSettingsRouter = createTRPCRouter({
+  getUserSettings: protectedProcedure.query((opts) =>
+    getUserSettings(opts.ctx.session.user.id, opts.ctx.db),
+  ),
+  updateUserSettings: protectedProcedure
+    .input(updateUserSettingsSchema)
+    .mutation(async (opts) => {
+      const [updatedSettings] = await opts.ctx.db
+        .update(userSettings)
+        .set(opts.input)
+        .where(eq(userSettings.userId, opts.ctx.session.user.id))
+        .returning();
+      if (!updatedSettings) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+      return updatedSettings;
+    }),
   getInterlinearLines: protectedProcedure.query(async (opts) => {
     return getInterlinearLines(opts.ctx.session.user.id, opts.ctx.db);
   }),

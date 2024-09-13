@@ -6,7 +6,7 @@ import { EditIcon, TrashIcon } from "lucide-react";
 import type { Disappearing, InterlinearLine } from "@acme/core/validators";
 
 import { useRaisedShadow } from "~/hooks/useRaisedShadow";
-import { cn } from "~/utils";
+import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import { ReorderIcon } from "./icons/drag-icon";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -261,13 +261,7 @@ const Item = ({
       </div>
       <div
         className="bg-secondary grid gap-2 overflow-x-auto p-4 outline-none"
-        style={{
-          fontSize: item.style.fontSize ?? undefined,
-          fontFamily: item.style.fontFamily ?? undefined,
-          fontWeight: item.style.fontWeight ?? undefined,
-          fontStyle: item.style.fontStyle ?? undefined,
-          color: item.style.color ?? undefined,
-        }}
+        style={getCSSStyleForInterlinearLine(item.style)}
         contentEditable
       >
         El gato es negro.

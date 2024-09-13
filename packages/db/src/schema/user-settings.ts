@@ -1,6 +1,9 @@
-import { jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, real, text } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
 
 import type { InterlinearLine } from "@acme/core/validators";
+import { interlinearLine } from "@acme/core/validators";
 
 import { createPrefixedId } from "../utils";
 import { users } from "./auth";
@@ -62,7 +65,20 @@ export const userSettings = pgTable("user_settings", {
     .$type<InterlinearLine[]>()
     .notNull()
     .$defaultFn(getDefaultInterlinearLines),
+  autoPlayAudio: boolean("auto_play_audio").notNull().default(true),
+  ttsVoice: text("tts_voice").notNull().default("alloy"),
+  ttsSpeed: real("tts_speed").notNull().default(1),
 });
 
 export type UserSettings = typeof userSettings.$inferSelect;
 export type UserSettingsInsert = typeof userSettings.$inferInsert;
+
+export const updateUserSettingsSchema = createInsertSchema(userSettings, {
+  interlinearLines: z.array(interlinearLine).min(1).optional(),
+  ttsSpeed: z.number().min(0.25).max(4).optional(),
+}).pick({
+  autoPlayAudio: true,
+  interlinearLines: true,
+  ttsSpeed: true,
+  ttsVoice: true,
+});

@@ -26,7 +26,6 @@
     "@acme/eslint-config": "*",
     "@acme/prettier-config": "*",
     "@acme/tsconfig": "*",
-    "@acme/validators": "*",
     "@t3-oss/env-nextjs": "^0.10.1",
     "dotenv-cli": "^7.4.2",
     "drizzle-kit": "0.22.6",

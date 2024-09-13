@@ -6,12 +6,7 @@ createJiti(fileURLToPath(import.meta.url))("./src/env");
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
-  transpilePackages: [
-    "@acme/api",
-    "@acme/auth",
-    "@acme/db",
-    "@acme/validators",
-  ],
+  transpilePackages: ["@acme/api", "@acme/auth", "@acme/db", "@acme/core"],
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 };

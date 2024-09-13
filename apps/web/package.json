@@ -20,7 +20,6 @@
     "@acme/eslint-config": "*",
     "@acme/prettier-config": "*",
     "@acme/tsconfig": "*",
-    "@acme/validators": "*",
     "@hookform/resolvers": "^3.6.0",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",

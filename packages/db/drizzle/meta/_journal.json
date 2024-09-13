@@ -15,6 +15,13 @@
       "when": 1726066198395,
       "tag": "0001_bitter_revanche",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1726195687921,
+      "tag": "0002_known_molecule_man",
+      "breakpoints": true
     }
   ]
 }
