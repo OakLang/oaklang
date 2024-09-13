@@ -33,7 +33,7 @@ export const POST = async (req: NextRequest) => {
       ttsSpeed: userSettings.ttsSpeed,
     })
     .from(userSettings)
-    .where(eq(userSettings.id, session.user.id));
+    .where(eq(userSettings.userId, session.user.id));
   if (!settings) {
     return new NextResponse("User settings not found", { status: 404 });
   }
