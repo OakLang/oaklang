@@ -36,7 +36,7 @@ export default function SettingsButton() {
         </TooltipTrigger>
         <TooltipContent>Hotkey: S(ettings)</TooltipContent>
       </Tooltip>
-      <DialogContent className="flex max-h-[min(768px,calc(100vh-48px))] max-w-3xl flex-col gap-0 overflow-hidden p-0">
+      <DialogContent className="flex h-[768px] max-h-[min(768px,calc(100vh-48px))] max-w-3xl flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="bg-card sticky top-0 z-40 flex-shrink-0 border-b p-6">
           <DialogTitle>Settings</DialogTitle>
           <DialogClose asChild>
