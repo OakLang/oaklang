@@ -1,1 +1,0 @@
-ALTER TABLE "training_session" ADD COLUMN "title" text;

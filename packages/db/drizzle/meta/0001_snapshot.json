@@ -1,6 +1,6 @@
 {
-  "id": "d91fc0ba-855e-4f64-a10a-55ed753deb7c",
-  "prevId": "5d5df1c9-e52e-4a9f-81af-373ac72c1c13",
+  "id": "8213889a-88a9-4ada-b02f-6db5ca409685",
+  "prevId": "1bda290e-49f7-41cc-87b2-2eda04e2ed23",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -364,6 +364,33 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "auto_play_audio": {
+          "name": "auto_play_audio",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "tts_voice": {
+          "name": "tts_voice",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'alloy'"
+        },
+        "tts_speed": {
+          "name": "tts_speed",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "native_language": {
+          "name": "native_language",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -379,6 +406,19 @@
             "id"
           ],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "user_settings_native_language_language_code_fk": {
+          "name": "user_settings_native_language_language_code_fk",
+          "tableFrom": "user_settings",
+          "tableTo": "language",
+          "columnsFrom": [
+            "native_language"
+          ],
+          "columnsTo": [
+            "code"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -397,17 +437,16 @@
       "name": "language",
       "schema": "",
       "columns": {
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
         "code": {
           "name": "code",
           "type": "text",
           "primaryKey": true,
+          "notNull": true
+        },
+        "country_code": {
+          "name": "country_code",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true
         },
         "name": {
@@ -465,24 +504,11 @@
           "notNull": true,
           "default": "'A1'"
         },
-        "help_langauge": {
-          "name": "help_langauge",
+        "language": {
+          "name": "language",
           "type": "text",
           "primaryKey": false,
           "notNull": true
-        },
-        "practice_language": {
-          "name": "practice_language",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "sentences_count": {
-          "name": "sentences_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 5
         }
       },
       "indexes": {},
@@ -500,25 +526,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "training_session_help_langauge_language_code_fk": {
-          "name": "training_session_help_langauge_language_code_fk",
+        "training_session_language_language_code_fk": {
+          "name": "training_session_language_language_code_fk",
           "tableFrom": "training_session",
           "tableTo": "language",
           "columnsFrom": [
-            "help_langauge"
-          ],
-          "columnsTo": [
-            "code"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "training_session_practice_language_language_code_fk": {
-          "name": "training_session_practice_language_language_code_fk",
-          "tableFrom": "training_session",
-          "tableTo": "language",
-          "columnsFrom": [
-            "practice_language"
+            "language"
           ],
           "columnsTo": [
             "code"
@@ -670,6 +683,77 @@
           ]
         }
       }
+    },
+    "public.practice_langauge": {
+      "name": "practice_langauge",
+      "schema": "",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "last_practiced": {
+          "name": "last_practiced",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "language": {
+          "name": "language",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "practice_langauge_user_id_user_id_fk": {
+          "name": "practice_langauge_user_id_user_id_fk",
+          "tableFrom": "practice_langauge",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "practice_langauge_language_language_code_fk": {
+          "name": "practice_langauge_language_language_code_fk",
+          "tableFrom": "practice_langauge",
+          "tableTo": "language",
+          "columnsFrom": [
+            "language"
+          ],
+          "columnsTo": [
+            "code"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "practice_langauge_user_id_language_pk": {
+          "name": "practice_langauge_user_id_language_pk",
+          "columns": [
+            "user_id",
+            "language"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
     }
   },
   "enums": {},

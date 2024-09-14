@@ -1,8 +1,10 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text } from "drizzle-orm/pg-core";
 
 export const languages = pgTable("language", {
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  // ISO 639
   code: text("code").notNull().primaryKey(),
+  // ISO 3166-1 A-2
+  countryCode: text("country_code").notNull(),
   name: text("name").notNull(),
 });
 

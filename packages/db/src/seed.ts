@@ -6,13 +6,13 @@ const main = async () => {
   console.log("Seed start");
 
   const data: LanguageInsert[] = [
-    { name: "English", code: "en" },
-    { name: "Spanish", code: "es" },
-    { name: "Bulgarian", code: "bg" },
-    { name: "French", code: "fr" },
-    { name: "German", code: "de" },
-    { name: "Italian", code: "it" },
-    { name: "Czech", code: "cs" },
+    { name: "English", code: "en", countryCode: "gb" },
+    { name: "Spanish", code: "es", countryCode: "es" },
+    { name: "Bulgarian", code: "bg", countryCode: "bg" },
+    { name: "French", code: "fr", countryCode: "fr" },
+    { name: "German", code: "de", countryCode: "de" },
+    { name: "Italian", code: "it", countryCode: "it" },
+    { name: "Czech", code: "cz", countryCode: "cz" },
   ];
 
   await db.delete(languages);

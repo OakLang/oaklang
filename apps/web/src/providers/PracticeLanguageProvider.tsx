@@ -1,0 +1,48 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { createContext, useContext } from "react";
+import { useParams } from "next/navigation";
+
+import type { LanguageWithStats } from "@acme/api/validators";
+
+import { api } from "~/trpc/react";
+
+export interface PracticeLanguageContextValue {
+  language: LanguageWithStats;
+}
+
+const PracticeLanguageContext =
+  createContext<PracticeLanguageContextValue | null>(null);
+
+export interface PracticeLanguageProviderProps {
+  children: ReactNode;
+  langauge: LanguageWithStats;
+}
+
+export default function PracticeLanguageProvider({
+  children,
+  langauge,
+}: PracticeLanguageProviderProps) {
+  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const langaugeQuery = api.users.getPracticeLanguage.useQuery(
+    practiceLanguage,
+    { initialData: langauge },
+  );
+
+  return (
+    <PracticeLanguageContext.Provider value={{ language: langaugeQuery.data }}>
+      {children}
+    </PracticeLanguageContext.Provider>
+  );
+}
+
+export const usePracticeLanguage = () => {
+  const context = useContext(PracticeLanguageContext);
+  if (!context) {
+    throw new Error(
+      "usePracticeLanguage must use insdie PracticeLanguageProvider",
+    );
+  }
+  return context;
+};

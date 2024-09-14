@@ -2,14 +2,8 @@
 
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useState } from "react";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
 
-import type {
-  TrainingSession,
-  UpdateTrainingSession,
-  Word,
-} from "@acme/db/schema";
+import type { TrainingSession, UpdateTrainingSession } from "@acme/db/schema";
 
 import { api } from "~/trpc/react";
 
@@ -18,10 +12,6 @@ export interface TrainingSessionContextValue {
   updateTrainingSession: (_: UpdateTrainingSession) => void;
   sentenceIndex: number;
   changeSentenceIndex: (index: number) => void;
-  practiceWords: Word[];
-  knownWords: Word[];
-  setKnownWords: (words: string[]) => void;
-  setPracticeWords: (words: string[]) => void;
 }
 
 export const TrainingSessionContext =
@@ -30,14 +20,11 @@ export const TrainingSessionContext =
 export interface TrainingSessionProviderProps {
   children: ReactNode;
   trainingSession: TrainingSession;
-  practiceWords: Word[];
-  knownWords: Word[];
 }
 
 export default function TrainingSessionProvider(
   props: TrainingSessionProviderProps,
 ) {
-  const { data: session } = useSession();
   const utils = api.useUtils();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId: props.trainingSession.id },
@@ -46,23 +33,6 @@ export default function TrainingSessionProvider(
   const [sentenceIndex, setSentenceIndex] = useState(
     trainingSessionQuery.data.sentenceIndex,
   );
-
-  const practiceWordsQuery = api.words.getWords.useQuery(
-    { trainingSessionId: props.trainingSession.id, isPracticing: true },
-    { initialData: props.practiceWords, refetchOnMount: false },
-  );
-  const knownWordsQuery = api.words.getWords.useQuery(
-    { trainingSessionId: props.trainingSession.id, isKnown: true },
-    { initialData: props.knownWords, refetchOnMount: false },
-  );
-  const createOrUpdateWordsMut = api.words.createOrUpdateWords.useMutation({
-    onSettled: (_, __, { trainingSessionId }) => {
-      void utils.words.getWords.invalidate({ trainingSessionId });
-    },
-    onError: (error) => {
-      toast("Error", { description: error.message });
-    },
-  });
 
   const updateTrainingSessionMut =
     api.trainingSessions.updateTrainingSession.useMutation({
@@ -87,129 +57,6 @@ export default function TrainingSessionProvider(
         });
       },
       [trainingSessionQuery.data, updateTrainingSessionMut],
-    );
-
-  const setKnownWords: TrainingSessionContextValue["setKnownWords"] =
-    useCallback(
-      (newWordsList) => {
-        if (!session) {
-          return;
-        }
-
-        const existingWords = knownWordsQuery.data.map((w) => w.word);
-        const newWords = newWordsList.filter((w) => !existingWords.includes(w));
-        const removedWords = existingWords.filter(
-          (w) => !newWordsList.includes(w),
-        );
-        if (newWords.length) {
-          createOrUpdateWordsMut.mutate({
-            words: newWords,
-            trainingSessionId: trainingSessionQuery.data.id,
-            isKnown: true,
-          });
-        }
-        if (removedWords.length) {
-          createOrUpdateWordsMut.mutate({
-            trainingSessionId: trainingSessionQuery.data.id,
-            words: removedWords,
-            isKnown: false,
-          });
-        }
-        utils.words.getWords.setData(
-          {
-            trainingSessionId: trainingSessionQuery.data.id,
-            isKnown: true,
-          },
-          (words = []) =>
-            [
-              ...words.filter((word) => !removedWords.includes(word.word)),
-              ...newWords.map(
-                (word) =>
-                  ({
-                    word,
-                    userId: session.user.id,
-                    createdAt: new Date(),
-                    isKnown: true,
-                    isPracticing: false,
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-expect-error
-                    _isTemp: true,
-                  }) satisfies Word,
-              ),
-            ].sort((a, b) =>
-              a.word.toLowerCase().localeCompare(b.word.toLocaleLowerCase()),
-            ),
-        );
-      },
-      [
-        createOrUpdateWordsMut,
-        knownWordsQuery.data,
-        session,
-        trainingSessionQuery.data.id,
-        utils.words.getWords,
-      ],
-    );
-
-  const setPracticeWords: TrainingSessionContextValue["setPracticeWords"] =
-    useCallback(
-      (newWordsList) => {
-        if (!session) {
-          return;
-        }
-
-        const existingWords = practiceWordsQuery.data.map((w) => w.word);
-        const newWords = newWordsList.filter((w) => !existingWords.includes(w));
-        const removedWords = existingWords.filter(
-          (w) => !newWordsList.includes(w),
-        );
-        if (newWords.length) {
-          createOrUpdateWordsMut.mutate({
-            words: newWords,
-            trainingSessionId: trainingSessionQuery.data.id,
-            isPracticing: true,
-          });
-        }
-        if (removedWords.length) {
-          createOrUpdateWordsMut.mutate({
-            trainingSessionId: trainingSessionQuery.data.id,
-            words: removedWords,
-            isPracticing: false,
-          });
-        }
-
-        utils.words.getWords.setData(
-          {
-            trainingSessionId: trainingSessionQuery.data.id,
-            isPracticing: true,
-          },
-          (words = []) =>
-            [
-              ...words.filter((word) => !removedWords.includes(word.word)),
-              ...newWords.map(
-                (word) =>
-                  ({
-                    word,
-                    userId: session.user.id,
-                    createdAt: new Date(),
-                    isPracticing: true,
-                    isKnown: false,
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-expect-error
-                    _isTemp: true,
-                  }) satisfies Word,
-              ),
-            ].sort((a, b) =>
-              a.word.toLowerCase().localeCompare(b.word.toLocaleLowerCase()),
-            ),
-        );
-      },
-      [
-        createOrUpdateWordsMut,
-        practiceWordsQuery.data,
-        session,
-        trainingSessionQuery.data.id,
-        utils.words.getWords,
-      ],
     );
 
   const updateTrainingSession = useCallback(
@@ -237,10 +84,6 @@ export default function TrainingSessionProvider(
         trainingSession: trainingSessionQuery.data,
         sentenceIndex,
         changeSentenceIndex,
-        knownWords: knownWordsQuery.data,
-        practiceWords: practiceWordsQuery.data,
-        setKnownWords,
-        setPracticeWords,
         updateTrainingSession,
       }}
     >

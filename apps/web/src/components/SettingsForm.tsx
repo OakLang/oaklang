@@ -15,7 +15,6 @@ import { cn } from "~/utils";
 import { APP_NAME } from "~/utils/constants";
 import { AudioSettings } from "./AudioSettings";
 import InterlinearLineEditor from "./InterlinearLineEditor";
-import LanguagePicker from "./LanguagePicker";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -184,38 +183,6 @@ const TrainingSessionSettings = () => {
             debouncedSetTitle(e.currentTarget.value);
           }}
         />
-      </fieldset>
-
-      <fieldset className="space-y-1">
-        <Label htmlFor="help-language">Help Language</Label>
-        <LanguagePicker value={trainingSession.helpLanguage} disabled />
-      </fieldset>
-      <fieldset className="space-y-1">
-        <Label htmlFor="practice-language">Practice Language</Label>
-        <LanguagePicker value={trainingSession.practiceLanguage} disabled />
-      </fieldset>
-
-      <fieldset className="space-y-1">
-        <Label htmlFor="practice-language">Num of Sentences</Label>
-        <Select
-          onValueChange={(value) =>
-            updateTrainingSession({
-              sentencesCount: Number(value),
-            })
-          }
-          value={String(trainingSession.sentencesCount)}
-        >
-          <SelectTrigger id="practice-language">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[3, 4, 5, 6, 7, 8].map((count) => (
-              <SelectItem key={count} value={String(count)}>
-                {count}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </fieldset>
 
       <fieldset className="space-y-1">

@@ -19,13 +19,9 @@ export const trainingSessions = pgTable("training_session", {
   complexity: text("complexity", { enum: ["A1", "A2", "B1", "B2", "C1", "C2"] })
     .notNull()
     .default("A1"),
-  helpLanguage: text("help_langauge")
+  language: text("language")
     .notNull()
     .references(() => languages.code, { onDelete: "cascade" }),
-  practiceLanguage: text("practice_language")
-    .notNull()
-    .references(() => languages.code, { onDelete: "cascade" }),
-  sentencesCount: integer("sentences_count").notNull().default(5),
 });
 
 export type TrainingSession = typeof trainingSessions.$inferSelect;
@@ -35,9 +31,7 @@ export const createTrainingSessionInput = createInsertSchema(
 ).pick({
   title: true,
   complexity: true,
-  helpLanguage: true,
-  practiceLanguage: true,
-  sentencesCount: true,
+  language: true,
 });
 export type CreateTrainingSessionInput = z.infer<
   typeof createTrainingSessionInput
@@ -48,7 +42,6 @@ export const updateTrainingSessionInput = createInsertSchema(trainingSessions)
   .pick({
     title: true,
     complexity: true,
-    sentencesCount: true,
     sentenceIndex: true,
   });
 export type UpdateTrainingSession = z.infer<typeof updateTrainingSessionInput>;

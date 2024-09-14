@@ -1,8 +1,10 @@
 "use client";
 
-import { LogOutIcon, UserIcon } from "lucide-react";
+import Link from "next/link";
+import { LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
+import { usePracticeLanguage } from "~/providers/PracticeLanguageProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -15,10 +17,13 @@ import {
 import { Skeleton } from "./ui/skeleton";
 
 export default function UserButton() {
+  const { language } = usePracticeLanguage();
   const { data, status } = useSession({ required: true });
+
   if (status === "loading") {
     return <Skeleton className="h-10 w-10 rounded-full" />;
   }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -37,7 +42,19 @@ export default function UserButton() {
           <p className="font-medium">{data.user.email}</p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>
+        <DropdownMenuItem asChild>
+          <Link href={`/app/${language.code}/settings`}>
+            <SettingsIcon className="mr-2 h-4 w-4" />
+            Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            localStorage.clear();
+            void signOut();
+          }}
+        >
           <LogOutIcon className="mr-2 h-4 w-4" />
           Log Out
         </DropdownMenuItem>

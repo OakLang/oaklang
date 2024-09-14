@@ -7,6 +7,7 @@ import { interlinearLine } from "@acme/core/validators";
 
 import { createPrefixedId } from "../utils";
 import { users } from "./auth";
+import { languages } from "./language";
 
 export const getDefaultInterlinearLines = (): InterlinearLine[] => [
   {
@@ -68,6 +69,9 @@ export const userSettings = pgTable("user_settings", {
   autoPlayAudio: boolean("auto_play_audio").notNull().default(true),
   ttsVoice: text("tts_voice").notNull().default("alloy"),
   ttsSpeed: real("tts_speed").notNull().default(1),
+  nativeLanguage: text("native_language").references(() => languages.code, {
+    onDelete: "set null",
+  }),
 });
 
 export type UserSettings = typeof userSettings.$inferSelect;
@@ -81,4 +85,5 @@ export const updateUserSettingsSchema = createInsertSchema(userSettings, {
   interlinearLines: true,
   ttsSpeed: true,
   ttsVoice: true,
+  nativeLanguage: true,
 });

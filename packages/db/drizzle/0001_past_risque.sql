@@ -1,0 +1,1 @@
+ALTER TABLE "practice_langauge" ADD COLUMN "last_practiced" timestamp DEFAULT now() NOT NULL;
