@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
-import { trainingSessions } from "./training";
+import { trainingSessions } from "./training-session";
 
 export const sentences = pgTable(
   "sentence",
