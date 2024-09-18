@@ -21,7 +21,7 @@ import { Separator } from "~/components/ui/separator";
 import { api } from "~/trpc/react";
 import { APP_NAME } from "~/utils/constants";
 
-export default function LangaugesPage() {
+export default function LanguagesPage() {
   const practiceLanguagesQuery = api.users.getPracticeLanguages.useQuery();
   const utils = api.useUtils();
 

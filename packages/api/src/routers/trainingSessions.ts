@@ -27,7 +27,7 @@ export const trainingSessionsRouter = createTRPCRouter({
   getTrainingSessions: protectedProcedure
     .input(
       z.object({
-        language: z.string(),
+        languageCode: z.string(),
       }),
     )
     .query(async ({ ctx: { db, session }, input }) => {
@@ -39,15 +39,15 @@ export const trainingSessionsRouter = createTRPCRouter({
           title: trainingSessions.title,
           sentenceIndex: trainingSessions.sentenceIndex,
           complexity: trainingSessions.complexity,
-          language: trainingSessions.language,
+          languageCode: trainingSessions.languageCode,
           languageName: languages.name,
         })
         .from(trainingSessions)
-        .innerJoin(languages, eq(languages.code, trainingSessions.language))
+        .innerJoin(languages, eq(languages.code, trainingSessions.languageCode))
         .where(
           and(
             eq(trainingSessions.userId, session.user.id),
-            eq(trainingSessions.language, input.language),
+            eq(trainingSessions.languageCode, input.languageCode),
           ),
         )
         .orderBy(desc(trainingSessions.id));
@@ -56,20 +56,23 @@ export const trainingSessionsRouter = createTRPCRouter({
   createTrainingSession: protectedProcedure
     .input(createTrainingSessionInput)
     .mutation(async (opts) => {
-      const [langauge] = await opts.ctx.db
+      const [language] = await opts.ctx.db
         .select({
-          code: practiceLanguages.langauge,
+          code: practiceLanguages.languageCode,
           name: languages.name,
         })
         .from(practiceLanguages)
-        .innerJoin(languages, eq(languages.code, practiceLanguages.langauge))
+        .innerJoin(
+          languages,
+          eq(languages.code, practiceLanguages.languageCode),
+        )
         .where(
           and(
-            eq(practiceLanguages.langauge, opts.input.language),
+            eq(practiceLanguages.languageCode, opts.input.languageCode),
             eq(practiceLanguages.userId, opts.ctx.session.user.id),
           ),
         );
-      if (!langauge) {
+      if (!language) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Practice language not found!",
@@ -79,9 +82,9 @@ export const trainingSessionsRouter = createTRPCRouter({
       const [trainingSession] = await opts.ctx.db
         .insert(trainingSessions)
         .values({
-          language: langauge.code,
+          languageCode: language.code,
           complexity: opts.input.complexity,
-          title: opts.input.title ?? `Learn ${langauge.name}`,
+          title: opts.input.title ?? `Learn ${language.name}`,
           userId: opts.ctx.session.user.id,
         })
         .returning();

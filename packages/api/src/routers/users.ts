@@ -26,13 +26,16 @@ export const usersRouter = createTRPCRouter({
   getPracticeLanguages: protectedProcedure
     .output(z.array(languageWithStats))
     .query(async (opts) => {
-      const langauges = await opts.ctx.db
+      const languages = await opts.ctx.db
         .select()
         .from(practiceLanguages)
-        .innerJoin(languages, eq(languages.code, practiceLanguages.langauge))
+        .innerJoin(
+          languages,
+          eq(languages.code, practiceLanguages.languageCode),
+        )
         .where(eq(practiceLanguages.userId, opts.ctx.session.user.id))
         .orderBy(desc(practiceLanguages.createdAt));
-      return langauges.map((lang) => ({ ...lang.language, knownWords: 0 }));
+      return languages.map((lang) => ({ ...lang.language, knownWords: 0 }));
     }),
 
   getPracticeLanguage: protectedProcedure
@@ -56,20 +59,20 @@ export const usersRouter = createTRPCRouter({
         .from(practiceLanguages)
         .where(
           and(
-            eq(practiceLanguages.langauge, language.code),
+            eq(practiceLanguages.languageCode, language.code),
             eq(practiceLanguages.userId, opts.ctx.session.user.id),
           ),
         );
 
       if (!practiceLanguage) {
-        const [newPracticeLangauge] = await opts.ctx.db
+        const [newPracticeLanguage] = await opts.ctx.db
           .insert(practiceLanguages)
           .values({
-            langauge: language.code,
+            languageCode: language.code,
             userId: opts.ctx.session.user.id,
           })
           .returning();
-        if (!newPracticeLangauge) {
+        if (!newPracticeLanguage) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         }
         return {
@@ -85,7 +88,7 @@ export const usersRouter = createTRPCRouter({
         })
         .where(
           and(
-            eq(practiceLanguages.langauge, practiceLanguage.langauge),
+            eq(practiceLanguages.languageCode, practiceLanguage.languageCode),
             eq(practiceLanguages.userId, practiceLanguage.userId),
           ),
         );
@@ -101,10 +104,13 @@ export const usersRouter = createTRPCRouter({
       const [practiceLanguage] = await opts.ctx.db
         .select()
         .from(practiceLanguages)
-        .innerJoin(languages, eq(languages.code, practiceLanguages.langauge))
+        .innerJoin(
+          languages,
+          eq(languages.code, practiceLanguages.languageCode),
+        )
         .where(
           and(
-            eq(practiceLanguages.langauge, opts.input),
+            eq(practiceLanguages.languageCode, opts.input),
             eq(practiceLanguages.userId, opts.ctx.session.user.id),
           ),
         );
@@ -137,7 +143,7 @@ export const usersRouter = createTRPCRouter({
         .delete(practiceLanguages)
         .where(
           and(
-            eq(practiceLanguages.langauge, opts.input),
+            eq(practiceLanguages.languageCode, opts.input),
             eq(practiceLanguages.userId, opts.ctx.session.user.id),
           ),
         );
@@ -148,7 +154,7 @@ export const usersRouter = createTRPCRouter({
         .where(
           and(
             eq(trainingSessions.userId, opts.ctx.session.user.id),
-            eq(trainingSessions.language, opts.input),
+            eq(trainingSessions.languageCode, opts.input),
           ),
         );
 

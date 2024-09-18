@@ -22,15 +22,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 export default function PracticeLanguageSwitcher() {
   const { practiceLanguage } = usePracticeLanguage();
   const practiceLanguages = api.users.getPracticeLanguages.useQuery();
-  const langaugesQuery = api.languages.getLanguages.useQuery();
+  const languagesQuery = api.languages.getLanguages.useQuery();
   const router = useRouter();
 
   const otherLanguages = useMemo(
     () =>
-      langaugesQuery.data?.filter(
+      languagesQuery.data?.filter(
         (item) => !practiceLanguages.data?.find((pl) => pl.code === item.code),
       ) ?? [],
-    [langaugesQuery.data, practiceLanguages.data],
+    [languagesQuery.data, practiceLanguages.data],
   );
 
   return (

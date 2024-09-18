@@ -24,13 +24,13 @@ export default function AppPage() {
   const router = useRouter();
   const trainingSessionsQuery =
     api.trainingSessions.getTrainingSessions.useQuery({
-      language: practiceLanguage.code,
+      languageCode: practiceLanguage.code,
     });
 
   const startTrainingSession =
     api.trainingSessions.createTrainingSession.useMutation({
       onSuccess: (data) => {
-        router.push(`/app/${data.language}/training/${data.id}`);
+        router.push(`/app/${data.languageCode}/training/${data.id}`);
       },
       onError: (error) => {
         toast("Faield to create a new training session", {
@@ -40,7 +40,7 @@ export default function AppPage() {
     });
 
   const handleStartTraining = useCallback(() => {
-    startTrainingSession.mutate({ language: practiceLanguage.code });
+    startTrainingSession.mutate({ languageCode: practiceLanguage.code });
   }, [startTrainingSession, practiceLanguage.code]);
 
   useHotkeys(
@@ -82,7 +82,7 @@ export default function AppPage() {
           trainingSessionsQuery.data.map((item) => (
             <Link
               key={item.id}
-              href={`/app/${item.language}/training/${item.id}`}
+              href={`/app/${item.languageCode}/training/${item.id}`}
               className="hover:bg-secondary/50 block rounded-md p-4"
             >
               <p>{item.title ?? "Untitled"}</p>

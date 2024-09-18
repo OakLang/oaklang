@@ -26,6 +26,9 @@ psql -c 'DROP DATABASE oaklang;'
 psql -c "CREATE ROLE oaklang WITH LOGIN SUPERUSER PASSWORD 'oaklang';"
 psql -c "CREATE DATABASE oaklang WITH OWNER oaklang;"
 psql -d oaklang -c "CREATE EXTENSION citext;"
+npm run generate
+npm run migrate
+npm run seed
 ```
 
 ## Seed

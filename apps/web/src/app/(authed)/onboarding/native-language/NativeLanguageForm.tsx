@@ -19,13 +19,13 @@ import { api } from "~/trpc/react";
 
 export default function NativeLanguageForm({ nextPath }: { nextPath: string }) {
   const [nativeLanguageCode, setNativeLanguageCode] = useState("");
-  const langaugesQuery = api.languages.getLanguages.useQuery();
+  const languagesQuery = api.languages.getLanguages.useQuery();
 
   const router = useRouter();
 
   const nativeLanguage = useMemo(
-    () => langaugesQuery.data?.find((lang) => lang.code === nativeLanguageCode),
-    [langaugesQuery.data, nativeLanguageCode],
+    () => languagesQuery.data?.find((lang) => lang.code === nativeLanguageCode),
+    [languagesQuery.data, nativeLanguageCode],
   );
 
   const utils = api.useUtils();
@@ -82,7 +82,7 @@ export default function NativeLanguageForm({ nextPath }: { nextPath: string }) {
             value={nativeLanguageCode}
             onValueChange={setNativeLanguageCode}
           >
-            {langaugesQuery.data?.map((lang) => (
+            {languagesQuery.data?.map((lang) => (
               <DropdownMenuRadioItem
                 key={lang.code}
                 value={lang.code}

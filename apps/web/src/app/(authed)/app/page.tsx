@@ -18,5 +18,5 @@ export default async function AppPage() {
     .orderBy(desc(practiceLanguages.lastPracticed))
     .limit(1);
 
-  redirect(`/app/${lang?.langauge ?? "en"}`, RedirectType.replace);
+  redirect(`/app/${lang?.languageCode ?? "en"}`, RedirectType.replace);
 }

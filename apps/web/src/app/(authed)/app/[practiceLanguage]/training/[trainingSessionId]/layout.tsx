@@ -16,7 +16,7 @@ export default async function TrainingLayout({
       trainingSessionId: params.trainingSessionId,
     });
 
-    if (trainingSession.language !== params.practiceLanguage) {
+    if (trainingSession.languageCode !== params.practiceLanguage) {
       notFound();
     }
 

@@ -22,17 +22,17 @@ export interface PracticeLanguageProviderProps {
 
 export default function PracticeLanguageProvider({
   children,
-  practiceLanguage: langauge,
+  practiceLanguage: language,
 }: PracticeLanguageProviderProps) {
   const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
-  const langaugeQuery = api.users.getPracticeLanguage.useQuery(
+  const languageQuery = api.users.getPracticeLanguage.useQuery(
     practiceLanguage,
-    { initialData: langauge },
+    { initialData: language },
   );
 
   return (
     <PracticeLanguageContext.Provider
-      value={{ practiceLanguage: langaugeQuery.data }}
+      value={{ practiceLanguage: languageQuery.data }}
     >
       {children}
     </PracticeLanguageContext.Provider>

@@ -103,7 +103,7 @@ export default function InterlinearView({
                 asChild
               >
                 <Link
-                  href={`https://translate.google.com/?sl=${trainingSession.language}&tl=${userSettings.nativeLanguage}&text=${sentences.map((sent) => sent.sentence).join(" ")}&op=translate`}
+                  href={`https://translate.google.com/?sl=${trainingSession.languageCode}&tl=${userSettings.nativeLanguage}&text=${sentences.map((sent) => sent.sentence).join(" ")}&op=translate`}
                   target="_blank"
                   rel="nofollow noreferrer"
                 >

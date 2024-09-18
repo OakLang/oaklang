@@ -69,6 +69,14 @@ CREATE TABLE IF NOT EXISTS "language" (
 	"name" text NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "practice_language" (
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"last_practiced" timestamp DEFAULT now() NOT NULL,
+	"user_id" text NOT NULL,
+	"language_code" text NOT NULL,
+	CONSTRAINT "practice_language_user_id_language_code_pk" PRIMARY KEY("user_id","language_code")
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "training_session" (
 	"id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -76,16 +84,24 @@ CREATE TABLE IF NOT EXISTS "training_session" (
 	"title" text,
 	"sentence_index" integer DEFAULT 0 NOT NULL,
 	"complexity" text DEFAULT 'A1' NOT NULL,
-	"language" text NOT NULL
+	"language_code" text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "word" (
+	"id" text PRIMARY KEY NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"user_id" text NOT NULL,
+	"language_code" text NOT NULL,
 	"word" text NOT NULL,
-	"is_known" boolean DEFAULT false NOT NULL,
-	"is_practicing" boolean DEFAULT false NOT NULL,
-	CONSTRAINT "word_user_id_word_pk" PRIMARY KEY("user_id","word")
+	"knwon_at" timestamp,
+	CONSTRAINT "word_user_id_word_language_code_unique" UNIQUE("user_id","word","language_code")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "word_from_training_session" (
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"word_id" text NOT NULL,
+	"training_session_id" text NOT NULL,
+	CONSTRAINT "word_from_training_session_training_session_id_word_id_unique" UNIQUE("training_session_id","word_id")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "sentence" (
@@ -97,13 +113,6 @@ CREATE TABLE IF NOT EXISTS "sentence" (
 	"words" jsonb NOT NULL,
 	"index" integer NOT NULL,
 	CONSTRAINT "sentence_training_session_id_index_unique" UNIQUE("training_session_id","index")
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "practice_langauge" (
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"user_id" text NOT NULL,
-	"language" text NOT NULL,
-	CONSTRAINT "practice_langauge_user_id_language_pk" PRIMARY KEY("user_id","language")
 );
 --> statement-breakpoint
 DO $$ BEGIN
@@ -137,13 +146,25 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "practice_language" ADD CONSTRAINT "practice_language_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "practice_language" ADD CONSTRAINT "practice_language_language_code_language_code_fk" FOREIGN KEY ("language_code") REFERENCES "public"."language"("code") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "training_session" ADD CONSTRAINT "training_session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "training_session" ADD CONSTRAINT "training_session_language_language_code_fk" FOREIGN KEY ("language") REFERENCES "public"."language"("code") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "training_session" ADD CONSTRAINT "training_session_language_code_language_code_fk" FOREIGN KEY ("language_code") REFERENCES "public"."language"("code") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -155,19 +176,25 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "word" ADD CONSTRAINT "word_language_code_language_code_fk" FOREIGN KEY ("language_code") REFERENCES "public"."language"("code") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "word_from_training_session" ADD CONSTRAINT "word_from_training_session_word_id_word_id_fk" FOREIGN KEY ("word_id") REFERENCES "public"."word"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "word_from_training_session" ADD CONSTRAINT "word_from_training_session_training_session_id_training_session_id_fk" FOREIGN KEY ("training_session_id") REFERENCES "public"."training_session"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "sentence" ADD CONSTRAINT "sentence_training_session_id_training_session_id_fk" FOREIGN KEY ("training_session_id") REFERENCES "public"."training_session"("id") ON DELETE cascade ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "practice_langauge" ADD CONSTRAINT "practice_langauge_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "practice_langauge" ADD CONSTRAINT "practice_langauge_language_language_code_fk" FOREIGN KEY ("language") REFERENCES "public"."language"("code") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
