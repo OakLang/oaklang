@@ -215,16 +215,6 @@ const Item = ({
           />
         </fieldset>
 
-        {/* <fieldset className="grid gap-1">
-          <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Size</Label>
-          <Input
-            value={item.style.fontSize ?? ""}
-            placeholder="16px"
-            className="min-h-0 resize-none"
-            onChange={(e) => onChangeStyle({ fontSize: e.currentTarget.value })}
-          />
-        </fieldset> */}
-
         <fieldset className="grid gap-1">
           <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Weight</Label>
           <Input

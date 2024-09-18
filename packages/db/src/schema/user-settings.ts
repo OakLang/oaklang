@@ -5,74 +5,9 @@ import { z } from "zod";
 import type { InterlinearLine } from "@acme/core/validators";
 import { interlinearLine } from "@acme/core/validators";
 
-import { createPrefixedId } from "../utils";
+import { createPrefixedId, getDefaultInterlinearLines } from "../utils";
 import { users } from "./auth";
 import { languages } from "./language";
-
-export const getDefaultInterlinearLines = (): InterlinearLine[] => [
-  {
-    id: createPrefixedId("inter"),
-    name: "word",
-    description: "word in PRACTICE LANGUAGE",
-    disappearing: "default",
-    style: {
-      fontFamily: "Times New Roman",
-      fontSize: "32px",
-      fontWeight: "500",
-    },
-  },
-  {
-    id: createPrefixedId("inter"),
-    name: "ipa",
-    description: "word pronunciation in IPA format",
-    disappearing: "default",
-    style: {
-      fontFamily: "Times New Roman",
-      fontSize: "18px",
-    },
-  },
-  {
-    id: createPrefixedId("inter"),
-    name: "pronunciation",
-    description: "phonetic word pronunciation in HELP LANGUAGE",
-    disappearing: "default",
-    style: {
-      fontFamily: "Times New Roman",
-      fontSize: "18px",
-    },
-  },
-  {
-    id: createPrefixedId("inter"),
-    name: "lemma",
-    description: "word in lemma form",
-    disappearing: "default",
-    style: {
-      fontFamily: "Times New Roman",
-      fontSize: "18px",
-    },
-  },
-  {
-    id: createPrefixedId("inter"),
-    name: "translation",
-    description: "word translation in HELP LANGUAGE",
-    disappearing: "default",
-    style: {
-      fontFamily: "Times New Roman",
-      fontSize: "18px",
-    },
-  },
-  {
-    id: createPrefixedId("inter"),
-    name: "text",
-    description:
-      "whitespace delimeted text associated with word from the full sentence including capitalization and punctuatio",
-    disappearing: "default",
-    style: {
-      fontFamily: "Times New Roman",
-      fontSize: "18px",
-    },
-  },
-];
 
 export const userSettings = pgTable("user_settings", {
   id: text("id")

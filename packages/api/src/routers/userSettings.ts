@@ -3,12 +3,8 @@ import { z } from "zod";
 
 import type { InterlinearLine } from "@acme/core/validators";
 import { interlinearLine } from "@acme/core/validators";
-import { createPrefixedId, eq } from "@acme/db";
-import {
-  getDefaultInterlinearLines,
-  updateUserSettingsSchema,
-  userSettings,
-} from "@acme/db/schema";
+import { createPrefixedId, eq, getDefaultInterlinearLines } from "@acme/db";
+import { updateUserSettingsSchema, userSettings } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getInterlinearLines, getUserSettings } from "../utils";

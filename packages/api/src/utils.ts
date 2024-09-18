@@ -6,12 +6,8 @@ import type { InterlinearLine } from "@acme/core/validators";
 import type { DB } from "@acme/db/client";
 import type { UserSettings } from "@acme/db/schema";
 import { interlinearLine } from "@acme/core/validators";
-import { eq } from "@acme/db";
-import {
-  getDefaultInterlinearLines,
-  trainingSessions,
-  userSettings,
-} from "@acme/db/schema";
+import { eq, getDefaultInterlinearLines } from "@acme/db";
+import { trainingSessions, userSettings } from "@acme/db/schema";
 
 export const getTrainingSessionOrThrow = async (
   trainingSessionId: string,

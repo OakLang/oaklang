@@ -10,7 +10,6 @@ export const interlinearLine = z.object({
   style: z.object({
     fontFamily: z.string().nullish(),
     fontWeight: z.string().nullish(),
-    fontSize: z.string().nullish(),
     fontStyle: z.string().nullish(),
     color: z.string().nullish(),
   }),
