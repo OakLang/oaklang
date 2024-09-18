@@ -10,7 +10,13 @@ import { useTrainingSession } from "~/providers/TrainingSessionProvider";
 import { useUserSettings } from "~/providers/UserSettingsProvider";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 
-export default function Interlinear({ sentences }: { sentences: Sentence[] }) {
+const PRIMARY_LINE_NAME = "word";
+
+export default function InterlinearView({
+  sentences,
+}: {
+  sentences: Sentence[];
+}) {
   const { setInspectedWord } = useTrainingSession();
   const { userSettings } = useUserSettings();
   const ref = useRef<HTMLDivElement>(null);
@@ -63,8 +69,9 @@ function Word({ line, word }: { word: string; line: InterlinearLine }) {
         "hover:ring-primary/50 clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200",
         {
           "ring-2 ring-yellow-400 hover:ring-yellow-400":
-            inspectedWord === word,
-          "pointer-events-none select-none opacity-80": line.name !== "word",
+            inspectedWord === word && line.name === PRIMARY_LINE_NAME,
+          "pointer-events-none select-none opacity-80":
+            line.name !== PRIMARY_LINE_NAME,
         },
       )}
       style={{
