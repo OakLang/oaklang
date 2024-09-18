@@ -261,7 +261,7 @@ const Item = ({
       </div>
       <div
         className="bg-secondary grid gap-2 overflow-x-auto p-4 outline-none"
-        style={getCSSStyleForInterlinearLine(item.style)}
+        style={getCSSStyleForInterlinearLine(item)}
         contentEditable
       >
         El gato es negro.

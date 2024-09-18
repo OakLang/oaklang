@@ -17,7 +17,7 @@ import {
 import { Skeleton } from "./ui/skeleton";
 
 export default function UserButton() {
-  const { language } = usePracticeLanguage();
+  const { practiceLanguage } = usePracticeLanguage();
   const { data, status } = useSession({ required: true });
 
   if (status === "loading") {
@@ -43,7 +43,7 @@ export default function UserButton() {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={`/app/${language.code}/settings`}>
+          <Link href={`/app/${practiceLanguage.code}/settings`}>
             <SettingsIcon className="mr-2 h-4 w-4" />
             Settings
           </Link>

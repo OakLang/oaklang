@@ -15,35 +15,51 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     name: "word",
     description: "word in PRACTICE LANGUAGE",
     disappearing: "default",
-    style: {},
+    style: {
+      fontFamily: "Times New Roman",
+      fontSize: "32px",
+      fontWeight: "500",
+    },
   },
   {
     id: createPrefixedId("inter"),
     name: "ipa",
     description: "word pronunciation in IPA format",
     disappearing: "default",
-    style: {},
+    style: {
+      fontFamily: "Times New Roman",
+      fontSize: "18px",
+    },
   },
   {
     id: createPrefixedId("inter"),
     name: "pronunciation",
     description: "phonetic word pronunciation in HELP LANGUAGE",
     disappearing: "default",
-    style: {},
+    style: {
+      fontFamily: "Times New Roman",
+      fontSize: "18px",
+    },
   },
   {
     id: createPrefixedId("inter"),
     name: "lemma",
     description: "word in lemma form",
     disappearing: "default",
-    style: {},
+    style: {
+      fontFamily: "Times New Roman",
+      fontSize: "18px",
+    },
   },
   {
     id: createPrefixedId("inter"),
     name: "translation",
     description: "word translation in HELP LANGUAGE",
     disappearing: "default",
-    style: {},
+    style: {
+      fontFamily: "Times New Roman",
+      fontSize: "18px",
+    },
   },
   {
     id: createPrefixedId("inter"),
@@ -51,7 +67,10 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     description:
       "whitespace delimeted text associated with word from the full sentence including capitalization and punctuatio",
     disappearing: "default",
-    style: {},
+    style: {
+      fontFamily: "Times New Roman",
+      fontSize: "18px",
+    },
   },
 ];
 

@@ -7,12 +7,12 @@ import UserButton from "~/components/UserButton";
 import { usePracticeLanguage } from "~/providers/PracticeLanguageProvider";
 
 export default function AppBar() {
-  const { language } = usePracticeLanguage();
+  const { practiceLanguage } = usePracticeLanguage();
   return (
     <header className="bg-card text-card-foreground sticky top-0 z-40 border-b">
       <div className="flex h-16 items-center gap-2 px-4">
         <h1 className="text-lg font-semibold">
-          <Link href={`/app/${language.code}`}>Oaklang</Link>
+          <Link href={`/app/${practiceLanguage.code}`}>Oaklang</Link>
         </h1>
         <div className="flex-1" />
         <PracticeLanguageSwitcher />

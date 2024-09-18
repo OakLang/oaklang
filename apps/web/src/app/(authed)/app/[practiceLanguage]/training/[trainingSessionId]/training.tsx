@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
-import InterlinearList from "~/components/InterlinearList";
+import InterlinearList from "~/components/OldInterlinearList";
 import { Button } from "~/components/ui/button";
 import {
   Tooltip,

@@ -13,10 +13,10 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
-import { Slider } from "~/components/ui/slider";
 import { Switch } from "~/components/ui/switch";
 import { useUserSettings } from "~/providers/UserSettingsProvider";
 import { api } from "~/trpc/react";
+import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 
 const voices: { voice: string; name: string }[] = [
   { voice: "alloy", name: "Alloy" },
@@ -129,14 +129,22 @@ export default function AudioSettings() {
         <Label htmlFor="speed" className="flex-1 truncate">
           Speed ({userSettings.ttsSpeed}x)
         </Label>
-        <Slider
-          max={4}
-          min={0.25}
-          onValueChange={(values) => handleChangeTtsSpeed(values[0] ?? 1)}
-          step={0.1}
-          value={[userSettings.ttsSpeed]}
-          className="w-48"
-        />
+
+        <Select
+          value={String(userSettings.ttsSpeed)}
+          onValueChange={(value) => handleChangeTtsSpeed(Number(value))}
+        >
+          <SelectTrigger id="voice" className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TTS_SPEED_OPTIONS.map((value) => (
+              <SelectItem key={value} value={String(value)}>
+                {value}x
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ import { usePracticeLanguage } from "~/providers/PracticeLanguageProvider";
 import { cn } from "~/utils";
 
 export default function SideBar() {
-  const { language } = usePracticeLanguage();
+  const { practiceLanguage } = usePracticeLanguage();
   const pathname = usePathname();
   const menu: {
     href: string;
@@ -25,32 +25,32 @@ export default function SideBar() {
     icon: ReactNode;
   }[] = [
     {
-      href: `/app/${language.code}/settings`,
+      href: `/app/${practiceLanguage.code}/settings`,
       name: "Account",
       icon: <UserIcon className="h-4 w-4" />,
     },
     {
-      href: `/app/${language.code}/settings/profile`,
+      href: `/app/${practiceLanguage.code}/settings/profile`,
       name: "Profile",
       icon: <BookUserIcon className="h-4 w-4" />,
     },
     {
-      href: `/app/${language.code}/settings/preferences`,
+      href: `/app/${practiceLanguage.code}/settings/preferences`,
       name: "Preferences",
       icon: <SettingsIcon className="h-4 w-4" />,
     },
     {
-      href: `/app/${language.code}/settings/reader`,
+      href: `/app/${practiceLanguage.code}/settings/reader`,
       name: "Reader",
       icon: <BookOpenIcon className="h-4 w-4" />,
     },
     {
-      href: `/app/${language.code}/settings/audio`,
+      href: `/app/${practiceLanguage.code}/settings/audio`,
       name: "Audio",
       icon: <HeadphonesIcon className="h-4 w-4" />,
     },
     {
-      href: `/app/${language.code}/settings/languages`,
+      href: `/app/${practiceLanguage.code}/settings/languages`,
       name: "Languages",
       icon: <LanguagesIcon className="h-4 w-4" />,
     },

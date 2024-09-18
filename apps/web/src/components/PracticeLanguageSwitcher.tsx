@@ -20,7 +20,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function PracticeLanguageSwitcher() {
-  const { language } = usePracticeLanguage();
+  const { practiceLanguage } = usePracticeLanguage();
   const practiceLanguages = api.users.getPracticeLanguages.useQuery();
   const langaugesQuery = api.languages.getLanguages.useQuery();
   const router = useRouter();
@@ -40,13 +40,13 @@ export default function PracticeLanguageSwitcher() {
           <TooltipTrigger asChild>
             <Button variant="secondary" className="rounded-full">
               <Image
-                src={`https://hatscripts.github.io/circle-flags/flags/${language.countryCode}.svg`}
-                alt={language.name}
+                src={`https://hatscripts.github.io/circle-flags/flags/${practiceLanguage.countryCode}.svg`}
+                alt={practiceLanguage.name}
                 className="-ml-2 mr-2 h-6 w-6 object-cover"
                 width={24}
                 height={24}
               />
-              {language.knownWords.toLocaleString()}{" "}
+              {practiceLanguage.knownWords.toLocaleString()}{" "}
               <span className="ml-1 max-lg:hidden">Known Words</span>
             </Button>
           </TooltipTrigger>
@@ -56,7 +56,7 @@ export default function PracticeLanguageSwitcher() {
             {practiceLanguages.data?.map((item) => (
               <DropdownMenuCheckboxItem
                 key={item.code}
-                checked={item.code === language.code}
+                checked={item.code === practiceLanguage.code}
                 onClick={() => router.push(`/app/${item.code}`)}
               >
                 <Image

@@ -26,13 +26,13 @@ export const swapArrayElement = <T>(
 };
 
 export const getCSSStyleForInterlinearLine = (
-  style: InterlinearLine["style"],
+  line: InterlinearLine,
 ): CSSProperties => {
   return {
-    fontSize: style.fontSize ?? undefined,
-    fontFamily: style.fontFamily ?? undefined,
-    fontWeight: style.fontWeight ?? undefined,
-    fontStyle: style.fontStyle ?? undefined,
-    color: style.color ?? undefined,
+    fontSize: line.style.fontSize ?? undefined,
+    fontFamily: line.style.fontFamily ?? undefined,
+    fontWeight: line.style.fontWeight ?? undefined,
+    fontStyle: line.style.fontStyle ?? undefined,
+    color: line.style.color ?? undefined,
   };
 };

@@ -1,6 +1,6 @@
+import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { createSelectSchema } from "@acme/db";
 import { languages } from "@acme/db/schema";
 
 export const languageWithStats = createSelectSchema(languages).and(

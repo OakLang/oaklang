@@ -9,7 +9,7 @@ import type { LanguageWithStats } from "@acme/api/validators";
 import { api } from "~/trpc/react";
 
 export interface PracticeLanguageContextValue {
-  language: LanguageWithStats;
+  practiceLanguage: LanguageWithStats;
 }
 
 const PracticeLanguageContext =
@@ -17,12 +17,12 @@ const PracticeLanguageContext =
 
 export interface PracticeLanguageProviderProps {
   children: ReactNode;
-  langauge: LanguageWithStats;
+  practiceLanguage: LanguageWithStats;
 }
 
 export default function PracticeLanguageProvider({
   children,
-  langauge,
+  practiceLanguage: langauge,
 }: PracticeLanguageProviderProps) {
   const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
   const langaugeQuery = api.users.getPracticeLanguage.useQuery(
@@ -31,7 +31,9 @@ export default function PracticeLanguageProvider({
   );
 
   return (
-    <PracticeLanguageContext.Provider value={{ language: langaugeQuery.data }}>
+    <PracticeLanguageContext.Provider
+      value={{ practiceLanguage: langaugeQuery.data }}
+    >
       {children}
     </PracticeLanguageContext.Provider>
   );

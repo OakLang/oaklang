@@ -16,23 +16,24 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@acme/core": "*",
     "@acme/auth": "*",
+    "@acme/core": "*",
     "@acme/db": "*",
+    "@acme/eslint-config": "*",
+    "@acme/prettier-config": "*",
+    "@acme/tsconfig": "*",
     "@ai-sdk/openai": "^0.0.24",
     "@t3-oss/env-nextjs": "^0.10.1",
     "@trpc/server": "11.0.0-rc.364",
     "ai": "^3.1.30",
+    "drizzle-zod": "^0.5.1",
+    "eslint": "^8.57.0",
     "nanoid": "^5.0.7",
     "openai": "^4.49.1",
-    "superjson": "2.2.1",
-    "zod": "^3.23.8",
-    "@acme/eslint-config": "*",
-    "@acme/prettier-config": "*",
-    "@acme/tsconfig": "*",
-    "eslint": "^8.57.0",
     "prettier": "^3.3.1",
-    "typescript": "^5.4.5"
+    "superjson": "2.2.1",
+    "typescript": "^5.4.5",
+    "zod": "^3.23.8"
   },
   "prettier": "@acme/prettier-config"
 }

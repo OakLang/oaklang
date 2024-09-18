@@ -1,7 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 import type { TrainingSession, UpdateTrainingSession } from "@acme/db/schema";
 
@@ -12,6 +18,10 @@ export interface TrainingSessionContextValue {
   updateTrainingSession: (_: UpdateTrainingSession) => void;
   sentenceIndex: number;
   changeSentenceIndex: (index: number) => void;
+  inspectedWord: string | null;
+  setInspectedWord: (value: string | null) => void;
+  sidebarOpen: boolean;
+  setSidebarOpen: (value: boolean) => void;
 }
 
 export const TrainingSessionContext =
@@ -25,6 +35,9 @@ export interface TrainingSessionProviderProps {
 export default function TrainingSessionProvider(
   props: TrainingSessionProviderProps,
 ) {
+  const [inspectedWord, setInspectedWord] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const utils = api.useUtils();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId: props.trainingSession.id },
@@ -78,6 +91,19 @@ export default function TrainingSessionProvider(
     ],
   );
 
+  const handleSidebarOpenChange = useCallback((open: boolean) => {
+    setSidebarOpen(open);
+    if (open) {
+      localStorage.setItem("inspection_sidebar_open", "true");
+    } else {
+      localStorage.removeItem("inspection_sidebar_open");
+    }
+  }, []);
+
+  useEffect(() => {
+    setSidebarOpen(localStorage.getItem("inspection_sidebar_open") === "true");
+  }, []);
+
   return (
     <TrainingSessionContext.Provider
       value={{
@@ -85,6 +111,10 @@ export default function TrainingSessionProvider(
         sentenceIndex,
         changeSentenceIndex,
         updateTrainingSession,
+        inspectedWord,
+        setInspectedWord,
+        sidebarOpen,
+        setSidebarOpen: handleSidebarOpenChange,
       }}
     >
       {props.children}

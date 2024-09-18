@@ -1,12 +1,8 @@
 import type { ReactNode } from "react";
-import { notFound, redirect, RedirectType } from "next/navigation";
-
-import { auth } from "@acme/auth";
-import { and, eq } from "@acme/db";
-import { db } from "@acme/db/client";
-import { trainingSessions } from "@acme/db/schema";
+import { notFound } from "next/navigation";
 
 import TrainingSessionProvider from "~/providers/TrainingSessionProvider";
+import { api } from "~/trpc/server";
 
 export default async function TrainingLayout({
   children,
@@ -15,29 +11,21 @@ export default async function TrainingLayout({
   children: ReactNode;
   params: { trainingSessionId: string; practiceLanguage: string };
 }) {
-  const session = await auth();
-  if (!session) {
-    redirect("/login", RedirectType.replace);
-  }
+  try {
+    const trainingSession = await api.trainingSessions.getTrainingSession({
+      trainingSessionId: params.trainingSessionId,
+    });
 
-  const [trainingSession] = await db
-    .select()
-    .from(trainingSessions)
-    .where(
-      and(
-        eq(trainingSessions.id, params.trainingSessionId),
-        eq(trainingSessions.language, params.practiceLanguage),
-        eq(trainingSessions.userId, session.user.id),
-      ),
+    if (trainingSession.language !== params.practiceLanguage) {
+      notFound();
+    }
+
+    return (
+      <TrainingSessionProvider trainingSession={trainingSession}>
+        {children}
+      </TrainingSessionProvider>
     );
-
-  if (!trainingSession) {
+  } catch (error) {
     notFound();
   }
-
-  return (
-    <TrainingSessionProvider trainingSession={trainingSession}>
-      {children}
-    </TrainingSessionProvider>
-  );
 }

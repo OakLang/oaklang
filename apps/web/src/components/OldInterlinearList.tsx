@@ -18,6 +18,7 @@ const generateAudioAsync = async ({ input }: { input: string }) => {
   console.log("Fetching Audio...");
   const body: TTSBodyParams = {
     input,
+    speed: 1,
   };
   const res = await fetch("/api/ai/tts", {
     body: JSON.stringify(body),
@@ -335,7 +336,7 @@ const ListItem = ({
           <button
             key={line.id}
             type="button"
-            style={getCSSStyleForInterlinearLine(line.style)}
+            style={getCSSStyleForInterlinearLine(line)}
           >
             {value ?? "-"}
           </button>

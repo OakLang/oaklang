@@ -18,7 +18,7 @@ export default async function AppLayout({
     );
 
     return (
-      <PracticeLanguageProvider langauge={language}>
+      <PracticeLanguageProvider practiceLanguage={language}>
         <AppBar />
         {children}
       </PracticeLanguageProvider>

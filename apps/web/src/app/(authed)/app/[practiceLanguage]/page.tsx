@@ -19,12 +19,12 @@ import { usePracticeLanguage } from "~/providers/PracticeLanguageProvider";
 import { api } from "~/trpc/react";
 
 export default function AppPage() {
-  const { language } = usePracticeLanguage();
+  const { practiceLanguage } = usePracticeLanguage();
   const startBtnTooltipProps = useHotkeysTooltipProps();
   const router = useRouter();
   const trainingSessionsQuery =
     api.trainingSessions.getTrainingSessions.useQuery({
-      language: language.code,
+      language: practiceLanguage.code,
     });
 
   const startTrainingSession =
@@ -40,8 +40,8 @@ export default function AppPage() {
     });
 
   const handleStartTraining = useCallback(() => {
-    startTrainingSession.mutate({ language: language.code });
-  }, [startTrainingSession, language.code]);
+    startTrainingSession.mutate({ language: practiceLanguage.code });
+  }, [startTrainingSession, practiceLanguage.code]);
 
   useHotkeys(
     "space",
