@@ -12,11 +12,13 @@ const AudioPlayButton = ({
   speed = 1,
   className,
   autoPlay,
+  iconSize = 24,
 }: {
   text: string;
   speed?: number;
   className?: string;
   autoPlay?: boolean;
+  iconSize?: number;
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -105,11 +107,27 @@ const AudioPlayButton = ({
             disabled={audioQuery.isFetching}
           >
             {audioQuery.isFetching ? (
-              <Loader2Icon className="h-6 w-6 animate-spin" />
+              <Loader2Icon
+                style={{
+                  width: iconSize,
+                  height: iconSize,
+                }}
+                className="animate-spin"
+              />
             ) : isPlaying ? (
-              <SquareIcon className="h-6 w-6" />
+              <SquareIcon
+                style={{
+                  width: iconSize,
+                  height: iconSize,
+                }}
+              />
             ) : (
-              <PlayIcon className="h-6 w-6" />
+              <PlayIcon
+                style={{
+                  width: iconSize,
+                  height: iconSize,
+                }}
+              />
             )}
             <span className="sr-only">{isPlaying ? "Stop" : "Play"}</span>
           </Button>

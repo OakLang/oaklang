@@ -22,6 +22,8 @@ export interface TrainingSessionContextValue {
   setInspectedWord: (value: string | null) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (value: boolean) => void;
+  fontSize: number;
+  setFontSize: (value: number) => void;
 }
 
 export const TrainingSessionContext =
@@ -37,6 +39,7 @@ export default function TrainingSessionProvider(
 ) {
   const [inspectedWord, setInspectedWord] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [fontSize, setFontSize] = useState(16);
 
   const utils = api.useUtils();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
@@ -115,6 +118,8 @@ export default function TrainingSessionProvider(
         setInspectedWord,
         sidebarOpen,
         setSidebarOpen: handleSidebarOpenChange,
+        fontSize,
+        setFontSize,
       }}
     >
       {props.children}

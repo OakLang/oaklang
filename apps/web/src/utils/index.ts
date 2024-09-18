@@ -29,7 +29,6 @@ export const getCSSStyleForInterlinearLine = (
   line: InterlinearLine,
 ): CSSProperties => {
   return {
-    fontSize: line.style.fontSize ?? undefined,
     fontFamily: line.style.fontFamily ?? undefined,
     fontWeight: line.style.fontWeight ?? undefined,
     fontStyle: line.style.fontStyle ?? undefined,

@@ -1,4 +1,3 @@
-import BottomBar from "./bottom-bar";
 import ContentView from "./content-view";
 import RightBar from "./right-bar";
 import TopBar from "./top-bar";
@@ -9,7 +8,7 @@ export default function TrainingPage() {
       <div className="relative flex flex-1 flex-col">
         <TopBar />
         <ContentView />
-        <BottomBar />
+        {/* <BottomBar /> */}
       </div>
       <RightBar />
     </div>

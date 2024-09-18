@@ -13,6 +13,7 @@ const main = async () => {
     { name: "German", code: "de", countryCode: "de" },
     { name: "Italian", code: "it", countryCode: "it" },
     { name: "Czech", code: "cz", countryCode: "cz" },
+    { name: "Ukrainian", code: "uk", countryCode: "ua" },
   ];
 
   await db.delete(languages);
