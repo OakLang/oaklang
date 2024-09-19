@@ -1,21 +1,15 @@
 import { redirect, RedirectType } from "next/navigation";
 
-import { auth } from "@acme/auth";
 import { desc, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import { practiceLanguages } from "@acme/db/schema";
 
-import { api } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
+import { getUserSettings } from "../../../utils";
 import PracticeLanguageForm from "./practice-language-form";
 
-export default async function OnboardingNativeLanguagePage() {
-  const session = await auth();
-  if (!session) {
-    redirect("/login", RedirectType.replace);
-  }
-
-  const userSettings = await api.userSettings.getUserSettings();
+export default async function OnboardinPracticeLanguagePage() {
+  const userSettings = await getUserSettings();
   if (!userSettings.nativeLanguage) {
     redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
   }
@@ -23,7 +17,7 @@ export default async function OnboardingNativeLanguagePage() {
   const [lang] = await db
     .select()
     .from(practiceLanguages)
-    .where(eq(practiceLanguages.userId, session.user.id))
+    .where(eq(practiceLanguages.userId, userSettings.userId))
     .orderBy(desc(practiceLanguages.lastPracticed))
     .limit(1);
 

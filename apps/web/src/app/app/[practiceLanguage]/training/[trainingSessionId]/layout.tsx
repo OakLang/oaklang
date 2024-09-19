@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 
+import { getTrainingSession } from "~/app/utils";
 import TrainingSessionProvider from "~/providers/TrainingSessionProvider";
-import { api } from "~/trpc/server";
 
 export default async function TrainingLayout({
   children,
@@ -12,7 +12,7 @@ export default async function TrainingLayout({
   params: { trainingSessionId: string; practiceLanguage: string };
 }) {
   try {
-    const trainingSession = await api.trainingSessions.getTrainingSession({
+    const trainingSession = await getTrainingSession({
       trainingSessionId: params.trainingSessionId,
     });
 

@@ -5,11 +5,15 @@ import { auth } from "@acme/auth";
 
 import SignIn from "./signin";
 
-export default async function LogInPage() {
+export default async function LogInPage({
+  searchParams,
+}: {
+  searchParams: { callbackUrl?: string };
+}) {
   const session = await auth();
 
   if (session) {
-    redirect("/app", RedirectType.replace);
+    redirect(searchParams.callbackUrl ?? "/app", RedirectType.replace);
   }
 
   return (

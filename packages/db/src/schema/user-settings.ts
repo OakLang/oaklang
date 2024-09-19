@@ -14,6 +14,7 @@ export const userSettings = pgTable("user_settings", {
     .primaryKey()
     .$defaultFn(() => createPrefixedId("sett")),
   userId: text("user_id")
+    .notNull()
     .unique()
     .references(() => users.id, { onDelete: "cascade" }),
   interlinearLines: jsonb("interlinear_lines")

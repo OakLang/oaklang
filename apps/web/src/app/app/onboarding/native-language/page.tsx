@@ -1,11 +1,11 @@
 import { redirect, RedirectType } from "next/navigation";
 
-import { api } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
+import { getUserSettings } from "../../../utils";
 import NativeLanguageForm from "./native-language-form";
 
 export default async function OnboardingNativeLanguagePage() {
-  const userSettings = await api.userSettings.getUserSettings();
+  const userSettings = await getUserSettings();
 
   const nextPath = OnboardingRoutes.practiceLanguage;
 

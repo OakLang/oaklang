@@ -1,10 +1,10 @@
 import NextAuth from "next-auth";
 
-import { authConfig } from "./config";
+import { nextAuthConfig } from "./config";
 
 export type { Session } from "next-auth";
 
-const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+const { handlers, auth, signIn, signOut } = NextAuth(nextAuthConfig);
 
 export { handlers, auth, signIn, signOut };
 

@@ -10,9 +10,10 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getInterlinearLines, getUserSettings } from "../utils";
 
 export const userSettingsRouter = createTRPCRouter({
-  getUserSettings: protectedProcedure.query((opts) =>
-    getUserSettings(opts.ctx.session.user.id, opts.ctx.db),
-  ),
+  getUserSettings: protectedProcedure.query((opts) => {
+    console.log("GET USER SETTINGS CALLED =============");
+    return getUserSettings(opts.ctx.session.user.id, opts.ctx.db);
+  }),
   updateUserSettings: protectedProcedure
     .input(updateUserSettingsSchema)
     .mutation(async (opts) => {

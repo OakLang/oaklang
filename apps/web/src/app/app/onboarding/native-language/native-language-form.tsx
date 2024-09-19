@@ -31,7 +31,7 @@ export default function NativeLanguageForm({ nextPath }: { nextPath: string }) {
   const utils = api.useUtils();
   const updateUserSettingsMutation =
     api.userSettings.updateUserSettings.useMutation({
-      onSettled: () => {
+      onSuccess: () => {
         void utils.userSettings.getUserSettings.invalidate();
         router.replace(nextPath);
       },

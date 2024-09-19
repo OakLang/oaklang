@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
@@ -15,6 +16,8 @@ export default function SignIn() {
       description: "Please try logging in with Google.",
     });
   }, []);
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/app";
 
   return (
     <div className="grid gap-6">
@@ -52,7 +55,11 @@ export default function SignIn() {
       </div>
 
       <Button
-        onClick={() => signIn("google", { callbackUrl: "/app" })}
+        onClick={() =>
+          signIn("google", {
+            callbackUrl,
+          })
+        }
         variant="outline"
       >
         <GoogleIcon className="mr-2 h-4 w-4" />

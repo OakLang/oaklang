@@ -1,8 +1,8 @@
 export const APP_NAME = "Oaklang";
 
 export const OnboardingRoutes = {
-  nativeLanguage: "/onboarding/native-language",
-  practiceLanguage: "/onboarding/practice-language",
+  nativeLanguage: "/app/onboarding/native-language",
+  practiceLanguage: "/app/onboarding/practice-language",
 };
 
 export const TTS_SPEED_OPTIONS: number[] = [
