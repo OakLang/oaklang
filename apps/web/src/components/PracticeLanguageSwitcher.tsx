@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -24,6 +24,7 @@ export default function PracticeLanguageSwitcher() {
   const practiceLanguages = api.users.getPracticeLanguages.useQuery();
   const languagesQuery = api.languages.getLanguages.useQuery();
   const router = useRouter();
+  const utils = api.useUtils();
 
   const otherLanguages = useMemo(
     () =>
@@ -32,6 +33,10 @@ export default function PracticeLanguageSwitcher() {
       ) ?? [],
     [languagesQuery.data, practiceLanguages.data],
   );
+
+  useEffect(() => {
+    void utils.users.getPracticeLanguages.invalidate();
+  }, [practiceLanguage.code, utils.users.getPracticeLanguages]);
 
   return (
     <Tooltip>

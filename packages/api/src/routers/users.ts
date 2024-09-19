@@ -26,7 +26,7 @@ export const usersRouter = createTRPCRouter({
   getPracticeLanguages: protectedProcedure
     .output(z.array(languageWithStats))
     .query(async (opts) => {
-      const languages = await opts.ctx.db
+      const languageList = await opts.ctx.db
         .select()
         .from(practiceLanguages)
         .innerJoin(
@@ -35,7 +35,7 @@ export const usersRouter = createTRPCRouter({
         )
         .where(eq(practiceLanguages.userId, opts.ctx.session.user.id))
         .orderBy(desc(practiceLanguages.createdAt));
-      return languages.map((lang) => ({ ...lang.language, knownWords: 0 }));
+      return languageList.map((lang) => ({ ...lang.language, knownWords: 0 }));
     }),
 
   getPracticeLanguage: protectedProcedure
