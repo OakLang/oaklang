@@ -5,6 +5,8 @@ import { desc, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import { practiceLanguages } from "@acme/db/schema";
 
+import { OnboardingRoutes } from "~/utils/constants";
+
 export default async function AppPage() {
   const session = await auth();
   if (!session) {
@@ -18,5 +20,9 @@ export default async function AppPage() {
     .orderBy(desc(practiceLanguages.lastPracticed))
     .limit(1);
 
-  redirect(`/app/${lang?.languageCode ?? "en"}`, RedirectType.replace);
+  if (!lang) {
+    redirect(OnboardingRoutes.practiceLanguage, RedirectType.replace);
+  }
+
+  redirect(`/app/${lang.languageCode}`, RedirectType.replace);
 }

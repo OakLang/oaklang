@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 
 import { auth } from "@acme/auth";
 
@@ -13,7 +13,7 @@ export default async function AuthedLayout({
 }) {
   const session = await auth();
   if (!session) {
-    redirect("/login");
+    redirect("/login", RedirectType.replace);
   }
   const userSettings = await api.userSettings.getUserSettings();
   return (
