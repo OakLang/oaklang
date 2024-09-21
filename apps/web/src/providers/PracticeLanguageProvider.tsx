@@ -25,7 +25,7 @@ export default function PracticeLanguageProvider({
   practiceLanguage: language,
 }: PracticeLanguageProviderProps) {
   const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
-  const languageQuery = api.users.getPracticeLanguage.useQuery(
+  const languageQuery = api.languages.getPracticeLanguage.useQuery(
     practiceLanguage,
     { initialData: language },
   );

@@ -21,7 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function PracticeLanguageSwitcher() {
   const { practiceLanguage } = usePracticeLanguage();
-  const practiceLanguages = api.users.getPracticeLanguages.useQuery();
+  const practiceLanguages = api.languages.getPracticeLanguages.useQuery();
   const languagesQuery = api.languages.getLanguages.useQuery();
   const router = useRouter();
   const utils = api.useUtils();
@@ -35,8 +35,8 @@ export default function PracticeLanguageSwitcher() {
   );
 
   useEffect(() => {
-    void utils.users.getPracticeLanguages.invalidate();
-  }, [practiceLanguage.code, utils.users.getPracticeLanguages]);
+    void utils.languages.getPracticeLanguages.invalidate();
+  }, [practiceLanguage.code, utils.languages.getPracticeLanguages]);
 
   return (
     <Tooltip>

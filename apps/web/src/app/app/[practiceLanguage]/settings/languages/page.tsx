@@ -26,14 +26,14 @@ import { APP_NAME } from "~/utils/constants";
 
 export default function LanguagesPage() {
   const { practiceLanguage } = usePracticeLanguage();
-  const practiceLanguagesQuery = api.users.getPracticeLanguages.useQuery();
+  const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery();
   const utils = api.useUtils();
   const router = useRouter();
 
   const deletePracticeLanguageMut =
-    api.users.deletePracticeLanguage.useMutation({
+    api.languages.deletePracticeLanguage.useMutation({
       onSuccess: (data) => {
-        void utils.users.getPracticeLanguages.invalidate();
+        void utils.languages.getPracticeLanguages.invalidate();
         toast(`Your ${data.language.name} data has been deleted.`);
         if (practiceLanguage.code === data.language.code) {
           const newLang = practiceLanguagesQuery.data?.find(
