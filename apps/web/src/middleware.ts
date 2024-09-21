@@ -10,7 +10,7 @@ const { auth } = NextAuth(authConfig);
 
 const intlMiddleware = createMiddleware(routing);
 
-const protectedPages = ["/dashboard/*"];
+const protectedPages = ["/app/*"];
 const authPages = ["/login"];
 
 const testPagesRegex = (pages: string[], pathname: string) => {
