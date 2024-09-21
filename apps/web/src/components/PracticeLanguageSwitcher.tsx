@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
@@ -21,6 +22,7 @@ import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function PracticeLanguageSwitcher() {
+  const t = useTranslations("App");
   const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
@@ -61,7 +63,7 @@ export default function PracticeLanguageSwitcher() {
                 height={24}
               />
               {practiceLanguageQuery.data.knownWords.toLocaleString()}{" "}
-              <span className="ml-1 max-lg:hidden">Known Words</span>
+              <span className="ml-1 max-lg:hidden">{t("known-words")}</span>
             </Button>
           </TooltipTrigger>
         </DropdownMenuTrigger>
@@ -90,7 +92,7 @@ export default function PracticeLanguageSwitcher() {
           <DropdownMenuSeparator />
           {otherLanguages.length > 0 && (
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Add a new Language</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("add-a-new-language")}</DropdownMenuLabel>
               {otherLanguages.map((item) => (
                 <DropdownMenuItem
                   onClick={() => router.push(`/app/${item.code}`)}
@@ -110,7 +112,7 @@ export default function PracticeLanguageSwitcher() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <TooltipContent>Practice Language</TooltipContent>
+      <TooltipContent>{t("practice-language")}</TooltipContent>
     </Tooltip>
   );
 }

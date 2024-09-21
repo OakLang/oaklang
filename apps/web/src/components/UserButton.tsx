@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 import { Link } from "~/i18n/routing";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -20,6 +21,7 @@ export default function UserButton() {
   const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
+  const t = useTranslations("App");
   const { data, status } = useSession({ required: true });
 
   if (status === "loading") {
@@ -40,14 +42,14 @@ export default function UserButton() {
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <div className="p-2">
-          <p className="text-muted-foreground text-sm">Signed in as</p>
+          <p className="text-muted-foreground text-sm">{t("signed-in-as")}</p>
           <p className="font-medium">{data.user.email}</p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={`/app/${practiceLanguage}/settings`}>
             <SettingsIcon className="mr-2 h-4 w-4" />
-            Settings
+            {t("settings")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -58,7 +60,7 @@ export default function UserButton() {
           }}
         >
           <LogOutIcon className="mr-2 h-4 w-4" />
-          Log Out
+          {t("log-out")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

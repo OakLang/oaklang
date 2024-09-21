@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2Icon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ import { Link, useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 
 export default function AppPage() {
+  const t = useTranslations("App");
   const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
@@ -64,7 +66,7 @@ export default function AppPage() {
               {startTrainingSession.isPending && (
                 <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
               )}
-              Start Training
+              {t("start-training")}
             </Button>
           </TooltipTrigger>
           <TooltipContent>Hotkey: Space</TooltipContent>
@@ -73,10 +75,10 @@ export default function AppPage() {
       <div className="bg-border my-4 h-px"></div>
       <div>
         <div className="p-4">
-          <p className="text-lg font-medium">Sessions</p>
+          <p className="text-lg font-medium">{t("sessions")}</p>
         </div>
         {trainingSessionsQuery.isPending ? (
-          <p>Loading...</p>
+          <p>{t("loading")}</p>
         ) : trainingSessionsQuery.isError ? (
           <p>{trainingSessionsQuery.error.message}</p>
         ) : (
@@ -89,13 +91,17 @@ export default function AppPage() {
               <p>{item.title ?? "Untitled"}</p>
               <p className="text-muted-foreground text-sm">
                 <span>
-                  Started{" "}
+                  {t("started")}{" "}
                   {formatDistanceToNow(item.createdAt, { addSuffix: true })}
                 </span>
                 {" • "}
-                <span>Language: {item.languageName}</span>
+                <span>
+                  {t("language")}: {item.languageName}
+                </span>
                 {" • "}
-                <span>Complexity: {item.complexity}</span>
+                <span>
+                  {t("complexity")}: {item.complexity}
+                </span>
               </p>
             </Link>
           ))

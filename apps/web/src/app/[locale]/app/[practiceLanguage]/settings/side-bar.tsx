@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import { useParams, usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   BookOpenIcon,
   BookUserIcon,
@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
-import { Link } from "~/i18n/routing";
+import { Link, usePathname } from "~/i18n/routing";
 import { cn } from "~/utils";
 
 export default function SideBar() {

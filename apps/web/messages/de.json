@@ -1,0 +1,28 @@
+{
+  "HomePage": {
+    "title": "Willkommen in Oaklang!",
+    "dashboard": "Armaturenbrett",
+    "sign-in": "Anmelden"
+  },
+  "not-found": {
+    "title": "Seite nicht gefunden!",
+    "home": "Heim"
+  },
+  "App": {
+    "add-a-new-language": "Fügen Sie eine neue Sprache hinzu",
+    "known-words": "Bekannte Wörter",
+    "practice-language": "Sprache üben",
+    "signed-in-as": "Angemeldet als",
+    "settings": "Einstellungen",
+    "log-out": "Abmelden",
+    "light": "Licht",
+    "dark": "Dunkel",
+    "system": "System",
+    "toggle-theme": "Thema umschalten",
+    "started": "Begonnen",
+    "loading": "Laden...",
+    "sessions": "Sitzungen",
+    "start-training": "Beginnen Sie mit dem Training"
+  },
+  "language": ""
+}

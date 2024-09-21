@@ -1,6 +1,29 @@
 {
   "HomePage": {
-    "title": "Hello world!",
-    "about": "Go to the about page"
+    "title": "Welcome to Oaklang!",
+    "dashboard": "Dashboard",
+    "sign-in": "Sign In"
+  },
+  "not-found": {
+    "title": "Page not found!",
+    "home": "Home"
+  },
+  "App": {
+    "add-a-new-language": "Add a new Language",
+    "known-words": "Known Words",
+    "practice-language": "Practice Language",
+    "signed-in-as": "Signed in as",
+    "settings": "Settings",
+    "log-out": "Log Out",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle-theme": "Toggle theme",
+    "loading": "Loading...",
+    "language": "Language",
+    "complexity": "Complexity",
+    "started": "Started",
+    "sessions": "Sessions",
+    "start-training": "Start Training"
   }
 }

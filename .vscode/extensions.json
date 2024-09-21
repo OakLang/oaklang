@@ -4,6 +4,7 @@
     "wakatime.vscode-wakatime",
     "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint",
-    "yoavbls.pretty-ts-errors"
+    "yoavbls.pretty-ts-errors",
+    "inlang.vs-code-extension"
   ]
 }
