@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@acme/auth";
 
@@ -8,7 +8,7 @@ import { Link } from "~/i18n/routing";
 
 export default async function HomePage() {
   const session = await auth();
-  const t = useTranslations("HomePage");
+  const t = await getTranslations("HomePage");
 
   return (
     <div className="flex flex-1 items-center justify-center">

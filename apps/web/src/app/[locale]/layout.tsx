@@ -5,7 +5,7 @@ import { Inter } from "next/font/google";
 import HolyLoader from "holy-loader";
 import { SessionProvider } from "next-auth/react";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, unstable_setRequestLocale } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 
 import { auth } from "@acme/auth";
@@ -51,6 +51,8 @@ export default async function RootLayout({
   children,
   params: { locale },
 }: Readonly<{ children: React.ReactNode; params: { locale: string } }>) {
+  unstable_setRequestLocale(locale);
+
   const session = await auth();
   const messages = await getMessages();
 

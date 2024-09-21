@@ -1,9 +1,15 @@
 import { useTranslations } from "next-intl";
+import { unstable_setRequestLocale } from "next-intl/server";
 
 import { Button } from "~/components/ui/button";
 import { Link } from "~/i18n/routing";
 
-const NotFoundPage = () => {
+interface Props {
+  params: { locale: string };
+}
+
+const NotFoundPage = ({ params: { locale } }: Props) => {
+  unstable_setRequestLocale(locale);
   const t = useTranslations("not-found");
 
   return (
