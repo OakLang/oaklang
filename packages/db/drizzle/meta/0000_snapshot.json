@@ -1,5 +1,5 @@
 {
-  "id": "935bdde1-d942-483f-8738-b535f8f4d9ab",
+  "id": "a9186794-3294-4314-825c-afa0afc5f8cc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -357,7 +357,7 @@
           "name": "user_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "interlinear_lines": {
           "name": "interlinear_lines",

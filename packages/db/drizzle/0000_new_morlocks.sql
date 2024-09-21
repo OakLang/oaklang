@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "verification_token" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user_settings" (
 	"id" text PRIMARY KEY NOT NULL,
-	"user_id" text,
+	"user_id" text NOT NULL,
 	"interlinear_lines" jsonb NOT NULL,
 	"auto_play_audio" boolean DEFAULT true NOT NULL,
 	"tts_voice" text DEFAULT 'alloy' NOT NULL,
