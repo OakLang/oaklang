@@ -21,6 +21,7 @@ const testPagesRegex = (pages: string[], pathname: string) => {
 };
 
 export default auth((req) => {
+  const response = intlMiddleware(req);
   const isAuth = !!req.auth;
   const isProtectedPage = testPagesRegex(protectedPages, req.nextUrl.pathname);
   const isAuthPage = testPagesRegex(authPages, req.nextUrl.pathname);
@@ -39,7 +40,7 @@ export default auth((req) => {
     return NextResponse.redirect(redirectUrl, 307);
   }
 
-  return intlMiddleware(req);
+  return response;
 });
 
 // Read more: https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
