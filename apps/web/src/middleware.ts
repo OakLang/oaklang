@@ -20,28 +20,30 @@ const testPagesRegex = (pages: string[], pathname: string) => {
   return new RegExp(regex, "i").test(pathname);
 };
 
-export default auth((req) => {
-  const response = intlMiddleware(req);
-  const isAuth = !!req.auth;
-  const isProtectedPage = testPagesRegex(protectedPages, req.nextUrl.pathname);
-  const isAuthPage = testPagesRegex(authPages, req.nextUrl.pathname);
+// export default auth((req) => {
+//   const response = intlMiddleware(req);
+//   const isAuth = !!req.auth;
+//   const isProtectedPage = testPagesRegex(protectedPages, req.nextUrl.pathname);
+//   const isAuthPage = testPagesRegex(authPages, req.nextUrl.pathname);
 
-  if (!isAuth && isProtectedPage) {
-    const redirectUrl = new URL("/login", req.nextUrl.origin);
-    redirectUrl.searchParams.set("callbackUrl", req.url);
-    return NextResponse.redirect(redirectUrl, 307);
-  }
+//   if (!isAuth && isProtectedPage) {
+//     const redirectUrl = new URL("/login", req.nextUrl.origin);
+//     redirectUrl.searchParams.set("callbackUrl", req.url);
+//     return NextResponse.redirect(redirectUrl, 307);
+//   }
 
-  if (isAuth && isAuthPage) {
-    const redirectUrl = new URL(
-      req.nextUrl.searchParams.get("callbackUrl") ?? "/app",
-      req.nextUrl.origin,
-    );
-    return NextResponse.redirect(redirectUrl, 307);
-  }
+//   if (isAuth && isAuthPage) {
+//     const redirectUrl = new URL(
+//       req.nextUrl.searchParams.get("callbackUrl") ?? "/app",
+//       req.nextUrl.origin,
+//     );
+//     return NextResponse.redirect(redirectUrl, 307);
+//   }
 
-  return response;
-});
+//   return response;
+// });
+
+export default intlMiddleware;
 
 // Read more: https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
 export const config = {
