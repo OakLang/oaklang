@@ -1,13 +1,8 @@
 import { atom } from "jotai";
 
-import type { AudioSettings } from "@acme/validators";
-import { initialAudioSettings } from "@acme/validators";
-
 export const knownIPAsAtom = atom<string[]>([]);
 
 export const knownTranslationsAtom = atom<string[]>([]);
-
-export const audioSettingsAtom = atom<AudioSettings>(initialAudioSettings);
 
 export const promptAtom =
   atom(`You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary. 
@@ -16,7 +11,7 @@ Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an {{COMPLE
 
 PRACTICE LANGUAGE: "{{PRACTICE_LANGUAGE}}"
 
-HELP LANGUAGE: "{{HELP_LANGUAGE}}"
+NATIVE LANGUAGE: "{{NATIVE_LANGUAGE}}"
 
 PRACTICE VOCABS: "{{PRACTICE_VOCABS}}"
 

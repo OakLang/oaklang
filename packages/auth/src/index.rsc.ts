@@ -1,11 +1,16 @@
 import { cache } from "react";
 import NextAuth from "next-auth";
 
-import { authConfig } from "./config";
+import { nextAuthConfig } from "./config";
 
 export type { Session } from "next-auth";
 
-const { handlers, auth: defaultAuth, signIn, signOut } = NextAuth(authConfig);
+const {
+  handlers,
+  auth: defaultAuth,
+  signIn,
+  signOut,
+} = NextAuth(nextAuthConfig);
 
 /**
  * This is the main way to get session data for your RSCs.

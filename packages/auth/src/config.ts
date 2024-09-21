@@ -4,10 +4,12 @@ import type {
   Session as NextAuthSession,
 } from "next-auth";
 import { skipCSRFCheck } from "@auth/core";
-import Google from "next-auth/providers/google";
 
 import { adapter } from "./adapter";
+import authConfig from "./auth-config";
 import { env } from "./env";
+
+export const isSecureContext = env.NODE_ENV !== "development";
 
 declare module "next-auth" {
   interface Session {
@@ -17,33 +19,16 @@ declare module "next-auth" {
   }
 }
 
-export const isSecureContext = env.NODE_ENV !== "development";
-
-export const authConfig = {
+export const nextAuthConfig = {
+  ...authConfig,
   adapter,
-  secret: env.AUTH_SECRET,
-  providers: [Google],
   ...(!isSecureContext
     ? {
         skipCSRFCheck: skipCSRFCheck,
         trustHost: true,
       }
     : {}),
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    session: ({ session, user }) => {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: user.id,
-        },
-      };
-    },
-  },
-  debug: !isSecureContext,
+  // debug: !isSecureContext,
 } satisfies NextAuthConfig;
 
 export const validateToken = async (

@@ -1,9 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { desc, eq } from "@acme/db";
+import { and, desc, eq } from "@acme/db";
 import {
   createTrainingSessionInput,
+  languages,
+  practiceLanguages,
   trainingSessions,
   updateTrainingSessionInput,
 } from "@acme/db/schema";
@@ -22,23 +24,67 @@ export const trainingSessionsRouter = createTRPCRouter({
       );
       return trainingSession;
     }),
-  getTrainingSessions: protectedProcedure.query(
-    async ({ ctx: { db, session } }) => {
+  getTrainingSessions: protectedProcedure
+    .input(
+      z.object({
+        languageCode: z.string(),
+      }),
+    )
+    .query(async ({ ctx: { db, session }, input }) => {
       const trainingSessionList = await db
-        .select()
+        .select({
+          id: trainingSessions.id,
+          createdAt: trainingSessions.createdAt,
+          userId: trainingSessions.userId,
+          title: trainingSessions.title,
+          sentenceIndex: trainingSessions.sentenceIndex,
+          complexity: trainingSessions.complexity,
+          languageCode: trainingSessions.languageCode,
+          languageName: languages.name,
+        })
         .from(trainingSessions)
-        .where(eq(trainingSessions.userId, session.user.id))
+        .innerJoin(languages, eq(languages.code, trainingSessions.languageCode))
+        .where(
+          and(
+            eq(trainingSessions.userId, session.user.id),
+            eq(trainingSessions.languageCode, input.languageCode),
+          ),
+        )
         .orderBy(desc(trainingSessions.id));
       return trainingSessionList;
-    },
-  ),
+    }),
   createTrainingSession: protectedProcedure
     .input(createTrainingSessionInput)
     .mutation(async (opts) => {
+      const [language] = await opts.ctx.db
+        .select({
+          code: practiceLanguages.languageCode,
+          name: languages.name,
+        })
+        .from(practiceLanguages)
+        .innerJoin(
+          languages,
+          eq(languages.code, practiceLanguages.languageCode),
+        )
+        .where(
+          and(
+            eq(practiceLanguages.languageCode, opts.input.languageCode),
+            eq(practiceLanguages.userId, opts.ctx.session.user.id),
+          ),
+        );
+      if (!language) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Practice language not found!",
+        });
+      }
+
       const [trainingSession] = await opts.ctx.db
         .insert(trainingSessions)
         .values({
-          ...opts.input,
+          languageCode: language.code,
+          complexity: opts.input.complexity,
+          title: opts.input.title ?? `Learn ${language.name}`,
           userId: opts.ctx.session.user.id,
         })
         .returning();

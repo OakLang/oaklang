@@ -1,9 +1,13 @@
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 import type { Session } from "@acme/auth";
+import type { InterlinearLine } from "@acme/core/validators";
 import type { DB } from "@acme/db/client";
-import { eq } from "@acme/db";
-import { trainingSessions } from "@acme/db/schema";
+import type { UserSettings } from "@acme/db/schema";
+import { interlinearLine } from "@acme/core/validators";
+import { eq, getDefaultInterlinearLines } from "@acme/db";
+import { trainingSessions, userSettings } from "@acme/db/schema";
 
 export const getTrainingSessionOrThrow = async (
   trainingSessionId: string,
@@ -21,4 +25,46 @@ export const getTrainingSessionOrThrow = async (
     });
   }
   return trainingSession;
+};
+
+export const getUserSettings = async (userId: string, db: DB) => {
+  const [settings] = await db
+    .select()
+    .from(userSettings)
+    .where(eq(userSettings.userId, userId));
+  if (!settings) {
+    const [newSettings] = await db
+      .insert(userSettings)
+      .values({ userId })
+      .returning();
+    if (!newSettings) {
+      throw new Error("Failed to create user settings");
+    }
+    return newSettings;
+  }
+  return settings;
+};
+
+export const getInterlinearLines = async (
+  userId: string,
+  db: DB,
+  settings?: UserSettings,
+) => {
+  if (!settings) {
+    settings = await getUserSettings(userId, db);
+  }
+  try {
+    const interlinearLines = await z
+      .array(interlinearLine)
+      .min(1)
+      .parseAsync(settings.interlinearLines);
+    return interlinearLines;
+  } catch (error) {
+    const lines = (userSettings.interlinearLines.defaultFn?.() ??
+      getDefaultInterlinearLines()) as unknown as InterlinearLine[];
+    await db.update(userSettings).set({
+      interlinearLines: lines,
+    });
+    return lines;
+  }
 };
