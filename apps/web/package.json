@@ -9,7 +9,7 @@
     "dev": "npm run with-env next dev",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
-    "start": "npm run with-env next start --max-http-header-size=80000",
+    "start": "npm run with-env next start",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env -c --"
   },
