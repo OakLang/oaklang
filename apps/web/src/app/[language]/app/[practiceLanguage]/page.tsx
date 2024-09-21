@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2Icon } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -15,22 +15,26 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
-import { usePracticeLanguage } from "~/providers/PracticeLanguageProvider";
 import { api } from "~/trpc/react";
 
 export default function AppPage() {
-  const { practiceLanguage } = usePracticeLanguage();
+  const { language, practiceLanguage } = useParams<{
+    language: string;
+    practiceLanguage: string;
+  }>();
   const startBtnTooltipProps = useHotkeysTooltipProps();
   const router = useRouter();
   const trainingSessionsQuery =
     api.trainingSessions.getTrainingSessions.useQuery({
-      languageCode: practiceLanguage.code,
+      languageCode: practiceLanguage,
     });
 
   const startTrainingSession =
     api.trainingSessions.createTrainingSession.useMutation({
       onSuccess: (data) => {
-        router.push(`/app/${data.languageCode}/training/${data.id}`);
+        router.push(
+          `/${language}/app/${data.languageCode}/training/${data.id}`,
+        );
       },
       onError: (error) => {
         toast("Faield to create a new training session", {
@@ -40,8 +44,8 @@ export default function AppPage() {
     });
 
   const handleStartTraining = useCallback(() => {
-    startTrainingSession.mutate({ languageCode: practiceLanguage.code });
-  }, [startTrainingSession, practiceLanguage.code]);
+    startTrainingSession.mutate({ languageCode: practiceLanguage });
+  }, [startTrainingSession, practiceLanguage]);
 
   useHotkeys(
     "space",
@@ -82,7 +86,7 @@ export default function AppPage() {
           trainingSessionsQuery.data.map((item) => (
             <Link
               key={item.id}
-              href={`/app/${item.languageCode}/training/${item.id}`}
+              href={`/${language}/app/${item.languageCode}/training/${item.id}`}
               className="hover:bg-secondary/50 block rounded-md p-4"
             >
               <p>{item.title ?? "Untitled"}</p>

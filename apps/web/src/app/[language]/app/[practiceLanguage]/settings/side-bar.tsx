@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
   BookOpenIcon,
   BookUserIcon,
@@ -13,48 +14,53 @@ import {
 } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
-import { usePracticeLanguage } from "~/providers/PracticeLanguageProvider";
 import { cn } from "~/utils";
 
 export default function SideBar() {
-  const { practiceLanguage } = usePracticeLanguage();
+  const { language, practiceLanguage } = useParams<{
+    language: string;
+    practiceLanguage: string;
+  }>();
   const pathname = usePathname();
   const menu: {
     href: string;
     name: string;
     icon: ReactNode;
-  }[] = [
-    {
-      href: `/app/${practiceLanguage.code}/settings`,
-      name: "Account",
-      icon: <UserIcon className="h-4 w-4" />,
-    },
-    {
-      href: `/app/${practiceLanguage.code}/settings/profile`,
-      name: "Profile",
-      icon: <BookUserIcon className="h-4 w-4" />,
-    },
-    {
-      href: `/app/${practiceLanguage.code}/settings/preferences`,
-      name: "Preferences",
-      icon: <SettingsIcon className="h-4 w-4" />,
-    },
-    {
-      href: `/app/${practiceLanguage.code}/settings/reader`,
-      name: "Reader",
-      icon: <BookOpenIcon className="h-4 w-4" />,
-    },
-    {
-      href: `/app/${practiceLanguage.code}/settings/audio`,
-      name: "Audio",
-      icon: <HeadphonesIcon className="h-4 w-4" />,
-    },
-    {
-      href: `/app/${practiceLanguage.code}/settings/languages`,
-      name: "Languages",
-      icon: <LanguagesIcon className="h-4 w-4" />,
-    },
-  ];
+  }[] = useMemo(
+    () => [
+      {
+        href: `/${language}/app/${practiceLanguage}/settings`,
+        name: "Account",
+        icon: <UserIcon className="h-4 w-4" />,
+      },
+      {
+        href: `/${language}/app/${practiceLanguage}/settings/profile`,
+        name: "Profile",
+        icon: <BookUserIcon className="h-4 w-4" />,
+      },
+      {
+        href: `/${language}/app/${practiceLanguage}/settings/preferences`,
+        name: "Preferences",
+        icon: <SettingsIcon className="h-4 w-4" />,
+      },
+      {
+        href: `/${language}/app/${practiceLanguage}/settings/reader`,
+        name: "Reader",
+        icon: <BookOpenIcon className="h-4 w-4" />,
+      },
+      {
+        href: `/${language}/app/${practiceLanguage}/settings/audio`,
+        name: "Audio",
+        icon: <HeadphonesIcon className="h-4 w-4" />,
+      },
+      {
+        href: `/${language}/app/${practiceLanguage}/settings/languages`,
+        name: "Languages",
+        icon: <LanguagesIcon className="h-4 w-4" />,
+      },
+    ],
+    [language, practiceLanguage],
+  );
 
   return (
     <aside className="bg-card text-card-foreground fixed bottom-0 left-0 top-16 h-[calc(100vh-4rem)] w-64 overflow-y-auto border-r">

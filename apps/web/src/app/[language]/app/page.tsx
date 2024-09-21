@@ -5,13 +5,20 @@ import { db } from "@acme/db/client";
 import { practiceLanguages } from "@acme/db/schema";
 
 import { OnboardingRoutes } from "~/utils/constants";
-import { getUserSettings } from "../utils";
+import { getUserSettings } from "../../utils";
 
-export default async function AppPage() {
+export default async function AppPage({
+  params,
+}: {
+  params: { language: string };
+}) {
   const userSettings = await getUserSettings();
 
   if (!userSettings.nativeLanguage) {
-    redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
+    redirect(
+      `/${params.language}${OnboardingRoutes.nativeLanguage}`,
+      RedirectType.replace,
+    );
   }
 
   const [lang] = await db
@@ -22,8 +29,14 @@ export default async function AppPage() {
     .limit(1);
 
   if (!lang) {
-    redirect(OnboardingRoutes.practiceLanguage, RedirectType.replace);
+    redirect(
+      `/${params.language}${OnboardingRoutes.practiceLanguage}`,
+      RedirectType.replace,
+    );
   }
 
-  redirect(`/app/${lang.languageCode}`, RedirectType.replace);
+  redirect(
+    `/${params.language}/app/${lang.languageCode}`,
+    RedirectType.replace,
+  );
 }

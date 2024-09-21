@@ -1,0 +1,39 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
+import { auth } from "@acme/auth";
+
+import { Button } from "~/components/ui/button";
+
+export default async function HomePage({
+  params,
+}: {
+  params: { language: string };
+}) {
+  const session = await auth();
+
+  return (
+    <div className="flex flex-1 items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <h1 className="text-center text-3xl font-medium">
+          Welcome to Oaklang!
+        </h1>
+        {session ? (
+          <Button asChild>
+            <Link href={`/${params.language}/app`}>
+              Dashboard
+              <ArrowRight className="-mr-1 ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild>
+            <Link href={`/${params.language}/login`}>
+              Sign In
+              <ArrowRight className="-mr-1 ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}

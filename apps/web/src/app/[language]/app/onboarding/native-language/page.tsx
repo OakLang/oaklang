@@ -1,13 +1,17 @@
 import { redirect, RedirectType } from "next/navigation";
 
 import { OnboardingRoutes } from "~/utils/constants";
-import { getUserSettings } from "../../../utils";
+import { getUserSettings } from "../../../../utils";
 import NativeLanguageForm from "./native-language-form";
 
-export default async function OnboardingNativeLanguagePage() {
+export default async function OnboardingNativeLanguagePage({
+  params,
+}: {
+  params: { language: string };
+}) {
   const userSettings = await getUserSettings();
 
-  const nextPath = OnboardingRoutes.practiceLanguage;
+  const nextPath = `/${params.language}${OnboardingRoutes.practiceLanguage}`;
 
   if (userSettings.nativeLanguage) {
     redirect(nextPath, RedirectType.replace);

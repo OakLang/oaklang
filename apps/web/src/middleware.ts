@@ -6,17 +6,18 @@ import authConfig from "@acme/auth/auth-config";
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  if (req.nextUrl.pathname.startsWith("/app") && !req.auth) {
-    const redirectUrl = new URL(authConfig.pages.signIn, req.nextUrl.origin);
+  const pathParts = req.nextUrl.pathname.split("/");
+  const language = pathParts[1];
+
+  if (pathParts[2] === "app" && !req.auth) {
+    const redirectUrl = new URL(
+      `/${language}${authConfig.pages.signIn}`,
+      req.nextUrl.origin,
+    );
     redirectUrl.searchParams.set("callbackUrl", req.url);
     return NextResponse.redirect(redirectUrl, 307);
   }
-  if (req.nextUrl.pathname === "/" && req.auth) {
-    return NextResponse.redirect(new URL("/app", req.url), 307);
-  }
-  if (req.nextUrl.pathname === "/home") {
-    return NextResponse.rewrite(new URL("/", req.url));
-  }
+
   return NextResponse.next();
 });
 

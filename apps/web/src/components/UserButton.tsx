@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
-import { usePracticeLanguage } from "~/providers/PracticeLanguageProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -17,7 +17,10 @@ import {
 import { Skeleton } from "./ui/skeleton";
 
 export default function UserButton() {
-  const { practiceLanguage } = usePracticeLanguage();
+  const { language, practiceLanguage } = useParams<{
+    language: string;
+    practiceLanguage: string;
+  }>();
   const { data, status } = useSession({ required: true });
 
   if (status === "loading") {
@@ -43,7 +46,7 @@ export default function UserButton() {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={`/app/${practiceLanguage.code}/settings`}>
+          <Link href={`/${language}/app/${practiceLanguage}/settings`}>
             <SettingsIcon className="mr-2 h-4 w-4" />
             Settings
           </Link>

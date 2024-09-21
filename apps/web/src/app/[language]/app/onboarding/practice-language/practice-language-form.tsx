@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ChevronDownIcon } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
@@ -19,10 +19,11 @@ import { api } from "~/trpc/react";
 export default function PracticeLanguageForm() {
   const [languageCode, setLanguageCode] = useState("");
   const languagesQuery = api.languages.getLanguages.useQuery();
+  const { language } = useParams<{ language: string }>();
 
-  const language = useMemo(
-    () => languagesQuery.data?.find((lang) => lang.code === languageCode),
-    [languagesQuery.data, languageCode],
+  const selectedLanguage = useMemo(
+    () => languagesQuery.data?.find((item) => item.code === languageCode),
+    [languageCode, languagesQuery.data],
   );
 
   const router = useRouter();
@@ -30,12 +31,12 @@ export default function PracticeLanguageForm() {
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (!language) {
+      if (!languageCode) {
         return;
       }
-      router.push(`/app/${language.code}`);
+      router.push(`/${language}/app/${languageCode}`);
     },
-    [language, router],
+    [language, languageCode, router],
   );
 
   return (
@@ -43,16 +44,16 @@ export default function PracticeLanguageForm() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="mx-auto justify-start text-left">
-            {language ? (
+            {selectedLanguage ? (
               <>
                 <Image
-                  src={`https://hatscripts.github.io/circle-flags/flags/${language.countryCode}.svg`}
-                  alt={language.name}
+                  src={`https://hatscripts.github.io/circle-flags/flags/${selectedLanguage.countryCode}.svg`}
+                  alt={selectedLanguage.name}
                   className="-ml-1 mr-2 h-5 w-5 object-cover"
                   width={24}
                   height={24}
                 />
-                <span className="flex-1 truncate">{language.name}</span>
+                <span className="flex-1 truncate">{selectedLanguage.name}</span>
               </>
             ) : (
               <span className="text-muted-foreground flex-1 truncate">

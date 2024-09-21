@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import { usePracticeLanguage } from "~/providers/PracticeLanguageProvider";
 import { api } from "~/trpc/react";
 import { Button } from "./ui/button";
 import {
@@ -17,10 +16,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function PracticeLanguageSwitcher() {
-  const { practiceLanguage } = usePracticeLanguage();
+  const { language, practiceLanguage } = useParams<{
+    language: string;
+    practiceLanguage: string;
+  }>();
+  const practiceLanguageQuery =
+    api.languages.getPracticeLanguage.useQuery(practiceLanguage);
   const practiceLanguages = api.languages.getPracticeLanguages.useQuery();
   const languagesQuery = api.languages.getLanguages.useQuery();
   const router = useRouter();
@@ -36,7 +41,11 @@ export default function PracticeLanguageSwitcher() {
 
   useEffect(() => {
     void utils.languages.getPracticeLanguages.invalidate();
-  }, [practiceLanguage.code, utils.languages.getPracticeLanguages]);
+  }, [practiceLanguage, utils.languages.getPracticeLanguages]);
+
+  if (!practiceLanguageQuery.isSuccess) {
+    return <Skeleton className="h-10 w-32 rounded-full" />;
+  }
 
   return (
     <Tooltip>
@@ -45,13 +54,13 @@ export default function PracticeLanguageSwitcher() {
           <TooltipTrigger asChild>
             <Button variant="secondary" className="rounded-full">
               <Image
-                src={`https://hatscripts.github.io/circle-flags/flags/${practiceLanguage.countryCode}.svg`}
-                alt={practiceLanguage.name}
+                src={`https://hatscripts.github.io/circle-flags/flags/${practiceLanguageQuery.data.countryCode}.svg`}
+                alt={practiceLanguageQuery.data.name}
                 className="-ml-2 mr-2 h-6 w-6 object-cover"
                 width={24}
                 height={24}
               />
-              {practiceLanguage.knownWords.toLocaleString()}{" "}
+              {practiceLanguageQuery.data.knownWords.toLocaleString()}{" "}
               <span className="ml-1 max-lg:hidden">Known Words</span>
             </Button>
           </TooltipTrigger>
@@ -61,8 +70,8 @@ export default function PracticeLanguageSwitcher() {
             {practiceLanguages.data?.map((item) => (
               <DropdownMenuCheckboxItem
                 key={item.code}
-                checked={item.code === practiceLanguage.code}
-                onClick={() => router.push(`/app/${item.code}`)}
+                checked={item.code === practiceLanguage}
+                onClick={() => router.push(`/${language}/app/${item.code}`)}
               >
                 <Image
                   src={`https://hatscripts.github.io/circle-flags/flags/${item.countryCode}.svg`}
@@ -84,7 +93,7 @@ export default function PracticeLanguageSwitcher() {
               <DropdownMenuLabel>Add a new Language</DropdownMenuLabel>
               {otherLanguages.map((item) => (
                 <DropdownMenuItem
-                  onClick={() => router.push(`/app/${item.code}`)}
+                  onClick={() => router.push(`/${language}/app/${item.code}`)}
                 >
                   <Image
                     src={`https://hatscripts.github.io/circle-flags/flags/${item.countryCode}.svg`}

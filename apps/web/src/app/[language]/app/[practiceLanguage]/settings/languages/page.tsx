@@ -2,7 +2,7 @@
 
 import { Fragment } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,12 +20,14 @@ import {
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
-import { usePracticeLanguage } from "~/providers/PracticeLanguageProvider";
 import { api } from "~/trpc/react";
 import { APP_NAME } from "~/utils/constants";
 
 export default function LanguagesPage() {
-  const { practiceLanguage } = usePracticeLanguage();
+  const { language, practiceLanguage } = useParams<{
+    language: string;
+    practiceLanguage: string;
+  }>();
   const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery();
   const utils = api.useUtils();
   const router = useRouter();
@@ -35,14 +37,14 @@ export default function LanguagesPage() {
       onSuccess: (data) => {
         void utils.languages.getPracticeLanguages.invalidate();
         toast(`Your ${data.language.name} data has been deleted.`);
-        if (practiceLanguage.code === data.language.code) {
+        if (practiceLanguage === data.language.code) {
           const newLang = practiceLanguagesQuery.data?.find(
             (item) => item.code !== data.language.code,
           );
           if (newLang) {
-            router.push(`/app/${newLang.code}/settings/languages`);
+            router.push(`/${language}/app/${newLang.code}/settings/languages`);
           } else {
-            router.push("/app");
+            router.push(`/${language}/app`);
           }
         }
       },
