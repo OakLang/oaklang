@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAtomValue } from "jotai";
 import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +27,8 @@ import { api } from "~/trpc/react";
 import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 
 export default function ContentView() {
+  const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
+    useState(false);
   const { trainingSession, changeSentenceIndex } = useTrainingSession();
   const { userSettings } = useUserSettings();
   const [speed, setSpeed] = useState(userSettings.ttsSpeed);
@@ -104,6 +106,28 @@ export default function ContentView() {
     changeSentenceIndex,
     sentencesQuery.isSuccess,
     trainingSession.sentenceIndex,
+  ]);
+
+  useEffect(() => {
+    if (
+      !initialGenerateSentencesCalled &&
+      sentencesQuery.isSuccess &&
+      sentencesQuery.data.length === 0 &&
+      !generateMoreSentencesMut.isPending
+    ) {
+      setInitialGenerateSentencesCalled(true);
+      generateMoreSentencesMut.mutate({
+        trainingSessionId: trainingSession.id,
+        promptTemplate,
+      });
+    }
+  }, [
+    generateMoreSentencesMut,
+    initialGenerateSentencesCalled,
+    sentencesQuery.data?.length,
+    sentencesQuery.isSuccess,
+    trainingSession.id,
+    promptTemplate,
   ]);
 
   return (
