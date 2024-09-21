@@ -1,5 +1,6 @@
-import { redirect, RedirectType } from "next/navigation";
+import { RedirectType } from "next/navigation";
 
+import { redirect } from "~/i18n/routing";
 import { OnboardingRoutes } from "~/utils/constants";
 import { getUserSettings } from "../../../../utils";
 import NativeLanguageForm from "./native-language-form";

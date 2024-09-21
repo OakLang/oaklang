@@ -4,10 +4,6 @@
     "dashboard": "Dashboard",
     "sign-in": "Sign In"
   },
-  "not-found": {
-    "title": "Page not found!",
-    "home": "Home"
-  },
   "App": {
     "add-a-new-language": "Add a new Language",
     "known-words": "Known Words",
@@ -25,5 +21,52 @@
     "started": "Started",
     "sessions": "Sessions",
     "start-training": "Start Training"
+  },
+  "NotFoundPage": {
+    "title": "Page not found!",
+    "home": "Home"
+  },
+  "LogInPage": {
+    "title": "Log in",
+    "subtitle": "Enter your email below to log in",
+    "signInWithEmail": "Sign In with Email",
+    "or": "Or continue with",
+    "logInWithGoogle": "Log in with Google"
+  },
+  "AccountPage": {
+    "deleteAccountCard": {
+      "title": "Delete Account",
+      "description": "Deleting your account will delete all your personal and learning data.",
+      "deleteMyAccount": "Delete my account",
+      "alert": {
+        "title": "Delete Account",
+        "description": "You’re about to permanently delete your account. This action will erase all your data on Oaklang, and it cannot be recovered. Are you sure you want to proceed?",
+        "cancel": "Never mind",
+        "delete": "I understand, delete my account"
+      }
+    },
+    "title": "Account",
+    "description": "Manage your account settings"
+  },
+  "PreferencesPage": {
+    "title": "Preferences",
+    "description": "Manage your preferences",
+    "general": "General",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "Settings": {
+    "SideBar": {
+      "account": "Account",
+      "profile": "Profile",
+      "preferences": "Preferences",
+      "reader": "Reader",
+      "audio": "Audio",
+      "languages": "Languages",
+      "title": "Settings"
+    }
   }
 }

@@ -4,10 +4,6 @@
     "dashboard": "Armaturenbrett",
     "sign-in": "Anmelden"
   },
-  "not-found": {
-    "title": "Seite nicht gefunden!",
-    "home": "Heim"
-  },
   "App": {
     "add-a-new-language": "Fügen Sie eine neue Sprache hinzu",
     "known-words": "Bekannte Wörter",
@@ -19,10 +15,56 @@
     "dark": "Dunkel",
     "system": "System",
     "toggle-theme": "Thema umschalten",
-    "started": "Begonnen",
     "loading": "Laden...",
+    "started": "Begonnen",
     "sessions": "Sitzungen",
     "start-training": "Beginnen Sie mit dem Training"
   },
-  "language": ""
+  "NotFoundPage": {
+    "title": "Seite nicht gefunden!",
+    "home": "Heim"
+  },
+  "LogInPage": {
+    "title": "Einloggen",
+    "subtitle": "Geben Sie unten Ihre E-Mail-Adresse ein, um sich anzumelden",
+    "signInWithEmail": "Melden Sie sich mit E-Mail an",
+    "or": "Oder fahren Sie fort mit",
+    "logInWithGoogle": "Melden Sie sich mit Google an"
+  },
+  "AccountPage": {
+    "deleteAccountCard": {
+      "title": "Konto löschen",
+      "description": "Durch das Löschen Ihres Kontos werden alle Ihre persönlichen Daten und Lerndaten gelöscht.",
+      "deleteMyAccount": "Mein Konto löschen",
+      "alert": {
+        "title": "Konto löschen",
+        "description": "Sie sind dabei, Ihr Konto endgültig zu löschen. \nDurch diese Aktion werden alle Ihre Daten auf Oaklang gelöscht und können nicht wiederhergestellt werden. \nSind Sie sicher, dass Sie fortfahren möchten?",
+        "cancel": "Egal",
+        "delete": "Ich verstehe, lösche mein Konto"
+      }
+    },
+    "title": "Konto",
+    "description": "Verwalten Sie Ihre Kontoeinstellungen"
+  },
+  "PreferencesPage": {
+    "title": "Präferenzen",
+    "description": "Verwalten Sie Ihre Präferenzen",
+    "general": "Allgemein",
+    "language": "Sprache",
+    "theme": "Thema",
+    "light": "Licht",
+    "dark": "Dunkel",
+    "system": "System"
+  },
+  "Settings": {
+    "SideBar": {
+      "account": "Konto",
+      "profile": "Profil",
+      "preferences": "Einstellungen",
+      "reader": "Leser",
+      "audio": "Audio",
+      "languages": "Sprachen",
+      "title": "Einstellungen"
+    }
+  }
 }

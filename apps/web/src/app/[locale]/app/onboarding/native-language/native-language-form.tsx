@@ -3,7 +3,6 @@
 import type { FormEvent } from "react";
 import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { ChevronDownIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,6 +14,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 
 export default function NativeLanguageForm({ nextPath }: { nextPath: string }) {

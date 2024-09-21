@@ -5,7 +5,7 @@ import { Inter } from "next/font/google";
 import HolyLoader from "holy-loader";
 import { SessionProvider } from "next-auth/react";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, unstable_setRequestLocale } from "next-intl/server";
+import { getMessages } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 
 import { auth } from "@acme/auth";
@@ -51,8 +51,6 @@ export default async function RootLayout({
   children,
   params: { locale },
 }: Readonly<{ children: React.ReactNode; params: { locale: string } }>) {
-  unstable_setRequestLocale(locale);
-
   const session = await auth();
   const messages = await getMessages();
 
@@ -66,7 +64,7 @@ export default async function RootLayout({
       >
         <ListenForTooltipHotkey />
         <HolyLoader color="#2666FF" height={3} showSpinner={false} />
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <SessionProvider session={session}>
             <TRPCReactProvider>
               <ThemeProvider

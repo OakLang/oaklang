@@ -12,7 +12,7 @@ export default async function AppPage() {
   const userSettings = await getUserSettings();
 
   if (!userSettings.nativeLanguage) {
-    return redirect(`${OnboardingRoutes.nativeLanguage}`, RedirectType.replace);
+    return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
   }
 
   const [lang] = await db
@@ -23,10 +23,7 @@ export default async function AppPage() {
     .limit(1);
 
   if (!lang) {
-    return redirect(
-      `${OnboardingRoutes.practiceLanguage}`,
-      RedirectType.replace,
-    );
+    return redirect(OnboardingRoutes.practiceLanguage, RedirectType.replace);
   }
 
   redirect(`/app/${lang.languageCode}`, RedirectType.replace);

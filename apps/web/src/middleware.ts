@@ -12,8 +12,16 @@ export default auth((req) => {
   const pathParts = req.nextUrl.pathname.split("/");
 
   if (pathParts[2] === "app" && !req.auth) {
-    const redirectUrl = new URL(authConfig.pages.signIn, req.nextUrl.origin);
+    const redirectUrl = new URL("/login", req.nextUrl.origin);
     redirectUrl.searchParams.set("callbackUrl", req.url);
+    return NextResponse.redirect(redirectUrl, 307);
+  }
+
+  if (pathParts[2] === "login" && req.auth) {
+    const redirectUrl = new URL(
+      req.nextUrl.searchParams.get("callbackUrl") ?? "/app",
+      req.nextUrl.origin,
+    );
     return NextResponse.redirect(redirectUrl, 307);
   }
 

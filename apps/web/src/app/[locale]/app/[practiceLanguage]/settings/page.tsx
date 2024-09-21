@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import PageTitle from "~/components/PageTitle";
@@ -28,6 +29,19 @@ import { Separator } from "~/components/ui/separator";
 import { api } from "~/trpc/react";
 
 export default function AccountPage() {
+  const t = useTranslations("AccountPage");
+
+  return (
+    <div className="container mx-auto max-w-screen-md px-4 py-16">
+      <PageTitle title={t("title")} description={t("description")} />
+      <Separator className="my-8" />
+      <DeleteAccountCard />
+    </div>
+  );
+}
+
+const DeleteAccountCard = () => {
+  const t = useTranslations("AccountPage.deleteAccountCard");
   const deleteAccountMut = api.users.deleteAccount.useMutation({
     onSuccess: () => {
       localStorage.clear();
@@ -39,50 +53,37 @@ export default function AccountPage() {
   });
 
   return (
-    <div className="container mx-auto max-w-screen-md px-4 py-16">
-      <PageTitle title="Account" description="Manage your account settings" />
-      <Separator className="my-8" />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Delete Account</CardTitle>
-          <CardDescription>
-            Deleting your account will delete all your personal and learning
-            data.
-          </CardDescription>
-        </CardHeader>
-        <CardFooter>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="destructive"
-                disabled={deleteAccountMut.isPending}
-              >
-                {deleteAccountMut.isPending && (
-                  <Loader2 className="-ml-1 mr-2 h-4 w-4 animate-spin" />
-                )}
-                Delete my account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Account</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You’re about to permanently delete your account. This action
-                  will erase all your data on Oaklang, and it cannot be
-                  recovered. Are you sure you want to proceed?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Never mind</AlertDialogCancel>
-                <AlertDialogAction onClick={() => deleteAccountMut.mutate()}>
-                  I understand, delete my account
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </CardFooter>
-      </Card>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
+      </CardHeader>
+      <CardFooter>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" disabled={deleteAccountMut.isPending}>
+              {deleteAccountMut.isPending && (
+                <Loader2 className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+              )}
+              {t("deleteMyAccount")}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("alert.title")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("alert.description")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("alert.cancel")}</AlertDialogCancel>
+              <AlertDialogAction onClick={() => deleteAccountMut.mutate()}>
+                {t("alert.delete")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </CardFooter>
+    </Card>
   );
-}
+};
