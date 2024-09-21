@@ -1,6 +1,5 @@
-import Link from "next/link";
-
 import { Button } from "~/components/ui/button";
+import { Link } from "~/i18n/routing";
 
 const NotFoundPage = () => {
   return (

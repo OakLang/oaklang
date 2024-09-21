@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeftIcon,
@@ -31,6 +30,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { Link } from "~/i18n/routing";
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
 
 export default function TopBar() {
@@ -41,8 +41,7 @@ export default function TopBar() {
     fontSize,
     setFontSize,
   } = useTrainingSession();
-  const { language, practiceLanguage } = useParams<{
-    language: string;
+  const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
   const { theme, setTheme } = useTheme();
@@ -53,7 +52,7 @@ export default function TopBar() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" className="mr-2" asChild>
-              <Link href={`/${language}/app/${practiceLanguage}`}>
+              <Link href={`/app/${practiceLanguage}`}>
                 <ArrowLeftIcon className="h-5 w-5" />
                 <div className="sr-only">Back</div>
               </Link>

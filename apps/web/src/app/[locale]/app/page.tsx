@@ -1,24 +1,18 @@
-import { redirect, RedirectType } from "next/navigation";
+import { RedirectType } from "next/navigation";
 
 import { desc, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import { practiceLanguages } from "@acme/db/schema";
 
+import { redirect } from "~/i18n/routing";
 import { OnboardingRoutes } from "~/utils/constants";
 import { getUserSettings } from "../../utils";
 
-export default async function AppPage({
-  params,
-}: {
-  params: { language: string };
-}) {
+export default async function AppPage() {
   const userSettings = await getUserSettings();
 
   if (!userSettings.nativeLanguage) {
-    redirect(
-      `/${params.language}${OnboardingRoutes.nativeLanguage}`,
-      RedirectType.replace,
-    );
+    return redirect(`${OnboardingRoutes.nativeLanguage}`, RedirectType.replace);
   }
 
   const [lang] = await db
@@ -29,14 +23,11 @@ export default async function AppPage({
     .limit(1);
 
   if (!lang) {
-    redirect(
-      `/${params.language}${OnboardingRoutes.practiceLanguage}`,
+    return redirect(
+      `${OnboardingRoutes.practiceLanguage}`,
       RedirectType.replace,
     );
   }
 
-  redirect(
-    `/${params.language}/app/${lang.languageCode}`,
-    RedirectType.replace,
-  );
+  redirect(`/app/${lang.languageCode}`, RedirectType.replace);
 }

@@ -4,6 +4,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import HolyLoader from "holy-loader";
 import { SessionProvider } from "next-auth/react";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 
 import { auth } from "@acme/auth";
@@ -47,11 +49,13 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+  params: { locale },
+}: Readonly<{ children: React.ReactNode; params: { locale: string } }>) {
   const session = await auth();
+  const messages = await getMessages();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={cn(
           "bg-background text-foreground flex min-h-screen flex-col",
@@ -60,14 +64,20 @@ export default async function RootLayout({
       >
         <ListenForTooltipHotkey />
         <HolyLoader color="#2666FF" height={3} showSpinner={false} />
-        <SessionProvider session={session}>
-          <TRPCReactProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              <TooltipProvider>{children}</TooltipProvider>
-              <Toaster />
-            </ThemeProvider>
-          </TRPCReactProvider>
-        </SessionProvider>
+        <NextIntlClientProvider messages={messages}>
+          <SessionProvider session={session}>
+            <TRPCReactProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+              >
+                <TooltipProvider>{children}</TooltipProvider>
+                <Toaster />
+              </ThemeProvider>
+            </TRPCReactProvider>
+          </SessionProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -4,17 +4,13 @@ import { OnboardingRoutes } from "~/utils/constants";
 import { getUserSettings } from "../../../../utils";
 import NativeLanguageForm from "./native-language-form";
 
-export default async function OnboardingNativeLanguagePage({
-  params,
-}: {
-  params: { language: string };
-}) {
+export default async function OnboardingNativeLanguagePage() {
   const userSettings = await getUserSettings();
 
-  const nextPath = `/${params.language}${OnboardingRoutes.practiceLanguage}`;
+  const nextPath = OnboardingRoutes.practiceLanguage;
 
   if (userSettings.nativeLanguage) {
-    redirect(nextPath, RedirectType.replace);
+    return redirect(nextPath, RedirectType.replace);
   }
 
   return (

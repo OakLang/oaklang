@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo } from "react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
+import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 import { Button } from "./ui/button";
 import {
@@ -20,8 +21,7 @@ import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function PracticeLanguageSwitcher() {
-  const { language, practiceLanguage } = useParams<{
-    language: string;
+  const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
   const practiceLanguageQuery =
@@ -71,7 +71,7 @@ export default function PracticeLanguageSwitcher() {
               <DropdownMenuCheckboxItem
                 key={item.code}
                 checked={item.code === practiceLanguage}
-                onClick={() => router.push(`/${language}/app/${item.code}`)}
+                onClick={() => router.push(`/app/${item.code}`)}
               >
                 <Image
                   src={`https://hatscripts.github.io/circle-flags/flags/${item.countryCode}.svg`}
@@ -93,7 +93,7 @@ export default function PracticeLanguageSwitcher() {
               <DropdownMenuLabel>Add a new Language</DropdownMenuLabel>
               {otherLanguages.map((item) => (
                 <DropdownMenuItem
-                  onClick={() => router.push(`/${language}/app/${item.code}`)}
+                  onClick={() => router.push(`/app/${item.code}`)}
                 >
                   <Image
                     src={`https://hatscripts.github.io/circle-flags/flags/${item.countryCode}.svg`}

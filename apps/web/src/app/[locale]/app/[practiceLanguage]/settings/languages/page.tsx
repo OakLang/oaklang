@@ -2,7 +2,7 @@
 
 import { Fragment } from "react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,12 +20,12 @@ import {
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
+import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 import { APP_NAME } from "~/utils/constants";
 
 export default function LanguagesPage() {
-  const { language, practiceLanguage } = useParams<{
-    language: string;
+  const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
   const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery();
@@ -42,9 +42,9 @@ export default function LanguagesPage() {
             (item) => item.code !== data.language.code,
           );
           if (newLang) {
-            router.push(`/${language}/app/${newLang.code}/settings/languages`);
+            router.push(`/app/${newLang.code}/settings/languages`);
           } else {
-            router.push(`/${language}/app`);
+            router.push("/app");
           }
         }
       },

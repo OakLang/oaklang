@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import {
   BookOpenIcon,
@@ -14,11 +13,11 @@ import {
 } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
+import { Link } from "~/i18n/routing";
 import { cn } from "~/utils";
 
 export default function SideBar() {
-  const { language, practiceLanguage } = useParams<{
-    language: string;
+  const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
   const pathname = usePathname();
@@ -29,37 +28,37 @@ export default function SideBar() {
   }[] = useMemo(
     () => [
       {
-        href: `/${language}/app/${practiceLanguage}/settings`,
+        href: `/app/${practiceLanguage}/settings`,
         name: "Account",
         icon: <UserIcon className="h-4 w-4" />,
       },
       {
-        href: `/${language}/app/${practiceLanguage}/settings/profile`,
+        href: `/app/${practiceLanguage}/settings/profile`,
         name: "Profile",
         icon: <BookUserIcon className="h-4 w-4" />,
       },
       {
-        href: `/${language}/app/${practiceLanguage}/settings/preferences`,
+        href: `/app/${practiceLanguage}/settings/preferences`,
         name: "Preferences",
         icon: <SettingsIcon className="h-4 w-4" />,
       },
       {
-        href: `/${language}/app/${practiceLanguage}/settings/reader`,
+        href: `/app/${practiceLanguage}/settings/reader`,
         name: "Reader",
         icon: <BookOpenIcon className="h-4 w-4" />,
       },
       {
-        href: `/${language}/app/${practiceLanguage}/settings/audio`,
+        href: `/app/${practiceLanguage}/settings/audio`,
         name: "Audio",
         icon: <HeadphonesIcon className="h-4 w-4" />,
       },
       {
-        href: `/${language}/app/${practiceLanguage}/settings/languages`,
+        href: `/app/${practiceLanguage}/settings/languages`,
         name: "Languages",
         icon: <LanguagesIcon className="h-4 w-4" />,
       },
     ],
-    [language, practiceLanguage],
+    [practiceLanguage],
   );
 
   return (

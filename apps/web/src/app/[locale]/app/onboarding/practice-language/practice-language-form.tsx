@@ -3,7 +3,6 @@
 import type { FormEvent } from "react";
 import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
 import { ChevronDownIcon } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
@@ -14,12 +13,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 
 export default function PracticeLanguageForm() {
   const [languageCode, setLanguageCode] = useState("");
   const languagesQuery = api.languages.getLanguages.useQuery();
-  const { language } = useParams<{ language: string }>();
 
   const selectedLanguage = useMemo(
     () => languagesQuery.data?.find((item) => item.code === languageCode),
@@ -34,9 +33,9 @@ export default function PracticeLanguageForm() {
       if (!languageCode) {
         return;
       }
-      router.push(`/${language}/app/${languageCode}`);
+      router.push(`/app/${languageCode}`);
     },
-    [language, languageCode, router],
+    [languageCode, router],
   );
 
   return (

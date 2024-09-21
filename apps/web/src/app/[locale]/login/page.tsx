@@ -1,24 +1,19 @@
-import Link from "next/link";
-import { redirect, RedirectType } from "next/navigation";
+import { RedirectType } from "next/navigation";
 
 import { auth } from "@acme/auth";
 
+import { Link, redirect } from "~/i18n/routing";
 import SignIn from "./signin";
 
 export default async function LogInPage({
   searchParams,
-  params,
 }: {
   searchParams: { callbackUrl?: string };
-  params: { language: string };
 }) {
   const session = await auth();
 
   if (session) {
-    redirect(
-      searchParams.callbackUrl ?? `/${params.language}/app`,
-      RedirectType.replace,
-    );
+    return redirect(searchParams.callbackUrl ?? "/app", RedirectType.replace);
   }
 
   return (
@@ -35,14 +30,14 @@ export default async function LogInPage({
           By clicking continue, you agree to our{" "}
           <Link
             className="hover:text-primary underline underline-offset-4"
-            href={`/${params.language}/terms`}
+            href="/terms"
           >
             Terms of Service
           </Link>{" "}
           and{" "}
           <Link
             className="hover:text-primary underline underline-offset-4"
-            href={`/${params.language}/privacy`}
+            href="/privacy"
           >
             Privacy Policy
           </Link>

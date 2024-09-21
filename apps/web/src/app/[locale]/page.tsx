@@ -1,15 +1,11 @@
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { auth } from "@acme/auth";
 
 import { Button } from "~/components/ui/button";
+import { Link } from "~/i18n/routing";
 
-export default async function HomePage({
-  params,
-}: {
-  params: { language: string };
-}) {
+export default async function HomePage() {
   const session = await auth();
 
   return (
@@ -20,14 +16,14 @@ export default async function HomePage({
         </h1>
         {session ? (
           <Button asChild>
-            <Link href={`/${params.language}/app`}>
+            <Link href="/app">
               Dashboard
               <ArrowRight className="-mr-1 ml-2 h-4 w-4" />
             </Link>
           </Button>
         ) : (
           <Button asChild>
-            <Link href={`/${params.language}/login`}>
+            <Link href="/login">
               Sign In
               <ArrowRight className="-mr-1 ml-2 h-4 w-4" />
             </Link>

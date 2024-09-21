@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
+import { Link } from "~/i18n/routing";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -17,8 +17,7 @@ import {
 import { Skeleton } from "./ui/skeleton";
 
 export default function UserButton() {
-  const { language, practiceLanguage } = useParams<{
-    language: string;
+  const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
   const { data, status } = useSession({ required: true });
@@ -46,7 +45,7 @@ export default function UserButton() {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={`/${language}/app/${practiceLanguage}/settings`}>
+          <Link href={`/app/${practiceLanguage}/settings`}>
             <SettingsIcon className="mr-2 h-4 w-4" />
             Settings
           </Link>

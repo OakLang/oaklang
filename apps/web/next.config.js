@@ -1,5 +1,8 @@
 import { fileURLToPath } from "url";
 import createJiti from "jiti";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin();
 
 createJiti(fileURLToPath(import.meta.url))("./src/env");
 
@@ -11,4 +14,4 @@ const config = {
   typescript: { ignoreBuildErrors: true },
 };
 
-export default config;
+export default withNextIntl(config);

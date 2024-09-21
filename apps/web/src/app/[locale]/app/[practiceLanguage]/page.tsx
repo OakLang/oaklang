@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2Icon } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -15,11 +14,11 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
+import { Link, useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 
 export default function AppPage() {
-  const { language, practiceLanguage } = useParams<{
-    language: string;
+  const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
   const startBtnTooltipProps = useHotkeysTooltipProps();
@@ -32,9 +31,7 @@ export default function AppPage() {
   const startTrainingSession =
     api.trainingSessions.createTrainingSession.useMutation({
       onSuccess: (data) => {
-        router.push(
-          `/${language}/app/${data.languageCode}/training/${data.id}`,
-        );
+        router.push(`/app/${data.languageCode}/training/${data.id}`);
       },
       onError: (error) => {
         toast("Faield to create a new training session", {
@@ -86,7 +83,7 @@ export default function AppPage() {
           trainingSessionsQuery.data.map((item) => (
             <Link
               key={item.id}
-              href={`/${language}/app/${item.languageCode}/training/${item.id}`}
+              href={`/app/${item.languageCode}/training/${item.id}`}
               className="hover:bg-secondary/50 block rounded-md p-4"
             >
               <p>{item.title ?? "Untitled"}</p>
