@@ -4,40 +4,35 @@ import { useEffect } from "react";
 
 import FullScreenLoader from "~/app/full-screen-loader";
 import { useRouter } from "~/i18n/routing";
+import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
 import { api } from "~/trpc/react";
 import { OnboardingRoutes } from "~/utils/constants";
 import PracticeLanguageForm from "./practice-language-form";
 
 export default function OnboardinPracticeLanguagePage() {
-  const userSettings = api.userSettings.getUserSettings.useQuery();
+  const nativeLanguage = useUserSettingsStore(
+    (state) => state.userSettings.nativeLanguage,
+  );
   const lastPracticedLanguage = api.languages.getLastPracticeLanguage.useQuery(
     undefined,
     {
-      enabled: !!userSettings.data?.nativeLanguage,
+      enabled: !!nativeLanguage,
     },
   );
 
   const router = useRouter();
 
   useEffect(() => {
-    if (userSettings.isSuccess && !userSettings.data.nativeLanguage) {
+    if (!nativeLanguage) {
       router.replace(OnboardingRoutes.nativeLanguage);
     }
-  }, [router, userSettings.data?.nativeLanguage, userSettings.isSuccess]);
+  }, [router, nativeLanguage]);
 
   useEffect(() => {
     if (lastPracticedLanguage.isSuccess && lastPracticedLanguage.data) {
       router.replace(`/app/${lastPracticedLanguage.data.languageCode}`);
     }
   }, [lastPracticedLanguage.data, lastPracticedLanguage.isSuccess, router]);
-
-  if (userSettings.isPending || lastPracticedLanguage.isPending) {
-    return <FullScreenLoader />;
-  }
-
-  if (userSettings.isError) {
-    return <p>{userSettings.error.message}</p>;
-  }
 
   if (lastPracticedLanguage.isError) {
     return <p>{lastPracticedLanguage.error.message}</p>;

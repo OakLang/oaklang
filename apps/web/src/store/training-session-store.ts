@@ -13,7 +13,7 @@ interface TrainingSessionState {
 
 interface TrainingSessionActions {
   setPromptTemplate: (template: string) => void;
-  changeSentenceIndex: (sentenceIndex: number) => void;
+  setSentenceIndex: (sentenceIndex: number) => void;
   setInspectedWord: (inspectedWord: string | null) => void;
   setInspectionPanelOpen: (sidebarOpen: boolean) => void;
   setFontSize: (fontSize: number) => void;
@@ -29,7 +29,7 @@ export const createTrainingSessionStore = (initState: TrainingSessionState) => {
       set({ promptTemplate });
       localStorage.setItem("prompt_template", promptTemplate);
     },
-    changeSentenceIndex: (sentenceIndex: number) => {
+    setSentenceIndex: (sentenceIndex) => {
       set(
         produce((state: TrainingSessionStore) => {
           state.trainingSession.sentenceIndex = sentenceIndex;

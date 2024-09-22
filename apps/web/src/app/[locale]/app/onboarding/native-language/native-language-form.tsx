@@ -4,7 +4,6 @@ import type { FormEvent } from "react";
 import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import { ChevronDownIcon, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -15,31 +14,22 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Skeleton } from "~/components/ui/skeleton";
-import { useRouter } from "~/i18n/routing";
+import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
 import { api } from "~/trpc/react";
 
-export default function NativeLanguageForm({ nextPath }: { nextPath: string }) {
+export default function NativeLanguageForm() {
+  const [isLoading, setIsLoading] = useState(false);
   const [nativeLanguageCode, setNativeLanguageCode] = useState("");
   const languagesQuery = api.languages.getLanguages.useQuery();
-
-  const router = useRouter();
 
   const nativeLanguage = useMemo(
     () => languagesQuery.data?.find((lang) => lang.code === nativeLanguageCode),
     [languagesQuery.data, nativeLanguageCode],
   );
 
-  const utils = api.useUtils();
-  const updateUserSettingsMutation =
-    api.userSettings.updateUserSettings.useMutation({
-      onSuccess: () => {
-        void utils.userSettings.getUserSettings.invalidate();
-        router.replace(nextPath);
-      },
-      onError: (error) => {
-        toast("Failed to update user settings", { description: error.message });
-      },
-    });
+  const setNativeLanguage = useUserSettingsStore(
+    (state) => state.setNativeLanguage,
+  );
 
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
@@ -47,11 +37,10 @@ export default function NativeLanguageForm({ nextPath }: { nextPath: string }) {
       if (!nativeLanguage) {
         return;
       }
-      updateUserSettingsMutation.mutate({
-        nativeLanguage: nativeLanguage.code,
-      });
+      setIsLoading(true);
+      setNativeLanguage(nativeLanguage.code);
     },
-    [nativeLanguage, updateUserSettingsMutation],
+    [nativeLanguage, setNativeLanguage],
   );
 
   return (
@@ -112,18 +101,8 @@ export default function NativeLanguageForm({ nextPath }: { nextPath: string }) {
         </DropdownMenu>
       )}
 
-      <Button
-        disabled={
-          !nativeLanguageCode ||
-          updateUserSettingsMutation.isPending ||
-          updateUserSettingsMutation.isSuccess
-        }
-        className="mx-auto"
-      >
-        {(updateUserSettingsMutation.isPending ||
-          updateUserSettingsMutation.isSuccess) && (
-          <Loader2 className="-ml-1 mr-2 h-4 w-4 animate-spin" />
-        )}
+      <Button disabled={!nativeLanguageCode || isLoading} className="mx-auto">
+        {isLoading && <Loader2 className="-ml-1 mr-2 h-4 w-4" />}
         Continue
       </Button>
     </form>

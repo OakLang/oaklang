@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { PlusIcon, RefreshCcwIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,6 +10,7 @@ import InterlinearLineEditor from "~/components/InterlinearLineEditor";
 import PageTitle from "~/components/PageTitle";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
+import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
 import { api } from "~/trpc/react";
 
 export default function ReaderPage() {
@@ -24,22 +25,16 @@ export default function ReaderPage() {
 }
 
 const InterlinearLinesConfigurationSection = () => {
-  const [interlinearLines, setInterlinearLines] = useState<InterlinearLine[]>(
-    [],
-  );
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const interlinearLinesQuery = api.userSettings.getUserSettings.useQuery();
-  const utils = api.useUtils();
+  const initInterlinearLines = useUserSettingsStore(
+    (state) => state.userSettings.interlinearLines,
+  );
+  const changeInterlinearLines = useUserSettingsStore(
+    (state) => state.setInterlinearLines,
+  );
+  const [interlinearLines, setInterlinearLines] =
+    useState<InterlinearLine[]>(initInterlinearLines);
 
-  const updateInterlinearLinesMut =
-    api.userSettings.updateUserSettings.useMutation({
-      onSuccess: () => {
-        void utils.userSettings.getUserSettings.invalidate();
-      },
-      onError: (error) => {
-        toast(error.message);
-      },
-    });
   const resetInterlinearLinesMut =
     api.userSettings.resetInterlinearLines.useMutation({
       onError: (error) => {
@@ -47,6 +42,7 @@ const InterlinearLinesConfigurationSection = () => {
       },
       onSuccess: (value) => {
         setInterlinearLines(value);
+        changeInterlinearLines(value);
       },
     });
 
@@ -57,6 +53,7 @@ const InterlinearLinesConfigurationSection = () => {
       },
       onSuccess: (value) => {
         setInterlinearLines(value);
+        changeInterlinearLines(value);
       },
     });
 
@@ -66,10 +63,10 @@ const InterlinearLinesConfigurationSection = () => {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        updateInterlinearLinesMut.mutate({ interlinearLines: value });
+        changeInterlinearLines(value);
       }, 300);
     },
-    [updateInterlinearLinesMut],
+    [changeInterlinearLines],
   );
 
   const handleChange = useCallback(
@@ -80,31 +77,20 @@ const InterlinearLinesConfigurationSection = () => {
     [debouncedChange],
   );
 
-  useEffect(() => {
-    setInterlinearLines(interlinearLinesQuery.data?.interlinearLines ?? []);
-  }, [interlinearLinesQuery.data]);
-
   return (
     <div className="my-8">
       <h2 className="mb-4 text-xl font-medium">Interlinear Lines</h2>
 
       <div>
-        {interlinearLinesQuery.isPending ? (
-          <p>Loading...</p>
-        ) : interlinearLinesQuery.isError ? (
-          <p>{interlinearLinesQuery.error.message}</p>
-        ) : (
-          <InterlinearLineEditor
-            interlinearLines={interlinearLines}
-            onChange={handleChange}
-          />
-        )}
+        <InterlinearLineEditor
+          interlinearLines={interlinearLines}
+          onChange={handleChange}
+        />
         <div className="flex flex-wrap gap-4 pt-4">
           <Button
             onClick={() => addNewInterlinearLineMut.mutate()}
             disabled={
               resetInterlinearLinesMut.isPending ||
-              updateInterlinearLinesMut.isPending ||
               addNewInterlinearLineMut.isPending
             }
           >
@@ -116,7 +102,6 @@ const InterlinearLinesConfigurationSection = () => {
             onClick={() => resetInterlinearLinesMut.mutate()}
             disabled={
               resetInterlinearLinesMut.isPending ||
-              updateInterlinearLinesMut.isPending ||
               addNewInterlinearLineMut.isPending
             }
           >

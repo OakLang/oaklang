@@ -20,14 +20,15 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { useTrainingSessionStore } from "~/providers/training-session-store-provider";
+import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
 import { api } from "~/trpc/react";
 import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 
 export default function ContentView() {
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
     useState(false);
-  const changeSentenceIndex = useTrainingSessionStore(
-    (state) => state.changeSentenceIndex,
+  const setSentenceIndex = useTrainingSessionStore(
+    (state) => state.setSentenceIndex,
   );
   const promptTemplate = useTrainingSessionStore(
     (state) => state.promptTemplate,
@@ -39,17 +40,14 @@ export default function ContentView() {
     (state) => state.trainingSession.sentenceIndex,
   );
 
-  const userSettings = api.userSettings.getUserSettings.useQuery();
-  const [speed, setSpeed] = useState(userSettings.data?.ttsSpeed);
+  const ttsSpeed = useUserSettingsStore((state) => state.userSettings.ttsSpeed);
+  const setTtsSpeed = useUserSettingsStore((state) => state.setTtsSpeed);
 
   const utils = api.useUtils();
 
   const sentencesQuery = api.sentences.getSentences.useQuery({
     trainingSessionId,
   });
-
-  const updateUserSettingsMut =
-    api.userSettings.updateUserSettings.useMutation();
 
   const generateMoreSentencesMut =
     api.sentences.generateMoreSentences.useMutation({
@@ -69,14 +67,6 @@ export default function ContentView() {
     [sentencesQuery.data, sentenceIndex],
   );
 
-  const handleTTSSpeedChange = useCallback(
-    (newSpeed: number) => {
-      updateUserSettingsMut.mutate({ ttsSpeed: newSpeed });
-      setSpeed(newSpeed);
-    },
-    [updateUserSettingsMut],
-  );
-
   const handleNext = useCallback(() => {
     if (!sentencesQuery.isSuccess) return;
     if (
@@ -93,13 +83,13 @@ export default function ContentView() {
       return;
     }
     const newSentenceIndex = sentenceIndex + 1;
-    changeSentenceIndex(newSentenceIndex);
+    setSentenceIndex(newSentenceIndex);
   }, [
     sentencesQuery.isSuccess,
     sentencesQuery.data?.length,
     generateMoreSentencesMut,
     sentenceIndex,
-    changeSentenceIndex,
+    setSentenceIndex,
     trainingSessionId,
     promptTemplate,
   ]);
@@ -110,8 +100,8 @@ export default function ContentView() {
       return;
     }
     const newSentenceIndex = sentenceIndex - 1;
-    changeSentenceIndex(newSentenceIndex);
-  }, [sentencesQuery.isSuccess, sentenceIndex, changeSentenceIndex]);
+    setSentenceIndex(newSentenceIndex);
+  }, [sentencesQuery.isSuccess, sentenceIndex, setSentenceIndex]);
 
   useEffect(() => {
     if (
@@ -134,12 +124,6 @@ export default function ContentView() {
     trainingSessionId,
     promptTemplate,
   ]);
-
-  useEffect(() => {
-    if (userSettings.isSuccess) {
-      setSpeed(userSettings.data.ttsSpeed);
-    }
-  }, [userSettings.data?.ttsSpeed, userSettings.isSuccess]);
 
   return (
     <div className="flex flex-1 gap-4 py-8 md:py-16">
@@ -167,14 +151,12 @@ export default function ContentView() {
               <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
                 <AudioPlayButton
                   text={currentSentence.sentence}
-                  speed={speed}
+                  speed={ttsSpeed}
                 />
                 <Tooltip>
                   <Select
-                    value={String(speed)}
-                    onValueChange={(value) =>
-                      handleTTSSpeedChange(Number(value))
-                    }
+                    value={String(ttsSpeed)}
+                    onValueChange={(value) => setTtsSpeed(Number(value))}
                   >
                     <TooltipTrigger asChild>
                       <SelectTrigger

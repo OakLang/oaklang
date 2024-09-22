@@ -4,33 +4,25 @@ import { useEffect } from "react";
 
 import FullScreenLoader from "~/app/full-screen-loader";
 import { useRouter } from "~/i18n/routing";
-import { api } from "~/trpc/react";
+import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
 import { OnboardingRoutes } from "~/utils/constants";
 import NativeLanguageForm from "./native-language-form";
 
 export default function OnboardingNativeLanguagePage() {
-  const userSettings = api.userSettings.getUserSettings.useQuery();
+  const nativeLanguage = useUserSettingsStore(
+    (state) => state.userSettings.nativeLanguage,
+  );
   const nextPath = OnboardingRoutes.practiceLanguage;
-
   const router = useRouter();
 
   useEffect(() => {
-    if (userSettings.isSuccess && userSettings.data.nativeLanguage) {
+    if (nativeLanguage) {
       router.replace(nextPath);
     }
-  }, [
-    nextPath,
-    router,
-    userSettings.data?.nativeLanguage,
-    userSettings.isSuccess,
-  ]);
+  }, [nextPath, router, nativeLanguage]);
 
-  if (userSettings.isPending) {
+  if (nativeLanguage) {
     return <FullScreenLoader />;
-  }
-
-  if (userSettings.isError) {
-    return <p>{userSettings.error.message}</p>;
   }
 
   return (
@@ -43,7 +35,7 @@ export default function OnboardingNativeLanguagePage() {
           <p className="text-muted-foreground mt-2 text-sm">
             This will set the language of your dictionary translations.
           </p>
-          <NativeLanguageForm nextPath={nextPath} />
+          <NativeLanguageForm />
         </div>
       </div>
     </div>

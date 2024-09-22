@@ -42,3 +42,5 @@ export const updateUserSettingsSchema = createInsertSchema(userSettings, {
   ttsVoice: true,
   nativeLanguage: true,
 });
+
+export type UpdateUserSettingsInput = z.infer<typeof updateUserSettingsSchema>;

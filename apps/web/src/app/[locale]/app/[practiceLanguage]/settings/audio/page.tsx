@@ -1,8 +1,5 @@
 "use client";
 
-import { useCallback, useRef } from "react";
-
-import type { RouterInputs } from "~/trpc/react";
 import PageTitle from "~/components/PageTitle";
 import { Label } from "~/components/ui/label";
 import {
@@ -14,7 +11,7 @@ import {
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import { Switch } from "~/components/ui/switch";
-import { api } from "~/trpc/react";
+import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
 import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 
 const voices: { voice: string; name: string }[] = [
@@ -27,79 +24,15 @@ const voices: { voice: string; name: string }[] = [
 ];
 
 export default function AudioSettings() {
-  const utils = api.useUtils();
-  const userSettings = api.userSettings.getUserSettings.useQuery();
-  const updateUserSettingsMut =
-    api.userSettings.updateUserSettings.useMutation();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const debouncedUpdateUserSettings = useCallback(
-    (settings: RouterInputs["userSettings"]["updateUserSettings"]) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        updateUserSettingsMut.mutate(settings);
-      }, 300);
-    },
-    [updateUserSettingsMut],
+  const ttsSpeed = useUserSettingsStore((state) => state.userSettings.ttsSpeed);
+  const ttsVoice = useUserSettingsStore((state) => state.userSettings.ttsVoice);
+  const autoPlayAudio = useUserSettingsStore(
+    (state) => state.userSettings.autoPlayAudio,
   );
-
-  const handleChangeAutoPlay = useCallback(
-    (autoPlayAudio: boolean) => {
-      if (!userSettings.isSuccess) {
-        return;
-      }
-      updateUserSettingsMut.mutate({ autoPlayAudio });
-      utils.userSettings.getUserSettings.setData(undefined, {
-        ...userSettings.data,
-        autoPlayAudio,
-      });
-    },
-    [
-      updateUserSettingsMut,
-      userSettings.data,
-      userSettings.isSuccess,
-      utils.userSettings.getUserSettings,
-    ],
-  );
-
-  const handleChangeTtsVoice = useCallback(
-    (ttsVoice: string) => {
-      if (!userSettings.isSuccess) {
-        return;
-      }
-      updateUserSettingsMut.mutate({ ttsVoice });
-      utils.userSettings.getUserSettings.setData(undefined, {
-        ...userSettings.data,
-        ttsVoice,
-      });
-    },
-    [
-      updateUserSettingsMut,
-      userSettings.data,
-      userSettings.isSuccess,
-      utils.userSettings.getUserSettings,
-    ],
-  );
-
-  const handleChangeTtsSpeed = useCallback(
-    (ttsSpeed: number) => {
-      if (!userSettings.isSuccess) {
-        return;
-      }
-      debouncedUpdateUserSettings({ ttsSpeed });
-      utils.userSettings.getUserSettings.setData(undefined, {
-        ...userSettings.data,
-        ttsSpeed,
-      });
-    },
-    [
-      debouncedUpdateUserSettings,
-      userSettings.data,
-      userSettings.isSuccess,
-      utils.userSettings.getUserSettings,
-    ],
+  const setTtsSpeed = useUserSettingsStore((state) => state.setTtsSpeed);
+  const setTtsVoice = useUserSettingsStore((state) => state.setTtsVoice);
+  const setAutoPlayAudio = useUserSettingsStore(
+    (state) => state.setAutoPlayAudio,
   );
 
   return (
@@ -113,9 +46,9 @@ export default function AudioSettings() {
           Auto Play
         </Label>
         <Switch
-          checked={userSettings.data?.autoPlayAudio}
+          checked={autoPlayAudio}
           id="auto-play"
-          onCheckedChange={handleChangeAutoPlay}
+          onCheckedChange={setAutoPlayAudio}
         />
       </div>
 
@@ -125,10 +58,7 @@ export default function AudioSettings() {
         <Label htmlFor="voice" className="flex-1 truncate">
           Voice
         </Label>
-        <Select
-          value={userSettings.data?.ttsVoice}
-          onValueChange={handleChangeTtsVoice}
-        >
+        <Select value={ttsVoice} onValueChange={setTtsVoice}>
           <SelectTrigger id="voice" className="w-48">
             <SelectValue />
           </SelectTrigger>
@@ -146,12 +76,12 @@ export default function AudioSettings() {
 
       <div className="flex items-center">
         <Label htmlFor="speed" className="flex-1 truncate">
-          Speed ({userSettings.data?.ttsSpeed}x)
+          Speed ({ttsSpeed}x)
         </Label>
 
         <Select
-          value={String(userSettings.data?.ttsSpeed)}
-          onValueChange={(value) => handleChangeTtsSpeed(Number(value))}
+          value={String(ttsSpeed)}
+          onValueChange={(value) => setTtsSpeed(Number(value))}
         >
           <SelectTrigger id="voice" className="w-48">
             <SelectValue />
