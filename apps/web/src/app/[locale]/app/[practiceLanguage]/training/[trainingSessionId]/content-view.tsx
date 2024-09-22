@@ -35,7 +35,9 @@ export default function ContentView() {
   const trainingSessionId = useTrainingSessionStore(
     (state) => state.trainingSession.id,
   );
-  const sentenceIndex = useTrainingSessionStore((state) => state.sentenceIndex);
+  const sentenceIndex = useTrainingSessionStore(
+    (state) => state.trainingSession.sentenceIndex,
+  );
 
   const userSettings = api.userSettings.getUserSettings.useQuery();
   const [speed, setSpeed] = useState(userSettings.data?.ttsSpeed);
@@ -48,21 +50,6 @@ export default function ContentView() {
 
   const updateUserSettingsMut =
     api.userSettings.updateUserSettings.useMutation();
-
-  const updateTrainingSessionMut =
-    api.trainingSessions.updateTrainingSession.useMutation({
-      onMutate: () => {
-        return { sentenceIndex };
-      },
-      onError: (error, _, ctx) => {
-        toast("Faield to change sentence Index", {
-          description: error.message,
-        });
-        if (ctx) {
-          changeSentenceIndex(ctx.sentenceIndex);
-        }
-      },
-    });
 
   const generateMoreSentencesMut =
     api.sentences.generateMoreSentences.useMutation({
@@ -107,17 +94,12 @@ export default function ContentView() {
     }
     const newSentenceIndex = sentenceIndex + 1;
     changeSentenceIndex(newSentenceIndex);
-    updateTrainingSessionMut.mutate({
-      trainingSessionId,
-      data: { sentenceIndex: newSentenceIndex },
-    });
   }, [
     sentencesQuery.isSuccess,
     sentencesQuery.data?.length,
     generateMoreSentencesMut,
     sentenceIndex,
     changeSentenceIndex,
-    updateTrainingSessionMut,
     trainingSessionId,
     promptTemplate,
   ]);
@@ -129,17 +111,7 @@ export default function ContentView() {
     }
     const newSentenceIndex = sentenceIndex - 1;
     changeSentenceIndex(newSentenceIndex);
-    updateTrainingSessionMut.mutate({
-      trainingSessionId,
-      data: { sentenceIndex: newSentenceIndex },
-    });
-  }, [
-    sentencesQuery.isSuccess,
-    sentenceIndex,
-    changeSentenceIndex,
-    updateTrainingSessionMut,
-    trainingSessionId,
-  ]);
+  }, [sentencesQuery.isSuccess, sentenceIndex, changeSentenceIndex]);
 
   useEffect(() => {
     if (

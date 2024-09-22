@@ -1,3 +1,4 @@
+import { produce } from "immer";
 import { createStore } from "zustand/vanilla";
 
 import type { TrainingSession } from "@acme/db/schema";
@@ -5,7 +6,6 @@ import type { TrainingSession } from "@acme/db/schema";
 interface TrainingSessionState {
   promptTemplate: string;
   trainingSession: TrainingSession;
-  sentenceIndex: number;
   inspectedWord: string | null;
   inspectionPanelOpen: boolean;
   fontSize: number;
@@ -13,7 +13,6 @@ interface TrainingSessionState {
 
 interface TrainingSessionActions {
   setPromptTemplate: (template: string) => void;
-  setTrainingSession: (trainingSession: Partial<TrainingSession>) => void;
   changeSentenceIndex: (sentenceIndex: number) => void;
   setInspectedWord: (inspectedWord: string | null) => void;
   setInspectionPanelOpen: (sidebarOpen: boolean) => void;
@@ -24,28 +23,18 @@ export type TrainingSessionStore = TrainingSessionState &
   TrainingSessionActions;
 
 export const createTrainingSessionStore = (initState: TrainingSessionState) => {
-  return createStore<TrainingSessionStore>()((set, get) => ({
+  return createStore<TrainingSessionStore>()((set) => ({
     ...initState,
     setPromptTemplate: (promptTemplate) => {
       set({ promptTemplate });
       localStorage.setItem("prompt_template", promptTemplate);
     },
-    setTrainingSession: (trainingSession) => {
-      set({
-        trainingSession: {
-          ...get().trainingSession,
-          ...trainingSession,
-        },
-      });
-    },
     changeSentenceIndex: (sentenceIndex: number) => {
-      set({
-        sentenceIndex,
-        trainingSession: {
-          ...get().trainingSession,
-          sentenceIndex,
-        },
-      });
+      set(
+        produce((state: TrainingSessionStore) => {
+          state.trainingSession.sentenceIndex = sentenceIndex;
+        }),
+      );
     },
     setFontSize: (fontSize) => {
       set({ fontSize });
@@ -88,7 +77,6 @@ export const initTrainingSessionStore = ({
   trainingSession,
 }: InitTrainingSessionStateProps): TrainingSessionState => {
   return {
-    sentenceIndex: trainingSession.sentenceIndex,
     trainingSession,
     promptTemplate:
       localStorage.getItem("prompt_template") ?? DEFAULT_PROMPT_TEMPLATE,

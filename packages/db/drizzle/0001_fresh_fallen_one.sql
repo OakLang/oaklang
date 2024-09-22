@@ -1,0 +1,1 @@
+ALTER TABLE "training_session" ALTER COLUMN "title" SET NOT NULL;

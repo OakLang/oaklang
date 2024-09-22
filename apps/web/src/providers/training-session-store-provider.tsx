@@ -1,14 +1,19 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { useStore } from "zustand";
 
-import type { TrainingSession } from "@acme/db/schema";
+import type {
+  TrainingSession,
+  UpdateTrainingSessionInput,
+} from "@acme/db/schema";
 
 import type { TrainingSessionStore } from "~/store/training-session-store";
 import {
   createTrainingSessionStore,
   initTrainingSessionStore,
 } from "~/store/training-session-store";
+import { api } from "~/trpc/react";
 
 export type TrainingSessionStoreApi = ReturnType<
   typeof createTrainingSessionStore
@@ -33,6 +38,72 @@ export default function TrainingSessionStoreProvider({
       initTrainingSessionStore({ trainingSession }),
     );
   }
+
+  const updateTrainingSessionMut =
+    api.trainingSessions.updateTrainingSession.useMutation({
+      onMutate: () => {
+        return { trainingSession };
+      },
+      onError: (error, _, ctx) => {
+        toast("Faield to change sentence Index", {
+          description: error.message,
+        });
+        if (ctx) {
+          storeRef.current?.setState((state) => ({
+            ...state,
+            trainingSession: ctx.trainingSession,
+          }));
+        }
+      },
+    });
+
+  useEffect(() => {
+    if (!storeRef.current) {
+      return;
+    }
+
+    const unsub = storeRef.current.subscribe((state, prevState) => {
+      let updateData: UpdateTrainingSessionInput = {};
+
+      if (
+        state.trainingSession.sentenceIndex !==
+        prevState.trainingSession.sentenceIndex
+      ) {
+        updateData = {
+          ...updateData,
+          sentenceIndex: state.trainingSession.sentenceIndex,
+        };
+      }
+
+      if (state.trainingSession.title !== prevState.trainingSession.title) {
+        updateData = {
+          ...updateData,
+          title: state.trainingSession.title,
+        };
+      }
+
+      if (
+        state.trainingSession.complexity !==
+        prevState.trainingSession.complexity
+      ) {
+        updateData = {
+          ...updateData,
+          complexity: state.trainingSession.complexity,
+        };
+      }
+
+      if (Object.keys(updateData).length !== 0) {
+        updateTrainingSessionMut.mutate({
+          trainingSessionId: state.trainingSession.id,
+          data: updateData,
+        });
+      }
+    });
+
+    return () => {
+      unsub();
+    };
+  }, [updateTrainingSessionMut]);
 
   return (
     <TrainingSessionStoreContext.Provider value={storeRef.current}>
