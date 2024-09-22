@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import NextAuth from "next-auth";
 import createMiddleware from "next-intl/middleware";
 
@@ -9,11 +10,30 @@ const { auth } = NextAuth(authConfig);
 
 const intlMiddleware = createMiddleware(routing);
 
-export default auth((req) => {
+const authMiddleware = auth((req) => {
   return intlMiddleware(req);
 });
 
-// Read more: https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
+const publicPages = ["/", "/login"];
+
+export default function middleware(req: NextRequest) {
+  const publicPathnameRegex = RegExp(
+    `^(/(${routing.locales.join("|")}))?(${publicPages
+      .flatMap((p) => (p === "/" ? ["", "/"] : p))
+      .join("|")})/?$`,
+    "i",
+  );
+  const isPublicPage = publicPathnameRegex.test(req.nextUrl.pathname);
+
+  if (isPublicPage) {
+    return intlMiddleware(req);
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    return (authMiddleware as any)(req);
+  }
+}
+
 export const config = {
-  matcher: ["/", "/(de|en)/:path*"],
+  // Skip all paths that should not be internationalized
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };
