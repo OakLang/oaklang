@@ -3,12 +3,14 @@ import { z } from "zod";
 
 import { and, desc, eq } from "@acme/db";
 import {
-  createTrainingSessionInput,
   languages,
   practiceLanguages,
   trainingSessions,
-  updateTrainingSessionInput,
 } from "@acme/db/schema";
+import {
+  createTrainingSessionInput,
+  updateTrainingSessionInput,
+} from "@acme/db/validators";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getTrainingSessionOrThrow } from "../utils";
@@ -84,7 +86,7 @@ export const trainingSessionsRouter = createTRPCRouter({
         .values({
           languageCode: language.code,
           complexity: opts.input.complexity,
-          title: opts.input.title ?? `Learn ${language.name}`,
+          title: opts.input.title,
           userId: opts.ctx.session.user.id,
         })
         .returning();

@@ -6,7 +6,8 @@
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./schema": "./src/schema/index.ts",
-    "./env": "./src/env.ts"
+    "./env": "./src/env.ts",
+    "./validators": "./src/validators.ts"
   },
   "license": "MIT",
   "scripts": {

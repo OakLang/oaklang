@@ -4,7 +4,8 @@
   "type": "module",
   "exports": {
     "./types": "./src/types/index.ts",
-    "./validators": "./src/validators/index.ts"
+    "./validators": "./src/validators/index.ts",
+    "./constants": "./src/constants/index.ts"
   },
   "license": "MIT",
   "scripts": {

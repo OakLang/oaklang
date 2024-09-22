@@ -1,6 +1,6 @@
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+
+import { COMPLEXITY_LIST } from "@acme/core/constants";
 
 import { createPrefixedId } from "../utils";
 import { users } from "./auth";
@@ -16,7 +16,7 @@ export const trainingSessions = pgTable("training_session", {
     .references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   sentenceIndex: integer("sentence_index").notNull().default(0),
-  complexity: text("complexity", { enum: ["A1", "A2", "B1", "B2", "C1", "C2"] })
+  complexity: text("complexity", { enum: COMPLEXITY_LIST })
     .notNull()
     .default("A1"),
   languageCode: text("language_code")
@@ -25,25 +25,3 @@ export const trainingSessions = pgTable("training_session", {
 });
 
 export type TrainingSession = typeof trainingSessions.$inferSelect;
-
-export const createTrainingSessionInput = createInsertSchema(trainingSessions, {
-  title: z.string().optional(),
-}).pick({
-  title: true,
-  complexity: true,
-  languageCode: true,
-});
-export type CreateTrainingSessionInput = z.infer<
-  typeof createTrainingSessionInput
->;
-
-export const updateTrainingSessionInput = createInsertSchema(trainingSessions)
-  .partial()
-  .pick({
-    title: true,
-    complexity: true,
-    sentenceIndex: true,
-  });
-export type UpdateTrainingSessionInput = z.infer<
-  typeof updateTrainingSessionInput
->;
