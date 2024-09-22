@@ -8,7 +8,7 @@ import type { InterlinearLine } from "@acme/core/validators";
 import type { Sentence } from "@acme/db/schema";
 
 import { Link } from "~/i18n/routing";
-import { useTrainingSession } from "~/providers/TrainingSessionProvider";
+import { useTrainingSessionStore } from "~/providers/training-session-store-provider";
 import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
@@ -22,7 +22,14 @@ export default function InterlinearView({
   sentences: Sentence[];
 }) {
   const [showTranslation, setShowTranslation] = useState(false);
-  const { setInspectedWord, fontSize, trainingSession } = useTrainingSession();
+  const trainingSession = useTrainingSessionStore(
+    (state) => state.trainingSession,
+  );
+  const fontSize = useTrainingSessionStore((state) => state.fontSize);
+  const setInspectedWord = useTrainingSessionStore(
+    (state) => state.setInspectedWord,
+  );
+
   const userSettings = api.userSettings.getUserSettings.useQuery();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -120,7 +127,10 @@ export default function InterlinearView({
 }
 
 function Word({ line, word }: { word: string; line: InterlinearLine }) {
-  const { setInspectedWord, inspectedWord } = useTrainingSession();
+  const inspectedWord = useTrainingSessionStore((state) => state.inspectedWord);
+  const setInspectedWord = useTrainingSessionStore(
+    (state) => state.setInspectedWord,
+  );
 
   const onClick = useCallback(
     (e: MouseEvent<HTMLSpanElement>) => {

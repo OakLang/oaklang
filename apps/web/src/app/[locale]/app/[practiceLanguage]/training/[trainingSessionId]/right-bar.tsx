@@ -1,10 +1,13 @@
 "use client";
 
 import WordInspectionPanel from "~/components/WordInspectionPanel";
-import { useTrainingSession } from "~/providers/TrainingSessionProvider";
+import { useTrainingSessionStore } from "~/providers/training-session-store-provider";
 
 export default function RightBar() {
-  const { sidebarOpen, inspectedWord } = useTrainingSession();
+  const sidebarOpen = useTrainingSessionStore(
+    (state) => state.inspectionPanelOpen,
+  );
+  const inspectedWord = useTrainingSessionStore((state) => state.inspectedWord);
 
   if (!sidebarOpen) {
     return null;

@@ -31,16 +31,21 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { Link } from "~/i18n/routing";
-import { useTrainingSession } from "~/providers/TrainingSessionProvider";
+import { useTrainingSessionStore } from "~/providers/training-session-store-provider";
 
 export default function TopBar() {
-  const {
-    trainingSession,
-    sidebarOpen,
-    setSidebarOpen,
-    fontSize,
-    setFontSize,
-  } = useTrainingSession();
+  const trainingSession = useTrainingSessionStore(
+    (state) => state.trainingSession,
+  );
+  const inspectionPanelOpen = useTrainingSessionStore(
+    (state) => state.inspectionPanelOpen,
+  );
+  const setInspectionPanelOpen = useTrainingSessionStore(
+    (state) => state.setInspectionPanelOpen,
+  );
+  const fontSize = useTrainingSessionStore((state) => state.fontSize);
+  const setFontSize = useTrainingSessionStore((state) => state.setFontSize);
+
   const { practiceLanguage } = useParams<{
     practiceLanguage: string;
   }>();
@@ -140,20 +145,20 @@ export default function TopBar() {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={() => setInspectionPanelOpen(!inspectionPanelOpen)}
             >
-              {sidebarOpen ? (
+              {inspectionPanelOpen ? (
                 <SidebarCloseIcon className="h-5 w-5 rotate-180" />
               ) : (
                 <SidebarOpenIcon className="h-5 w-5 rotate-180" />
               )}
               <div className="sr-only">
-                {sidebarOpen ? "Colapse Sidebar" : "Expand sidebar"}
+                {inspectionPanelOpen ? "Colapse Sidebar" : "Expand sidebar"}
               </div>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {sidebarOpen ? "Colapse Sidebar" : "Expand sidebar"}
+            {inspectionPanelOpen ? "Colapse Sidebar" : "Expand sidebar"}
           </TooltipContent>
         </Tooltip>
       </div>

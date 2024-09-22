@@ -86,7 +86,8 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.4.5",
     "usehooks-ts": "^3.1.0",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zustand": "^5.0.0-rc.2"
   },
   "ct3aMetadata": {
     "initVersion": "7.17.0"

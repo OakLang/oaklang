@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-// import { useAtom } from "jotai";
 import { Loader2, PlayIcon, SquareIcon } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
 
@@ -8,8 +7,6 @@ import type { Sentence } from "@acme/db/schema";
 
 import type { TTSBodyParams } from "~/app/api/ai/tts/route";
 import { useHotkeysTooltipProps } from "~/hooks/useHotkeysTooltipProps";
-// import { useTrainingSession } from "~/providers/TrainingSessionProvider";
-// import { knownIPAsAtom, knownTranslationsAtom } from "~/store";
 import { api } from "~/trpc/react";
 import { getCSSStyleForInterlinearLine } from "~/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -36,12 +33,6 @@ const generateAudioAsync = async ({ input }: { input: string }) => {
 };
 
 export default function InterlinearList({ sentence }: { sentence: Sentence }) {
-  // const { knownWords, setKnownWords, practiceWords, setPracticeWords } =
-  //   useTrainingSession();
-  // const [knownIPAs, setKnownIPAs] = useAtom(knownIPAsAtom);
-  // const [knownTranslations, setKnownTranslations] = useAtom(
-  //   knownTranslationsAtom,
-  // );
   const [isPaused, setIsPaused] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playCount, setPlayCount] = useState(0);

@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import FullScreenLoader from "~/app/full-screen-loader";
 import { Button } from "~/components/ui/button";
 import { Link } from "~/i18n/routing";
-import TrainingSessionProvider from "~/providers/TrainingSessionProvider";
+import TrainingSessionStoreProvider from "~/providers/training-session-store-provider";
 import { api } from "~/trpc/react";
 
 export default function TrainingLayout({ children }: { children: ReactNode }) {
@@ -30,9 +30,9 @@ export default function TrainingLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <TrainingSessionProvider trainingSession={trainingSessionQuery.data}>
+    <TrainingSessionStoreProvider trainingSession={trainingSessionQuery.data}>
       {children}
-    </TrainingSessionProvider>
+    </TrainingSessionStoreProvider>
   );
 }
 

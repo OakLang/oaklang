@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAtomValue } from "jotai";
 import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,27 +19,50 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { useTrainingSession } from "~/providers/TrainingSessionProvider";
-import { promptAtom } from "~/store";
+import { useTrainingSessionStore } from "~/providers/training-session-store-provider";
 import { api } from "~/trpc/react";
 import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 
 export default function ContentView() {
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
     useState(false);
-  const { trainingSession, changeSentenceIndex } = useTrainingSession();
+  const changeSentenceIndex = useTrainingSessionStore(
+    (state) => state.changeSentenceIndex,
+  );
+  const promptTemplate = useTrainingSessionStore(
+    (state) => state.promptTemplate,
+  );
+  const trainingSessionId = useTrainingSessionStore(
+    (state) => state.trainingSession.id,
+  );
+  const sentenceIndex = useTrainingSessionStore((state) => state.sentenceIndex);
+
   const userSettings = api.userSettings.getUserSettings.useQuery();
   const [speed, setSpeed] = useState(userSettings.data?.ttsSpeed);
-  const promptTemplate = useAtomValue(promptAtom);
 
   const utils = api.useUtils();
 
   const sentencesQuery = api.sentences.getSentences.useQuery({
-    trainingSessionId: trainingSession.id,
+    trainingSessionId,
   });
 
   const updateUserSettingsMut =
     api.userSettings.updateUserSettings.useMutation();
+
+  const updateTrainingSessionMut =
+    api.trainingSessions.updateTrainingSession.useMutation({
+      onMutate: () => {
+        return { sentenceIndex };
+      },
+      onError: (error, _, ctx) => {
+        toast("Faield to change sentence Index", {
+          description: error.message,
+        });
+        if (ctx) {
+          changeSentenceIndex(ctx.sentenceIndex);
+        }
+      },
+    });
 
   const generateMoreSentencesMut =
     api.sentences.generateMoreSentences.useMutation({
@@ -49,7 +71,6 @@ export default function ContentView() {
           { trainingSessionId },
           (sentences) => [...(sentences ?? []), ...data],
         );
-        void utils.sentences.getSentences.invalidate();
       },
       onError: (error) => {
         toast("Failed to generate sentences", { description: error.message });
@@ -57,8 +78,8 @@ export default function ContentView() {
     });
 
   const currentSentence = useMemo(
-    () => sentencesQuery.data?.[trainingSession.sentenceIndex],
-    [sentencesQuery.data, trainingSession.sentenceIndex],
+    () => sentencesQuery.data?.[sentenceIndex],
+    [sentencesQuery.data, sentenceIndex],
   );
 
   const handleTTSSpeedChange = useCallback(
@@ -73,38 +94,51 @@ export default function ContentView() {
     if (!sentencesQuery.isSuccess) return;
     if (
       !generateMoreSentencesMut.isPending &&
-      trainingSession.sentenceIndex >= sentencesQuery.data.length - 3
+      sentenceIndex >= sentencesQuery.data.length - 3
     ) {
       generateMoreSentencesMut.mutate({
-        trainingSessionId: trainingSession.id,
+        trainingSessionId,
         promptTemplate,
       });
     }
-    if (trainingSession.sentenceIndex >= sentencesQuery.data.length) {
+    if (sentenceIndex >= sentencesQuery.data.length) {
       console.log("Can not go next");
       return;
     }
-    changeSentenceIndex(trainingSession.sentenceIndex + 1);
+    const newSentenceIndex = sentenceIndex + 1;
+    changeSentenceIndex(newSentenceIndex);
+    updateTrainingSessionMut.mutate({
+      trainingSessionId,
+      data: { sentenceIndex: newSentenceIndex },
+    });
   }, [
-    changeSentenceIndex,
-    generateMoreSentencesMut,
-    sentencesQuery.data?.length,
     sentencesQuery.isSuccess,
-    trainingSession.id,
-    trainingSession.sentenceIndex,
+    sentencesQuery.data?.length,
+    generateMoreSentencesMut,
+    sentenceIndex,
+    changeSentenceIndex,
+    updateTrainingSessionMut,
+    trainingSessionId,
     promptTemplate,
   ]);
 
   const handlePrevious = useCallback(() => {
     if (!sentencesQuery.isSuccess) return;
-    if (trainingSession.sentenceIndex <= 0) {
+    if (sentenceIndex <= 0) {
       return;
     }
-    changeSentenceIndex(trainingSession.sentenceIndex - 1);
+    const newSentenceIndex = sentenceIndex - 1;
+    changeSentenceIndex(newSentenceIndex);
+    updateTrainingSessionMut.mutate({
+      trainingSessionId,
+      data: { sentenceIndex: newSentenceIndex },
+    });
   }, [
-    changeSentenceIndex,
     sentencesQuery.isSuccess,
-    trainingSession.sentenceIndex,
+    sentenceIndex,
+    changeSentenceIndex,
+    updateTrainingSessionMut,
+    trainingSessionId,
   ]);
 
   useEffect(() => {
@@ -116,7 +150,7 @@ export default function ContentView() {
     ) {
       setInitialGenerateSentencesCalled(true);
       generateMoreSentencesMut.mutate({
-        trainingSessionId: trainingSession.id,
+        trainingSessionId,
         promptTemplate,
       });
     }
@@ -125,7 +159,7 @@ export default function ContentView() {
     initialGenerateSentencesCalled,
     sentencesQuery.data?.length,
     sentencesQuery.isSuccess,
-    trainingSession.id,
+    trainingSessionId,
     promptTemplate,
   ]);
 
@@ -144,9 +178,7 @@ export default function ContentView() {
               variant="ghost"
               className="text-muted-foreground h-full w-12"
               size="icon"
-              disabled={
-                sentencesQuery.isSuccess && trainingSession.sentenceIndex <= 0
-              }
+              disabled={sentencesQuery.isSuccess && sentenceIndex <= 0}
               onClick={handlePrevious}
             >
               <ChevronLeftIcon className="h-8 w-8" />
@@ -211,7 +243,7 @@ export default function ContentView() {
               size="icon"
               disabled={
                 sentencesQuery.isSuccess &&
-                trainingSession.sentenceIndex >= sentencesQuery.data.length
+                sentenceIndex >= sentencesQuery.data.length
               }
               onClick={handleNext}
             >
