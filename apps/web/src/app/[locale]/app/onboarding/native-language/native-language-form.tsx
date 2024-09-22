@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Skeleton } from "~/components/ui/skeleton";
-import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
+import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
 
 export default function NativeLanguageForm() {
@@ -27,9 +27,7 @@ export default function NativeLanguageForm() {
     [languagesQuery.data, nativeLanguageCode],
   );
 
-  const setNativeLanguage = useUserSettingsStore(
-    (state) => state.setNativeLanguage,
-  );
+  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
 
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
@@ -38,9 +36,11 @@ export default function NativeLanguageForm() {
         return;
       }
       setIsLoading(true);
-      setNativeLanguage(nativeLanguage.code);
+      updateUserSettingsMutation.mutate({
+        nativeLanguage: nativeLanguage.code,
+      });
     },
-    [nativeLanguage, setNativeLanguage],
+    [nativeLanguage, updateUserSettingsMutation],
   );
 
   return (

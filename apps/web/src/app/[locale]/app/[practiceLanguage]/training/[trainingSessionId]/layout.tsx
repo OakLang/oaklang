@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import FullScreenLoader from "~/app/full-screen-loader";
 import { Button } from "~/components/ui/button";
 import { Link } from "~/i18n/routing";
-import TrainingSessionStoreProvider from "~/providers/training-session-store-provider";
+import AppStoreProvider from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
 
 export default function TrainingLayout({ children }: { children: ReactNode }) {
@@ -14,9 +14,8 @@ export default function TrainingLayout({ children }: { children: ReactNode }) {
     trainingSessionId: string;
     practiceLanguage: string;
   }>();
-  const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
-    { trainingSessionId },
-  );
+  const trainingSessionQuery =
+    api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
 
   if (trainingSessionQuery.isPending) {
     return <FullScreenLoader />;
@@ -29,11 +28,7 @@ export default function TrainingLayout({ children }: { children: ReactNode }) {
     return <NotFound />;
   }
 
-  return (
-    <TrainingSessionStoreProvider trainingSession={trainingSessionQuery.data}>
-      {children}
-    </TrainingSessionStoreProvider>
-  );
+  return <AppStoreProvider>{children}</AppStoreProvider>;
 }
 
 function NotFound() {

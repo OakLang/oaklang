@@ -1,40 +1,27 @@
-import { produce } from "immer";
 import { createStore } from "zustand/vanilla";
 
-import type { TrainingSession } from "@acme/db/schema";
-
-interface TrainingSessionState {
+interface AppState {
   promptTemplate: string;
-  trainingSession: TrainingSession;
   inspectedWord: string | null;
   inspectionPanelOpen: boolean;
   fontSize: number;
 }
 
-interface TrainingSessionActions {
+interface AppActions {
   setPromptTemplate: (template: string) => void;
-  setSentenceIndex: (sentenceIndex: number) => void;
   setInspectedWord: (inspectedWord: string | null) => void;
   setInspectionPanelOpen: (sidebarOpen: boolean) => void;
   setFontSize: (fontSize: number) => void;
 }
 
-export type TrainingSessionStore = TrainingSessionState &
-  TrainingSessionActions;
+export type AppStore = AppState & AppActions;
 
-export const createTrainingSessionStore = (initState: TrainingSessionState) => {
-  return createStore<TrainingSessionStore>()((set) => ({
+export const createAppStore = (initState: AppState) => {
+  return createStore<AppStore>()((set) => ({
     ...initState,
     setPromptTemplate: (promptTemplate) => {
       set({ promptTemplate });
       localStorage.setItem("prompt_template", promptTemplate);
-    },
-    setSentenceIndex: (sentenceIndex) => {
-      set(
-        produce((state: TrainingSessionStore) => {
-          state.trainingSession.sentenceIndex = sentenceIndex;
-        }),
-      );
     },
     setFontSize: (fontSize) => {
       set({ fontSize });
@@ -53,11 +40,7 @@ export const createTrainingSessionStore = (initState: TrainingSessionState) => {
   }));
 };
 
-export interface InitTrainingSessionStateProps {
-  trainingSession: TrainingSession;
-}
-
-const DEFAULT_PROMPT_TEMPLATE = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary.
+export const DEFAULT_PROMPT_TEMPLATE = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary.
 
 Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an {{COMPLEXITY}} {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTICE_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list. Also make sure not to regenerate previously generated sentences.
 
@@ -73,11 +56,8 @@ PREVIOUSLY GENERATED SENTENCES: """
 {{PREVIOUSLY_GENERATED_SENTENCES}}
 """`;
 
-export const initTrainingSessionStore = ({
-  trainingSession,
-}: InitTrainingSessionStateProps): TrainingSessionState => {
+export const initAppStore = (): AppState => {
   return {
-    trainingSession,
     promptTemplate:
       localStorage.getItem("prompt_template") ?? DEFAULT_PROMPT_TEMPLATE,
     inspectedWord: null,

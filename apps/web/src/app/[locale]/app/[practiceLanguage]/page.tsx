@@ -90,7 +90,7 @@ export default function AppPage() {
               href={`/app/${item.languageCode}/training/${item.id}`}
               className="hover:bg-secondary/50 block rounded-md p-4"
             >
-              <p>{item.title ?? "Untitled"}</p>
+              <p>{item.title}</p>
               <p className="text-muted-foreground text-sm">
                 <span>
                   {t("started")}{" "}

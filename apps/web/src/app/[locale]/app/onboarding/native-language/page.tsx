@@ -4,24 +4,22 @@ import { useEffect } from "react";
 
 import FullScreenLoader from "~/app/full-screen-loader";
 import { useRouter } from "~/i18n/routing";
-import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
+import { api } from "~/trpc/react";
 import { OnboardingRoutes } from "~/utils/constants";
 import NativeLanguageForm from "./native-language-form";
 
 export default function OnboardingNativeLanguagePage() {
-  const nativeLanguage = useUserSettingsStore(
-    (state) => state.userSettings.nativeLanguage,
-  );
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const nextPath = OnboardingRoutes.practiceLanguage;
   const router = useRouter();
 
   useEffect(() => {
-    if (nativeLanguage) {
+    if (userSettingsQuery.data?.nativeLanguage) {
       router.replace(nextPath);
     }
-  }, [nextPath, router, nativeLanguage]);
+  }, [nextPath, router, userSettingsQuery.data?.nativeLanguage]);
 
-  if (nativeLanguage) {
+  if (!userSettingsQuery.isSuccess || userSettingsQuery.data.nativeLanguage) {
     return <FullScreenLoader />;
   }
 

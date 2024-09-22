@@ -4,42 +4,47 @@ import { useEffect } from "react";
 
 import FullScreenLoader from "~/app/full-screen-loader";
 import { useRouter } from "~/i18n/routing";
-import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
 import { api } from "~/trpc/react";
 import { OnboardingRoutes } from "~/utils/constants";
 import PracticeLanguageForm from "./practice-language-form";
 
 export default function OnboardinPracticeLanguagePage() {
-  const nativeLanguage = useUserSettingsStore(
-    (state) => state.userSettings.nativeLanguage,
-  );
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const lastPracticedLanguage = api.languages.getLastPracticeLanguage.useQuery(
     undefined,
     {
-      enabled: !!nativeLanguage,
+      enabled: !!userSettingsQuery.data?.nativeLanguage,
     },
   );
 
   const router = useRouter();
 
   useEffect(() => {
-    if (!nativeLanguage) {
+    if (userSettingsQuery.isSuccess && !userSettingsQuery.data.nativeLanguage) {
       router.replace(OnboardingRoutes.nativeLanguage);
     }
-  }, [router, nativeLanguage]);
+  }, [
+    router,
+    userSettingsQuery.isSuccess,
+    userSettingsQuery.data?.nativeLanguage,
+  ]);
 
   useEffect(() => {
-    if (lastPracticedLanguage.isSuccess && lastPracticedLanguage.data) {
+    if (lastPracticedLanguage.data) {
       router.replace(`/app/${lastPracticedLanguage.data.languageCode}`);
     }
-  }, [lastPracticedLanguage.data, lastPracticedLanguage.isSuccess, router]);
+  }, [lastPracticedLanguage.data, router]);
+
+  if (
+    lastPracticedLanguage.isPending ||
+    userSettingsQuery.isPending ||
+    lastPracticedLanguage.data
+  ) {
+    return <FullScreenLoader />;
+  }
 
   if (lastPracticedLanguage.isError) {
     return <p>{lastPracticedLanguage.error.message}</p>;
-  }
-
-  if (lastPracticedLanguage.data) {
-    return <FullScreenLoader />;
   }
 
   return (

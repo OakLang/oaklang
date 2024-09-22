@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PlusIcon, RefreshCcwIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,7 +10,7 @@ import InterlinearLineEditor from "~/components/InterlinearLineEditor";
 import PageTitle from "~/components/PageTitle";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
-import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
+import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
 
 export default function ReaderPage() {
@@ -26,14 +26,12 @@ export default function ReaderPage() {
 
 const InterlinearLinesConfigurationSection = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const initInterlinearLines = useUserSettingsStore(
-    (state) => state.userSettings.interlinearLines,
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
+
+  const [interlinearLines, setInterlinearLines] = useState<InterlinearLine[]>(
+    userSettingsQuery.data?.interlinearLines ?? [],
   );
-  const changeInterlinearLines = useUserSettingsStore(
-    (state) => state.setInterlinearLines,
-  );
-  const [interlinearLines, setInterlinearLines] =
-    useState<InterlinearLine[]>(initInterlinearLines);
 
   const resetInterlinearLinesMut =
     api.userSettings.resetInterlinearLines.useMutation({
@@ -42,7 +40,7 @@ const InterlinearLinesConfigurationSection = () => {
       },
       onSuccess: (value) => {
         setInterlinearLines(value);
-        changeInterlinearLines(value);
+        updateUserSettingsMutation.mutate({ interlinearLines: value });
       },
     });
 
@@ -53,7 +51,7 @@ const InterlinearLinesConfigurationSection = () => {
       },
       onSuccess: (value) => {
         setInterlinearLines(value);
-        changeInterlinearLines(value);
+        updateUserSettingsMutation.mutate({ interlinearLines: value });
       },
     });
 
@@ -63,10 +61,10 @@ const InterlinearLinesConfigurationSection = () => {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        changeInterlinearLines(value);
+        updateUserSettingsMutation.mutate({ interlinearLines: value });
       }, 300);
     },
-    [changeInterlinearLines],
+    [updateUserSettingsMutation],
   );
 
   const handleChange = useCallback(
@@ -76,6 +74,12 @@ const InterlinearLinesConfigurationSection = () => {
     },
     [debouncedChange],
   );
+
+  useEffect(() => {
+    if (userSettingsQuery.data?.interlinearLines) {
+      setInterlinearLines(userSettingsQuery.data.interlinearLines);
+    }
+  }, [userSettingsQuery.data?.interlinearLines]);
 
   return (
     <div className="my-8">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,35 +20,31 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { useTrainingSessionStore } from "~/providers/training-session-store-provider";
-import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
+import { useUpdateTrainingSessionMutation } from "~/hooks/useUpdateTrainingSessionMutation";
+import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
+import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
 import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 
 export default function ContentView() {
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
     useState(false);
-  const setSentenceIndex = useTrainingSessionStore(
-    (state) => state.setSentenceIndex,
-  );
-  const promptTemplate = useTrainingSessionStore(
-    (state) => state.promptTemplate,
-  );
-  const trainingSessionId = useTrainingSessionStore(
-    (state) => state.trainingSession.id,
-  );
-  const sentenceIndex = useTrainingSessionStore(
-    (state) => state.trainingSession.sentenceIndex,
-  );
-
-  const ttsSpeed = useUserSettingsStore((state) => state.userSettings.ttsSpeed);
-  const setTtsSpeed = useUserSettingsStore((state) => state.setTtsSpeed);
+  const { trainingSessionId } = useParams<{
+    trainingSessionId: string;
+  }>();
 
   const utils = api.useUtils();
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
+  const trainingSessionQuery =
+    api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
+  const sentencesQuery = api.sentences.getSentences.useQuery(
+    { trainingSessionId },
+    { enabled: trainingSessionQuery.isSuccess },
+  );
+  const updateTrainingSessionMutation = useUpdateTrainingSessionMutation();
 
-  const sentencesQuery = api.sentences.getSentences.useQuery({
-    trainingSessionId,
-  });
+  const promptTemplate = useAppStore((state) => state.promptTemplate);
 
   const generateMoreSentencesMut =
     api.sentences.generateMoreSentences.useMutation({
@@ -62,46 +59,67 @@ export default function ContentView() {
       },
     });
 
-  const currentSentence = useMemo(
-    () => sentencesQuery.data?.[sentenceIndex],
-    [sentencesQuery.data, sentenceIndex],
-  );
+  const currentSentence = useMemo(() => {
+    if (trainingSessionQuery.isSuccess && sentencesQuery.isSuccess) {
+      return sentencesQuery.data[trainingSessionQuery.data.sentenceIndex];
+    }
+  }, [
+    sentencesQuery.data,
+    sentencesQuery.isSuccess,
+    trainingSessionQuery.data?.sentenceIndex,
+    trainingSessionQuery.isSuccess,
+  ]);
 
   const handleNext = useCallback(() => {
-    if (!sentencesQuery.isSuccess) return;
+    if (!sentencesQuery.isSuccess || !trainingSessionQuery.isSuccess) {
+      return;
+    }
     if (
       !generateMoreSentencesMut.isPending &&
-      sentenceIndex >= sentencesQuery.data.length - 3
+      trainingSessionQuery.data.sentenceIndex >= sentencesQuery.data.length - 3
     ) {
       generateMoreSentencesMut.mutate({
         trainingSessionId,
         promptTemplate,
       });
     }
-    if (sentenceIndex >= sentencesQuery.data.length) {
+    if (trainingSessionQuery.data.sentenceIndex >= sentencesQuery.data.length) {
       console.log("Can not go next");
       return;
     }
-    const newSentenceIndex = sentenceIndex + 1;
-    setSentenceIndex(newSentenceIndex);
+    const newSentenceIndex = trainingSessionQuery.data.sentenceIndex + 1;
+    updateTrainingSessionMutation.mutate({
+      trainingSessionId,
+      data: { sentenceIndex: newSentenceIndex },
+    });
   }, [
-    sentencesQuery.isSuccess,
-    sentencesQuery.data?.length,
     generateMoreSentencesMut,
-    sentenceIndex,
-    setSentenceIndex,
+    sentencesQuery.data?.length,
+    sentencesQuery.isSuccess,
     trainingSessionId,
+    trainingSessionQuery.data?.sentenceIndex,
+    trainingSessionQuery.isSuccess,
+    updateTrainingSessionMutation,
     promptTemplate,
   ]);
 
   const handlePrevious = useCallback(() => {
-    if (!sentencesQuery.isSuccess) return;
-    if (sentenceIndex <= 0) {
+    if (!sentencesQuery.isSuccess || !trainingSessionQuery.isSuccess) return;
+    if (trainingSessionQuery.data.sentenceIndex <= 0) {
       return;
     }
-    const newSentenceIndex = sentenceIndex - 1;
-    setSentenceIndex(newSentenceIndex);
-  }, [sentencesQuery.isSuccess, sentenceIndex, setSentenceIndex]);
+    const newSentenceIndex = trainingSessionQuery.data.sentenceIndex - 1;
+    updateTrainingSessionMutation.mutate({
+      trainingSessionId,
+      data: { sentenceIndex: newSentenceIndex },
+    });
+  }, [
+    sentencesQuery.isSuccess,
+    trainingSessionId,
+    trainingSessionQuery.data?.sentenceIndex,
+    trainingSessionQuery.isSuccess,
+    updateTrainingSessionMutation,
+  ]);
 
   useEffect(() => {
     if (
@@ -134,7 +152,11 @@ export default function ContentView() {
               variant="ghost"
               className="text-muted-foreground h-full w-12"
               size="icon"
-              disabled={sentencesQuery.isSuccess && sentenceIndex <= 0}
+              disabled={
+                sentencesQuery.isSuccess &&
+                trainingSessionQuery.isSuccess &&
+                trainingSessionQuery.data.sentenceIndex <= 0
+              }
               onClick={handlePrevious}
             >
               <ChevronLeftIcon className="h-8 w-8" />
@@ -151,12 +173,16 @@ export default function ContentView() {
               <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
                 <AudioPlayButton
                   text={currentSentence.sentence}
-                  speed={ttsSpeed}
+                  speed={userSettingsQuery.data?.ttsSpeed ?? 1}
                 />
                 <Tooltip>
                   <Select
-                    value={String(ttsSpeed)}
-                    onValueChange={(value) => setTtsSpeed(Number(value))}
+                    value={String(userSettingsQuery.data?.ttsSpeed ?? "1")}
+                    onValueChange={(value) =>
+                      updateUserSettingsMutation.mutate({
+                        ttsSpeed: Number(value),
+                      })
+                    }
                   >
                     <TooltipTrigger asChild>
                       <SelectTrigger
@@ -197,7 +223,9 @@ export default function ContentView() {
               size="icon"
               disabled={
                 sentencesQuery.isSuccess &&
-                sentenceIndex >= sentencesQuery.data.length
+                trainingSessionQuery.isSuccess &&
+                trainingSessionQuery.data.sentenceIndex >=
+                  sentencesQuery.data.length
               }
               onClick={handleNext}
             >

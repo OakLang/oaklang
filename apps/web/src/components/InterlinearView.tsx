@@ -2,14 +2,15 @@
 
 import type { MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 
 import type { InterlinearLine } from "@acme/core/validators";
 import type { Sentence } from "@acme/db/schema";
 
 import { Link } from "~/i18n/routing";
-import { useTrainingSessionStore } from "~/providers/training-session-store-provider";
-import { useUserSettingsStore } from "~/providers/user-settings-store-provider";
+import { useAppStore } from "~/providers/app-store-provider";
+import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
 import { Button } from "./ui/button";
@@ -22,19 +23,13 @@ export default function InterlinearView({
   sentences: Sentence[];
 }) {
   const [showTranslation, setShowTranslation] = useState(false);
-  const tsLangaugeCode = useTrainingSessionStore(
-    (state) => state.trainingSession.languageCode,
-  );
-  const fontSize = useTrainingSessionStore((state) => state.fontSize);
-  const setInspectedWord = useTrainingSessionStore(
-    (state) => state.setInspectedWord,
-  );
-  const userNativeLanguage = useUserSettingsStore(
-    (state) => state.userSettings.nativeLanguage,
-  );
-  const interlinearLines = useUserSettingsStore(
-    (state) => state.userSettings.interlinearLines,
-  );
+  const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
+  const trainingSessionQuery =
+    api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
+
+  const fontSize = useAppStore((state) => state.fontSize);
+  const setInspectedWord = useAppStore((state) => state.setInspectedWord);
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -70,7 +65,7 @@ export default function InterlinearView({
           sentence.words.map((word) => {
             return (
               <span className="mb-4 mr-4 inline-flex flex-col gap-2">
-                {interlinearLines.map((line) => {
+                {userSettingsQuery.data?.interlinearLines.map((line) => {
                   const value = word[line.name];
                   if (!value) {
                     return null;
@@ -115,7 +110,7 @@ export default function InterlinearView({
                 asChild
               >
                 <Link
-                  href={`https://translate.google.com/?sl=${tsLangaugeCode}&tl=${userNativeLanguage}&text=${sentences.map((sent) => sent.sentence).join(" ")}&op=translate`}
+                  href={`https://translate.google.com/?sl=${trainingSessionQuery.data?.languageCode}&tl=${userSettingsQuery.data?.nativeLanguage}&text=${sentences.map((sent) => sent.sentence).join(" ")}&op=translate`}
                   target="_blank"
                   rel="nofollow noreferrer"
                 >
@@ -132,10 +127,8 @@ export default function InterlinearView({
 }
 
 function Word({ line, word }: { word: string; line: InterlinearLine }) {
-  const inspectedWord = useTrainingSessionStore((state) => state.inspectedWord);
-  const setInspectedWord = useTrainingSessionStore(
-    (state) => state.setInspectedWord,
-  );
+  const inspectedWord = useAppStore((state) => state.inspectedWord);
+  const setInspectedWord = useAppStore((state) => state.setInspectedWord);
 
   const onClick = useCallback(
     (e: MouseEvent<HTMLSpanElement>) => {

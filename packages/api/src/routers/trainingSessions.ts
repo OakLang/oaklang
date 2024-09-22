@@ -15,10 +15,10 @@ import { getTrainingSessionOrThrow } from "../utils";
 
 export const trainingSessionsRouter = createTRPCRouter({
   getTrainingSession: protectedProcedure
-    .input(z.object({ trainingSessionId: z.string() }))
-    .query(async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
+    .input(z.string())
+    .query(async ({ ctx: { db, session }, input }) => {
       const trainingSession = await getTrainingSessionOrThrow(
-        trainingSessionId,
+        input,
         db,
         session,
       );

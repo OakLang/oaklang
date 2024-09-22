@@ -41,7 +41,8 @@ export default function PracticeLanguageSwitcher() {
 
   useEffect(() => {
     void utils.languages.getPracticeLanguages.invalidate();
-  }, [practiceLanguage, utils.languages.getPracticeLanguages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [practiceLanguage]);
 
   if (!practiceLanguageQuery.isSuccess) {
     return <Skeleton className="h-10 w-14 rounded-full lg:w-32" />;

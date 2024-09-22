@@ -31,20 +31,19 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { Link } from "~/i18n/routing";
-import { useTrainingSessionStore } from "~/providers/training-session-store-provider";
+import { useAppStore } from "~/providers/app-store-provider";
+import { api } from "~/trpc/react";
 
 export default function TopBar() {
-  const trainingSession = useTrainingSessionStore(
-    (state) => state.trainingSession,
-  );
-  const inspectionPanelOpen = useTrainingSessionStore(
-    (state) => state.inspectionPanelOpen,
-  );
-  const setInspectionPanelOpen = useTrainingSessionStore(
+  const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
+  const trainingSessionQuery =
+    api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
+  const inspectionPanelOpen = useAppStore((state) => state.inspectionPanelOpen);
+  const setInspectionPanelOpen = useAppStore(
     (state) => state.setInspectionPanelOpen,
   );
-  const fontSize = useTrainingSessionStore((state) => state.fontSize);
-  const setFontSize = useTrainingSessionStore((state) => state.setFontSize);
+  const fontSize = useAppStore((state) => state.fontSize);
+  const setFontSize = useAppStore((state) => state.setFontSize);
 
   const { practiceLanguage } = useParams<{
     practiceLanguage: string;
@@ -66,7 +65,9 @@ export default function TopBar() {
           <TooltipContent>Back</TooltipContent>
         </Tooltip>
 
-        <h1 className="text-lg font-medium">{trainingSession.title}</h1>
+        <h1 className="text-lg font-medium">
+          {trainingSessionQuery.data?.title}
+        </h1>
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-2">
