@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useAtomValue } from "jotai";
 
-import { showHotkeysAtom } from "~/store/show-tooltips";
+import { useShowHotkeys } from "~/store/show-hotkeys-store";
 
 export const useHotkeysTooltipProps = () => {
-  const showHotkeys = useAtomValue(showHotkeysAtom);
+  const showHotkeys = useShowHotkeys((state) => state.show);
   const [open, onOpenChange] = useState(false);
+
   return { onOpenChange, open: open || showHotkeys };
 };

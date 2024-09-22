@@ -13,13 +13,11 @@
     "studio": "npm run studio --workspace=@acme/db",
     "seed": "npm run seed --workspace=@acme/db",
     "dev": "turbo run dev --parallel",
-    "clean": "turbo clean && git clean -xdf .turbo node_modules",
-    "postinstall": "husky install"
+    "clean": "turbo clean && git clean -xdf .turbo node_modules"
   },
   "license": "ISC",
   "dependencies": {
     "@acme/prettier-config": "*",
-    "husky": "^9.0.11",
     "turbo": "^2.1.2"
   },
   "workspaces": [

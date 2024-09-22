@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSetAtom } from "jotai";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import { showHotkeysAtom } from "~/store/show-tooltips";
+import { useShowHotkeys } from "~/store/show-hotkeys-store";
 
 export default function ListenForTooltipHotkey() {
-  const setShowHotkeys = useSetAtom(showHotkeysAtom);
+  const setShowHotkeys = useShowHotkeys((state) => state.setShowTooltips);
 
   useHotkeys(
     "ctrl",
