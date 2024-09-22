@@ -1,30 +1,37 @@
-import { RedirectType } from "next/navigation";
+"use client";
 
-import { desc, eq } from "@acme/db";
-import { db } from "@acme/db/client";
-import { practiceLanguages } from "@acme/db/schema";
+import { useEffect } from "react";
 
-import { redirect } from "~/i18n/routing";
+import FullScreenLoader from "~/app/full-screen-loader";
+import { useRouter } from "~/i18n/routing";
+import { api } from "~/trpc/react";
 import { OnboardingRoutes } from "~/utils/constants";
-import { getUserSettings } from "../../utils";
 
-export default async function AppPage() {
-  const userSettings = await getUserSettings();
+export default function AppPage() {
+  const userSettings = api.userSettings.getUserSettings.useQuery();
+  const lastPracticeLang = api.languages.getLastPracticeLanguage.useQuery(
+    undefined,
+    {
+      enabled: !!userSettings.data?.nativeLanguage,
+    },
+  );
+  const router = useRouter();
 
-  if (!userSettings.nativeLanguage) {
-    return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
-  }
+  useEffect(() => {
+    if (userSettings.isSuccess && !userSettings.data.nativeLanguage) {
+      router.replace(OnboardingRoutes.nativeLanguage);
+    }
+  }, [router, userSettings.data?.nativeLanguage, userSettings.isSuccess]);
 
-  const [lang] = await db
-    .select()
-    .from(practiceLanguages)
-    .where(eq(practiceLanguages.userId, userSettings.userId))
-    .orderBy(desc(practiceLanguages.lastPracticed))
-    .limit(1);
+  useEffect(() => {
+    if (lastPracticeLang.isSuccess) {
+      if (lastPracticeLang.data) {
+        router.replace(`/app/${lastPracticeLang.data.languageCode}`);
+      } else {
+        router.replace(OnboardingRoutes.practiceLanguage);
+      }
+    }
+  }, [lastPracticeLang.data, lastPracticeLang.isSuccess, router]);
 
-  if (!lang) {
-    return redirect(OnboardingRoutes.practiceLanguage, RedirectType.replace);
-  }
-
-  redirect(`/app/${lang.languageCode}`, RedirectType.replace);
+  return <FullScreenLoader />;
 }

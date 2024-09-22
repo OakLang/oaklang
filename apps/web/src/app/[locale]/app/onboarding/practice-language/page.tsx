@@ -1,29 +1,50 @@
-import { RedirectType } from "next/navigation";
+"use client";
 
-import { desc, eq } from "@acme/db";
-import { db } from "@acme/db/client";
-import { practiceLanguages } from "@acme/db/schema";
+import { useEffect } from "react";
 
-import { redirect } from "~/i18n/routing";
+import FullScreenLoader from "~/app/full-screen-loader";
+import { useRouter } from "~/i18n/routing";
+import { api } from "~/trpc/react";
 import { OnboardingRoutes } from "~/utils/constants";
-import { getUserSettings } from "../../../../utils";
 import PracticeLanguageForm from "./practice-language-form";
 
-export default async function OnboardinPracticeLanguagePage() {
-  const userSettings = await getUserSettings();
-  if (!userSettings.nativeLanguage) {
-    return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
+export default function OnboardinPracticeLanguagePage() {
+  const userSettings = api.userSettings.getUserSettings.useQuery();
+  const lastPracticedLanguage = api.languages.getLastPracticeLanguage.useQuery(
+    undefined,
+    {
+      enabled: !!userSettings.data?.nativeLanguage,
+    },
+  );
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (userSettings.isSuccess && !userSettings.data.nativeLanguage) {
+      router.replace(OnboardingRoutes.nativeLanguage);
+    }
+  }, [router, userSettings.data?.nativeLanguage, userSettings.isSuccess]);
+
+  useEffect(() => {
+    if (lastPracticedLanguage.isSuccess && lastPracticedLanguage.data) {
+      router.replace(`/app/${lastPracticedLanguage.data.languageCode}`);
+    }
+  }, [lastPracticedLanguage.data, lastPracticedLanguage.isSuccess, router]);
+
+  if (userSettings.isPending || lastPracticedLanguage.isPending) {
+    return <FullScreenLoader />;
   }
 
-  const [lang] = await db
-    .select()
-    .from(practiceLanguages)
-    .where(eq(practiceLanguages.userId, userSettings.userId))
-    .orderBy(desc(practiceLanguages.lastPracticed))
-    .limit(1);
+  if (userSettings.isError) {
+    return <p>{userSettings.error.message}</p>;
+  }
 
-  if (lang) {
-    return redirect(`/app/${lang.languageCode}`, RedirectType.replace);
+  if (lastPracticedLanguage.isError) {
+    return <p>{lastPracticedLanguage.error.message}</p>;
+  }
+
+  if (lastPracticedLanguage.data) {
+    return <FullScreenLoader />;
   }
 
   return (

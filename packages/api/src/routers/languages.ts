@@ -30,6 +30,15 @@ export const languagesRouter = createTRPCRouter({
         .orderBy(desc(practiceLanguages.createdAt));
       return languageList.map((lang) => ({ ...lang.language, knownWords: 0 }));
     }),
+  getLastPracticeLanguage: protectedProcedure.query(async (opts) => {
+    const [lang] = await opts.ctx.db
+      .select()
+      .from(practiceLanguages)
+      .where(eq(practiceLanguages.userId, opts.ctx.session.user.id))
+      .orderBy(desc(practiceLanguages.lastPracticed))
+      .limit(1);
+    return lang ?? null;
+  }),
   getPracticeLanguage: protectedProcedure
     .input(z.string())
     .output(languageWithStats)

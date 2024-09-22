@@ -20,19 +20,21 @@ import { api } from "~/trpc/react";
 
 export default function AppPage() {
   const t = useTranslations("App");
-  const { practiceLanguage } = useParams<{
-    practiceLanguage: string;
-  }>();
+  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
   const startBtnTooltipProps = useHotkeysTooltipProps();
   const router = useRouter();
   const trainingSessionsQuery =
     api.trainingSessions.getTrainingSessions.useQuery({
       languageCode: practiceLanguage,
     });
+  const utils = api.useUtils();
 
   const startTrainingSession =
     api.trainingSessions.createTrainingSession.useMutation({
       onSuccess: (data) => {
+        void utils.trainingSessions.getTrainingSessions.invalidate({
+          languageCode: practiceLanguage,
+        });
         router.push(`/app/${data.languageCode}/training/${data.id}`);
       },
       onError: (error) => {

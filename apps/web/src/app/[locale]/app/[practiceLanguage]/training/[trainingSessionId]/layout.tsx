@@ -1,31 +1,48 @@
+"use client";
+
 import type { ReactNode } from "react";
-import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 
-import { getTrainingSession } from "~/app/utils";
+import FullScreenLoader from "~/app/full-screen-loader";
+import { Button } from "~/components/ui/button";
+import { Link } from "~/i18n/routing";
 import TrainingSessionProvider from "~/providers/TrainingSessionProvider";
+import { api } from "~/trpc/react";
 
-export default async function TrainingLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: { trainingSessionId: string; practiceLanguage: string };
-}) {
-  try {
-    const trainingSession = await getTrainingSession({
-      trainingSessionId: params.trainingSessionId,
-    });
+export default function TrainingLayout({ children }: { children: ReactNode }) {
+  const { practiceLanguage, trainingSessionId } = useParams<{
+    trainingSessionId: string;
+    practiceLanguage: string;
+  }>();
+  const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
+    { trainingSessionId },
+  );
 
-    if (trainingSession.languageCode !== params.practiceLanguage) {
-      notFound();
-    }
-
-    return (
-      <TrainingSessionProvider trainingSession={trainingSession}>
-        {children}
-      </TrainingSessionProvider>
-    );
-  } catch (error) {
-    notFound();
+  if (trainingSessionQuery.isPending) {
+    return <FullScreenLoader />;
   }
+
+  if (
+    trainingSessionQuery.isError ||
+    trainingSessionQuery.data.languageCode !== practiceLanguage
+  ) {
+    return <NotFound />;
+  }
+
+  return (
+    <TrainingSessionProvider trainingSession={trainingSessionQuery.data}>
+      {children}
+    </TrainingSessionProvider>
+  );
+}
+
+function NotFound() {
+  return (
+    <div>
+      <p>Training Session Not Found!</p>
+      <Button asChild>
+        <Link href="/app">Dashboard</Link>
+      </Button>
+    </div>
+  );
 }

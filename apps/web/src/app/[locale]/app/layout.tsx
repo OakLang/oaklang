@@ -1,14 +1,18 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useSession } from "next-auth/react";
 
-import UserSettingsProvider from "~/providers/UserSettingsProvider";
-import { getUserSettings } from "../../utils";
+import FullScreenLoader from "~/app/full-screen-loader";
 
-export default async function AppLayout({ children }: { children: ReactNode }) {
-  const userSettings = await getUserSettings();
+export default function AppLayout({ children }: { children: ReactNode }) {
+  const { status } = useSession({
+    required: true,
+  });
 
-  return (
-    <UserSettingsProvider userSettings={userSettings}>
-      {children}
-    </UserSettingsProvider>
-  );
+  if (status != "authenticated") {
+    return <FullScreenLoader />;
+  }
+
+  return children;
 }

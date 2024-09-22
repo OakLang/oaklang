@@ -18,13 +18,11 @@ import {
 import { Skeleton } from "./ui/skeleton";
 
 export default function UserButton() {
-  const { practiceLanguage } = useParams<{
-    practiceLanguage: string;
-  }>();
+  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
   const t = useTranslations("App");
-  const { data, status } = useSession({ required: true });
+  const { data, status } = useSession();
 
-  if (status === "loading") {
+  if (status != "authenticated") {
     return <Skeleton className="h-10 w-10 rounded-full" />;
   }
 

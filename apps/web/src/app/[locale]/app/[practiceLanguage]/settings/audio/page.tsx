@@ -14,7 +14,6 @@ import {
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import { Switch } from "~/components/ui/switch";
-import { useUserSettings } from "~/providers/UserSettingsProvider";
 import { api } from "~/trpc/react";
 import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 
@@ -29,7 +28,7 @@ const voices: { voice: string; name: string }[] = [
 
 export default function AudioSettings() {
   const utils = api.useUtils();
-  const { userSettings } = useUserSettings();
+  const userSettings = api.userSettings.getUserSettings.useQuery();
   const updateUserSettingsMut =
     api.userSettings.updateUserSettings.useMutation();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -48,37 +47,57 @@ export default function AudioSettings() {
 
   const handleChangeAutoPlay = useCallback(
     (autoPlayAudio: boolean) => {
+      if (!userSettings.isSuccess) {
+        return;
+      }
       updateUserSettingsMut.mutate({ autoPlayAudio });
       utils.userSettings.getUserSettings.setData(undefined, {
-        ...userSettings,
+        ...userSettings.data,
         autoPlayAudio,
       });
     },
-    [updateUserSettingsMut, userSettings, utils.userSettings.getUserSettings],
+    [
+      updateUserSettingsMut,
+      userSettings.data,
+      userSettings.isSuccess,
+      utils.userSettings.getUserSettings,
+    ],
   );
 
   const handleChangeTtsVoice = useCallback(
     (ttsVoice: string) => {
+      if (!userSettings.isSuccess) {
+        return;
+      }
       updateUserSettingsMut.mutate({ ttsVoice });
       utils.userSettings.getUserSettings.setData(undefined, {
-        ...userSettings,
+        ...userSettings.data,
         ttsVoice,
       });
     },
-    [updateUserSettingsMut, userSettings, utils.userSettings.getUserSettings],
+    [
+      updateUserSettingsMut,
+      userSettings.data,
+      userSettings.isSuccess,
+      utils.userSettings.getUserSettings,
+    ],
   );
 
   const handleChangeTtsSpeed = useCallback(
     (ttsSpeed: number) => {
+      if (!userSettings.isSuccess) {
+        return;
+      }
       debouncedUpdateUserSettings({ ttsSpeed });
       utils.userSettings.getUserSettings.setData(undefined, {
-        ...userSettings,
+        ...userSettings.data,
         ttsSpeed,
       });
     },
     [
       debouncedUpdateUserSettings,
-      userSettings,
+      userSettings.data,
+      userSettings.isSuccess,
       utils.userSettings.getUserSettings,
     ],
   );
@@ -94,7 +113,7 @@ export default function AudioSettings() {
           Auto Play
         </Label>
         <Switch
-          checked={userSettings.autoPlayAudio}
+          checked={userSettings.data?.autoPlayAudio}
           id="auto-play"
           onCheckedChange={handleChangeAutoPlay}
         />
@@ -107,7 +126,7 @@ export default function AudioSettings() {
           Voice
         </Label>
         <Select
-          value={userSettings.ttsVoice}
+          value={userSettings.data?.ttsVoice}
           onValueChange={handleChangeTtsVoice}
         >
           <SelectTrigger id="voice" className="w-48">
@@ -127,11 +146,11 @@ export default function AudioSettings() {
 
       <div className="flex items-center">
         <Label htmlFor="speed" className="flex-1 truncate">
-          Speed ({userSettings.ttsSpeed}x)
+          Speed ({userSettings.data?.ttsSpeed}x)
         </Label>
 
         <Select
-          value={String(userSettings.ttsSpeed)}
+          value={String(userSettings.data?.ttsSpeed)}
           onValueChange={(value) => handleChangeTtsSpeed(Number(value))}
         >
           <SelectTrigger id="voice" className="w-48">

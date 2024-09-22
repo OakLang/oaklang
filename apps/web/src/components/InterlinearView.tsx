@@ -2,14 +2,14 @@
 
 import type { MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 
 import type { InterlinearLine } from "@acme/core/validators";
 import type { Sentence } from "@acme/db/schema";
 
+import { Link } from "~/i18n/routing";
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
-import { useUserSettings } from "~/providers/UserSettingsProvider";
+import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
 import { Button } from "./ui/button";
@@ -23,7 +23,7 @@ export default function InterlinearView({
 }) {
   const [showTranslation, setShowTranslation] = useState(false);
   const { setInspectedWord, fontSize, trainingSession } = useTrainingSession();
-  const { userSettings } = useUserSettings();
+  const userSettings = api.userSettings.getUserSettings.useQuery();
   const ref = useRef<HTMLDivElement>(null);
 
   const translation = useMemo(
@@ -58,7 +58,7 @@ export default function InterlinearView({
           sentence.words.map((word) => {
             return (
               <span className="mb-4 mr-4 inline-flex flex-col gap-2">
-                {userSettings.interlinearLines.map((line) => {
+                {userSettings.data?.interlinearLines.map((line) => {
                   const value = word[line.name];
                   if (!value) {
                     return null;
@@ -103,7 +103,7 @@ export default function InterlinearView({
                 asChild
               >
                 <Link
-                  href={`https://translate.google.com/?sl=${trainingSession.languageCode}&tl=${userSettings.nativeLanguage}&text=${sentences.map((sent) => sent.sentence).join(" ")}&op=translate`}
+                  href={`https://translate.google.com/?sl=${trainingSession.languageCode}&tl=${userSettings.data?.nativeLanguage}&text=${sentences.map((sent) => sent.sentence).join(" ")}&op=translate`}
                   target="_blank"
                   rel="nofollow noreferrer"
                 >

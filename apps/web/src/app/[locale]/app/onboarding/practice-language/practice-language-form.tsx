@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, Loader2 } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -17,6 +17,7 @@ import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 
 export default function PracticeLanguageForm() {
+  const [isLoading, setIsLoading] = useState(false);
   const [languageCode, setLanguageCode] = useState("");
   const languagesQuery = api.languages.getLanguages.useQuery();
 
@@ -33,6 +34,7 @@ export default function PracticeLanguageForm() {
       if (!languageCode) {
         return;
       }
+      setIsLoading(true);
       router.push(`/app/${languageCode}`);
     },
     [languageCode, router],
@@ -87,7 +89,8 @@ export default function PracticeLanguageForm() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Button disabled={!languageCode} className="mx-auto">
+      <Button disabled={!languageCode || isLoading} className="mx-auto">
+        {isLoading && <Loader2 className="-ml-1 mr-2 h-4 w-4" />}
         Continue
       </Button>
     </form>

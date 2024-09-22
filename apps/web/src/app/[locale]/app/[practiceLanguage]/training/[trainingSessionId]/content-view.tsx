@@ -21,7 +21,6 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { useTrainingSession } from "~/providers/TrainingSessionProvider";
-import { useUserSettings } from "~/providers/UserSettingsProvider";
 import { promptAtom } from "~/store";
 import { api } from "~/trpc/react";
 import { TTS_SPEED_OPTIONS } from "~/utils/constants";
@@ -30,8 +29,8 @@ export default function ContentView() {
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
     useState(false);
   const { trainingSession, changeSentenceIndex } = useTrainingSession();
-  const { userSettings } = useUserSettings();
-  const [speed, setSpeed] = useState(userSettings.ttsSpeed);
+  const userSettings = api.userSettings.getUserSettings.useQuery();
+  const [speed, setSpeed] = useState(userSettings.data?.ttsSpeed);
   const promptTemplate = useAtomValue(promptAtom);
 
   const utils = api.useUtils();
@@ -129,6 +128,12 @@ export default function ContentView() {
     trainingSession.id,
     promptTemplate,
   ]);
+
+  useEffect(() => {
+    if (userSettings.isSuccess) {
+      setSpeed(userSettings.data.ttsSpeed);
+    }
+  }, [userSettings.data?.ttsSpeed, userSettings.isSuccess]);
 
   return (
     <div className="flex flex-1 gap-4 py-8 md:py-16">

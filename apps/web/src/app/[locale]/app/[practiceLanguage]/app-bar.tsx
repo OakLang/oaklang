@@ -7,9 +7,7 @@ import UserButton from "~/components/UserButton";
 import { Link } from "~/i18n/routing";
 
 export default function AppBar() {
-  const { practiceLanguage } = useParams<{
-    practiceLanguage: string;
-  }>();
+  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
 
   return (
     <header className="bg-card text-card-foreground sticky top-0 z-40 border-b">

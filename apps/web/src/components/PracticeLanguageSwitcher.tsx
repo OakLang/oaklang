@@ -23,9 +23,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function PracticeLanguageSwitcher() {
   const t = useTranslations("App");
-  const { practiceLanguage } = useParams<{
-    practiceLanguage: string;
-  }>();
+  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
   const practiceLanguageQuery =
     api.languages.getPracticeLanguage.useQuery(practiceLanguage);
   const practiceLanguages = api.languages.getPracticeLanguages.useQuery();
@@ -46,7 +44,7 @@ export default function PracticeLanguageSwitcher() {
   }, [practiceLanguage, utils.languages.getPracticeLanguages]);
 
   if (!practiceLanguageQuery.isSuccess) {
-    return <Skeleton className="h-10 w-32 rounded-full" />;
+    return <Skeleton className="h-10 w-14 rounded-full lg:w-32" />;
   }
 
   return (
