@@ -14,9 +14,9 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     name: "word",
     description: "word in PRACTICE LANGUAGE",
     disappearing: "default",
+    hidden: false,
     style: {
       fontFamily: "Times New Roman",
-      fontSize: "32px",
       fontWeight: "500",
     },
   },
@@ -25,9 +25,9 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     name: "ipa",
     description: "word pronunciation in IPA format",
     disappearing: "default",
+    hidden: false,
     style: {
       fontFamily: "Times New Roman",
-      fontSize: "18px",
     },
   },
   {
@@ -35,9 +35,9 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     name: "pronunciation",
     description: "phonetic word pronunciation in HELP LANGUAGE",
     disappearing: "default",
+    hidden: false,
     style: {
       fontFamily: "Times New Roman",
-      fontSize: "18px",
     },
   },
   {
@@ -45,9 +45,9 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     name: "lemma",
     description: "word in lemma form",
     disappearing: "default",
+    hidden: false,
     style: {
       fontFamily: "Times New Roman",
-      fontSize: "18px",
     },
   },
   {
@@ -55,9 +55,9 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     name: "translation",
     description: "word translation in HELP LANGUAGE",
     disappearing: "default",
+    hidden: false,
     style: {
       fontFamily: "Times New Roman",
-      fontSize: "18px",
     },
   },
   {
@@ -66,9 +66,9 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     description:
       "whitespace delimeted text associated with word from the full sentence including capitalization and punctuatio",
     disappearing: "default",
+    hidden: false,
     style: {
       fontFamily: "Times New Roman",
-      fontSize: "18px",
     },
   },
 ];

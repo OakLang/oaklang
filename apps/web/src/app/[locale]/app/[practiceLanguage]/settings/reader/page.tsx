@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import type { InterlinearLine } from "@acme/core/validators";
 
-import InterlinearLineEditor from "~/components/InterlinearLineEditor";
+import InterlinearLinesEditor from "~/components/InterlinearLineEditor";
 import PageTitle from "~/components/PageTitle";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
@@ -86,7 +86,7 @@ const InterlinearLinesConfigurationSection = () => {
       <h2 className="mb-4 text-xl font-medium">Interlinear Lines</h2>
 
       <div>
-        <InterlinearLineEditor
+        <InterlinearLinesEditor
           interlinearLines={interlinearLines}
           onChange={handleChange}
         />

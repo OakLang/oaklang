@@ -1,7 +1,7 @@
 import type { ChangeEvent } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Reorder, useDragControls, useMotionValue } from "framer-motion";
-import { EditIcon, TrashIcon } from "lucide-react";
+import { EditIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
 
 import type { Disappearing, InterlinearLine } from "@acme/core/validators";
 
@@ -28,20 +28,14 @@ const disappearingOptions: {
     name: "Sticky",
   },
 ];
-export default function InterlinearLineEditor({
+
+export default function InterlinearLinesEditor({
   onChange,
   interlinearLines,
 }: {
   interlinearLines: InterlinearLine[];
   onChange: (value: InterlinearLine[]) => void;
 }) {
-  // const [interlinearLines, setInterlinearLines] = useState(initValue);
-
-  // const handleChange = (lines: InterlinearLine[]) => {
-  //   setInterlinearLines(lines);
-  //   onChange?.(lines);
-  // };
-
   return (
     <Reorder.Group
       className="grid gap-4"
@@ -50,7 +44,7 @@ export default function InterlinearLineEditor({
       axis="y"
     >
       {interlinearLines.map((item, i) => (
-        <Item
+        <InterlinearLineRow
           item={item}
           onDelete={() =>
             onChange(interlinearLines.filter((_, index) => i !== index))
@@ -68,7 +62,7 @@ export default function InterlinearLineEditor({
   );
 }
 
-const Item = ({
+const InterlinearLineRow = ({
   item,
   onChange,
   onDelete,
@@ -86,28 +80,41 @@ const Item = ({
 
   const disabled = item.name === "word";
 
-  const onChangeName = (e: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...item, name: e.currentTarget.value });
-  };
+  const onChangeName = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      onChange({ ...item, name: e.currentTarget.value });
+    },
+    [item, onChange],
+  );
 
-  const onChangeDescription = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    onChange({ ...item, description: e.currentTarget.value });
-  };
-  const onChangeEnabled = (disappearing: Disappearing) => {
-    onChange({ ...item, disappearing });
-  };
+  const onChangeDescription = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      onChange({ ...item, description: e.currentTarget.value });
+    },
+    [item, onChange],
+  );
+  const onChangeDisappearing = useCallback(
+    (disappearing: Disappearing) => {
+      onChange({ ...item, disappearing });
+    },
+    [item, onChange],
+  );
+  const onToggleHidden = useCallback(() => {
+    onChange({ ...item, hidden: !item.hidden });
+  }, [item, onChange]);
 
-  const onChangeStyle = (
-    style: Partial<NonNullable<InterlinearLine["style"]>>,
-  ) => {
-    onChange({
-      ...item,
-      style: {
-        ...item.style,
-        ...style,
-      },
-    });
-  };
+  const onChangeStyle = useCallback(
+    (style: Partial<NonNullable<InterlinearLine["style"]>>) => {
+      onChange({
+        ...item,
+        style: {
+          ...item.style,
+          ...style,
+        },
+      });
+    },
+    [item, onChange],
+  );
 
   return (
     <Reorder.Item
@@ -118,18 +125,24 @@ const Item = ({
       style={{ boxShadow, y }}
       layout="position"
     >
-      <div className="flex h-12 items-center justify-between border-b px-2">
+      <div className="flex h-14 items-center gap-2 border-b px-2">
         <div
           onPointerDown={(event) => controls.start(event)}
-          className="hover:bg-secondary mr-2 flex h-8 w-6 cursor-grab items-center justify-center rounded-md"
+          className="hover:bg-secondary flex h-8 w-6 cursor-grab items-center justify-center rounded-md"
         >
           <ReorderIcon className="h-4 w-4" />
         </div>
 
-        <p className="flex-1 font-semibold">
-          {item.name || `Line ${index + 1}`}
-        </p>
-        <div className="space-x-1">
+        <div className="flex flex-1 flex-col justify-center overflow-hidden">
+          <p className="line-clamp-1 font-semibold leading-5">
+            {item.name || `Line ${index + 1}`}{" "}
+          </p>
+          <p className="text-muted-foreground line-clamp-1 text-sm leading-4">
+            {item.description}
+          </p>
+        </div>
+
+        <div className="flex flex-shrink-0 space-x-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -141,10 +154,37 @@ const Item = ({
                 onClick={() => setIsEditing(!isEditing)}
               >
                 <EditIcon className="h-4 w-4" />
+                <div className="sr-only">Edit Line</div>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Edit Line</TooltipContent>
+            <TooltipContent>Edit line</TooltipContent>
           </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className={cn("h-8 w-8", {
+                  "bg-secondary": isEditing,
+                })}
+                onClick={onToggleHidden}
+              >
+                {item.hidden ? (
+                  <EyeOffIcon className="h-4 w-4" />
+                ) : (
+                  <EyeIcon className="h-4 w-4" />
+                )}
+                <span className="sr-only">
+                  {item.hidden ? "Show Line" : "Hide Line"}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {item.hidden ? "Show Line" : "Hide Line"}
+            </TooltipContent>
+          </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -155,6 +195,7 @@ const Item = ({
                 onClick={onDelete}
               >
                 <TrashIcon className="h-4 w-4" />
+                <div className="sr-only">Delete Line</div>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Delete Line</TooltipContent>
@@ -194,7 +235,7 @@ const Item = ({
                 <TabsTrigger
                   value={item.value}
                   key={item.value}
-                  onClick={() => onChangeEnabled(item.value)}
+                  onClick={() => onChangeDisappearing(item.value)}
                 >
                   {item.name}
                 </TabsTrigger>
@@ -250,7 +291,7 @@ const Item = ({
         </fieldset>
       </div>
       <div
-        className="bg-secondary grid gap-2 overflow-x-auto p-4 outline-none"
+        className="bg-secondary/50 grid gap-2 overflow-x-auto px-4 py-2 outline-none"
         style={getCSSStyleForInterlinearLine(item)}
         contentEditable
       >

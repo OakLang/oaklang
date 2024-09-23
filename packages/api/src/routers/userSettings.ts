@@ -1,13 +1,11 @@
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 
 import type { InterlinearLine } from "@acme/core/validators";
-import { interlinearLine } from "@acme/core/validators";
 import { createPrefixedId, eq, getDefaultInterlinearLines } from "@acme/db";
 import { updateUserSettingsSchema, userSettings } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getInterlinearLines, getUserSettings } from "../utils";
+import { getUserSettings } from "../utils";
 
 export const userSettingsRouter = createTRPCRouter({
   getUserSettings: protectedProcedure.query((opts) => {
@@ -16,6 +14,17 @@ export const userSettingsRouter = createTRPCRouter({
   updateUserSettings: protectedProcedure
     .input(updateUserSettingsSchema)
     .mutation(async (opts) => {
+      if (opts.input.interlinearLines) {
+        const names = opts.input.interlinearLines.map((line) => line.name);
+        names.forEach((name, i) => {
+          if (names.findIndex((n) => n === name) !== i) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "Each interlinear line name should be unique",
+            });
+          }
+        });
+      }
       const [updatedSettings] = await opts.ctx.db
         .update(userSettings)
         .set(opts.input)
@@ -25,19 +34,6 @@ export const userSettingsRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
       return updatedSettings;
-    }),
-  getInterlinearLines: protectedProcedure.query(async (opts) => {
-    return getInterlinearLines(opts.ctx.session.user.id, opts.ctx.db);
-  }),
-  updateInterlinearLines: protectedProcedure
-    .input(z.array(interlinearLine).min(1))
-    .mutation(async (opts) => {
-      await opts.ctx.db
-        .update(userSettings)
-        .set({
-          interlinearLines: opts.input,
-        })
-        .where(eq(userSettings.userId, opts.ctx.session.user.id));
     }),
   resetInterlinearLines: protectedProcedure.mutation(async (opts) => {
     const interlinearLines = (userSettings.interlinearLines.defaultFn?.() ??
@@ -51,12 +47,12 @@ export const userSettingsRouter = createTRPCRouter({
     return interlinearLines;
   }),
   addNewInterlinearLine: protectedProcedure.mutation(async (opts) => {
-    const interlinearLines = await getInterlinearLines(
+    const settings = await getUserSettings(
       opts.ctx.session.user.id,
       opts.ctx.db,
     );
     const newList: InterlinearLine[] = [
-      ...interlinearLines,
+      ...settings.interlinearLines,
       {
         id: createPrefixedId("inter"),
         name: "new_line",

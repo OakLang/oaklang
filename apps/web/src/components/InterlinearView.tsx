@@ -68,10 +68,12 @@ export default function InterlinearView({
                 className="mb-4 mr-4 inline-flex flex-col gap-2"
                 key={`${sentence.id}-${word.wordId}-${word.index}`}
               >
-                {userSettingsQuery.data?.interlinearLines.map((line) => {
-                  const value = word.interlinearLines[line.name];
-                  return <Word line={line} word={value ?? "-"} />;
-                })}
+                {userSettingsQuery.data?.interlinearLines
+                  .filter((line) => !line.hidden)
+                  .map((line) => {
+                    const value = word.interlinearLines[line.name];
+                    return <Word line={line} word={value ?? "-"} />;
+                  })}
               </span>
             );
           }),
