@@ -60,31 +60,24 @@ export default function InterlinearView({
 
   return (
     <div ref={ref} onClick={onClick} className="flex-1" style={{ fontSize }}>
-      <div>
+      <p className="pointer-events-none">
         {sentences.map((sentence) =>
           sentence.sentenceWords.map((word) => {
             return (
-              <span
-                className="mb-4 mr-4 inline-flex flex-col gap-2"
+              <LineWord
                 key={`${sentence.id}-${word.wordId}-${word.index}`}
-              >
-                {userSettingsQuery.data?.interlinearLines
-                  .filter((line) => !line.hidden)
-                  .map((line) => {
-                    const value = word.interlinearLines[line.name];
-                    return <Word line={line} word={value ?? "-"} />;
-                  })}
-              </span>
+                word={word}
+              />
             );
           }),
         )}
-      </div>
+      </p>
 
-      <div className="mt-4">
+      <div className="pointer-events-none mt-4">
         <Button
           variant="ghost"
           onClick={handleToggleShowTranslation}
-          className="text-muted-foreground"
+          className="text-muted-foreground pointer-events-auto"
         >
           {showTranslation ? "Hide Translation" : "Show Translation"}
           <ChevronDownIcon
@@ -97,7 +90,7 @@ export default function InterlinearView({
           />
         </Button>
         {showTranslation && (
-          <div className="text-muted-foreground bg-muted mt-2 flex gap-4 overflow-hidden rounded-lg p-2">
+          <div className="text-muted-foreground bg-muted pointer-events-auto mt-2 flex gap-4 overflow-hidden rounded-lg p-2">
             <AudioPlayButton
               text={translation}
               className="h-10 w-10"
@@ -128,43 +121,57 @@ export default function InterlinearView({
   );
 }
 
-function Word({ line, word }: { word: string; line: InterlinearLine }) {
+function LineWord({
+  word,
+}: {
+  word: SentenceWithWords["sentenceWords"][number];
+}) {
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+
   const inspectedWord = useAppStore((state) => state.inspectedWord);
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
 
   const onClick = useCallback(
-    (e: MouseEvent<HTMLSpanElement>) => {
-      e.preventDefault();
-      setInspectedWord(word);
+    (line: InterlinearLine) => {
+      if (line.name === PRIMARY_LINE_NAME) {
+        setInspectedWord(word.word);
+      }
     },
-    [setInspectedWord, word],
+    [setInspectedWord, word.word],
   );
 
-  const onDoubleClick = useCallback((e: MouseEvent<HTMLSpanElement>) => {
-    e.preventDefault();
-  }, []);
-
   return (
-    <span
-      className={cn(
-        "hover:ring-primary/50 clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200",
-        {
-          "ring-2 ring-yellow-400 hover:ring-yellow-400":
-            inspectedWord === word && line.name === PRIMARY_LINE_NAME,
-          "pointer-events-none select-none opacity-80":
-            line.name !== PRIMARY_LINE_NAME,
-        },
-        line.name === PRIMARY_LINE_NAME
-          ? "text-[2em] leading-none"
-          : "text-[1em] leading-none",
-      )}
-      style={{
-        ...getCSSStyleForInterlinearLine(line),
-      }}
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
-    >
-      {word}
+    <span className="mb-4 mr-4 inline-flex flex-col items-center gap-2">
+      {userSettingsQuery.data?.interlinearLines
+        .filter((line) => !line.hidden)
+        .map((line) => {
+          const value = word.interlinearLines[line.name];
+          const isPrimaryLine = line.name === PRIMARY_LINE_NAME;
+
+          return (
+            <span
+              className={cn(
+                "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200",
+                {
+                  "ring-2 ring-yellow-400 hover:ring-yellow-400":
+                    inspectedWord &&
+                    inspectedWord.id === word.word.id &&
+                    isPrimaryLine,
+                  "opacity-80": !isPrimaryLine,
+                },
+                isPrimaryLine
+                  ? "text-[2em] leading-none"
+                  : "text-[1em] leading-none",
+              )}
+              style={{
+                ...getCSSStyleForInterlinearLine(line),
+              }}
+              onClick={() => onClick(line)}
+            >
+              {value}
+            </span>
+          );
+        })}
     </span>
   );
 }

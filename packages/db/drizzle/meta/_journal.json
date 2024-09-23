@@ -8,6 +8,20 @@
       "when": 1727085263664,
       "tag": "0000_sweet_shiva",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1727099131679,
+      "tag": "0001_handy_boom_boom",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1727100351022,
+      "tag": "0002_mean_yellow_claw",
+      "breakpoints": true
     }
   ]
 }

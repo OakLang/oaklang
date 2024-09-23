@@ -9,11 +9,8 @@ import {
 } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { getKnownWordsCountForLanguage } from "../utils";
 import { languageWithStats } from "../validators";
-
-const getKnownWordsCount = async (lang: string): Promise<number> => {
-  return 0;
-};
 
 export const languagesRouter = createTRPCRouter({
   getLanguages: publicProcedure.query(async ({ ctx: { db } }) => {
@@ -22,30 +19,34 @@ export const languagesRouter = createTRPCRouter({
   }),
   getPracticeLanguages: protectedProcedure
     .output(z.array(languageWithStats))
-    .query(async (opts) => {
-      const languageList = await opts.ctx.db
+    .query(async ({ ctx }) => {
+      const languageList = await ctx.db
         .select()
         .from(practiceLanguages)
         .innerJoin(
           languages,
           eq(languages.code, practiceLanguages.languageCode),
         )
-        .where(eq(practiceLanguages.userId, opts.ctx.session.user.id))
+        .where(eq(practiceLanguages.userId, ctx.session.user.id))
         .orderBy(desc(practiceLanguages.createdAt));
       return Promise.all(
         languageList.map(async (lang) => {
           return {
             ...lang.language,
-            knownWords: await getKnownWordsCount(lang.language.code),
+            knownWords: await getKnownWordsCountForLanguage(
+              lang.language.code,
+              ctx.session,
+              ctx.db,
+            ),
           };
         }),
       );
     }),
-  getLastPracticeLanguage: protectedProcedure.query(async (opts) => {
-    const [lang] = await opts.ctx.db
+  getLastPracticeLanguage: protectedProcedure.query(async ({ ctx }) => {
+    const [lang] = await ctx.db
       .select()
       .from(practiceLanguages)
-      .where(eq(practiceLanguages.userId, opts.ctx.session.user.id))
+      .where(eq(practiceLanguages.userId, ctx.session.user.id))
       .orderBy(desc(practiceLanguages.lastPracticed))
       .limit(1);
     return lang ?? null;
@@ -53,11 +54,11 @@ export const languagesRouter = createTRPCRouter({
   getPracticeLanguage: protectedProcedure
     .input(z.string())
     .output(languageWithStats)
-    .query(async (opts) => {
-      const [language] = await opts.ctx.db
+    .query(async ({ ctx, input }) => {
+      const [language] = await ctx.db
         .select()
         .from(languages)
-        .where(eq(languages.code, opts.input));
+        .where(eq(languages.code, input));
 
       if (!language) {
         throw new TRPCError({
@@ -66,22 +67,22 @@ export const languagesRouter = createTRPCRouter({
         });
       }
 
-      const [practiceLanguage] = await opts.ctx.db
+      const [practiceLanguage] = await ctx.db
         .select()
         .from(practiceLanguages)
         .where(
           and(
             eq(practiceLanguages.languageCode, language.code),
-            eq(practiceLanguages.userId, opts.ctx.session.user.id),
+            eq(practiceLanguages.userId, ctx.session.user.id),
           ),
         );
 
       if (!practiceLanguage) {
-        const [newPracticeLanguage] = await opts.ctx.db
+        const [newPracticeLanguage] = await ctx.db
           .insert(practiceLanguages)
           .values({
             languageCode: language.code,
-            userId: opts.ctx.session.user.id,
+            userId: ctx.session.user.id,
           })
           .returning();
         if (!newPracticeLanguage) {
@@ -93,7 +94,7 @@ export const languagesRouter = createTRPCRouter({
         };
       }
 
-      await opts.ctx.db
+      await ctx.db
         .update(practiceLanguages)
         .set({
           lastPracticed: new Date(),
@@ -107,13 +108,17 @@ export const languagesRouter = createTRPCRouter({
 
       return {
         ...language,
-        knownWords: await getKnownWordsCount(language.code),
+        knownWords: await getKnownWordsCountForLanguage(
+          language.code,
+          ctx.session,
+          ctx.db,
+        ),
       };
     }),
   deletePracticeLanguage: protectedProcedure
     .input(z.string())
-    .mutation(async (opts) => {
-      const [practiceLanguage] = await opts.ctx.db
+    .mutation(async ({ ctx, input }) => {
+      const [practiceLanguage] = await ctx.db
         .select()
         .from(practiceLanguages)
         .innerJoin(
@@ -122,8 +127,8 @@ export const languagesRouter = createTRPCRouter({
         )
         .where(
           and(
-            eq(practiceLanguages.languageCode, opts.input),
-            eq(practiceLanguages.userId, opts.ctx.session.user.id),
+            eq(practiceLanguages.languageCode, input),
+            eq(practiceLanguages.userId, ctx.session.user.id),
           ),
         );
 
@@ -134,10 +139,10 @@ export const languagesRouter = createTRPCRouter({
         });
       }
 
-      const [practiceLanguagesCount] = await opts.ctx.db
+      const [practiceLanguagesCount] = await ctx.db
         .select({ count: count() })
         .from(practiceLanguages)
-        .where(eq(practiceLanguages.userId, opts.ctx.session.user.id));
+        .where(eq(practiceLanguages.userId, ctx.session.user.id));
 
       if (!practiceLanguagesCount) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -151,94 +156,25 @@ export const languagesRouter = createTRPCRouter({
       }
 
       // Delete The Practice Language
-      await opts.ctx.db
+      await ctx.db
         .delete(practiceLanguages)
         .where(
           and(
-            eq(practiceLanguages.languageCode, opts.input),
-            eq(practiceLanguages.userId, opts.ctx.session.user.id),
+            eq(practiceLanguages.languageCode, input),
+            eq(practiceLanguages.userId, ctx.session.user.id),
           ),
         );
 
       // Delete Training Sessions
-      await opts.ctx.db
+      await ctx.db
         .delete(trainingSessions)
         .where(
           and(
-            eq(trainingSessions.userId, opts.ctx.session.user.id),
-            eq(trainingSessions.languageCode, opts.input),
+            eq(trainingSessions.userId, ctx.session.user.id),
+            eq(trainingSessions.languageCode, input),
           ),
         );
 
       return practiceLanguage;
     }),
-  // getWord: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       wordId: z.string(),
-  //     }),
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     const [word] = await ctx.db
-  //       .select()
-  //       .from(words)
-  //       .where(
-  //         and(
-  //           eq(words.id, input.wordId),
-  //           eq(words.userId, ctx.session.user.id),
-  //         ),
-  //       );
-  //     if (!word) {
-  //       throw new TRPCError({ code: "NOT_FOUND", message: "Word not found!" });
-  //     }
-  //     return word;
-  //   }),
-  // markWordKnown: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       wordId: z.string(),
-  //     }),
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     const [word] = await ctx.db
-  //       .select()
-  //       .from(words)
-  //       .where(
-  //         and(
-  //           eq(words.id, input.wordId),
-  //           eq(words.userId, ctx.session.user.id),
-  //         ),
-  //       );
-  //     if (!word) {
-  //       throw new TRPCError({ code: "NOT_FOUND", message: "Word not found!" });
-  //     }
-  //     await ctx.db
-  //       .update(words)
-  //       .set({ knownAt: new Date() })
-  //       .where(eq(words.id, input.wordId));
-  //   }),
-  // markWordUnknown: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       wordId: z.string(),
-  //     }),
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     const [word] = await ctx.db
-  //       .select()
-  //       .from(words)
-  //       .where(
-  //         and(
-  //           eq(words.id, input.wordId),
-  //           eq(words.userId, ctx.session.user.id),
-  //         ),
-  //       );
-  //     if (!word) {
-  //       throw new TRPCError({ code: "NOT_FOUND", message: "Word not found!" });
-  //     }
-  //     await ctx.db
-  //       .update(words)
-  //       .set({ knownAt: null })
-  //       .where(eq(words.id, input.wordId));
-  //   }),
 });

@@ -14,7 +14,7 @@ export const practiceWords = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    practiceCount: integer("practice_count").notNull().default(0),
+    practiceCount: integer("practice_count").notNull().default(1),
     knownAt: timestamp("known_at"),
   },
   (table) => ({

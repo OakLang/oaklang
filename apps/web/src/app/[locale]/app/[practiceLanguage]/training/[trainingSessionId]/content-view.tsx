@@ -43,6 +43,11 @@ export default function ContentView() {
     { enabled: trainingSessionQuery.isSuccess },
   );
   const updateTrainingSessionMutation = useUpdateTrainingSessionMutation();
+  const addPracticeWordsMutation = api.words.addPracticeWords.useMutation({
+    onError: (error) => {
+      toast(error.message);
+    },
+  });
 
   const promptTemplate = useAppStore((state) => state.promptTemplate);
 
@@ -142,6 +147,14 @@ export default function ContentView() {
     trainingSessionId,
     promptTemplate,
   ]);
+
+  useEffect(() => {
+    const wordIds = currentSentence?.sentenceWords.map((word) => word.wordId);
+    if (wordIds && wordIds.length > 0) {
+      addPracticeWordsMutation.mutate({ wordIds });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSentence]);
 
   return (
     <div className="flex flex-1 gap-4 py-8 md:py-16">

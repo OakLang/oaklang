@@ -6,8 +6,21 @@ import type { InterlinearLine } from "@acme/core/validators";
 import type { DB } from "@acme/db/client";
 import type { UserSettings, Word } from "@acme/db/schema";
 import { interlinearLine } from "@acme/core/validators";
-import { eq, getDefaultInterlinearLines, sql } from "@acme/db";
-import { trainingSessions, userSettings, words } from "@acme/db/schema";
+import {
+  and,
+  count,
+  eq,
+  getDefaultInterlinearLines,
+  isNull,
+  not,
+  sql,
+} from "@acme/db";
+import {
+  practiceWords,
+  trainingSessions,
+  userSettings,
+  words,
+} from "@acme/db/schema";
 
 export const getTrainingSessionOrThrow = async (
   trainingSessionId: string,
@@ -92,4 +105,39 @@ export const getOrCreateWord = async (
     .returning();
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return newWord!;
+};
+
+export const getKnownWordsCountForLanguage = async (
+  languageCode: string,
+  session: Session,
+  db: DB,
+): Promise<number> => {
+  const [row] = await db
+    .select({ count: count() })
+    .from(practiceWords)
+    .innerJoin(words, eq(words.id, practiceWords.wordId))
+    .where(
+      and(
+        eq(practiceWords.userId, session.user.id),
+        not(isNull(practiceWords.knownAt)),
+        eq(words.languageCode, languageCode),
+      ),
+    );
+  return row?.count ?? 0;
+};
+
+export const getKnownWordsCount = async (
+  session: Session,
+  db: DB,
+): Promise<number> => {
+  const [row] = await db
+    .select({ count: count() })
+    .from(practiceWords)
+    .where(
+      and(
+        eq(practiceWords.userId, session.user.id),
+        not(isNull(practiceWords.knownAt)),
+      ),
+    );
+  return row?.count ?? 0;
 };

@@ -1,95 +1,82 @@
-import { createTRPCRouter } from "../trpc";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
+import { eq, sql } from "@acme/db";
+import { practiceWords } from "@acme/db/schema";
+
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const wordsRouter = createTRPCRouter({
-  // getWords: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       trainingSessionId: z.string(),
-  //       isKnown: z.boolean().optional(),
-  //       isPracticing: z.boolean().optional(),
-  //     }),
-  //   )
-  //   .query(
-  //     async ({ ctx: { db, session }, input: { isKnown, isPracticing } }) => {
-  //       const practiceWords = await db
-  //         .select()
-  //         .from(words)
-  //         .where(
-  //           and(
-  //             eq(words.userId, session.user.id),
-  //             ...(typeof isPracticing !== "undefined"
-  //               ? [eq(words.isPracticing, isPracticing)]
-  //               : []),
-  //             ...(typeof isKnown !== "undefined"
-  //               ? [eq(words.isKnown, isKnown)]
-  //               : []),
-  //           ),
-  //         )
-  //         .orderBy(asc(words.word));
-  //       return practiceWords;
-  //     },
-  //   ),
-  // createOrUpdateWords: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       trainingSessionId: z.string(),
-  //       words: z.array(z.string()).min(1).max(100),
-  //       isKnown: z.boolean().optional(),
-  //       isPracticing: z.boolean().optional(),
-  //     }),
-  //   )
-  //   .mutation(
-  //     async ({
-  //       ctx: { db, session },
-  //       input: { words: wordsList, isKnown, isPracticing },
-  //     }) => {
-  //       const newWords = await db
-  //         .insert(words)
-  //         .values(
-  //           wordsList.map(
-  //             (word) =>
-  //               ({
-  //                 userId: session.user.id,
-  //                 word,
-  //                 isKnown,
-  //                 isPracticing,
-  //               }) satisfies typeof words.$inferInsert,
-  //           ),
-  //         )
-  //         .onConflictDoUpdate({
-  //           target: [words.userId, words.word],
-  //           set: {
-  //             isKnown:
-  //               typeof isKnown === "undefined"
-  //                 ? sql`${words.isKnown}`
-  //                 : isKnown,
-  //             isPracticing:
-  //               typeof isPracticing === "undefined"
-  //                 ? sql`${words.isPracticing}`
-  //                 : isPracticing,
-  //           },
-  //         })
-  //         .returning();
-  //       return newWords;
-  //     },
-  //   ),
-  // deleteWords: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       trainingSessionId: z.string(),
-  //       words: z.array(z.string()).min(1).max(100),
-  //     }),
-  //   )
-  //   .mutation(async ({ ctx: { db, session }, input: { words: wordsList } }) => {
-  //     const deletedWords = await db
-  //       .delete(words)
-  //       .where(
-  //         and(
-  //           eq(words.userId, session.user.id),
-  //           inArray(words.word, wordsList),
-  //         ),
-  //       )
-  //       .returning();
-  //     return deletedWords;
-  //   }),
+  getPracticeWord: protectedProcedure
+    .input(z.object({ wordId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const [word] = await ctx.db
+        .select()
+        .from(practiceWords)
+        .where(eq(practiceWords.wordId, input.wordId));
+      if (!word) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Word not found!" });
+      }
+      return word;
+    }),
+  addPracticeWords: protectedProcedure
+    .input(
+      z.object({
+        wordIds: z.array(z.string()).min(1),
+        markKnow: z.boolean().optional().default(false),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .insert(practiceWords)
+        .values(
+          input.wordIds.map(
+            (wordId) =>
+              ({
+                wordId,
+                userId: ctx.session.user.id,
+                knownAt: input.markKnow ? new Date() : undefined,
+              }) satisfies typeof practiceWords.$inferInsert,
+          ),
+        )
+        .onConflictDoUpdate({
+          target: [practiceWords.userId, practiceWords.wordId],
+          set: {
+            practiceCount: sql`${practiceWords.practiceCount} + 1`,
+          },
+        });
+    }),
+  markWordKnown: protectedProcedure
+    .input(z.object({ wordId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .insert(practiceWords)
+        .values({
+          knownAt: new Date(),
+          userId: ctx.session.user.id,
+          wordId: input.wordId,
+        })
+        .onConflictDoUpdate({
+          target: [practiceWords.userId, practiceWords.wordId],
+          set: {
+            knownAt: new Date(),
+          },
+        });
+    }),
+  markWordUnknown: protectedProcedure
+    .input(z.object({ wordId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .insert(practiceWords)
+        .values({
+          userId: ctx.session.user.id,
+          wordId: input.wordId,
+        })
+        .onConflictDoUpdate({
+          target: [practiceWords.userId, practiceWords.wordId],
+          set: {
+            knownAt: null,
+          },
+        });
+    }),
 });
