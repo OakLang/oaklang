@@ -11,6 +11,10 @@ import {
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { languageWithStats } from "../validators";
 
+const getKnownWordsCount = async (lang: string): Promise<number> => {
+  return 0;
+};
+
 export const languagesRouter = createTRPCRouter({
   getLanguages: publicProcedure.query(async ({ ctx: { db } }) => {
     const languagesList = await db.select().from(languages);
@@ -28,7 +32,14 @@ export const languagesRouter = createTRPCRouter({
         )
         .where(eq(practiceLanguages.userId, opts.ctx.session.user.id))
         .orderBy(desc(practiceLanguages.createdAt));
-      return languageList.map((lang) => ({ ...lang.language, knownWords: 0 }));
+      return Promise.all(
+        languageList.map(async (lang) => {
+          return {
+            ...lang.language,
+            knownWords: await getKnownWordsCount(lang.language.code),
+          };
+        }),
+      );
     }),
   getLastPracticeLanguage: protectedProcedure.query(async (opts) => {
     const [lang] = await opts.ctx.db
@@ -96,7 +107,7 @@ export const languagesRouter = createTRPCRouter({
 
       return {
         ...language,
-        knownWords: 0,
+        knownWords: await getKnownWordsCount(language.code),
       };
     }),
   deletePracticeLanguage: protectedProcedure
@@ -161,4 +172,73 @@ export const languagesRouter = createTRPCRouter({
 
       return practiceLanguage;
     }),
+  // getWord: protectedProcedure
+  //   .input(
+  //     z.object({
+  //       wordId: z.string(),
+  //     }),
+  //   )
+  //   .mutation(async ({ ctx, input }) => {
+  //     const [word] = await ctx.db
+  //       .select()
+  //       .from(words)
+  //       .where(
+  //         and(
+  //           eq(words.id, input.wordId),
+  //           eq(words.userId, ctx.session.user.id),
+  //         ),
+  //       );
+  //     if (!word) {
+  //       throw new TRPCError({ code: "NOT_FOUND", message: "Word not found!" });
+  //     }
+  //     return word;
+  //   }),
+  // markWordKnown: protectedProcedure
+  //   .input(
+  //     z.object({
+  //       wordId: z.string(),
+  //     }),
+  //   )
+  //   .mutation(async ({ ctx, input }) => {
+  //     const [word] = await ctx.db
+  //       .select()
+  //       .from(words)
+  //       .where(
+  //         and(
+  //           eq(words.id, input.wordId),
+  //           eq(words.userId, ctx.session.user.id),
+  //         ),
+  //       );
+  //     if (!word) {
+  //       throw new TRPCError({ code: "NOT_FOUND", message: "Word not found!" });
+  //     }
+  //     await ctx.db
+  //       .update(words)
+  //       .set({ knownAt: new Date() })
+  //       .where(eq(words.id, input.wordId));
+  //   }),
+  // markWordUnknown: protectedProcedure
+  //   .input(
+  //     z.object({
+  //       wordId: z.string(),
+  //     }),
+  //   )
+  //   .mutation(async ({ ctx, input }) => {
+  //     const [word] = await ctx.db
+  //       .select()
+  //       .from(words)
+  //       .where(
+  //         and(
+  //           eq(words.id, input.wordId),
+  //           eq(words.userId, ctx.session.user.id),
+  //         ),
+  //       );
+  //     if (!word) {
+  //       throw new TRPCError({ code: "NOT_FOUND", message: "Word not found!" });
+  //     }
+  //     await ctx.db
+  //       .update(words)
+  //       .set({ knownAt: null })
+  //       .where(eq(words.id, input.wordId));
+  //   }),
 });

@@ -9,6 +9,7 @@ import {
 
 import { createPrefixedId } from "../utils";
 import { trainingSessions } from "./training-session";
+import { words } from "./word";
 
 export const sentences = pgTable(
   "sentence",
@@ -22,7 +23,6 @@ export const sentences = pgTable(
       .references(() => trainingSessions.id, { onDelete: "cascade" }),
     sentence: text("sentence").notNull(),
     translation: text("translation").notNull(),
-    words: jsonb("words").notNull().$type<Record<string, string>[]>(),
     index: integer("index").notNull(),
   },
   (table) => ({
@@ -31,3 +31,22 @@ export const sentences = pgTable(
 );
 export type Sentence = typeof sentences.$inferSelect;
 export type SentenceInsert = typeof sentences.$inferInsert;
+
+export const sentenceWords = pgTable(
+  "sentence_word",
+  {
+    sentenceId: text("sentence_id")
+      .notNull()
+      .references(() => sentences.id, { onDelete: "cascade" }),
+    wordId: text("word_id")
+      .notNull()
+      .references(() => words.id, { onDelete: "cascade" }),
+    index: integer("index").notNull(),
+    interlinearLines: jsonb("interlinear_lines")
+      .notNull()
+      .$type<Record<string, string>>(),
+  },
+  (table) => ({
+    uniqueIdx: unique().on(table.sentenceId, table.index),
+  }),
+);

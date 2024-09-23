@@ -5,8 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 
+import type { SentenceWithWords } from "@acme/api/validators";
 import type { InterlinearLine } from "@acme/core/validators";
-import type { Sentence } from "@acme/db/schema";
 
 import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
@@ -20,7 +20,7 @@ const PRIMARY_LINE_NAME = "word";
 export default function InterlinearView({
   sentences,
 }: {
-  sentences: Sentence[];
+  sentences: SentenceWithWords[];
 }) {
   const [showTranslation, setShowTranslation] = useState(false);
   const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
@@ -62,15 +62,15 @@ export default function InterlinearView({
     <div ref={ref} onClick={onClick} className="flex-1" style={{ fontSize }}>
       <div>
         {sentences.map((sentence) =>
-          sentence.words.map((word) => {
+          sentence.sentenceWords.map((word) => {
             return (
-              <span className="mb-4 mr-4 inline-flex flex-col gap-2">
+              <span
+                className="mb-4 mr-4 inline-flex flex-col gap-2"
+                key={`${sentence.id}-${word.wordId}-${word.index}`}
+              >
                 {userSettingsQuery.data?.interlinearLines.map((line) => {
-                  const value = word[line.name];
-                  if (!value) {
-                    return null;
-                  }
-                  return <Word line={line} word={value} />;
+                  const value = word.interlinearLines[line.name];
+                  return <Word line={line} word={value ?? "-"} />;
                 })}
               </span>
             );

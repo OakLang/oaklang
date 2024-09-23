@@ -8,18 +8,21 @@ import type { InterlinearLine } from "@acme/core/validators";
 import type { DB } from "@acme/db/client";
 import type { TrainingSession, UserSettings } from "@acme/db/schema";
 import { asc, desc, eq } from "@acme/db";
-import { languages, sentences } from "@acme/db/schema";
+import { languages, sentences, sentenceWords, words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   getInterlinearLines,
+  getOrCreateWord,
   getTrainingSessionOrThrow,
   getUserSettings,
 } from "../utils";
+import { sentenceWithWords } from "../validators";
 
 export const sentencesRouter = createTRPCRouter({
   getSentences: protectedProcedure
     .input(z.object({ trainingSessionId: z.string() }))
+    .output(z.array(sentenceWithWords))
     .query(async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
       const trainingSession = await getTrainingSessionOrThrow(
         trainingSessionId,
@@ -31,7 +34,24 @@ export const sentencesRouter = createTRPCRouter({
         .from(sentences)
         .where(eq(sentences.trainingSessionId, trainingSession.id))
         .orderBy(asc(sentences.index));
-      return sentencesList;
+      return Promise.all(
+        sentencesList.map(async (sentence) => {
+          const list = await db
+            .select()
+            .from(sentenceWords)
+            .innerJoin(words, eq(words.id, sentenceWords.wordId))
+            .where(eq(sentenceWords.sentenceId, sentence.id))
+            .orderBy(asc(sentenceWords.index));
+
+          return {
+            ...sentence,
+            sentenceWords: list.map((item) => ({
+              ...item.sentence_word,
+              word: item.word,
+            })),
+          };
+        }),
+      );
     }),
   getSentence: protectedProcedure
     .input(z.object({ sentenceId: z.string() }))
@@ -59,6 +79,7 @@ export const sentencesRouter = createTRPCRouter({
         promptTemplate: z.string().min(1).max(1000),
       }),
     )
+    .output(z.array(sentenceWithWords))
     .mutation(
       async ({
         ctx: { db, session },
@@ -90,24 +111,73 @@ export const sentencesRouter = createTRPCRouter({
           .from(sentences)
           .where(eq(sentences.trainingSessionId, trainingSession.id))
           .orderBy(desc(sentences.index));
-        const values = result.object.sentences.map<
-          typeof sentences.$inferInsert
-        >((sentence, index) => ({
-          sentence: sentence.sentence,
-          translation: sentence.translation,
-          words: sentence.words,
-          trainingSessionId: trainingSession.id,
-          index: (lastSentence?.index ?? 0) + 1 + index,
-        }));
-        if (values.length) {
-          const newSentences = await db
-            .insert(sentences)
-            .values(values)
-            .onConflictDoNothing()
-            .returning();
-          return newSentences;
-        }
-        return [];
+
+        const value = await Promise.all(
+          result.object.sentences.map(async (item, sentenceIndex) => {
+            const [sentence] = await db
+              .insert(sentences)
+              .values({
+                sentence: item.sentence,
+                translation: item.translation,
+                trainingSessionId: trainingSession.id,
+                index: (lastSentence?.index ?? 0) + 1 + sentenceIndex,
+              })
+              .returning();
+            if (!sentence) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Failed to create sentence",
+              });
+            }
+
+            const sentenceWordsList = await Promise.all(
+              item.words.map(async (wordRecord, wordIndex) => {
+                const primaryWord = wordRecord.word;
+                if (!primaryWord) {
+                  throw new TRPCError({
+                    code: "INTERNAL_SERVER_ERROR",
+                    message: "Failed to get primary word",
+                  });
+                }
+
+                const word = await getOrCreateWord(
+                  primaryWord,
+                  trainingSession.languageCode,
+                  db,
+                );
+
+                const [sentenceWord] = await db
+                  .insert(sentenceWords)
+                  .values({
+                    sentenceId: sentence.id,
+                    wordId: word.id,
+                    index: wordIndex,
+                    interlinearLines: wordRecord,
+                  })
+                  .returning();
+
+                if (!sentenceWord) {
+                  throw new TRPCError({
+                    code: "INTERNAL_SERVER_ERROR",
+                    message: "Failed to connect sentence to word",
+                  });
+                }
+
+                return {
+                  ...sentenceWord,
+                  word,
+                };
+              }),
+            );
+
+            return {
+              ...sentence,
+              sentenceWords: sentenceWordsList,
+            };
+          }),
+        );
+
+        return value;
       },
     ),
 });

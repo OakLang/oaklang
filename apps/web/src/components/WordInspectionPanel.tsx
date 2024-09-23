@@ -5,6 +5,7 @@ export default function WordInspectionPanel({ word }: { word: string }) {
   const openWindow = (url: string, target: string) => {
     window.open(url, target, "width=720,height=480");
   };
+
   return (
     <div>
       <div className="flex items-center gap-4 border-b p-4">
@@ -37,6 +38,9 @@ export default function WordInspectionPanel({ word }: { word: string }) {
             Seznam (popup)
           </Button>
         </div>
+      </div>
+      <div className="p-4 pt-0">
+        <Button variant="outline">Mark Known</Button>
       </div>
     </div>
   );

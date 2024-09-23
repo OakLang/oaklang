@@ -4,10 +4,10 @@ import { z } from "zod";
 import type { Session } from "@acme/auth";
 import type { InterlinearLine } from "@acme/core/validators";
 import type { DB } from "@acme/db/client";
-import type { UserSettings } from "@acme/db/schema";
+import type { UserSettings, Word } from "@acme/db/schema";
 import { interlinearLine } from "@acme/core/validators";
-import { eq, getDefaultInterlinearLines } from "@acme/db";
-import { trainingSessions, userSettings } from "@acme/db/schema";
+import { eq, getDefaultInterlinearLines, sql } from "@acme/db";
+import { trainingSessions, userSettings, words } from "@acme/db/schema";
 
 export const getTrainingSessionOrThrow = async (
   trainingSessionId: string,
@@ -67,4 +67,29 @@ export const getInterlinearLines = async (
     });
     return lines;
   }
+};
+
+export const getOrCreateWord = async (
+  word: string,
+  langaugeCode: string,
+  db: DB,
+): Promise<Word> => {
+  const cleanWord = word.trim().toLowerCase();
+
+  const [newWord] = await db
+    .insert(words)
+    .values({
+      word: cleanWord,
+      languageCode: langaugeCode,
+    })
+    .onConflictDoUpdate({
+      target: [words.word, words.languageCode],
+      set: {
+        word: sql`${words.word}`,
+        languageCode: sql`${words.languageCode}`,
+      },
+    })
+    .returning();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return newWord!;
 };

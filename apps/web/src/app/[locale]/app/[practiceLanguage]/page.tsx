@@ -15,8 +15,9 @@ export default function AppPage() {
   const [showStartTrainingDialog, setShowStartTrainingDialog] = useState(false);
 
   return (
-    <div className="container my-8 max-w-screen-sm">
-      <div className="flex flex-col gap-4 p-4">
+    <div className="container my-8 max-w-screen-xl">
+      <div className="flex gap-4 p-4">
+        <div className="flex-1"></div>
         <Button
           onClick={() => setShowStartTrainingDialog(!showStartTrainingDialog)}
         >
