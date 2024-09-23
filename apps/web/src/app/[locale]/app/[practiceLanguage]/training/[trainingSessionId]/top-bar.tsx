@@ -1,15 +1,22 @@
 "use client";
 
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import { Reorder, useDragControls, useMotionValue } from "framer-motion";
 import {
   ArrowLeftIcon,
   BookAIcon,
+  EyeIcon,
+  EyeOffIcon,
   MoreHorizontalIcon,
   SidebarCloseIcon,
   SidebarOpenIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
+import type { InterlinearLine } from "@acme/core/validators";
+
+import { ReorderIcon } from "~/components/icons/drag-icon";
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
 import {
@@ -24,12 +31,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Separator } from "~/components/ui/separator";
 import { Slider } from "~/components/ui/slider";
+import { Toggle } from "~/components/ui/toggle";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { useRaisedShadow } from "~/hooks/useRaisedShadow";
+import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
@@ -38,6 +49,7 @@ export default function TopBar() {
   const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
   const trainingSessionQuery =
     api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
+
   const inspectionPanelOpen = useAppStore((state) => state.inspectionPanelOpen);
   const setInspectionPanelOpen = useAppStore(
     (state) => state.setInspectionPanelOpen,
@@ -81,12 +93,12 @@ export default function TopBar() {
                 </Button>
               </TooltipTrigger>
             </PopoverTrigger>
-            <PopoverContent className="p-0" side="bottom" align="end">
+            <PopoverContent className="w-96 p-0" side="bottom" align="end">
               <div className="p-4 pb-0">
                 <h2 className="text-lg font-semibold">Reader Settings</h2>
               </div>
 
-              <div className="space-y-4 p-4">
+              <div className="space-y-6 p-4">
                 <div className="flex items-center">
                   <Label htmlFor="theme-picker" className="flex-1">
                     Theme
@@ -124,6 +136,21 @@ export default function TopBar() {
                     step={2}
                     onValueChange={(values) => setFontSize(values[0] ?? 16)}
                   />
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">Interlinear Lines</p>
+                    <Link
+                      href={`/app/${practiceLanguage}/settings/reader#interlinear-lines`}
+                      className="text-muted-foreground hover:text-foreground text-sm font-medium underline"
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                  <div>
+                    <SimpleInterlinearLineEditor />
+                  </div>
                 </div>
               </div>
             </PopoverContent>
@@ -166,3 +193,116 @@ export default function TopBar() {
     </header>
   );
 }
+
+const SimpleInterlinearLineEditor = () => {
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
+
+  const [interlinearLines, setInterlinearLines] = useState<InterlinearLine[]>(
+    userSettingsQuery.data?.interlinearLines ?? [],
+  );
+
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedChange = useCallback(
+    (value: InterlinearLine[]) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        updateUserSettingsMutation.mutate({ interlinearLines: value });
+      }, 300);
+    },
+    [updateUserSettingsMutation],
+  );
+
+  const handleChange = useCallback(
+    (value: InterlinearLine[], useDebounce?: boolean) => {
+      setInterlinearLines(value);
+      if (useDebounce) {
+        debouncedChange(value);
+      } else {
+        updateUserSettingsMutation.mutate({ interlinearLines: value });
+      }
+    },
+    [debouncedChange, updateUserSettingsMutation],
+  );
+
+  useEffect(() => {
+    if (userSettingsQuery.data?.interlinearLines) {
+      setInterlinearLines(userSettingsQuery.data.interlinearLines);
+    }
+  }, [userSettingsQuery.data?.interlinearLines]);
+
+  return (
+    <Reorder.Group
+      values={interlinearLines}
+      onReorder={(value) => handleChange(value, true)}
+      axis="y"
+    >
+      {interlinearLines.map((line, i) => (
+        <Fragment key={line.id}>
+          <Line
+            item={line}
+            onChange={(newLine, useDebounce) =>
+              handleChange(
+                interlinearLines.map((line, idx) =>
+                  idx === i ? newLine : line,
+                ),
+                useDebounce,
+              )
+            }
+          />
+          {i < interlinearLines.length - 1 && <Separator className="my-1" />}
+        </Fragment>
+      ))}
+    </Reorder.Group>
+  );
+};
+
+const Line = ({
+  item,
+  onChange,
+}: {
+  item: InterlinearLine;
+
+  onChange: (line: InterlinearLine, useDebounce?: boolean) => void;
+}) => {
+  const controls = useDragControls();
+  const y = useMotionValue(0);
+  const boxShadow = useRaisedShadow(y);
+
+  const onToggleHidden = useCallback(() => {
+    onChange({ ...item, hidden: !item.hidden });
+  }, [item, onChange]);
+
+  return (
+    <Reorder.Item
+      value={item}
+      dragListener={false}
+      dragControls={controls}
+      style={{ boxShadow, y }}
+      layout="position"
+      className="bg-background flex items-center rounded-md"
+    >
+      <div
+        onPointerDown={(event) => controls.start(event)}
+        className="hover:bg-secondary flex h-8 w-6 cursor-grab items-center justify-center rounded-md"
+      >
+        <ReorderIcon className="h-4 w-4" />
+      </div>
+      <p className="flex-1 truncate px-2 font-medium">{item.name}</p>
+      <Toggle
+        pressed={item.hidden ?? false}
+        aria-label="Show or hide Line"
+        onPressedChange={onToggleHidden}
+      >
+        {item.hidden ? (
+          <EyeOffIcon className="h-4 w-4" />
+        ) : (
+          <EyeIcon className="h-4 w-4" />
+        )}
+      </Toggle>
+    </Reorder.Item>
+  );
+};

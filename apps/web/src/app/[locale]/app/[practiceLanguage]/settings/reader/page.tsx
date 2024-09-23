@@ -82,7 +82,7 @@ const InterlinearLinesConfigurationSection = () => {
   }, [userSettingsQuery.data?.interlinearLines]);
 
   return (
-    <div className="my-8">
+    <section id="interlinear-lines" className="my-8">
       <h2 className="mb-4 text-xl font-medium">Interlinear Lines</h2>
 
       <div>
@@ -114,6 +114,6 @@ const InterlinearLinesConfigurationSection = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
