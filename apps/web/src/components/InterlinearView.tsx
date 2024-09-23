@@ -160,7 +160,7 @@ function LineWord({
                   "opacity-80": !isPrimaryLine,
                 },
                 isPrimaryLine
-                  ? "text-[2em] leading-none"
+                  ? "text-[1.75em] leading-none"
                   : "text-[1em] leading-none",
               )}
               style={{

@@ -8,6 +8,8 @@ import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
 import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function WordInspectionPanel({ word }: { word: Word }) {
   const openWindow = (url: string, target: string) => {
@@ -56,7 +58,15 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
   });
 
   if (pracitceWordQuery.isPending) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex items-center gap-4 border-b p-4">
+        <Skeleton className="h-10 w-10 rounded-full" />
+        <div className="flex-1">
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <Skeleton className="h-10 w-10 rounded-full" />
+      </div>
+    );
   }
 
   if (pracitceWordQuery.isError) {
@@ -65,10 +75,55 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
 
   return (
     <div>
-      <div className="flex items-center gap-4 border-b p-4">
-        <AudioPlayButton text={word.word} className="h-12 w-12" autoPlay />
-        <p>{word.word}</p>
+      <div className="grid gap-4 border-b p-4">
+        <div className="flex items-center gap-4">
+          <AudioPlayButton text={word.word} className="h-12 w-12" autoPlay />
+          <div className="flex-1">
+            <p>{word.word}</p>
+          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={
+                  markWordKnownMutation.isPending ||
+                  markWordUnknownMutation.isPending
+                }
+                className={cn({
+                  "rounded-full bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 hover:text-yellow-500":
+                    !!pracitceWordQuery.data.knownAt,
+                })}
+                onClick={() => {
+                  if (pracitceWordQuery.data.knownAt) {
+                    markWordUnknownMutation.mutate({ wordId: word.id });
+                  } else {
+                    markWordKnownMutation.mutate({ wordId: word.id });
+                  }
+                }}
+                size="icon"
+              >
+                {markWordKnownMutation.isPending ||
+                markWordUnknownMutation.isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <CheckIcon className="h-5 w-5" />
+                )}
+                <span className="sr-only">
+                  {pracitceWordQuery.data.knownAt
+                    ? "Mark as unknown"
+                    : "Mark as known"}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" align="center">
+              {pracitceWordQuery.data.knownAt
+                ? "Mark as unknown"
+                : "Mark as known"}
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
+
       <div className="p-4">
         <div className="mb-4 flex items-center">
           <h2 className="text-lg font-semibold">Dictionaries</h2>
@@ -98,33 +153,6 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
             Seznam (popup)
           </Button>
         </div>
-      </div>
-      <div className="p-4 pt-0">
-        <Button
-          variant="outline"
-          disabled={
-            markWordKnownMutation.isPending || markWordUnknownMutation.isPending
-          }
-          className={cn({
-            "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 hover:text-yellow-500":
-              !!pracitceWordQuery.data.knownAt,
-          })}
-          onClick={() => {
-            if (pracitceWordQuery.data.knownAt) {
-              markWordUnknownMutation.mutate({ wordId: word.id });
-            } else {
-              markWordKnownMutation.mutate({ wordId: word.id });
-            }
-          }}
-        >
-          {markWordKnownMutation.isPending ||
-          markWordUnknownMutation.isPending ? (
-            <Loader2 className="-mr-1 ml-2 h-4 w-4 animate-spin" />
-          ) : pracitceWordQuery.data.knownAt ? (
-            <CheckIcon className="-ml-1 mr-2 h-4 w-4" />
-          ) : null}
-          Known
-        </Button>
       </div>
     </div>
   );
