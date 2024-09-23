@@ -33,7 +33,6 @@ import {
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import { Slider } from "~/components/ui/slider";
-import { Toggle } from "~/components/ui/toggle";
 import {
   Tooltip,
   TooltipContent,
@@ -44,6 +43,7 @@ import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
+import { cn } from "~/utils";
 
 export default function TopBar() {
   const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
@@ -291,18 +291,25 @@ const Line = ({
       >
         <ReorderIcon className="h-4 w-4" />
       </div>
-      <p className="flex-1 truncate px-2 font-medium">{item.name}</p>
-      <Toggle
-        pressed={item.hidden ?? false}
+      <p
+        className={cn("flex-1 truncate px-2", {
+          "line-through": item.hidden,
+        })}
+      >
+        {item.name}
+      </p>
+      <Button
         aria-label="Show or hide Line"
-        onPressedChange={onToggleHidden}
+        onClick={onToggleHidden}
+        size="icon"
+        variant="ghost"
       >
         {item.hidden ? (
           <EyeOffIcon className="h-4 w-4" />
         ) : (
           <EyeIcon className="h-4 w-4" />
         )}
-      </Toggle>
+      </Button>
     </Reorder.Item>
   );
 };
