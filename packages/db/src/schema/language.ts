@@ -1,6 +1,10 @@
+import { relations } from "drizzle-orm";
 import { pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { trainingSessions } from "./training-session";
+import { userSettings } from "./user-settings";
+import { words } from "./word";
 
 export const languages = pgTable("language", {
   // ISO 639
@@ -12,6 +16,13 @@ export const languages = pgTable("language", {
 
 export type Language = typeof languages.$inferSelect;
 export type LanguageInsert = typeof languages.$inferInsert;
+
+export const languagesRelations = relations(languages, ({ many }) => ({
+  words: many(words),
+  trainingSessions: many(trainingSessions),
+  practiceLanguages: many(practiceLanguages),
+  userSettings: many(userSettings),
+}));
 
 export const practiceLanguages = pgTable(
   "practice_language",
@@ -34,3 +45,17 @@ export const practiceLanguages = pgTable(
 
 export type PracticeLanguage = typeof practiceLanguages.$inferSelect;
 export type PracticeLanguageInsert = typeof practiceLanguages.$inferInsert;
+
+export const practiceLanguagesRelations = relations(
+  practiceLanguages,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [practiceLanguages.userId],
+      references: [users.id],
+    }),
+    language: one(languages, {
+      fields: [practiceLanguages.languageCode],
+      references: [languages.code],
+    }),
+  }),
+);

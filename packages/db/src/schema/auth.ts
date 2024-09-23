@@ -1,4 +1,5 @@
 import type { AdapterAccountType } from "next-auth/adapters";
+import { relations } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -9,6 +10,8 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
+import { practiceWords } from "./practice-word";
+import { userSettings } from "./user-settings";
 
 export const users = pgTable("user", {
   id: text("id")
@@ -21,6 +24,13 @@ export const users = pgTable("user", {
   image: text("image"),
 });
 export type User = typeof users.$inferSelect;
+
+export const usersRelations = relations(users, ({ many }) => ({
+  accounts: many(accounts),
+  sessions: many(sessions),
+  authenticators: many(authenticators),
+  practiceWords: many(practiceWords),
+}));
 
 export const accounts = pgTable(
   "account",
@@ -48,6 +58,13 @@ export const accounts = pgTable(
 );
 export type Account = typeof accounts.$inferSelect;
 
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
 export const sessions = pgTable("session", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   sessionToken: text("session_token").primaryKey(),
@@ -56,6 +73,14 @@ export const sessions = pgTable("session", {
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+  userSettings: one(userSettings),
+}));
 
 export const verificationTokens = pgTable(
   "verification_token",
@@ -93,3 +118,10 @@ export const authenticators = pgTable(
     }),
   }),
 );
+
+export const authenticatorsRelations = relations(authenticators, ({ one }) => ({
+  user: one(users, {
+    fields: [authenticators.userId],
+    references: [users.id],
+  }),
+}));

@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   integer,
   jsonb,
@@ -32,6 +33,14 @@ export const sentences = pgTable(
 export type Sentence = typeof sentences.$inferSelect;
 export type SentenceInsert = typeof sentences.$inferInsert;
 
+export const sentencesRelations = relations(sentences, ({ one, many }) => ({
+  trainingSession: one(trainingSessions, {
+    fields: [sentences.trainingSessionId],
+    references: [trainingSessions.id],
+  }),
+  sentenceWords: many(sentenceWords),
+}));
+
 export const sentenceWords = pgTable(
   "sentence_word",
   {
@@ -50,3 +59,14 @@ export const sentenceWords = pgTable(
     uniqueIdx: unique().on(table.sentenceId, table.index),
   }),
 );
+
+export const sentenceWordsRelations = relations(sentenceWords, ({ one }) => ({
+  sentence: one(sentences, {
+    fields: [sentenceWords.sentenceId],
+    references: [sentences.id],
+  }),
+  words: one(words, {
+    fields: [sentenceWords.wordId],
+    references: [words.id],
+  }),
+}));

@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { boolean, jsonb, pgTable, real, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -31,6 +32,17 @@ export const userSettings = pgTable("user_settings", {
 
 export type UserSettings = typeof userSettings.$inferSelect;
 export type UserSettingsInsert = typeof userSettings.$inferInsert;
+
+export const userSettingsRelations = relations(userSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [userSettings.userId],
+    references: [users.id],
+  }),
+  nativeLanguage: one(languages, {
+    fields: [userSettings.nativeLanguage],
+    references: [languages.code],
+  }),
+}));
 
 export const updateUserSettingsSchema = createInsertSchema(userSettings, {
   interlinearLines: z.array(interlinearLine).min(1).optional(),

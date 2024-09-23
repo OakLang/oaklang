@@ -4,3 +4,4 @@ export * from "./language";
 export * from "./training-session";
 export * from "./word";
 export * from "./sentence";
+export * from "./practice-word";

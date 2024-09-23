@@ -20,7 +20,8 @@
     "check": "npm run with-env drizzle-kit check:pg",
     "seed": "node --import tsx --env-file ../../.env ./src/seed.ts",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "with-env": "dotenv -e ../../.env -c --"
+    "with-env": "dotenv -e ../../.env -c --",
+    "dbml": "tsx ./src/dbml.ts"
   },
   "dependencies": {
     "@acme/core": "*",
@@ -29,6 +30,7 @@
     "@acme/tsconfig": "*",
     "@t3-oss/env-nextjs": "^0.10.1",
     "dotenv-cli": "^7.4.2",
+    "drizzle-dbml-generator": "^0.9.0",
     "drizzle-kit": "0.24.2",
     "drizzle-orm": "0.33.0",
     "drizzle-zod": "^0.5.1",

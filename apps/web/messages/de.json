@@ -18,7 +18,9 @@
     "loading": "Laden...",
     "started": "Begonnen",
     "sessions": "Sitzungen",
-    "start-training": "Beginnen Sie mit dem Training"
+    "start-training": "Beginnen Sie mit dem Training",
+    "complexity": "Komplexität",
+    "language": "Sprache"
   },
   "NotFoundPage": {
     "title": "Seite nicht gefunden!",
