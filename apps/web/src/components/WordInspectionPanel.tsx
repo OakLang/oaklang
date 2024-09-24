@@ -84,13 +84,13 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="outline"
+                variant="ghost"
                 disabled={
                   markWordKnownMutation.isPending ||
                   markWordUnknownMutation.isPending
                 }
-                className={cn({
-                  "rounded-full bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 hover:text-yellow-500":
+                className={cn("rounded-full", {
+                  "bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 hover:text-yellow-500":
                     !!pracitceWordQuery.data.knownAt,
                 })}
                 onClick={() => {
