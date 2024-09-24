@@ -89,8 +89,8 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
                   markWordKnownMutation.isPending ||
                   markWordUnknownMutation.isPending
                 }
-                className={cn("rounded-full", {
-                  "bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 hover:text-yellow-500":
+                className={cn("text-muted-foreground rounded-full", {
+                  "bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20 hover:text-yellow-500 dark:text-yellow-500":
                     !!pracitceWordQuery.data.knownAt,
                 })}
                 onClick={() => {
@@ -104,9 +104,9 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
               >
                 {markWordKnownMutation.isPending ||
                 markWordUnknownMutation.isPending ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
-                  <CheckIcon className="h-5 w-5" />
+                  <CheckIcon className="h-6 w-6" />
                 )}
                 <span className="sr-only">
                   {pracitceWordQuery.data.knownAt

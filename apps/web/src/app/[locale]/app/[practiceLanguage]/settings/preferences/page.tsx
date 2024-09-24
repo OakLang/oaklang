@@ -16,6 +16,7 @@ import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import { useRouter } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
+import { AVAILABLE_PROMPT_TEMPLATE_KEYS } from "~/utils/constants";
 
 export default function PreferencesPage() {
   const { theme, setTheme } = useTheme();
@@ -91,16 +92,6 @@ export default function PreferencesPage() {
   );
 }
 
-const AVAILABLE_KEYS = [
-  "{{PRACTICE_LANGUAGE}}",
-  "{{NATIVE_LANGUAGE}}",
-  "{{KNOWN_WORDS}}",
-  "{{PRACTICE_WORDS}}",
-  "{{PREVIOUSLY_GENERATED_SENTENCES}}",
-  "{{SENTENCE_COUNT}}",
-  "{{COMPLEXITY}}",
-];
-
 const PromptTemplate = () => {
   const promptTemplate = useAppStore((state) => state.promptTemplate);
   const setPromptTemplate = useAppStore((state) => state.setPromptTemplate);
@@ -126,7 +117,7 @@ const PromptTemplate = () => {
         <p className="text-muted-foreground text-sm">
           Available Keys{" "}
           {format.list(
-            AVAILABLE_KEYS.map((key) => (
+            AVAILABLE_PROMPT_TEMPLATE_KEYS.map((key) => (
               <code key={key} className="font-semibold">
                 {key}
               </code>
