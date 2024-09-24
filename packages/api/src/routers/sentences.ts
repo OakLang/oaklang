@@ -253,7 +253,7 @@ const buildPrompt = async ({
       .limit(40);
 
     promptTemplate = promptTemplate.replaceAll(
-      "{{PRACTICE_WORDS}}",
+      "{{KNOWN_WORDS}}",
       knownWordsList.map((word) => word.word).join(", "),
     );
   }
