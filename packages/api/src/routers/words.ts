@@ -43,6 +43,7 @@ export const wordsRouter = createTRPCRouter({
           target: [practiceWords.userId, practiceWords.wordId],
           set: {
             practiceCount: sql`${practiceWords.practiceCount} + 1`,
+            lastSeenAt: sql`NOW()`,
           },
         });
     }),
