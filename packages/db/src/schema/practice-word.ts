@@ -4,8 +4,8 @@ import { integer, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
 import { users } from "./auth";
 import { words } from "./word";
 
-export const practiceWords = pgTable(
-  "practice_word",
+export const userWords = pgTable(
+  "user_word",
   {
     createdAt: timestamp("created_at").notNull().defaultNow(),
     wordId: text("word_id")
@@ -14,22 +14,28 @@ export const practiceWords = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    practiceCount: integer("practice_count").notNull().default(1),
-    lastSeenAt: timestamp("last_seen_at").notNull().defaultNow(),
     knownAt: timestamp("known_at"),
+    lastSeenAt: timestamp("last_seen_at").notNull().defaultNow(),
+    seenCount: integer("seen_count").notNull().default(1),
+    lastPracticedAt: timestamp("last_practiced_at"),
+    practiceCount: integer("practice_count").notNull().default(0),
+    timesUsedSinceLastPractice: integer("times_used_since_last_practice")
+      .notNull()
+      .default(0),
+    nextPracticeAt: timestamp("next_practice_at"),
   },
   (table) => ({
     uniqueIdx: unique().on(table.userId, table.wordId),
   }),
 );
 
-export const practiceWordsRelations = relations(practiceWords, ({ one }) => ({
+export const practiceWordsRelations = relations(userWords, ({ one }) => ({
   word: one(words, {
-    fields: [practiceWords.wordId],
+    fields: [userWords.wordId],
     references: [words.id],
   }),
   user: one(users, {
-    fields: [practiceWords.userId],
+    fields: [userWords.userId],
     references: [users.id],
   }),
 }));

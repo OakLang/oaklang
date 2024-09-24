@@ -1,17 +1,15 @@
 import { createStore } from "zustand/vanilla";
 
-import type { Word } from "@acme/db/schema";
-
 interface AppState {
   promptTemplate: string;
-  inspectedWord: Word | null;
+  inspectedWordId: string | null;
   inspectionPanelOpen: boolean;
   fontSize: number;
 }
 
 interface AppActions {
   setPromptTemplate: (template: string) => void;
-  setInspectedWord: (wordId: Word | null) => void;
+  setInspectedWordId: (wordId: string | null) => void;
   setInspectionPanelOpen: (sidebarOpen: boolean) => void;
   setFontSize: (fontSize: number) => void;
 }
@@ -29,8 +27,8 @@ export const createAppStore = (initState: AppState) => {
       set({ fontSize });
       localStorage.setItem("font_size", String(fontSize));
     },
-    setInspectedWord: (word) => {
-      set({ inspectedWord: word });
+    setInspectedWordId: (inspectedWordId) => {
+      set({ inspectedWordId });
     },
     setInspectionPanelOpen: (inspectionPanelOpen) => {
       set({ inspectionPanelOpen });
@@ -58,7 +56,7 @@ export const initAppStore = (): AppState => {
   return {
     promptTemplate:
       localStorage.getItem("prompt_template") ?? DEFAULT_PROMPT_TEMPLATE,
-    inspectedWord: null,
+    inspectedWordId: null,
     inspectionPanelOpen:
       localStorage.getItem("inspection_panel_open") === "true",
     fontSize: localStorage.getItem("font_size")

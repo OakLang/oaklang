@@ -10,7 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
-import { practiceWords } from "./practice-word";
+import { userWords } from "./practice-word";
 import { userSettings } from "./user-settings";
 
 export const users = pgTable("user", {
@@ -29,7 +29,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   authenticators: many(authenticators),
-  practiceWords: many(practiceWords),
+  practiceWords: many(userWords),
 }));
 
 export const accounts = pgTable(

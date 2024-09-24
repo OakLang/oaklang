@@ -43,7 +43,7 @@ export default function ContentView() {
     { enabled: trainingSessionQuery.isSuccess },
   );
   const updateTrainingSessionMutation = useUpdateTrainingSessionMutation();
-  const addPracticeWordsMutation = api.words.addPracticeWords.useMutation({
+  const seenWordsMutation = api.words.seenWords.useMutation({
     onError: (error) => {
       toast(error.message);
     },
@@ -151,7 +151,7 @@ export default function ContentView() {
   useEffect(() => {
     const wordIds = currentSentence?.sentenceWords.map((word) => word.wordId);
     if (wordIds && wordIds.length > 0) {
-      addPracticeWordsMutation.mutate({ wordIds });
+      seenWordsMutation.mutate(wordIds);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSentence]);

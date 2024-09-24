@@ -28,7 +28,7 @@ export default function InterlinearView({
     api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
 
   const fontSize = useAppStore((state) => state.fontSize);
-  const setInspectedWord = useAppStore((state) => state.setInspectedWord);
+  const setInspectedWordId = useAppStore((state) => state.setInspectedWordId);
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
 
   const ref = useRef<HTMLDivElement>(null);
@@ -40,7 +40,7 @@ export default function InterlinearView({
 
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     if (e.target === ref.current) {
-      setInspectedWord(null);
+      setInspectedWordId(null);
     }
   };
 
@@ -128,16 +128,16 @@ function LineWord({
 }) {
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
 
-  const inspectedWord = useAppStore((state) => state.inspectedWord);
-  const setInspectedWord = useAppStore((state) => state.setInspectedWord);
+  const inspectedWordId = useAppStore((state) => state.inspectedWordId);
+  const setInspectedWordId = useAppStore((state) => state.setInspectedWordId);
 
   const onClick = useCallback(
     (line: InterlinearLine) => {
       if (line.name === PRIMARY_LINE_NAME) {
-        setInspectedWord(word.word);
+        setInspectedWordId(word.wordId);
       }
     },
-    [setInspectedWord, word.word],
+    [setInspectedWordId, word.wordId],
   );
 
   return (
@@ -154,8 +154,8 @@ function LineWord({
                 "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200",
                 {
                   "ring-2 ring-yellow-400 hover:ring-yellow-400":
-                    inspectedWord &&
-                    inspectedWord.id === word.word.id &&
+                    inspectedWordId &&
+                    inspectedWordId === word.word.id &&
                     isPrimaryLine,
                   "opacity-80": !isPrimaryLine,
                 },

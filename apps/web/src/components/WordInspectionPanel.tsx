@@ -2,8 +2,6 @@ import { useParams } from "next/navigation";
 import { CheckIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { Word } from "@acme/db/schema";
-
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
@@ -11,24 +9,24 @@ import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-export default function WordInspectionPanel({ word }: { word: Word }) {
+export default function WordInspectionPanel({ wordId }: { wordId: string }) {
   const openWindow = (url: string, target: string) => {
     window.open(url, target, "width=720,height=480");
   };
   const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
-  const pracitceWordQuery = api.words.getPracticeWord.useQuery({
-    wordId: word.id,
+  const pracitceWordQuery = api.words.getUserWord.useQuery({
+    wordId: wordId,
   });
 
   const utils = api.useUtils();
   const markWordKnownMutation = api.words.markWordKnown.useMutation({
     onMutate: (vars) => {
-      utils.words.getPracticeWord.setData({ wordId: vars.wordId }, (word) =>
+      utils.words.getUserWord.setData({ wordId: vars.wordId }, (word) =>
         word ? { ...word, knownAt: new Date() } : undefined,
       );
     },
     onSuccess: (_, vars) => {
-      void utils.words.getPracticeWord.invalidate({ wordId: vars.wordId });
+      void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
       void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
       void utils.languages.getPracticeLanguages.invalidate(undefined, {
         type: "active",
@@ -41,12 +39,12 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
 
   const markWordUnknownMutation = api.words.markWordUnknown.useMutation({
     onMutate: (vars) => {
-      utils.words.getPracticeWord.setData({ wordId: vars.wordId }, (word) =>
+      utils.words.getUserWord.setData({ wordId: vars.wordId }, (word) =>
         word ? { ...word, knownAt: null } : undefined,
       );
     },
     onSuccess: (_, vars) => {
-      void utils.words.getPracticeWord.invalidate({ wordId: vars.wordId });
+      void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
       void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
       void utils.languages.getPracticeLanguages.invalidate(undefined, {
         type: "active",
@@ -77,9 +75,13 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
     <div>
       <div className="grid gap-4 border-b p-4">
         <div className="flex items-center gap-4">
-          <AudioPlayButton text={word.word} className="h-12 w-12" autoPlay />
+          <AudioPlayButton
+            text={pracitceWordQuery.data.word.word}
+            className="h-12 w-12"
+            autoPlay
+          />
           <div className="flex-1">
-            <p>{word.word}</p>
+            <p>{pracitceWordQuery.data.word.word}</p>
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -95,9 +97,13 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
                 })}
                 onClick={() => {
                   if (pracitceWordQuery.data.knownAt) {
-                    markWordUnknownMutation.mutate({ wordId: word.id });
+                    markWordUnknownMutation.mutate({
+                      wordId: pracitceWordQuery.data.wordId,
+                    });
                   } else {
-                    markWordKnownMutation.mutate({ wordId: word.id });
+                    markWordKnownMutation.mutate({
+                      wordId: pracitceWordQuery.data.wordId,
+                    });
                   }
                 }}
                 size="icon"
@@ -134,7 +140,7 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
             variant="secondary"
             onClick={() =>
               openWindow(
-                `https://en.wiktionary.org/wiki/${word.word}`,
+                `https://en.wiktionary.org/wiki/${pracitceWordQuery.data.word.word}`,
                 "wiktionary",
               )
             }
@@ -145,7 +151,7 @@ export default function WordInspectionPanel({ word }: { word: Word }) {
             variant="secondary"
             onClick={() =>
               openWindow(
-                `https://slovnik.seznam.cz/preklad/cesky_anglicky/${word.word}`,
+                `https://slovnik.seznam.cz/preklad/cesky_anglicky/${pracitceWordQuery.data.word.word}`,
                 "seznam",
               )
             }

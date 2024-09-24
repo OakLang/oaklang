@@ -29,6 +29,20 @@
       "when": 1727160354873,
       "tag": "0003_massive_tyger_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1727174397647,
+      "tag": "0004_fearless_stranger",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1727174419044,
+      "tag": "0005_soft_lilith",
+      "breakpoints": true
     }
   ]
 }

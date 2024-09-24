@@ -1,49 +1,52 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { eq, sql } from "@acme/db";
-import { practiceWords } from "@acme/db/schema";
+import { and, eq, sql } from "@acme/db";
+import { userWords, words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const wordsRouter = createTRPCRouter({
-  getPracticeWord: protectedProcedure
+  getUserWord: protectedProcedure
     .input(z.object({ wordId: z.string() }))
     .query(async ({ ctx, input }) => {
       const [word] = await ctx.db
         .select()
-        .from(practiceWords)
-        .where(eq(practiceWords.wordId, input.wordId));
+        .from(userWords)
+        .innerJoin(words, eq(words.id, userWords.wordId))
+        .where(
+          and(
+            eq(userWords.wordId, input.wordId),
+            eq(userWords.userId, ctx.session.user.id),
+          ),
+        );
       if (!word) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Word not found!" });
       }
-      return word;
+      return {
+        ...word.user_word,
+        word: word.word,
+      };
     }),
-  addPracticeWords: protectedProcedure
-    .input(
-      z.object({
-        wordIds: z.array(z.string()).min(1),
-        markKnow: z.boolean().optional().default(false),
-      }),
-    )
+  seenWords: protectedProcedure
+    .input(z.array(z.string()).min(1))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .insert(practiceWords)
+        .insert(userWords)
         .values(
-          input.wordIds.map(
+          input.map(
             (wordId) =>
               ({
                 wordId,
                 userId: ctx.session.user.id,
-                knownAt: input.markKnow ? new Date() : undefined,
-              }) satisfies typeof practiceWords.$inferInsert,
+              }) satisfies typeof userWords.$inferInsert,
           ),
         )
         .onConflictDoUpdate({
-          target: [practiceWords.userId, practiceWords.wordId],
+          target: [userWords.userId, userWords.wordId],
           set: {
-            practiceCount: sql`${practiceWords.practiceCount} + 1`,
             lastSeenAt: sql`NOW()`,
+            seenCount: sql`${userWords.seenCount} + 1`,
           },
         });
     }),
@@ -51,14 +54,14 @@ export const wordsRouter = createTRPCRouter({
     .input(z.object({ wordId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .insert(practiceWords)
+        .insert(userWords)
         .values({
           knownAt: new Date(),
           userId: ctx.session.user.id,
           wordId: input.wordId,
         })
         .onConflictDoUpdate({
-          target: [practiceWords.userId, practiceWords.wordId],
+          target: [userWords.userId, userWords.wordId],
           set: {
             knownAt: new Date(),
           },
@@ -68,13 +71,13 @@ export const wordsRouter = createTRPCRouter({
     .input(z.object({ wordId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .insert(practiceWords)
+        .insert(userWords)
         .values({
           userId: ctx.session.user.id,
           wordId: input.wordId,
         })
         .onConflictDoUpdate({
-          target: [practiceWords.userId, practiceWords.wordId],
+          target: [userWords.userId, userWords.wordId],
           set: {
             knownAt: null,
           },

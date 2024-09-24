@@ -10,9 +10,9 @@ import type { Language, TrainingSession, UserSettings } from "@acme/db/schema";
 import { and, asc, desc, eq, isNull, not } from "@acme/db";
 import {
   languages,
-  practiceWords,
   sentences,
   sentenceWords,
+  userWords,
   words,
 } from "@acme/db/schema";
 
@@ -240,16 +240,16 @@ const buildPrompt = async ({
   if (promptTemplate.includes("{{KNOWN_WORDS}}")) {
     const knownWordsList = await db
       .select({ word: words.word })
-      .from(practiceWords)
-      .innerJoin(words, eq(words.id, practiceWords.wordId))
+      .from(userWords)
+      .innerJoin(words, eq(words.id, userWords.wordId))
       .where(
         and(
-          eq(practiceWords.userId, session.user.id),
+          eq(userWords.userId, session.user.id),
           eq(words.languageCode, trainingSession.languageCode),
-          not(isNull(practiceWords.knownAt)),
+          not(isNull(userWords.knownAt)),
         ),
       )
-      .orderBy(desc(practiceWords.knownAt))
+      .orderBy(desc(userWords.knownAt))
       .limit(40);
 
     promptTemplate = promptTemplate.replaceAll(
@@ -261,16 +261,16 @@ const buildPrompt = async ({
   if (promptTemplate.includes("{{PRACTICE_WORDS}}")) {
     const practiceWordsList = await db
       .select({ word: words.word })
-      .from(practiceWords)
-      .innerJoin(words, eq(words.id, practiceWords.wordId))
+      .from(userWords)
+      .innerJoin(words, eq(words.id, userWords.wordId))
       .where(
         and(
-          eq(practiceWords.userId, session.user.id),
+          eq(userWords.userId, session.user.id),
           eq(words.languageCode, trainingSession.languageCode),
-          isNull(practiceWords.knownAt),
+          isNull(userWords.knownAt),
         ),
       )
-      .orderBy(desc(practiceWords.practiceCount))
+      .orderBy(desc(userWords.practiceCount))
       .limit(40);
 
     promptTemplate = promptTemplate.replaceAll(

@@ -3,7 +3,7 @@ import { pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
 import { languages } from "./language";
-import { practiceWords } from "./practice-word";
+import { userWords } from "./practice-word";
 
 export const words = pgTable(
   "word",
@@ -26,7 +26,7 @@ export type Word = typeof words.$inferSelect;
 export type WordInsert = typeof words.$inferInsert;
 
 export const wordsRelations = relations(words, ({ many, one }) => ({
-  practiceWords: many(practiceWords),
+  practiceWords: many(userWords),
   langauge: one(languages, {
     fields: [words.languageCode],
     references: [languages.code],

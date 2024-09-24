@@ -16,9 +16,9 @@ import {
   sql,
 } from "@acme/db";
 import {
-  practiceWords,
   trainingSessions,
   userSettings,
+  userWords,
   words,
 } from "@acme/db/schema";
 
@@ -114,12 +114,12 @@ export const getKnownWordsCountForLanguage = async (
 ): Promise<number> => {
   const [row] = await db
     .select({ count: count() })
-    .from(practiceWords)
-    .innerJoin(words, eq(words.id, practiceWords.wordId))
+    .from(userWords)
+    .innerJoin(words, eq(words.id, userWords.wordId))
     .where(
       and(
-        eq(practiceWords.userId, session.user.id),
-        not(isNull(practiceWords.knownAt)),
+        eq(userWords.userId, session.user.id),
+        not(isNull(userWords.knownAt)),
         eq(words.languageCode, languageCode),
       ),
     );
@@ -132,11 +132,11 @@ export const getKnownWordsCount = async (
 ): Promise<number> => {
   const [row] = await db
     .select({ count: count() })
-    .from(practiceWords)
+    .from(userWords)
     .where(
       and(
-        eq(practiceWords.userId, session.user.id),
-        not(isNull(practiceWords.knownAt)),
+        eq(userWords.userId, session.user.id),
+        not(isNull(userWords.knownAt)),
       ),
     );
   return row?.count ?? 0;
