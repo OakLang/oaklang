@@ -238,27 +238,6 @@ const buildPrompt = async ({
   nativeLanguage: Language;
   practiceLanguage: Language;
 }) => {
-  if (promptTemplate.includes("{{KNOWN_WORDS}}")) {
-    const knownWordsList = await db
-      .select({ word: words.word })
-      .from(userWords)
-      .innerJoin(words, eq(words.id, userWords.wordId))
-      .where(
-        and(
-          eq(userWords.userId, session.user.id),
-          eq(words.languageCode, trainingSession.languageCode),
-          not(isNull(userWords.knownAt)),
-        ),
-      )
-      .orderBy(desc(userWords.knownAt))
-      .limit(40);
-
-    promptTemplate = promptTemplate.replaceAll(
-      "{{KNOWN_WORDS}}",
-      knownWordsList.map((word) => word.word).join(", "),
-    );
-  }
-
   if (promptTemplate.includes("{{PRACTICE_WORDS}}")) {
     const practiceWordsList = await getCurrentPracticeWords({
       db,
