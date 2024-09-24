@@ -1,6 +1,7 @@
 import type { ClassValue } from "clsx";
 import type { CSSProperties } from "react";
 import { clsx } from "clsx";
+import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
 
 import type { InterlinearLine } from "@acme/core/validators";
@@ -34,4 +35,8 @@ export const getCSSStyleForInterlinearLine = (
     fontStyle: line.style.fontStyle ?? undefined,
     color: line.style.color ?? undefined,
   };
+};
+
+export const formatDate = (date: Date) => {
+  return dayjs(date).format("MMM D, YYYY h:mm A");
 };

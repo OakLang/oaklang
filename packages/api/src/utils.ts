@@ -9,10 +9,13 @@ import { interlinearLine } from "@acme/core/validators";
 import {
   and,
   count,
+  desc,
   eq,
   getDefaultInterlinearLines,
   isNull,
+  lt,
   not,
+  or,
   sql,
 } from "@acme/db";
 import {
@@ -140,4 +143,42 @@ export const getKnownWordsCount = async (
       ),
     );
   return row?.count ?? 0;
+};
+
+export const getCurrentPracticeWords = async ({
+  db,
+  languageCode,
+  session,
+}: {
+  db: DB;
+  session: Session;
+  languageCode: string;
+}) => {
+  return db
+    .select({
+      word: words.word,
+      wordId: userWords.wordId,
+      seenCount: userWords.seenCount,
+      lastPracticedAt: userWords.lastPracticedAt,
+      practiceCount: userWords.practiceCount,
+      seenCountSinceLastPracticed: userWords.seenCountSinceLastPracticed,
+      nextPracticeAt: userWords.nextPracticeAt,
+      spacedRepetitionStage: userWords.spacedRepetitionStage,
+      lastSeenAt: userWords.lastSeenAt,
+    })
+    .from(userWords)
+    .innerJoin(words, eq(words.id, userWords.wordId))
+    .where(
+      and(
+        eq(userWords.userId, session.user.id),
+        eq(words.languageCode, languageCode),
+        isNull(userWords.knownAt),
+        or(
+          isNull(userWords.nextPracticeAt),
+          lt(userWords.nextPracticeAt, sql`NOW()`),
+        ),
+      ),
+    )
+    .orderBy(desc(userWords.practiceCount))
+    .limit(40);
 };

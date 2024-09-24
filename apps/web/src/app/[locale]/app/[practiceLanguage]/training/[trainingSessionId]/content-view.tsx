@@ -43,7 +43,7 @@ export default function ContentView() {
     { enabled: trainingSessionQuery.isSuccess },
   );
   const updateTrainingSessionMutation = useUpdateTrainingSessionMutation();
-  const seenWordsMutation = api.words.seenWords.useMutation({
+  const seenWordMutation = api.words.seenWord.useMutation({
     onError: (error) => {
       toast(error.message);
     },
@@ -148,13 +148,20 @@ export default function ContentView() {
     promptTemplate,
   ]);
 
+  const uniqueWordIds = useMemo(() => {
+    const wordIds =
+      currentSentence?.sentenceWords.map((word) => word.wordId) ?? [];
+    return wordIds.filter(
+      (id, i) => wordIds.findIndex((wid) => wid === id) === i,
+    );
+  }, [currentSentence?.sentenceWords]);
+
   useEffect(() => {
-    const wordIds = currentSentence?.sentenceWords.map((word) => word.wordId);
-    if (wordIds && wordIds.length > 0) {
-      seenWordsMutation.mutate(wordIds);
-    }
+    void Promise.all(
+      uniqueWordIds.map((wordId) => seenWordMutation.mutate({ wordId })),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSentence]);
+  }, [uniqueWordIds]);
 
   return (
     <div className="flex flex-1 gap-4 py-8 md:py-16">

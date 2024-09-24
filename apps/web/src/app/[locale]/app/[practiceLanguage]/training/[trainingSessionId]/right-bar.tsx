@@ -1,5 +1,6 @@
 "use client";
 
+import CurrentPracticeWordsPanel from "~/components/CurrentPracticeWordsPanel";
 import WordInspectionPanel from "~/components/WordInspectionPanel";
 import { useAppStore } from "~/providers/app-store-provider";
 
@@ -12,11 +13,11 @@ export default function RightBar() {
   }
 
   return (
-    <aside className="w-96 flex-shrink-0 border-l">
+    <aside className="flex h-[calc(100vh-4rem-1px)] w-96 flex-shrink-0 flex-col overflow-y-auto border-l">
       {inspectedWordId ? (
         <WordInspectionPanel wordId={inspectedWordId} />
       ) : (
-        <p className="text-muted-foreground p-4">Select a word</p>
+        <CurrentPracticeWordsPanel />
       )}
     </aside>
   );

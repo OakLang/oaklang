@@ -10,8 +10,8 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
-import { userWords } from "./practice-word";
 import { userSettings } from "./user-settings";
+import { userWords } from "./user-word";
 
 export const users = pgTable("user", {
   id: text("id")

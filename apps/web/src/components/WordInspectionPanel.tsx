@@ -3,7 +3,7 @@ import { CheckIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { api } from "~/trpc/react";
-import { cn } from "~/utils";
+import { cn, formatDate } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
@@ -14,9 +14,12 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
     window.open(url, target, "width=720,height=480");
   };
   const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
-  const pracitceWordQuery = api.words.getUserWord.useQuery({
-    wordId: wordId,
-  });
+  const userWordQuery = api.words.getUserWord.useQuery(
+    {
+      wordId: wordId,
+    },
+    { staleTime: 0 },
+  );
 
   const utils = api.useUtils();
   const markWordKnownMutation = api.words.markWordKnown.useMutation({
@@ -55,7 +58,7 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
     },
   });
 
-  if (pracitceWordQuery.isPending) {
+  if (userWordQuery.isPending) {
     return (
       <div className="flex items-center gap-4 border-b p-4">
         <Skeleton className="h-10 w-10 rounded-full" />
@@ -67,8 +70,8 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
     );
   }
 
-  if (pracitceWordQuery.isError) {
-    return <p>{pracitceWordQuery.error.message}</p>;
+  if (userWordQuery.isError) {
+    return <p>{userWordQuery.error.message}</p>;
   }
 
   return (
@@ -76,12 +79,12 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
       <div className="grid gap-4 border-b p-4">
         <div className="flex items-center gap-4">
           <AudioPlayButton
-            text={pracitceWordQuery.data.word.word}
+            text={userWordQuery.data.word.word}
             className="h-12 w-12"
             autoPlay
           />
           <div className="flex-1">
-            <p>{pracitceWordQuery.data.word.word}</p>
+            <p>{userWordQuery.data.word.word}</p>
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -93,16 +96,16 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
                 }
                 className={cn("text-muted-foreground rounded-full", {
                   "bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20 hover:text-yellow-500 dark:text-yellow-500":
-                    !!pracitceWordQuery.data.knownAt,
+                    !!userWordQuery.data.knownAt,
                 })}
                 onClick={() => {
-                  if (pracitceWordQuery.data.knownAt) {
+                  if (userWordQuery.data.knownAt) {
                     markWordUnknownMutation.mutate({
-                      wordId: pracitceWordQuery.data.wordId,
+                      wordId: userWordQuery.data.wordId,
                     });
                   } else {
                     markWordKnownMutation.mutate({
-                      wordId: pracitceWordQuery.data.wordId,
+                      wordId: userWordQuery.data.wordId,
                     });
                   }
                 }}
@@ -115,16 +118,14 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
                   <CheckIcon className="h-6 w-6" />
                 )}
                 <span className="sr-only">
-                  {pracitceWordQuery.data.knownAt
+                  {userWordQuery.data.knownAt
                     ? "Mark as unknown"
                     : "Mark as known"}
                 </span>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left" align="center">
-              {pracitceWordQuery.data.knownAt
-                ? "Mark as unknown"
-                : "Mark as known"}
+              {userWordQuery.data.knownAt ? "Mark as unknown" : "Mark as known"}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -140,7 +141,7 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
             variant="secondary"
             onClick={() =>
               openWindow(
-                `https://en.wiktionary.org/wiki/${pracitceWordQuery.data.word.word}`,
+                `https://en.wiktionary.org/wiki/${userWordQuery.data.word.word}`,
                 "wiktionary",
               )
             }
@@ -151,7 +152,7 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
             variant="secondary"
             onClick={() =>
               openWindow(
-                `https://slovnik.seznam.cz/preklad/cesky_anglicky/${pracitceWordQuery.data.word.word}`,
+                `https://slovnik.seznam.cz/preklad/cesky_anglicky/${userWordQuery.data.word.word}`,
                 "seznam",
               )
             }
@@ -159,6 +160,33 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
             Seznam (popup)
           </Button>
         </div>
+      </div>
+
+      <div className="grid gap-2 text-sm">
+        {Object.entries({
+          "Known At": userWordQuery.data.knownAt
+            ? formatDate(userWordQuery.data.knownAt)
+            : null,
+          "Last Seen At": userWordQuery.data.lastSeenAt
+            ? formatDate(userWordQuery.data.lastSeenAt)
+            : null,
+          "Last Practiced At": userWordQuery.data.lastPracticedAt
+            ? formatDate(userWordQuery.data.lastPracticedAt)
+            : null,
+          "Next Practice At": userWordQuery.data.nextPracticeAt
+            ? formatDate(userWordQuery.data.nextPracticeAt)
+            : null,
+          "Seen Count": userWordQuery.data.seenCount.toLocaleString(),
+          "Practice Count": userWordQuery.data.practiceCount.toLocaleString(),
+          "Seen Count Since Last Practiced":
+            userWordQuery.data.seenCountSinceLastPracticed.toLocaleString(),
+          "Spaced Repetition Stage": userWordQuery.data.spacedRepetitionStage,
+        }).map((item) => (
+          <div key={item[0]} className="flex items-center justify-between px-4">
+            <p>{item[0]}</p>
+            <p className="text-muted-foreground text-right">{item[1] ?? "-"}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

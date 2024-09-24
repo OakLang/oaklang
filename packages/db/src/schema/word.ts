@@ -3,7 +3,7 @@ import { pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
 import { languages } from "./language";
-import { userWords } from "./practice-word";
+import { userWords } from "./user-word";
 
 export const words = pgTable(
   "word",

@@ -18,6 +18,7 @@ import {
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
+  getCurrentPracticeWords,
   getOrCreateWord,
   getTrainingSessionOrThrow,
   getUserSettings,
@@ -259,20 +260,11 @@ const buildPrompt = async ({
   }
 
   if (promptTemplate.includes("{{PRACTICE_WORDS}}")) {
-    const practiceWordsList = await db
-      .select({ word: words.word })
-      .from(userWords)
-      .innerJoin(words, eq(words.id, userWords.wordId))
-      .where(
-        and(
-          eq(userWords.userId, session.user.id),
-          eq(words.languageCode, trainingSession.languageCode),
-          isNull(userWords.knownAt),
-        ),
-      )
-      .orderBy(desc(userWords.practiceCount))
-      .limit(40);
-
+    const practiceWordsList = await getCurrentPracticeWords({
+      db,
+      languageCode: practiceLanguage.code,
+      session,
+    });
     promptTemplate = promptTemplate.replaceAll(
       "{{PRACTICE_WORDS}}",
       practiceWordsList.map((word) => word.word).join(", "),

@@ -15,14 +15,17 @@ export const userWords = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     knownAt: timestamp("known_at"),
-    lastSeenAt: timestamp("last_seen_at").notNull().defaultNow(),
-    seenCount: integer("seen_count").notNull().default(1),
+    lastSeenAt: timestamp("last_seen_at"),
+    seenCount: integer("seen_count").notNull().default(0),
     lastPracticedAt: timestamp("last_practiced_at"),
     practiceCount: integer("practice_count").notNull().default(0),
-    timesUsedSinceLastPractice: integer("times_used_since_last_practice")
+    seenCountSinceLastPracticed: integer("seen_count_since_last_practiced")
       .notNull()
       .default(0),
     nextPracticeAt: timestamp("next_practice_at"),
+    spacedRepetitionStage: integer("spaced_repetition_stage")
+      .notNull()
+      .default(1),
   },
   (table) => ({
     uniqueIdx: unique().on(table.userId, table.wordId),

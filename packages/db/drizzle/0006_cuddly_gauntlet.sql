@@ -1,0 +1,2 @@
+ALTER TABLE "user_word" RENAME COLUMN "times_used_since_last_practice" TO "seen_count_since_last_practiced";--> statement-breakpoint
+ALTER TABLE "user_word" ALTER COLUMN "seen_count_since_last_practiced" SET DEFAULT 1;
