@@ -1,10 +1,18 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import { PlusIcon, RefreshCcwIcon } from "lucide-react";
+import { nanoid } from "nanoid";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
+
+import type { SpacedRepetitionStage } from "@acme/core/validators";
 
 import PageTitle from "~/components/PageTitle";
+import SpacedRepetitionStagesEditor from "~/components/SpacedRepetitionStagesEditor";
+import { Button } from "~/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -14,8 +22,10 @@ import {
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
+import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { useRouter } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
+import { api } from "~/trpc/react";
 import { AVAILABLE_PROMPT_TEMPLATE_KEYS } from "~/utils/constants";
 
 export default function PreferencesPage() {
@@ -88,6 +98,8 @@ export default function PreferencesPage() {
       <Separator className="my-8" />
 
       <PromptTemplate />
+      <Separator className="my-8" />
+      <SpacedRepetitionStagesConfigurationSection />
     </div>
   );
 }
@@ -124,6 +136,105 @@ const PromptTemplate = () => {
             )),
           )}
         </p>
+      </div>
+    </section>
+  );
+};
+
+const SpacedRepetitionStagesConfigurationSection = () => {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
+
+  const [spacedRepetitionStages, setSpacedRepetitionStages] = useState<
+    SpacedRepetitionStage[]
+  >(userSettingsQuery.data?.spacedRepetitionStages ?? []);
+
+  const resetSpacedRepetitionStagesMut =
+    api.userSettings.resetSpacedRepetitionStages.useMutation({
+      onError: (error) => {
+        toast(error.message);
+      },
+      onSuccess: (spacedRepetitionStages) => {
+        setSpacedRepetitionStages(spacedRepetitionStages);
+        updateUserSettingsMutation.mutate({ spacedRepetitionStages });
+      },
+    });
+
+  // const addNewInterlinearLineMut =
+  //   api.userSettings.addNewInterlinearLine.useMutation({
+  //     onError: (error) => {
+  //       toast(error.message);
+  //     },
+  //     onSuccess: (value) => {
+  //       setInterlinearLines(value);
+  //       updateUserSettingsMutation.mutate({ interlinearLines: value });
+  //     },
+  //   });
+
+  const debouncedChange = useCallback(
+    (spacedRepetitionStages: SpacedRepetitionStage[]) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        updateUserSettingsMutation.mutate({ spacedRepetitionStages });
+      }, 300);
+    },
+    [updateUserSettingsMutation],
+  );
+
+  const handleChange = useCallback(
+    (spacedRepetitionStages: SpacedRepetitionStage[]) => {
+      setSpacedRepetitionStages(spacedRepetitionStages);
+      debouncedChange(spacedRepetitionStages);
+    },
+    [debouncedChange],
+  );
+
+  useEffect(() => {
+    if (userSettingsQuery.data?.spacedRepetitionStages) {
+      setSpacedRepetitionStages(userSettingsQuery.data.spacedRepetitionStages);
+    }
+  }, [userSettingsQuery.data?.spacedRepetitionStages]);
+
+  return (
+    <section id="interlinear-lines" className="my-8">
+      <h2 className="mb-4 text-xl font-medium">Spaced Repetition Stages</h2>
+
+      <div>
+        <SpacedRepetitionStagesEditor
+          items={spacedRepetitionStages}
+          onChange={handleChange}
+        />
+        <div className="flex flex-wrap gap-4 pt-4">
+          <Button
+            variant="outline"
+            onClick={() =>
+              handleChange([
+                ...spacedRepetitionStages,
+                {
+                  id: nanoid(),
+                  iteration: spacedRepetitionStages.length + 1,
+                  waitTime: "0",
+                  repetitions: 0,
+                  timesToShowDisappearing: 0,
+                },
+              ])
+            }
+          >
+            <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
+            Add new Iteration
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => resetSpacedRepetitionStagesMut.mutate()}
+            disabled={resetSpacedRepetitionStagesMut.isPending}
+          >
+            <RefreshCcwIcon className="-ml-1 mr-2 h-4 w-4" />
+            Reset List
+          </Button>
+        </div>
       </div>
     </section>
   );

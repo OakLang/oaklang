@@ -2,16 +2,15 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { Session } from "@acme/auth";
-import type { InterlinearLine } from "@acme/core/validators";
 import type { DB } from "@acme/db/client";
 import type { UserSettings, Word } from "@acme/db/schema";
 import { interlinearLine } from "@acme/core/validators";
 import {
   and,
   count,
+  DEFAULT_INTERLINEAR_LINES,
   desc,
   eq,
-  getDefaultInterlinearLines,
   isNull,
   lt,
   not,
@@ -76,8 +75,7 @@ export const getInterlinearLines = async (
       .parseAsync(settings.interlinearLines);
     return interlinearLines;
   } catch (error) {
-    const lines = (userSettings.interlinearLines.defaultFn?.() ??
-      getDefaultInterlinearLines()) as unknown as InterlinearLine[];
+    const lines = DEFAULT_INTERLINEAR_LINES;
     await db.update(userSettings).set({
       interlinearLines: lines,
     });

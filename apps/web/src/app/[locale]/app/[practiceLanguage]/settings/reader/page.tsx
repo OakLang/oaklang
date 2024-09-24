@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PlusIcon, RefreshCcwIcon } from "lucide-react";
+import { nanoid } from "nanoid";
 import { toast } from "sonner";
 
 import type { InterlinearLine } from "@acme/core/validators";
@@ -75,6 +76,20 @@ const InterlinearLinesConfigurationSection = () => {
     [debouncedChange],
   );
 
+  const handleAddNewLine = useCallback(() => {
+    handleChange([
+      ...interlinearLines,
+      {
+        id: nanoid(),
+        name: `line_${interlinearLines.length + 1}`,
+        description: "Discribe what this line should generate",
+        disappearing: "default",
+        hidden: false,
+        style: {},
+      },
+    ]);
+  }, [handleChange, interlinearLines]);
+
   useEffect(() => {
     if (userSettingsQuery.data?.interlinearLines) {
       setInterlinearLines(userSettingsQuery.data.interlinearLines);
@@ -91,13 +106,7 @@ const InterlinearLinesConfigurationSection = () => {
           onChange={handleChange}
         />
         <div className="flex flex-wrap gap-4 pt-4">
-          <Button
-            onClick={() => addNewInterlinearLineMut.mutate()}
-            disabled={
-              resetInterlinearLinesMut.isPending ||
-              addNewInterlinearLineMut.isPending
-            }
-          >
+          <Button onClick={handleAddNewLine}>
             <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
             Add New Line
           </Button>

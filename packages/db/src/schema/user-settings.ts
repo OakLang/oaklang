@@ -3,10 +3,17 @@ import { boolean, jsonb, pgTable, real, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import type { InterlinearLine } from "@acme/core/validators";
-import { interlinearLine } from "@acme/core/validators";
+import type {
+  InterlinearLine,
+  SpacedRepetitionStage,
+} from "@acme/core/validators";
+import { interlinearLine, spacedRepetitionStage } from "@acme/core/validators";
 
-import { createPrefixedId, getDefaultInterlinearLines } from "../utils";
+import {
+  createPrefixedId,
+  DEFAULT_INTERLINEAR_LINES,
+  DEFAULT_SPACED_REPETITION_STAGES,
+} from "../utils";
 import { users } from "./auth";
 import { languages } from "./language";
 
@@ -21,7 +28,11 @@ export const userSettings = pgTable("user_settings", {
   interlinearLines: jsonb("interlinear_lines")
     .$type<InterlinearLine[]>()
     .notNull()
-    .$defaultFn(getDefaultInterlinearLines),
+    .default(DEFAULT_INTERLINEAR_LINES),
+  spacedRepetitionStages: jsonb("spaced_repetition_stages")
+    .notNull()
+    .$type<SpacedRepetitionStage[]>()
+    .default(DEFAULT_SPACED_REPETITION_STAGES),
   autoPlayAudio: boolean("auto_play_audio").notNull().default(true),
   ttsVoice: text("tts_voice").notNull().default("alloy"),
   ttsSpeed: real("tts_speed").notNull().default(1),
@@ -46,6 +57,7 @@ export const userSettingsRelations = relations(userSettings, ({ one }) => ({
 
 export const updateUserSettingsSchema = createInsertSchema(userSettings, {
   interlinearLines: z.array(interlinearLine).min(1).optional(),
+  spacedRepetitionStages: z.array(spacedRepetitionStage).min(1).optional(),
   ttsSpeed: z.number().min(0.25).max(4).optional(),
 }).pick({
   autoPlayAudio: true,
@@ -53,6 +65,7 @@ export const updateUserSettingsSchema = createInsertSchema(userSettings, {
   ttsSpeed: true,
   ttsVoice: true,
   nativeLanguage: true,
+  spacedRepetitionStages: true,
 });
 
 export type UpdateUserSettingsInput = z.infer<typeof updateUserSettingsSchema>;

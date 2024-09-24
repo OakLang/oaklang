@@ -3,12 +3,11 @@ import dayjs from "dayjs";
 import ms from "ms";
 import { z } from "zod";
 
-import { SPACED_REPETITION_STAGES } from "@acme/core/constants";
 import { and, eq, sql } from "@acme/db";
 import { userWords, words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getCurrentPracticeWords } from "../utils";
+import { getCurrentPracticeWords, getUserSettings } from "../utils";
 
 export const wordsRouter = createTRPCRouter({
   getUserWord: protectedProcedure
@@ -61,8 +60,9 @@ export const wordsRouter = createTRPCRouter({
       if (userWord.knownAt) {
         return;
       }
+      const userSettings = await getUserSettings(ctx.session.user.id, ctx.db);
 
-      const spacedRepetitionStage = SPACED_REPETITION_STAGES.find(
+      const spacedRepetitionStage = userSettings.spacedRepetitionStages.find(
         (stage) => stage.iteration === userWord.spacedRepetitionStage,
       );
       if (!spacedRepetitionStage) {
@@ -85,9 +85,10 @@ export const wordsRouter = createTRPCRouter({
         spacedRepetitionStage.repetitions
       ) {
         // This stage practice is done
-        const nextSpacedRepetitionStage = SPACED_REPETITION_STAGES.find(
-          (stage) => stage.iteration === spacedRepetitionStage.iteration + 1,
-        );
+        const nextSpacedRepetitionStage =
+          userSettings.spacedRepetitionStages.find(
+            (stage) => stage.iteration === spacedRepetitionStage.iteration + 1,
+          );
 
         await ctx.db
           .update(userWords)

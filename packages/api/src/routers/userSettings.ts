@@ -1,7 +1,12 @@
 import { TRPCError } from "@trpc/server";
 
 import type { InterlinearLine } from "@acme/core/validators";
-import { createPrefixedId, eq, getDefaultInterlinearLines } from "@acme/db";
+import {
+  createPrefixedId,
+  DEFAULT_INTERLINEAR_LINES,
+  DEFAULT_SPACED_REPETITION_STAGES,
+  eq,
+} from "@acme/db";
 import { updateUserSettingsSchema, userSettings } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -25,6 +30,13 @@ export const userSettingsRouter = createTRPCRouter({
           }
         });
       }
+      if (opts.input.spacedRepetitionStages) {
+        opts.input.spacedRepetitionStages =
+          opts.input.spacedRepetitionStages.map((stage, i) => ({
+            ...stage,
+            iteration: i + 1,
+          }));
+      }
       const [updatedSettings] = await opts.ctx.db
         .update(userSettings)
         .set(opts.input)
@@ -36,8 +48,7 @@ export const userSettingsRouter = createTRPCRouter({
       return updatedSettings;
     }),
   resetInterlinearLines: protectedProcedure.mutation(async (opts) => {
-    const interlinearLines = (userSettings.interlinearLines.defaultFn?.() ??
-      getDefaultInterlinearLines()) as unknown as InterlinearLine[];
+    const interlinearLines = DEFAULT_INTERLINEAR_LINES;
     await opts.ctx.db
       .update(userSettings)
       .set({
@@ -45,6 +56,16 @@ export const userSettingsRouter = createTRPCRouter({
       })
       .where(eq(userSettings.userId, opts.ctx.session.user.id));
     return interlinearLines;
+  }),
+  resetSpacedRepetitionStages: protectedProcedure.mutation(async (opts) => {
+    const spacedRepetitionStages = DEFAULT_SPACED_REPETITION_STAGES;
+    await opts.ctx.db
+      .update(userSettings)
+      .set({
+        spacedRepetitionStages,
+      })
+      .where(eq(userSettings.userId, opts.ctx.session.user.id));
+    return spacedRepetitionStages;
   }),
   addNewInterlinearLine: protectedProcedure.mutation(async (opts) => {
     const settings = await getUserSettings(

@@ -1,16 +1,20 @@
 import crypto from "crypto";
 import ksuid from "ksuid";
+import { nanoid } from "nanoid";
 
-import type { InterlinearLine } from "@acme/core/validators";
+import type {
+  InterlinearLine,
+  SpacedRepetitionStage,
+} from "@acme/core/validators";
 
 export const createPrefixedId = (prefix: string) => {
   const id = ksuid.fromParts(Date.now(), crypto.randomBytes(16));
   return `${prefix}_${id.string}`;
 };
 
-export const getDefaultInterlinearLines = (): InterlinearLine[] => [
+export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
   {
-    id: createPrefixedId("inter"),
+    id: "01J8JCN4RNPKJZG64219443K5W",
     name: "text",
     style: { fontFamily: "Times New Roman" },
     description:
@@ -19,7 +23,7 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     hidden: false,
   },
   {
-    id: createPrefixedId("inter"),
+    id: "01J8JCN8ZV0F4VN91GDSN4Q4HR",
     name: "word",
     style: { fontFamily: "Times New Roman", fontWeight: "500" },
     description:
@@ -28,7 +32,7 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     hidden: false,
   },
   {
-    id: createPrefixedId("inter"),
+    id: "01J8JCND9FJ5AHP5PAXADQVGT9",
     name: "lemma",
     style: { fontFamily: "Times New Roman" },
     description: "word in lemma form",
@@ -36,7 +40,7 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     hidden: false,
   },
   {
-    id: createPrefixedId("inter"),
+    id: nanoid(),
     name: "translation",
     style: { fontFamily: "Times New Roman" },
     description: "word translation in {{NATIVE_LANGUAGE}}",
@@ -44,7 +48,7 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     hidden: false,
   },
   {
-    id: createPrefixedId("inter"),
+    id: "01J8JCNHPZMM9M0WPP8DHFSNR5",
     name: "ipa",
     style: { fontFamily: "Times New Roman" },
     description: "word pronunciation in IPA format",
@@ -52,7 +56,7 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     hidden: false,
   },
   {
-    id: createPrefixedId("inter"),
+    id: "01J8JCNNZYACY187W8TE7M7S9B",
     name: "pronunciation",
     style: { fontFamily: "Times New Roman" },
     description: "phonetic word pronunciation in {{NATIVE_LANGUAGE}}",
@@ -60,12 +64,43 @@ export const getDefaultInterlinearLines = (): InterlinearLine[] => [
     hidden: false,
   },
   {
-    id: createPrefixedId("inter"),
+    id: "01J8JCNVPVTAXM8XF81M5ZM2YJ",
     name: "grammar",
     style: { fontStyle: "italic" },
     description:
       "Provide an abbreviated grammatical analysis of the word in this context using standard grammatical abbreviations (e.g., adj m s nom), including part of speech, gender, number, case, tense, and other relevant details.",
     disappearing: "default",
     hidden: true,
+  },
+];
+
+export const DEFAULT_SPACED_REPETITION_STAGES: SpacedRepetitionStage[] = [
+  {
+    id: "01J8JCKTK8EH36035PXZ16901M",
+    iteration: 1,
+    waitTime: "0",
+    repetitions: 5,
+    timesToShowDisappearing: 3,
+  },
+  {
+    id: "01J8JCMFQTDVAJ606MCDR9HJ6Y",
+    iteration: 2,
+    waitTime: "10m",
+    repetitions: 5,
+    timesToShowDisappearing: 3,
+  },
+  {
+    id: "01J8JCMP8Q01WX9Z6N6SJQZEXC",
+    iteration: 3,
+    waitTime: "1d",
+    repetitions: 4,
+    timesToShowDisappearing: 1,
+  },
+  {
+    id: "01J8JCMWB9HTBJJJ6R4ADS00MH",
+    iteration: 4,
+    waitTime: "5d",
+    repetitions: 6,
+    timesToShowDisappearing: 1,
   },
 ];
