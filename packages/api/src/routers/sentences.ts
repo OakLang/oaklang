@@ -7,14 +7,8 @@ import { z } from "zod";
 import type { Session } from "@acme/auth";
 import type { DB } from "@acme/db/client";
 import type { Language, TrainingSession, UserSettings } from "@acme/db/schema";
-import { and, asc, desc, eq, isNull, not } from "@acme/db";
-import {
-  languages,
-  sentences,
-  sentenceWords,
-  userWords,
-  words,
-} from "@acme/db/schema";
+import { asc, desc, eq } from "@acme/db";
+import { languages, sentences, sentenceWords, words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
