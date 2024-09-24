@@ -11,64 +11,61 @@ export const createPrefixedId = (prefix: string) => {
 export const getDefaultInterlinearLines = (): InterlinearLine[] => [
   {
     id: createPrefixedId("inter"),
+    name: "text",
+    style: { fontFamily: "Times New Roman" },
+    description:
+      "whitespace delimited text associated with word from the full sentence including capitalization and punctuation",
+    disappearing: "default",
+    hidden: false,
+  },
+  {
+    id: createPrefixedId("inter"),
     name: "word",
-    description: "word in PRACTICE LANGUAGE",
+    style: { fontFamily: "Times New Roman", fontWeight: "500" },
+    description:
+      "word in {{PRACTICE_LANGUAGE}} without whitespace or punctuation or capitalization",
     disappearing: "default",
     hidden: false,
-    style: {
-      fontFamily: "Times New Roman",
-      fontWeight: "500",
-    },
-  },
-  {
-    id: createPrefixedId("inter"),
-    name: "ipa",
-    description: "word pronunciation in IPA format",
-    disappearing: "default",
-    hidden: false,
-    style: {
-      fontFamily: "Times New Roman",
-    },
-  },
-  {
-    id: createPrefixedId("inter"),
-    name: "pronunciation",
-    description: "phonetic word pronunciation in HELP LANGUAGE",
-    disappearing: "default",
-    hidden: false,
-    style: {
-      fontFamily: "Times New Roman",
-    },
   },
   {
     id: createPrefixedId("inter"),
     name: "lemma",
+    style: { fontFamily: "Times New Roman" },
     description: "word in lemma form",
     disappearing: "default",
     hidden: false,
-    style: {
-      fontFamily: "Times New Roman",
-    },
   },
   {
     id: createPrefixedId("inter"),
     name: "translation",
-    description: "word translation in HELP LANGUAGE",
+    style: { fontFamily: "Times New Roman" },
+    description: "word translation in {{NATIVE_LANGUAGE}}",
     disappearing: "default",
     hidden: false,
-    style: {
-      fontFamily: "Times New Roman",
-    },
   },
   {
     id: createPrefixedId("inter"),
-    name: "text",
-    description:
-      "whitespace delimeted text associated with word from the full sentence including capitalization and punctuatio",
+    name: "ipa",
+    style: { fontFamily: "Times New Roman" },
+    description: "word pronunciation in IPA format",
     disappearing: "default",
     hidden: false,
-    style: {
-      fontFamily: "Times New Roman",
-    },
+  },
+  {
+    id: createPrefixedId("inter"),
+    name: "pronunciation",
+    style: { fontFamily: "Times New Roman" },
+    description: "phonetic word pronunciation in {{NATIVE_LANGUAGE}}",
+    disappearing: "default",
+    hidden: false,
+  },
+  {
+    id: createPrefixedId("inter"),
+    name: "grammar",
+    style: { fontStyle: "italic" },
+    description:
+      "Provide an abbreviated grammatical analysis of the word in this context using standard grammatical abbreviations (e.g., adj m s nom), including part of speech, gender, number, case, tense, and other relevant details.",
+    disappearing: "default",
+    hidden: true,
   },
 ];

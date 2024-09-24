@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
 import PageTitle from "~/components/PageTitle";
@@ -13,7 +13,9 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
+import { Textarea } from "~/components/ui/textarea";
 import { useRouter } from "~/i18n/routing";
+import { useAppStore } from "~/providers/app-store-provider";
 
 export default function PreferencesPage() {
   const { theme, setTheme } = useTheme();
@@ -81,6 +83,57 @@ export default function PreferencesPage() {
           </Select>
         </div>
       </div>
+
+      <Separator className="my-8" />
+
+      <PromptTemplate />
     </div>
   );
 }
+
+const AVAILABLE_KEYS = [
+  "{{PRACTICE_LANGUAGE}}",
+  "{{NATIVE_LANGUAGE}}",
+  "{{KNOWN_WORDS}}",
+  "{{PRACTICE_WORDS}}",
+  "{{PREVIOUSLY_GENERATED_SENTENCES}}",
+  "{{SENTENCE_COUNT}}",
+  "{{COMPLEXITY}}",
+];
+
+const PromptTemplate = () => {
+  const promptTemplate = useAppStore((state) => state.promptTemplate);
+  const setPromptTemplate = useAppStore((state) => state.setPromptTemplate);
+  const format = useFormatter();
+
+  return (
+    <section id="interlinear-lines" className="my-8">
+      <div className="mb-4">
+        <h2 className="text-xl font-medium">GPT Prompt Template</h2>
+        <p className="text-muted-foreground text-sm">
+          This prompt will be used as a context to generate sentences using GPT
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <Textarea
+          value={promptTemplate}
+          onChange={(e) => {
+            setPromptTemplate(e.currentTarget.value);
+          }}
+          className="resize-y"
+          rows={20}
+        />
+        <p className="text-muted-foreground text-sm">
+          Available Keys{" "}
+          {format.list(
+            AVAILABLE_KEYS.map((key) => (
+              <code key={key} className="font-semibold">
+                {key}
+              </code>
+            )),
+          )}
+        </p>
+      </div>
+    </section>
+  );
+};

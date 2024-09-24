@@ -2,6 +2,7 @@ import type { ChangeEvent } from "react";
 import { useCallback, useState } from "react";
 import { Reorder, useDragControls, useMotionValue } from "framer-motion";
 import { EditIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
+import { useFormatter } from "next-intl";
 
 import type { Disappearing, InterlinearLine } from "@acme/core/validators";
 
@@ -28,6 +29,8 @@ const disappearingOptions: {
     name: "Sticky",
   },
 ];
+
+const AVAILABLE_KEYS = ["{{PRACTICE_LANGUAGE}}", "{{NATIVE_LANGUAGE}}"];
 
 export default function InterlinearLinesEditor({
   onChange,
@@ -77,6 +80,7 @@ const InterlinearLineRow = ({
   const controls = useDragControls();
   const y = useMotionValue(0);
   const boxShadow = useRaisedShadow(y);
+  const format = useFormatter();
 
   const disabled = item.name === "word";
 
@@ -203,11 +207,11 @@ const InterlinearLineRow = ({
         </div>
       </div>
       <div
-        className={cn("hidden grid-cols-2 gap-4 p-4", {
+        className={cn("hidden grid-cols-2 gap-6 p-4", {
           grid: isEditing,
         })}
       >
-        <fieldset className="col-span-full grid gap-1">
+        <fieldset className="col-span-full grid gap-2">
           <Label htmlFor={`interlinear-line-name`}>Name</Label>
           <Input
             id={`interlinear-line-name`}
@@ -217,7 +221,7 @@ const InterlinearLineRow = ({
           />
         </fieldset>
 
-        <fieldset className="col-span-full grid gap-1">
+        <fieldset className="col-span-full grid gap-2">
           <Label htmlFor={`interlinear-line-gpt-prompt`}>Description</Label>
           <Textarea
             value={item.description}
@@ -225,6 +229,16 @@ const InterlinearLineRow = ({
             className="min-h-0 resize-none"
             onChange={(e) => onChangeDescription(e)}
           />
+          <p className="text-muted-foreground text-sm">
+            Available keys{" "}
+            {format.list(
+              AVAILABLE_KEYS.map((key) => (
+                <code key={key} className="font-semibold">
+                  {key}
+                </code>
+              )),
+            )}
+          </p>
         </fieldset>
 
         <fieldset className="col-span-full flex items-center justify-between">
@@ -244,7 +258,7 @@ const InterlinearLineRow = ({
           </Tabs>
         </fieldset>
 
-        <fieldset className="grid gap-1">
+        <fieldset className="grid gap-2">
           <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Family</Label>
           <Input
             value={item.style.fontFamily ?? ""}
@@ -256,7 +270,7 @@ const InterlinearLineRow = ({
           />
         </fieldset>
 
-        <fieldset className="grid gap-1">
+        <fieldset className="grid gap-2">
           <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Weight</Label>
           <Input
             value={item.style.fontWeight ?? ""}
@@ -268,7 +282,7 @@ const InterlinearLineRow = ({
           />
         </fieldset>
 
-        <fieldset className="grid gap-1">
+        <fieldset className="grid gap-2">
           <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Style</Label>
           <Input
             value={item.style.fontStyle ?? ""}
@@ -280,7 +294,7 @@ const InterlinearLineRow = ({
           />
         </fieldset>
 
-        <fieldset className="grid gap-1">
+        <fieldset className="grid gap-2">
           <Label htmlFor={`interlinear-line-gpt-prompt`}>Text Color</Label>
           <Input
             value={item.style.color ?? ""}

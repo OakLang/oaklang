@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import FullScreenLoader from "~/app/full-screen-loader";
 import { Button } from "~/components/ui/button";
 import { Link, useRouter } from "~/i18n/routing";
+import AppStoreProvider from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
 import { OnboardingRoutes } from "~/utils/constants";
 import AppBar from "./app-bar";
@@ -39,10 +40,10 @@ export default function MainAppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <>
+    <AppStoreProvider>
       <AppBar />
       {children}
-    </>
+    </AppStoreProvider>
   );
 }
 

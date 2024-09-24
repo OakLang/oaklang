@@ -44,15 +44,11 @@ export const createAppStore = (initState: AppState) => {
 
 export const DEFAULT_PROMPT_TEMPLATE = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary.
 
-Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an {{COMPLEXITY}} {{PRACTICE_LANGUAGE}} student using as many words from the {{PRACTICE_VOCABS}} list as possible and restricting other words to those in the {{KNOWN_VOCABS}} list. Also make sure not to regenerate previously generated sentences.
+Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an {{COMPLEXITY}} {{PRACTICE_LANGUAGE}} student using as many words from the PRACTICE WORDS list as possible and restricting other words to those in the KNOWN WORDS list. Also make sure not to regenerate previously generated sentences.
 
-PRACTICE LANGUAGE: "{{PRACTICE_LANGUAGE}}"
+PRACTICE WORDS: "{{PRACTICE_WORDS}}"
 
-NATIVE LANGUAGE: "{{NATIVE_LANGUAGE}}"
-
-PRACTICE VOCABS: "{{PRACTICE_VOCABS}}"
-
-KNOWN VOCABS: "{{KNOWN_VOCABS}}"
+KNOWN WORDS: "{{KNOWN_WORDS}}"
 
 PREVIOUSLY GENERATED SENTENCES: """
 {{PREVIOUSLY_GENERATED_SENTENCES}}

@@ -4,15 +4,20 @@ import { TRPCError } from "@trpc/server";
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import type { InterlinearLine } from "@acme/core/validators";
+import type { Session } from "@acme/auth";
 import type { DB } from "@acme/db/client";
-import type { TrainingSession, UserSettings } from "@acme/db/schema";
-import { asc, desc, eq } from "@acme/db";
-import { languages, sentences, sentenceWords, words } from "@acme/db/schema";
+import type { Language, TrainingSession, UserSettings } from "@acme/db/schema";
+import { and, asc, desc, eq, isNull, not } from "@acme/db";
+import {
+  languages,
+  practiceWords,
+  sentences,
+  sentenceWords,
+  words,
+} from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
-  getInterlinearLines,
   getOrCreateWord,
   getTrainingSessionOrThrow,
   getUserSettings,
@@ -85,27 +90,62 @@ export const sentencesRouter = createTRPCRouter({
         ctx: { db, session },
         input: { trainingSessionId, promptTemplate },
       }) => {
+        const userSettings = await getUserSettings(session.user.id, db);
+        if (!userSettings.nativeLanguage) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "User do not have native language",
+          });
+        }
+
+        const [nativeLanguage] = await db
+          .select()
+          .from(languages)
+          .where(eq(languages.code, userSettings.nativeLanguage));
+        if (!nativeLanguage) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Native language not found!",
+          });
+        }
+
         const trainingSession = await getTrainingSessionOrThrow(
           trainingSessionId,
           db,
           session,
         );
-        const userSettings = await getUserSettings(session.user.id, db);
+        const [practiceLanguage] = await db
+          .select()
+          .from(languages)
+          .where(eq(languages.code, trainingSession.languageCode));
+        if (!practiceLanguage) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Practice Language not found!",
+          });
+        }
 
-        const prompt = await buildPrompt(
+        const prompt = await buildPrompt({
           trainingSession,
-          userSettings,
           db,
           promptTemplate,
-        );
+          nativeLanguage,
+          practiceLanguage,
+          session,
+        });
 
-        const interlinearLines = await getInterlinearLines(session.user.id, db);
+        const schema = buildSchema({
+          userSettings,
+          nativeLanguage,
+          practiceLanguage,
+        });
 
         const result = await generateObject({
           model: openai("gpt-4o", { user: session.user.id }),
           prompt,
-          schema: buildSchema(interlinearLines),
+          schema,
         });
+
         const [lastSentence] = await db
           .select({ index: sentences.index })
           .from(sentences)
@@ -182,97 +222,115 @@ export const sentencesRouter = createTRPCRouter({
     ),
 });
 
-const buildPrompt = async (
-  trainingSession: TrainingSession,
-  userSettings: UserSettings,
-  db: DB,
-  promptTemplate: string,
-) => {
-  const sentencesList = await db
-    .select({ sentence: sentences.sentence, index: sentences.index })
-    .from(sentences)
-    .where(eq(sentences.trainingSessionId, trainingSession.id))
-    .orderBy(asc(sentences.index));
-
-  const [language] = await db
-    .select()
-    .from(languages)
-    .where(eq(languages.code, trainingSession.languageCode));
-  if (!language) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Invalid Help Language!",
-    });
-  }
-  if (!userSettings.nativeLanguage) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Native language not found in user settings",
-    });
-  }
-  const [nativeLanguage] = await db
-    .select()
-    .from(languages)
-    .where(eq(languages.code, userSettings.nativeLanguage));
-  if (!nativeLanguage) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Native language not found",
-    });
-  }
-
-  // const knownWords = await db
-  //   .select()
-  //   .from(words)
-  //   .where(
-  //     and(eq(words.userId, trainingSession.userId), eq(words.isKnown, true)),
-  //   )
-  //   .orderBy(asc(words.createdAt));
-  // const practicingWords = await db
-  //   .select()
-  //   .from(words)
-  //   .where(
-  //     and(
-  //       eq(words.userId, trainingSession.userId),
-  //       eq(words.isPracticing, true),
-  //     ),
-  //   )
-  //   .orderBy(asc(words.createdAt));
-
-  return (
-    promptTemplate
-      .replaceAll("{{SENTENCE_COUNT}}", "5")
-      .replaceAll("{{PRACTICE_LANGUAGE}}", language.name)
-      .replaceAll("{{NATIVE_LANGUAGE}}", nativeLanguage.name)
-      // .replaceAll(
-      //   "{{PRACTICE_VOCABS}}",
-      //   practicingWords.map((i) => i.word).join(", "),
-      // )
-      // .replaceAll("{{KNOWN_VOCABS}}", knownWords.map((i) => i.word).join(", "))
-      .replaceAll("{{COMPLEXITY}}", trainingSession.complexity)
-      .replaceAll(
-        "{{PREVIOUSLY_GENERATED_SENTENCES}}",
-        sentencesList
-          .map((sentence) => `${sentence.index}. ${sentence.sentence}`)
-          .join("\n"),
+const buildPrompt = async ({
+  db,
+  nativeLanguage,
+  practiceLanguage,
+  promptTemplate,
+  trainingSession,
+  session,
+}: {
+  db: DB;
+  session: Session;
+  trainingSession: TrainingSession;
+  promptTemplate: string;
+  nativeLanguage: Language;
+  practiceLanguage: Language;
+}) => {
+  if (promptTemplate.includes("{{KNOWN_WORDS}}")) {
+    const knownWordsList = await db
+      .select({ word: words.word })
+      .from(practiceWords)
+      .innerJoin(words, eq(words.id, practiceWords.wordId))
+      .where(
+        and(
+          eq(practiceWords.userId, session.user.id),
+          eq(words.languageCode, trainingSession.languageCode),
+          not(isNull(practiceWords.knownAt)),
+        ),
       )
-  );
+      .orderBy(desc(practiceWords.knownAt))
+      .limit(40);
+
+    promptTemplate = promptTemplate.replaceAll(
+      "{{PRACTICE_WORDS}}",
+      knownWordsList.map((word) => word.word).join(", "),
+    );
+  }
+
+  if (promptTemplate.includes("{{PRACTICE_WORDS}}")) {
+    const practiceWordsList = await db
+      .select({ word: words.word })
+      .from(practiceWords)
+      .innerJoin(words, eq(words.id, practiceWords.wordId))
+      .where(
+        and(
+          eq(practiceWords.userId, session.user.id),
+          eq(words.languageCode, trainingSession.languageCode),
+          isNull(practiceWords.knownAt),
+        ),
+      )
+      .orderBy(desc(practiceWords.practiceCount))
+      .limit(40);
+
+    promptTemplate = promptTemplate.replaceAll(
+      "{{PRACTICE_WORDS}}",
+      practiceWordsList.map((word) => word.word).join(", "),
+    );
+  }
+
+  if (promptTemplate.includes("{{PREVIOUSLY_GENERATED_SENTENCES}}")) {
+    const sentencesList = await db
+      .select({ sentence: sentences.sentence, index: sentences.index })
+      .from(sentences)
+      .where(eq(sentences.trainingSessionId, trainingSession.id))
+      .orderBy(asc(sentences.index));
+
+    promptTemplate = promptTemplate.replaceAll(
+      "{{PREVIOUSLY_GENERATED_SENTENCES}}",
+      sentencesList
+        .map((sentence) => `${sentence.index}. ${sentence.sentence}`)
+        .join("\n"),
+    );
+  }
+
+  return promptTemplate
+    .replaceAll("{{SENTENCE_COUNT}}", "5")
+    .replaceAll("{{PRACTICE_LANGUAGE}}", practiceLanguage.name)
+    .replaceAll("{{NATIVE_LANGUAGE}}", nativeLanguage.name)
+    .replaceAll("{{COMPLEXITY}}", trainingSession.complexity);
 };
 
-const buildSchema = (interlinearLines: InterlinearLine[]) => {
+const buildSchema = ({
+  nativeLanguage,
+  practiceLanguage,
+  userSettings,
+}: {
+  userSettings: UserSettings;
+  nativeLanguage: Language;
+  practiceLanguage: Language;
+}) => {
   const wordSchemaObject: Record<string, ZodString> = {};
-  interlinearLines.forEach((line) => {
+  userSettings.interlinearLines.forEach((line) => {
     if (line.name && line.description) {
-      wordSchemaObject[line.name] = z.string().describe(line.description);
+      wordSchemaObject[line.name] = z
+        .string()
+        .describe(
+          line.description
+            .replaceAll("{{PRACTICE_LANGUAGE}}", practiceLanguage.name)
+            .replaceAll("{{NATIVE_LANGUAGE}}", nativeLanguage.name),
+        );
     }
   });
   const wordSchema = z.object(wordSchemaObject);
 
   const sentenceSchema = z.object({
-    sentence: z.string().describe(`the full sentence in PRACTICE LANGUAGE.`),
+    sentence: z
+      .string()
+      .describe(`the full sentence in ${practiceLanguage.name}.`),
     translation: z
       .string()
-      .describe(`the full sentence translation in HELP LANGUAGE`),
+      .describe(`the full sentence translation in ${nativeLanguage.name}`),
     words: z
       .array(wordSchema)
       .describe(`list of words to build the full sentence`),
