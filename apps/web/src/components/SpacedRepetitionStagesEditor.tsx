@@ -1,7 +1,7 @@
-import type { ChangeEvent } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Reorder, useDragControls, useMotionValue } from "framer-motion";
 import { EditIcon, TrashIcon } from "lucide-react";
+import ms from "ms";
 
 import type { SpacedRepetitionStage } from "@acme/core/validators";
 
@@ -11,6 +11,7 @@ import { ReorderIcon } from "./icons/drag-icon";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import NumberInput from "./ui/number-input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function SpacedRepetitionStagesEditor({
@@ -69,34 +70,13 @@ const SpacedRepetitionStageRow = ({
   const y = useMotionValue(0);
   const boxShadow = useRaisedShadow(y);
 
-  const onChangeWaitTime = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      onChange({ ...item, waitTime: e.currentTarget.value });
-    },
-    [item, onChange],
-  );
-  const onChangeRepetitions = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      try {
-        const repetitions = parseInt(e.currentTarget.value);
-        onChange({ ...item, repetitions });
-      } catch (error) {
-        console.log(error);
-      }
-    },
-    [item, onChange],
-  );
-  const onChangeTimesToShowDisappearing = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      try {
-        const timesToShowDisappearing = parseInt(e.currentTarget.value);
-        onChange({ ...item, timesToShowDisappearing });
-      } catch (error) {
-        console.log(error);
-      }
-    },
-    [item, onChange],
-  );
+  const finalWaitTime = useMemo(() => {
+    try {
+      return ms(ms(item.waitTime), { long: true });
+    } catch (error) {
+      return "-";
+    }
+  }, [item.waitTime]);
 
   return (
     <Reorder.Item
@@ -159,34 +139,48 @@ const SpacedRepetitionStageRow = ({
       {isEditing && (
         <div className="grid gap-6 border-t p-4">
           <fieldset className="col-span-full grid gap-2">
-            <Label htmlFor="wait-time">Wait Time</Label>
+            <Label htmlFor="waitTime">Wait Time ({finalWaitTime})</Label>
             <Input
-              id="wait-time"
+              id="waitTime"
               value={item.waitTime}
-              onChange={(e) => onChangeWaitTime(e)}
+              onChange={(e) =>
+                onChange({ ...item, waitTime: e.currentTarget.value })
+              }
+              onBlur={(e) => {
+                try {
+                  ms(ms(e.currentTarget.value));
+                } catch (error) {
+                  onChange({ ...item, waitTime: "0" });
+                }
+              }}
               placeholder="1d, 2 days, 1y, 10m, 32 minutes, ..."
             />
+            <p className="text-muted-foreground text-sm">
+              Examples: 2s, 10m, 20 minutes, 1d, 24 days, 1y...
+            </p>
           </fieldset>
 
           <fieldset className="col-span-full grid gap-2">
             <Label htmlFor="repetitions">Repetitions</Label>
-            <Input
+            <NumberInput
               id="repetitions"
-              type="number"
               value={item.repetitions}
-              min={1}
-              onChange={(e) => onChangeRepetitions(e)}
+              minValue={1}
+              onChange={(repetitions) => onChange({ ...item, repetitions })}
             />
           </fieldset>
 
           <fieldset className="col-span-full grid gap-2">
-            <Label htmlFor="repetitions">Times To Show Disappearing</Label>
-            <Input
-              id="repetitions"
+            <Label htmlFor="timesToShowDisappearing">
+              Times To Show Disappearing
+            </Label>
+            <NumberInput
+              id="timesToShowDisappearing"
               value={item.timesToShowDisappearing}
-              type="number"
-              min={0}
-              onChange={(e) => onChangeTimesToShowDisappearing(e)}
+              minValue={0}
+              onChange={(timesToShowDisappearing) =>
+                onChange({ ...item, timesToShowDisappearing })
+              }
             />
           </fieldset>
         </div>

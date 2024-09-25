@@ -20,7 +20,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         ref={ref}
         {...props}
       >
-        <Input className="bg-background flex-1 px-3 py-2 focus-visible:outline-none" />
+        <Input className="flex-1 bg-transparent px-3 py-2 focus-visible:outline-none" />
         <div className="flex flex-col border-l">
           <Button
             slot="increment"
