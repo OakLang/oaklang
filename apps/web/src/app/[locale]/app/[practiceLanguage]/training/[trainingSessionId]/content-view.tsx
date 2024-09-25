@@ -194,6 +194,7 @@ export default function ContentView() {
                 <AudioPlayButton
                   text={currentSentence.sentence}
                   speed={userSettingsQuery.data?.ttsSpeed ?? 1}
+                  autoPlay={userSettingsQuery.data?.autoPlayAudio ?? false}
                 />
                 <Tooltip>
                   <Select
