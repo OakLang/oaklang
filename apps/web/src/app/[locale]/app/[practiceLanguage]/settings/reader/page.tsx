@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import { toast } from "sonner";
 
 import type { InterlinearLine } from "@acme/core/validators";
+import { DEFAULT_INTERLINEAR_LINE_STYLE } from "@acme/core/validators";
 
 import InterlinearLinesEditor from "~/components/InterlinearLineEditor";
 import PageTitle from "~/components/PageTitle";
@@ -45,17 +46,6 @@ const InterlinearLinesConfigurationSection = () => {
       },
     });
 
-  const addNewInterlinearLineMut =
-    api.userSettings.addNewInterlinearLine.useMutation({
-      onError: (error) => {
-        toast(error.message);
-      },
-      onSuccess: (value) => {
-        setInterlinearLines(value);
-        updateUserSettingsMutation.mutate({ interlinearLines: value });
-      },
-    });
-
   const debouncedChange = useCallback(
     (value: InterlinearLine[]) => {
       if (timeoutRef.current) {
@@ -85,7 +75,7 @@ const InterlinearLinesConfigurationSection = () => {
         description: "Discribe what this line should generate",
         disappearing: "default",
         hidden: false,
-        style: {},
+        style: DEFAULT_INTERLINEAR_LINE_STYLE,
       },
     ]);
   }, [handleChange, interlinearLines]);
@@ -113,10 +103,7 @@ const InterlinearLinesConfigurationSection = () => {
           <Button
             variant="outline"
             onClick={() => resetInterlinearLinesMut.mutate()}
-            disabled={
-              resetInterlinearLinesMut.isPending ||
-              addNewInterlinearLineMut.isPending
-            }
+            disabled={resetInterlinearLinesMut.isPending}
           >
             <RefreshCcwIcon className="-ml-1 mr-2 h-4 w-4" />
             Reset List

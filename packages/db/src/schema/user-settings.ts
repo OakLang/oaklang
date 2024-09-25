@@ -7,13 +7,14 @@ import type {
   InterlinearLine,
   SpacedRepetitionStage,
 } from "@acme/core/validators";
-import { interlinearLine, spacedRepetitionStage } from "@acme/core/validators";
-
 import {
-  createPrefixedId,
   DEFAULT_INTERLINEAR_LINES,
   DEFAULT_SPACED_REPETITION_STAGES,
-} from "../utils";
+  interlinearLine,
+  spacedRepetitionStage,
+} from "@acme/core/validators";
+
+import { createPrefixedId } from "../utils";
 import { users } from "./auth";
 import { languages } from "./language";
 

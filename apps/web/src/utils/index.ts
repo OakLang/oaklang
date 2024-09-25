@@ -30,9 +30,9 @@ export const getCSSStyleForInterlinearLine = (
   line: InterlinearLine,
 ): CSSProperties => {
   return {
-    fontFamily: line.style.fontFamily ?? undefined,
-    fontWeight: line.style.fontWeight ?? undefined,
-    fontStyle: line.style.fontStyle ?? undefined,
+    fontFamily: line.style.fontFamily,
+    fontWeight: line.style.fontWeight,
+    fontStyle: line.style.fontStyle,
     color: line.style.color ?? undefined,
   };
 };

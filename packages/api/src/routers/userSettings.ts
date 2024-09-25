@@ -1,12 +1,10 @@
 import { TRPCError } from "@trpc/server";
 
-import type { InterlinearLine } from "@acme/core/validators";
 import {
-  createPrefixedId,
   DEFAULT_INTERLINEAR_LINES,
   DEFAULT_SPACED_REPETITION_STAGES,
-  eq,
-} from "@acme/db";
+} from "@acme/core/validators";
+import { eq } from "@acme/db";
 import { updateUserSettingsSchema, userSettings } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -66,25 +64,5 @@ export const userSettingsRouter = createTRPCRouter({
       })
       .where(eq(userSettings.userId, opts.ctx.session.user.id));
     return spacedRepetitionStages;
-  }),
-  addNewInterlinearLine: protectedProcedure.mutation(async (opts) => {
-    const settings = await getUserSettings(
-      opts.ctx.session.user.id,
-      opts.ctx.db,
-    );
-    const newList: InterlinearLine[] = [
-      ...settings.interlinearLines,
-      {
-        id: createPrefixedId("inter"),
-        name: "new_line",
-        description: "Description for new Line",
-        disappearing: "default",
-        style: {},
-      },
-    ];
-    await opts.ctx.db.update(userSettings).set({
-      interlinearLines: newList,
-    });
-    return newList;
   }),
 });

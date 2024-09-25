@@ -27,7 +27,6 @@ export default function InterlinearView({
   const trainingSessionQuery =
     api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
 
-  const fontSize = useAppStore((state) => state.fontSize);
   const setInspectedWordId = useAppStore((state) => state.setInspectedWordId);
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
 
@@ -59,7 +58,7 @@ export default function InterlinearView({
   }, [translation]);
 
   return (
-    <div ref={ref} onClick={onClick} className="flex-1" style={{ fontSize }}>
+    <div ref={ref} onClick={onClick} className="flex-1">
       <p className="pointer-events-none">
         {sentences.map((sentence) =>
           sentence.sentenceWords.map((word) => {
@@ -128,6 +127,7 @@ function LineWord({
 }) {
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
 
+  const fontSize = useAppStore((state) => state.fontSize);
   const inspectedWordId = useAppStore((state) => state.inspectedWordId);
   const setInspectedWordId = useAppStore((state) => state.setInspectedWordId);
 
@@ -165,6 +165,7 @@ function LineWord({
               )}
               style={{
                 ...getCSSStyleForInterlinearLine(line),
+                fontSize: line.style.fontSize * (fontSize / 16),
               }}
               onClick={() => onClick(line)}
             >

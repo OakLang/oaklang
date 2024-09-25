@@ -261,7 +261,7 @@ const InterlinearLineRow = ({
         <fieldset className="grid gap-2">
           <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Family</Label>
           <Input
-            value={item.style.fontFamily ?? ""}
+            value={item.style.fontFamily}
             placeholder="Times New Roman"
             className="min-h-0 resize-none"
             onChange={(e) =>
@@ -271,9 +271,21 @@ const InterlinearLineRow = ({
         </fieldset>
 
         <fieldset className="grid gap-2">
+          <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Size</Label>
+          <Input
+            value={item.style.fontSize}
+            type="number"
+            className="min-h-0 resize-none"
+            onChange={(e) =>
+              onChangeStyle({ fontSize: parseInt(e.currentTarget.value) })
+            }
+          />
+        </fieldset>
+
+        <fieldset className="grid gap-2">
           <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Weight</Label>
           <Input
-            value={item.style.fontWeight ?? ""}
+            value={item.style.fontWeight}
             placeholder="600"
             className="min-h-0 resize-none"
             onChange={(e) =>
@@ -285,7 +297,7 @@ const InterlinearLineRow = ({
         <fieldset className="grid gap-2">
           <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Style</Label>
           <Input
-            value={item.style.fontStyle ?? ""}
+            value={item.style.fontStyle}
             placeholder="italic"
             className="min-h-0 resize-none"
             onChange={(e) =>

@@ -161,17 +161,6 @@ const SpacedRepetitionStagesConfigurationSection = () => {
       },
     });
 
-  // const addNewInterlinearLineMut =
-  //   api.userSettings.addNewInterlinearLine.useMutation({
-  //     onError: (error) => {
-  //       toast(error.message);
-  //     },
-  //     onSuccess: (value) => {
-  //       setInterlinearLines(value);
-  //       updateUserSettingsMutation.mutate({ interlinearLines: value });
-  //     },
-  //   });
-
   const debouncedChange = useCallback(
     (spacedRepetitionStages: SpacedRepetitionStage[]) => {
       if (timeoutRef.current) {
