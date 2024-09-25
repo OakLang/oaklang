@@ -1,36 +1,24 @@
-import type { ChangeEvent } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Reorder, useDragControls, useMotionValue } from "framer-motion";
-import { EditIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
-import { useFormatter } from "next-intl";
+import {
+  EditIcon,
+  EyeIcon,
+  EyeOffIcon,
+  MoonIcon,
+  SunIcon,
+  TrashIcon,
+} from "lucide-react";
+import { useTheme } from "next-themes";
 
-import type { Disappearing, InterlinearLine } from "@acme/core/validators";
+import type { InterlinearLine } from "@acme/core/validators";
+import { NON_EDITABLE_LINE_NAMES } from "@acme/core/validators";
 
 import { useRaisedShadow } from "~/hooks/useRaisedShadow";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import { ReorderIcon } from "./icons/drag-icon";
+import { InterlinearLineEditForm } from "./InterlinearLineEditForm";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
-import { Textarea } from "./ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-
-const disappearingOptions: {
-  value: Disappearing;
-  name: string;
-}[] = [
-  {
-    value: "default",
-    name: "Default",
-  },
-  {
-    value: "sticky",
-    name: "Sticky",
-  },
-];
-
-const AVAILABLE_KEYS = ["{{PRACTICE_LANGUAGE}}", "{{NATIVE_LANGUAGE}}"];
 
 export default function InterlinearLinesEditor({
   onChange,
@@ -72,64 +60,36 @@ const InterlinearLineRow = ({
   index,
 }: {
   item: InterlinearLine;
-  onDelete: () => void;
   onChange: (line: InterlinearLine) => void;
+  onDelete: () => void;
   index: number;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const controls = useDragControls();
   const y = useMotionValue(0);
   const boxShadow = useRaisedShadow(y);
-  const format = useFormatter();
+  const { resolvedTheme } = useTheme();
+  const [dark, setDark] = useState(resolvedTheme === "dark");
 
-  const disabled = item.name === "word";
-
-  const onChangeName = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      onChange({ ...item, name: e.currentTarget.value });
-    },
-    [item, onChange],
+  const disabled = useMemo(
+    () => NON_EDITABLE_LINE_NAMES.includes(item.name),
+    [item.name],
   );
 
-  const onChangeDescription = useCallback(
-    (e: ChangeEvent<HTMLTextAreaElement>) => {
-      onChange({ ...item, description: e.currentTarget.value });
-    },
-    [item, onChange],
-  );
-  const onChangeDisappearing = useCallback(
-    (disappearing: Disappearing) => {
-      onChange({ ...item, disappearing });
-    },
-    [item, onChange],
-  );
   const onToggleHidden = useCallback(() => {
     onChange({ ...item, hidden: !item.hidden });
   }, [item, onChange]);
-
-  const onChangeStyle = useCallback(
-    (style: Partial<NonNullable<InterlinearLine["style"]>>) => {
-      onChange({
-        ...item,
-        style: {
-          ...item.style,
-          ...style,
-        },
-      });
-    },
-    [item, onChange],
-  );
 
   return (
     <Reorder.Item
       value={item}
       dragListener={false}
       dragControls={controls}
-      className="bg-card grid rounded-lg border shadow-sm"
+      className="bg-card grid overflow-hidden rounded-lg border shadow-sm"
       style={{ boxShadow, y }}
       layout="position"
     >
-      <div className="flex h-14 items-center gap-2 border-b px-2">
+      <div className="flex h-14 items-center gap-2 px-2">
         <div
           onPointerDown={(event) => controls.start(event)}
           className="hover:bg-secondary flex h-8 w-6 cursor-grab items-center justify-center rounded-md"
@@ -206,122 +166,41 @@ const InterlinearLineRow = ({
           </Tooltip>
         </div>
       </div>
-      <div
-        className={cn("hidden grid-cols-2 gap-6 p-4", {
-          grid: isEditing,
-        })}
-      >
-        <fieldset className="col-span-full grid gap-2">
-          <Label htmlFor={`interlinear-line-name`}>Name</Label>
-          <Input
-            id={`interlinear-line-name`}
-            value={item.name}
-            disabled={disabled}
-            onChange={(e) => onChangeName(e)}
-          />
-        </fieldset>
-
-        <fieldset className="col-span-full grid gap-2">
-          <Label htmlFor={`interlinear-line-gpt-prompt`}>Description</Label>
-          <Textarea
-            value={item.description}
-            rows={2}
-            className="min-h-0 resize-none"
-            onChange={(e) => onChangeDescription(e)}
-          />
-          <p className="text-muted-foreground text-sm">
-            Available keys{" "}
-            {format.list(
-              AVAILABLE_KEYS.map((key) => (
-                <code key={key} className="font-semibold">
-                  {key}
-                </code>
-              )),
-            )}
+      {isEditing && (
+        <div className="border-t">
+          <InterlinearLineEditForm item={item} onChange={onChange} />
+        </div>
+      )}
+      <div className="flex gap-2 overflow-hidden border-t p-2">
+        <div
+          contentEditable
+          className={cn(
+            "w-full flex-1 overflow-x-auto rounded-md p-3 px-4 outline-none",
+            {
+              "bg-zinc-900 text-white": dark,
+              "bg-zinc-100 text-zinc-950": !dark,
+            },
+          )}
+        >
+          <p
+            className="whitespace-nowrap leading-none"
+            style={getCSSStyleForInterlinearLine(item)}
+          >
+            El gato es negro.
           </p>
-        </fieldset>
-
-        <fieldset className="col-span-full flex items-center justify-between">
-          <Label htmlFor="enabled">Disappearing</Label>
-          <Tabs value={item.disappearing}>
-            <TabsList>
-              {disappearingOptions.map((item) => (
-                <TabsTrigger
-                  value={item.value}
-                  key={item.value}
-                  onClick={() => onChangeDisappearing(item.value)}
-                >
-                  {item.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </fieldset>
-
-        <fieldset className="grid gap-2">
-          <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Family</Label>
-          <Input
-            value={item.style.fontFamily}
-            placeholder="Times New Roman"
-            className="min-h-0 resize-none"
-            onChange={(e) =>
-              onChangeStyle({ fontFamily: e.currentTarget.value })
-            }
-          />
-        </fieldset>
-
-        <fieldset className="grid gap-2">
-          <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Size</Label>
-          <Input
-            value={item.style.fontSize}
-            type="number"
-            className="min-h-0 resize-none"
-            onChange={(e) =>
-              onChangeStyle({ fontSize: parseInt(e.currentTarget.value) })
-            }
-          />
-        </fieldset>
-
-        <fieldset className="grid gap-2">
-          <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Weight</Label>
-          <Input
-            value={item.style.fontWeight}
-            placeholder="600"
-            className="min-h-0 resize-none"
-            onChange={(e) =>
-              onChangeStyle({ fontWeight: e.currentTarget.value })
-            }
-          />
-        </fieldset>
-
-        <fieldset className="grid gap-2">
-          <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Style</Label>
-          <Input
-            value={item.style.fontStyle}
-            placeholder="italic"
-            className="min-h-0 resize-none"
-            onChange={(e) =>
-              onChangeStyle({ fontStyle: e.currentTarget.value })
-            }
-          />
-        </fieldset>
-
-        <fieldset className="grid gap-2">
-          <Label htmlFor={`interlinear-line-gpt-prompt`}>Text Color</Label>
-          <Input
-            value={item.style.color ?? ""}
-            placeholder="#000000"
-            className="min-h-0 resize-none"
-            onChange={(e) => onChangeStyle({ color: e.currentTarget.value })}
-          />
-        </fieldset>
-      </div>
-      <div
-        className="bg-secondary/50 grid gap-2 overflow-x-auto px-4 py-2 outline-none"
-        style={getCSSStyleForInterlinearLine(item)}
-        contentEditable
-      >
-        El gato es negro.
+        </div>
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-full w-8 flex-shrink-0"
+          onClick={() => setDark(!dark)}
+        >
+          {dark ? (
+            <MoonIcon className="h-4 w-4" />
+          ) : (
+            <SunIcon className="h-4 w-4" />
+          )}
+        </Button>
       </div>
     </Reorder.Item>
   );

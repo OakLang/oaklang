@@ -9,7 +9,7 @@ export const interlinearLine = z.object({
   disappearing: disappearingEnum,
   hidden: z.boolean().nullish(),
   style: z.object({
-    fontSize: z.number().default(16),
+    fontSize: z.number().min(12).max(48).default(16),
     fontFamily: z.string().default("Times New Roman"),
     fontWeight: z.string().default("400"),
     fontStyle: z.string().default("normal"),
@@ -19,6 +19,8 @@ export const interlinearLine = z.object({
 
 export type Disappearing = z.infer<typeof disappearingEnum>;
 export type InterlinearLine = z.infer<typeof interlinearLine>;
+
+export const NON_EDITABLE_LINE_NAMES = ["word"];
 
 export const DEFAULT_INTERLINEAR_LINE_STYLE: InterlinearLine["style"] = {
   fontFamily: "Times New Roman",
@@ -30,7 +32,7 @@ export const DEFAULT_INTERLINEAR_LINE_STYLE: InterlinearLine["style"] = {
 
 export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
   {
-    id: "01J8JCN4RNPKJZG64219443K5W",
+    id: "fzFShZlh8Cilj3tBnNvBz",
     name: "text",
     style: {
       ...DEFAULT_INTERLINEAR_LINE_STYLE,
@@ -43,7 +45,7 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
     hidden: false,
   },
   {
-    id: "01J8JCN8ZV0F4VN91GDSN4Q4HR",
+    id: "3OQ_IriDgK0JXH4VVxJkl",
     name: "word",
     style: DEFAULT_INTERLINEAR_LINE_STYLE,
     description:
@@ -52,7 +54,7 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
     hidden: true,
   },
   {
-    id: "01J8JCND9FJ5AHP5PAXADQVGT9",
+    id: "g5H0tIRQK0nN9GZF1B-aW",
     name: "lemma",
     style: DEFAULT_INTERLINEAR_LINE_STYLE,
     description: "word in lemma form",
@@ -60,7 +62,7 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
     hidden: false,
   },
   {
-    id: "01J8MK2PME54VJ9R80W10TZ7V7",
+    id: "d2nK5RVUhmIk6owFxvIkn",
     name: "translation",
     style: DEFAULT_INTERLINEAR_LINE_STYLE,
     description: "word translation in {{NATIVE_LANGUAGE}}",
@@ -68,7 +70,7 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
     hidden: false,
   },
   {
-    id: "01J8JCNHPZMM9M0WPP8DHFSNR5",
+    id: "MXta_2mUvmlKvQaPtM-Ad",
     name: "ipa",
     style: DEFAULT_INTERLINEAR_LINE_STYLE,
     description: "word pronunciation in IPA format",
@@ -76,7 +78,7 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
     hidden: false,
   },
   {
-    id: "01J8JCNNZYACY187W8TE7M7S9B",
+    id: "ZZwf15A56jNMgxxaVT_Gs",
     name: "pronunciation",
     style: DEFAULT_INTERLINEAR_LINE_STYLE,
     description: "phonetic word pronunciation in {{NATIVE_LANGUAGE}}",
@@ -84,7 +86,7 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
     hidden: false,
   },
   {
-    id: "01J8JCNVPVTAXM8XF81M5ZM2YJ",
+    id: "eBGG0RysMUSQVCfD7YZmA",
     name: "grammar",
     style: { ...DEFAULT_INTERLINEAR_LINE_STYLE, fontStyle: "italic" },
     description:

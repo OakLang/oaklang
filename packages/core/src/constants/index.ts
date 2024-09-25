@@ -20,3 +20,8 @@ export const FONTS: string[] = [
   "Copperplate",
   "Papyrus",
 ];
+
+export const INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS = [
+  "{{PRACTICE_LANGUAGE}}",
+  "{{NATIVE_LANGUAGE}}",
+];

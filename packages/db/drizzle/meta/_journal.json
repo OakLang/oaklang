@@ -15,6 +15,13 @@
       "when": 1727268118593,
       "tag": "0001_narrow_calypso",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1727271136041,
+      "tag": "0002_majestic_grey_gargoyle",
+      "breakpoints": true
     }
   ]
 }
