@@ -4,9 +4,10 @@ import type { MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
+import { toast } from "sonner";
 
-import type { SentenceWithWords } from "@acme/api/validators";
 import type { InterlinearLine } from "@acme/core/validators";
+import type { Sentence, SentenceWord } from "@acme/db/schema";
 
 import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
@@ -14,13 +15,14 @@ import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
 import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
 
 const PRIMARY_LINE_NAME = "word";
 
 export default function InterlinearView({
   sentences,
 }: {
-  sentences: SentenceWithWords[];
+  sentences: Sentence[];
 }) {
   const [showTranslation, setShowTranslation] = useState(false);
   const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
@@ -60,16 +62,9 @@ export default function InterlinearView({
   return (
     <div ref={ref} onClick={onClick} className="flex-1">
       <p className="pointer-events-none">
-        {sentences.map((sentence) =>
-          sentence.sentenceWords.map((word) => {
-            return (
-              <LineWord
-                key={`${sentence.id}-${word.wordId}-${word.index}`}
-                word={word}
-              />
-            );
-          }),
-        )}
+        {sentences.map((sentence) => (
+          <SentenceItem key={sentence.id} sentence={sentence} />
+        ))}
       </p>
 
       <div className="pointer-events-none mt-4">
@@ -120,15 +115,73 @@ export default function InterlinearView({
   );
 }
 
-function LineWord({
-  word,
-}: {
-  word: SentenceWithWords["sentenceWords"][number];
-}) {
+const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
+  const generateSentenceWordsPromptTemplate = useAppStore(
+    (state) => state.generateSentenceWordsPromptTemplate,
+  );
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const sentenceWordsQuery = api.sentences.getSentenceWords.useQuery({
+    sentenceId: sentence.id,
+    promptTemplate: generateSentenceWordsPromptTemplate,
+  });
+  const seenWordMutation = api.words.seenWord.useMutation({
+    onError: (error) => {
+      toast(error.message);
+    },
+  });
 
+  const uniqueWordIds = useMemo(() => {
+    const wordIds = sentenceWordsQuery.data?.map((word) => word.wordId) ?? [];
+    return wordIds.filter(
+      (id, i) => wordIds.findIndex((wid) => wid === id) === i,
+    );
+  }, [sentenceWordsQuery.data]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      void Promise.all(
+        uniqueWordIds.map((wordId) => seenWordMutation.mutate({ wordId })),
+      );
+    }, 500);
+    return () => {
+      clearTimeout(timeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uniqueWordIds]);
+
+  if (sentenceWordsQuery.isPending) {
+    return new Array(5).fill(0).map((_, i) => (
+      <span
+        className="mb-16 mr-4 inline-flex flex-col items-center gap-2"
+        key={i}
+      >
+        {userSettingsQuery.data?.interlinearLines.map((line) => (
+          <Skeleton
+            className="inline"
+            style={{
+              height: line.style.fontSize,
+              width:
+                (Math.random() * (40 - 10) + 40) * (line.style.fontSize / 16),
+            }}
+            key={line.id}
+          />
+        ))}
+      </span>
+    ));
+  }
+
+  if (sentenceWordsQuery.isError) {
+    return <p>{sentenceWordsQuery.error.message}</p>;
+  }
+
+  return sentenceWordsQuery.data.map((word) => {
+    return <LineWord key={word.index} word={word} />;
+  });
+};
+
+function LineWord({ word }: { word: SentenceWord }) {
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const fontSize = useAppStore((state) => state.fontSize);
-  const inspectedWordId = useAppStore((state) => state.inspectedWordId);
   const setInspectedWordId = useAppStore((state) => state.setInspectedWordId);
 
   const onClick = useCallback(
@@ -141,27 +194,15 @@ function LineWord({
   );
 
   return (
-    <span className="mb-4 mr-4 inline-flex flex-col items-center gap-2">
+    <span className="mb-16 mr-4 inline-flex flex-col items-center gap-2">
       {userSettingsQuery.data?.interlinearLines
         .filter((line) => !line.hidden)
         .map((line) => {
           const value = word.interlinearLines[line.name];
-          const isPrimaryLine = line.name === PRIMARY_LINE_NAME;
-
           return (
-            <span
+            <button
               className={cn(
-                "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200",
-                {
-                  "ring-2 ring-yellow-400 hover:ring-yellow-400":
-                    inspectedWordId &&
-                    inspectedWordId === word.word.id &&
-                    isPrimaryLine,
-                  "opacity-80": !isPrimaryLine,
-                },
-                isPrimaryLine
-                  ? "text-[1.75em] leading-none"
-                  : "text-[1em] leading-none",
+                "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200 focus:ring-yellow-400",
               )}
               style={{
                 ...getCSSStyleForInterlinearLine(line),
@@ -170,7 +211,7 @@ function LineWord({
               onClick={() => onClick(line)}
             >
               {value}
-            </span>
+            </button>
           );
         })}
     </span>

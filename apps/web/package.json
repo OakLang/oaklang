@@ -81,6 +81,7 @@
     "react-hook-form": "^7.51.5",
     "react-hotkeys-hook": "^4.5.0",
     "sonner": "^1.5.0",
+    "string-template": "^1.0.0",
     "superjson": "2.2.1",
     "swapy": "^0.2.1",
     "tailwind-merge": "^2.3.0",
@@ -93,5 +94,8 @@
   },
   "ct3aMetadata": {
     "initVersion": "7.17.0"
+  },
+  "devDependencies": {
+    "@types/string-template": "^1.0.6"
   }
 }

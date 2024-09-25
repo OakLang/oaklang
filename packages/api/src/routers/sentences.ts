@@ -1,14 +1,24 @@
+// import type { ZodString } from "zod";
 import type { ZodString } from "zod";
 import { openai } from "@ai-sdk/openai";
 import { TRPCError } from "@trpc/server";
 import { generateObject } from "ai";
+import stringTemplate from "string-template";
 import { z } from "zod";
 
-import type { Session } from "@acme/auth";
-import type { DB } from "@acme/db/client";
-import type { Language, TrainingSession, UserSettings } from "@acme/db/schema";
-import { asc, desc, eq } from "@acme/db";
-import { languages, sentences, sentenceWords, words } from "@acme/db/schema";
+import type { Language, UserSettings } from "@acme/db/schema";
+// import type { Session } from "@acme/auth";
+// import type { DB } from "@acme/db/client";
+// import type { Language, TrainingSession, UserSettings } from "@acme/db/schema";
+import { and, asc, createSelectSchema, desc, eq, isNull, not } from "@acme/db";
+import { db } from "@acme/db/client";
+import {
+  languages,
+  sentences,
+  sentenceWords,
+  userWords,
+  words,
+} from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
@@ -17,41 +27,22 @@ import {
   getTrainingSessionOrThrow,
   getUserSettings,
 } from "../utils";
-import { sentenceWithWords } from "../validators";
 
 export const sentencesRouter = createTRPCRouter({
   getSentences: protectedProcedure
     .input(z.object({ trainingSessionId: z.string() }))
-    .output(z.array(sentenceWithWords))
+    .output(z.array(createSelectSchema(sentences)))
     .query(async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
       const trainingSession = await getTrainingSessionOrThrow(
         trainingSessionId,
         db,
         session,
       );
-      const sentencesList = await db
+      return db
         .select()
         .from(sentences)
         .where(eq(sentences.trainingSessionId, trainingSession.id))
         .orderBy(asc(sentences.index));
-      return Promise.all(
-        sentencesList.map(async (sentence) => {
-          const list = await db
-            .select()
-            .from(sentenceWords)
-            .innerJoin(words, eq(words.id, sentenceWords.wordId))
-            .where(eq(sentenceWords.sentenceId, sentence.id))
-            .orderBy(asc(sentenceWords.index));
-
-          return {
-            ...sentence,
-            sentenceWords: list.map((item) => ({
-              ...item.sentence_word,
-              word: item.word,
-            })),
-          };
-        }),
-      );
     }),
   getSentence: protectedProcedure
     .input(z.object({ sentenceId: z.string() }))
@@ -72,201 +63,265 @@ export const sentencesRouter = createTRPCRouter({
 
       return sentence;
     }),
-  generateMoreSentences: protectedProcedure
+  generateSentences: protectedProcedure
     .input(
       z.object({
         trainingSessionId: z.string(),
-        promptTemplate: z.string().min(1).max(1000),
+        limit: z.number().min(1).max(10).default(5),
+        promptTemplate: z.string(),
       }),
     )
-    .output(z.array(sentenceWithWords))
-    .mutation(
-      async ({
-        ctx: { db, session },
-        input: { trainingSessionId, promptTemplate },
-      }) => {
-        const userSettings = await getUserSettings(session.user.id, db);
-        if (!userSettings.nativeLanguage) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "User do not have native language",
-          });
-        }
-
-        const [nativeLanguage] = await db
-          .select()
-          .from(languages)
-          .where(eq(languages.code, userSettings.nativeLanguage));
-        if (!nativeLanguage) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Native language not found!",
-          });
-        }
-
-        const trainingSession = await getTrainingSessionOrThrow(
-          trainingSessionId,
-          db,
-          session,
-        );
-        const [practiceLanguage] = await db
-          .select()
-          .from(languages)
-          .where(eq(languages.code, trainingSession.languageCode));
-        if (!practiceLanguage) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Practice Language not found!",
-          });
-        }
-
-        const prompt = await buildPrompt({
-          trainingSession,
-          db,
-          promptTemplate,
-          nativeLanguage,
-          practiceLanguage,
-          session,
+    .mutation(async ({ ctx: { db, session }, input }) => {
+      const userSettings = await getUserSettings(session.user.id, db);
+      if (!userSettings.nativeLanguage) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User do not have native language",
         });
+      }
 
-        const schema = buildSchema({
-          userSettings,
-          nativeLanguage,
-          practiceLanguage,
+      const [nativeLanguage] = await db
+        .select()
+        .from(languages)
+        .where(eq(languages.code, userSettings.nativeLanguage));
+      if (!nativeLanguage) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Native language not found!",
         });
+      }
 
-        const result = await generateObject({
-          model: openai("gpt-4o", { user: session.user.id }),
-          prompt,
-          schema,
+      const trainingSession = await getTrainingSessionOrThrow(
+        input.trainingSessionId,
+        db,
+        session,
+      );
+      const [practiceLanguage] = await db
+        .select()
+        .from(languages)
+        .where(eq(languages.code, trainingSession.languageCode));
+      if (!practiceLanguage) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Practice Language not found!",
         });
+      }
 
-        const [lastSentence] = await db
-          .select({ index: sentences.index })
-          .from(sentences)
-          .where(eq(sentences.trainingSessionId, trainingSession.id))
-          .orderBy(desc(sentences.index));
+      const practiceWords = await getCurrentPracticeWords({
+        db,
+        languageCode: practiceLanguage.code,
+        session,
+      });
 
-        const value = await Promise.all(
-          result.object.sentences.map(async (item, sentenceIndex) => {
-            const [sentence] = await db
-              .insert(sentences)
-              .values({
-                sentence: item.sentence,
-                translation: item.translation,
-                trainingSessionId: trainingSession.id,
-                index: (lastSentence?.index ?? 0) + 1 + sentenceIndex,
-              })
-              .returning();
-            if (!sentence) {
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "Failed to create sentence",
-              });
-            }
+      console.log(
+        "PRACTICE WORDS: ",
+        practiceWords.map((word) => word.word).join(", "),
+      );
 
-            const sentenceWordsList = await Promise.all(
-              item.words.map(async (wordRecord, wordIndex) => {
-                const primaryWord = wordRecord.word;
-                if (!primaryWord) {
-                  throw new TRPCError({
-                    code: "INTERNAL_SERVER_ERROR",
-                    message: "Failed to get primary word",
-                  });
-                }
+      const knownWords = await db
+        .select({ word: words.word })
+        .from(userWords)
+        .innerJoin(words, eq(words.id, userWords.wordId))
+        .where(
+          and(
+            eq(userWords.userId, session.user.id),
+            eq(words.languageCode, practiceLanguage.code),
+            not(isNull(userWords.knownAt)),
+          ),
+        )
+        .orderBy(desc(userWords.knownAt))
+        .limit(50);
 
-                const word = await getOrCreateWord(
-                  primaryWord,
-                  trainingSession.languageCode,
-                  db,
-                );
+      console.log(
+        "KNOWN WORDS: ",
+        knownWords.map((word) => word.word).join(", "),
+      );
 
-                const [sentenceWord] = await db
-                  .insert(sentenceWords)
-                  .values({
-                    sentenceId: sentence.id,
-                    wordId: word.id,
-                    index: wordIndex,
-                    interlinearLines: wordRecord,
-                  })
-                  .returning();
+      const previouslyGeneratedSentences = await db
+        .select({ index: sentences.index, sentence: sentences.sentence })
+        .from(sentences)
+        .where(eq(sentences.trainingSessionId, trainingSession.id))
+        .orderBy(desc(sentences.index))
+        .limit(30)
+        .then((res) => res.reverse());
 
-                if (!sentenceWord) {
-                  throw new TRPCError({
-                    code: "INTERNAL_SERVER_ERROR",
-                    message: "Failed to connect sentence to word",
-                  });
-                }
+      console.log(
+        "PREVIOUSLY GENERATED SENTENCES: ",
+        previouslyGeneratedSentences
+          .map((sen) => `${sen.index}. ${sen.sentence}`)
+          .join("\n"),
+      );
+      const TEMPLATE_OBJECT = {
+        SENTENCE_COUNT: input.limit,
+        PRACTICE_LANGUAGE: practiceLanguage.name,
+        NATIVE_LANGUAGE: nativeLanguage.name,
+        PRACTICE_WORDS: practiceWords.map((word) => word.word).join(", "),
+        KNOWN_WORDS: knownWords.map((word) => word.word).join(", "),
+        COMPLEXITY: trainingSession.complexity,
+        PREVIOUSLY_GENERATED_SENTENCES: previouslyGeneratedSentences
+          .map((sen) => `${sen.index}. ${sen.sentence}`)
+          .join("\n"),
+      };
 
-                return {
-                  ...sentenceWord,
-                  word,
-                };
-              }),
-            );
+      const prompt = stringTemplate(input.promptTemplate, TEMPLATE_OBJECT);
 
-            return {
-              ...sentence,
-              sentenceWords: sentenceWordsList,
-            };
+      console.log("PROMPT: ", prompt);
+
+      const schema = z.object({
+        sentences: z.array(
+          z.object({
+            sentence: z
+              .string()
+              .describe(
+                stringTemplate(
+                  "The full sentence in {PRACTICE_LANGUAGE} language.",
+                  TEMPLATE_OBJECT,
+                ),
+              ),
+            translation: z
+              .string()
+              .describe(
+                stringTemplate(
+                  "The full sentence translation in {NATIVE_LANGUAGE}",
+                  TEMPLATE_OBJECT,
+                ),
+              ),
           }),
-        );
+        ),
+      });
 
-        return value;
-      },
-    ),
+      const result = await generateObject({
+        model: openai("gpt-4o", { user: session.user.id }),
+        prompt,
+        schema,
+      });
+
+      const validatedSentences = result.object.sentences;
+
+      const lastSentenceIndex = previouslyGeneratedSentences.at(-1)?.index ?? 0;
+      console.log("Last sentence index: ", lastSentenceIndex);
+
+      const newSentences = await db
+        .insert(sentences)
+        .values(
+          validatedSentences.map((sentence, index) => ({
+            index: lastSentenceIndex + 1 + index,
+            sentence: sentence.sentence,
+            translation: sentence.translation,
+            trainingSessionId: trainingSession.id,
+          })),
+        )
+        .returning();
+
+      return newSentences.sort((a, b) => a.index - b.index);
+    }),
+  getSentenceWords: protectedProcedure
+    .input(z.object({ sentenceId: z.string(), promptTemplate: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const list = await db
+        .select()
+        .from(sentenceWords)
+        .where(eq(sentenceWords.sentenceId, input.sentenceId))
+        .orderBy(asc(sentenceWords.index));
+
+      if (list.length > 0) {
+        return list;
+      }
+
+      const [sentence] = await db
+        .select()
+        .from(sentences)
+        .where(eq(sentences.id, input.sentenceId));
+      if (!sentence) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Sentence not found!",
+        });
+      }
+
+      const userSettings = await getUserSettings(ctx.session.user.id, db);
+      if (!userSettings.nativeLanguage) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User do not have native language",
+        });
+      }
+
+      const [nativeLanguage] = await db
+        .select()
+        .from(languages)
+        .where(eq(languages.code, userSettings.nativeLanguage));
+      if (!nativeLanguage) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Native language not found!",
+        });
+      }
+
+      const trainingSession = await getTrainingSessionOrThrow(
+        sentence.trainingSessionId,
+        ctx.db,
+        ctx.session,
+      );
+      const [practiceLanguage] = await db
+        .select()
+        .from(languages)
+        .where(eq(languages.code, trainingSession.languageCode));
+      if (!practiceLanguage) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Practice Language not found!",
+        });
+      }
+
+      const prompt = stringTemplate(input.promptTemplate, {
+        PRACTICE_LANGUAGE: practiceLanguage.name,
+        NATIVE_LANGUAGE: nativeLanguage.name,
+        SENTENCE: sentence.sentence,
+      });
+      const schema = buildSentenceWordsGPTSchema({
+        nativeLanguage,
+        practiceLanguage,
+        userSettings,
+      });
+
+      const result = await generateObject({
+        model: openai("gpt-4o", { user: ctx.session.user.id }),
+        prompt,
+        schema,
+      });
+
+      const values = await Promise.all(
+        result.object.words.map(async (item, index) => {
+          const primaryWord = item.word;
+          if (!primaryWord) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "No primary interlinear line found!",
+            });
+          }
+          const word = await getOrCreateWord(
+            primaryWord,
+            practiceLanguage.code,
+            db,
+          );
+          return {
+            interlinearLines: item,
+            index,
+            sentenceId: sentence.id,
+            wordId: word.id,
+          } satisfies typeof sentenceWords.$inferInsert;
+        }),
+      );
+
+      if (values.length > 0) {
+        return db.insert(sentenceWords).values(values).returning();
+      }
+      return [];
+    }),
 });
 
-const buildPrompt = async ({
-  db,
-  nativeLanguage,
-  practiceLanguage,
-  promptTemplate,
-  trainingSession,
-  session,
-}: {
-  db: DB;
-  session: Session;
-  trainingSession: TrainingSession;
-  promptTemplate: string;
-  nativeLanguage: Language;
-  practiceLanguage: Language;
-}) => {
-  if (promptTemplate.includes("{{PRACTICE_WORDS}}")) {
-    const practiceWordsList = await getCurrentPracticeWords({
-      db,
-      languageCode: practiceLanguage.code,
-      session,
-    });
-    promptTemplate = promptTemplate.replaceAll(
-      "{{PRACTICE_WORDS}}",
-      practiceWordsList.map((word) => word.word).join(", "),
-    );
-  }
-
-  if (promptTemplate.includes("{{PREVIOUSLY_GENERATED_SENTENCES}}")) {
-    const sentencesList = await db
-      .select({ sentence: sentences.sentence, index: sentences.index })
-      .from(sentences)
-      .where(eq(sentences.trainingSessionId, trainingSession.id))
-      .orderBy(asc(sentences.index));
-
-    promptTemplate = promptTemplate.replaceAll(
-      "{{PREVIOUSLY_GENERATED_SENTENCES}}",
-      sentencesList
-        .map((sentence) => `${sentence.index}. ${sentence.sentence}`)
-        .join("\n"),
-    );
-  }
-
-  return promptTemplate
-    .replaceAll("{{SENTENCE_COUNT}}", "5")
-    .replaceAll("{{PRACTICE_LANGUAGE}}", practiceLanguage.name)
-    .replaceAll("{{NATIVE_LANGUAGE}}", nativeLanguage.name)
-    .replaceAll("{{COMPLEXITY}}", trainingSession.complexity);
-};
-
-const buildSchema = ({
+const buildSentenceWordsGPTSchema = ({
   nativeLanguage,
   practiceLanguage,
   userSettings,
@@ -275,35 +330,19 @@ const buildSchema = ({
   nativeLanguage: Language;
   practiceLanguage: Language;
 }) => {
-  const wordSchemaObject: Record<string, ZodString> = {};
+  const wordSchema: Record<string, ZodString> = {};
   userSettings.interlinearLines.forEach((line) => {
     if (line.name && line.description) {
-      wordSchemaObject[line.name] = z
-        .string()
-        .describe(
-          line.description
-            .replaceAll("{{PRACTICE_LANGUAGE}}", practiceLanguage.name)
-            .replaceAll("{{NATIVE_LANGUAGE}}", nativeLanguage.name),
-        );
+      wordSchema[line.name] = z.string().describe(
+        stringTemplate(line.description, {
+          PRACTICE_LANGUAGE: practiceLanguage.name,
+          NATIVE_LANGUAGE: nativeLanguage.name,
+        }),
+      );
     }
   });
-  const wordSchema = z.object(wordSchemaObject);
 
-  const sentenceSchema = z.object({
-    sentence: z
-      .string()
-      .describe(`the full sentence in ${practiceLanguage.name}.`),
-    translation: z
-      .string()
-      .describe(`the full sentence translation in ${nativeLanguage.name}`),
-    words: z
-      .array(wordSchema)
-      .describe(`list of words to build the full sentence`),
+  return z.object({
+    words: z.array(z.object(wordSchema)),
   });
-
-  const generateSentenceObjectSchema = z.object({
-    sentences: z.array(sentenceSchema).describe("list of sentences"),
-  });
-
-  return generateSentenceObjectSchema;
 };

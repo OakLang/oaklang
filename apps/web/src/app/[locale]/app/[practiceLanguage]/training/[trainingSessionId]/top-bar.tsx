@@ -11,20 +11,12 @@ import {
   SidebarCloseIcon,
   SidebarOpenIcon,
 } from "lucide-react";
-import { useFormatter } from "next-intl";
 import { useTheme } from "next-themes";
 
 import type { InterlinearLine } from "@acme/core/validators";
 
 import { ReorderIcon } from "~/components/icons/drag-icon";
 import { Button } from "~/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog";
 import { Label } from "~/components/ui/label";
 import {
   Popover,
@@ -40,7 +32,6 @@ import {
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import { Slider } from "~/components/ui/slider";
-import { Textarea } from "~/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -52,7 +43,6 @@ import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
-import { AVAILABLE_PROMPT_TEMPLATE_KEYS } from "~/utils/constants";
 
 export default function TopBar() {
   const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
@@ -92,7 +82,7 @@ export default function TopBar() {
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-2">
-        <Dialog>
+        {/* <Dialog>
           <DialogTrigger asChild>
             <Button variant="ghost">Edit Prompt</Button>
           </DialogTrigger>
@@ -102,7 +92,7 @@ export default function TopBar() {
             </DialogHeader>
             <PromptTemplatePopover />
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
 
         <Tooltip>
           <Popover>
@@ -335,31 +325,31 @@ const Line = ({
   );
 };
 
-const PromptTemplatePopover = () => {
-  const promptTemplate = useAppStore((state) => state.promptTemplate);
-  const setPromptTemplate = useAppStore((state) => state.setPromptTemplate);
-  const format = useFormatter();
+// const PromptTemplatePopover = () => {
+//   const promptTemplate = useAppStore((state) => state.promptTemplate);
+//   const setPromptTemplate = useAppStore((state) => state.setPromptTemplate);
+//   const format = useFormatter();
 
-  return (
-    <div className="grid gap-2">
-      <Textarea
-        value={promptTemplate}
-        onChange={(e) => {
-          setPromptTemplate(e.currentTarget.value);
-        }}
-        className="resize-y"
-        rows={10}
-      />
-      <p className="text-muted-foreground text-sm">
-        Available Keys{" "}
-        {format.list(
-          AVAILABLE_PROMPT_TEMPLATE_KEYS.map((key) => (
-            <code key={key} className="font-semibold">
-              {key}
-            </code>
-          )),
-        )}
-      </p>
-    </div>
-  );
-};
+//   return (
+//     <div className="grid gap-2">
+//       <Textarea
+//         value={promptTemplate}
+//         onChange={(e) => {
+//           setPromptTemplate(e.currentTarget.value);
+//         }}
+//         className="resize-y"
+//         rows={10}
+//       />
+//       <p className="text-muted-foreground text-sm">
+//         Available Keys{" "}
+//         {format.list(
+//           AVAILABLE_PROMPT_TEMPLATE_KEYS.map((key) => (
+//             <code key={key} className="font-semibold">
+//               {key}
+//             </code>
+//           )),
+//         )}
+//       </p>
+//     </div>
+//   );
+// };

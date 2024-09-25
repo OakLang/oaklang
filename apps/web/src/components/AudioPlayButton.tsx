@@ -46,16 +46,23 @@ const AudioPlayButton = ({
       return;
     }
 
-    audioRef.current.src = audioUrl;
-    void audioRef.current.play();
+    if (!audioRef.current.paused) {
+      audioRef.current.currentTime = 0;
+    } else {
+      audioRef.current.src = audioUrl;
+      try {
+        await audioRef.current.play();
+      } catch (error) {
+        /* empty */
+      }
+    }
   }, [audioQuery]);
 
   const stopAudio = useCallback(() => {
-    if (!audioRef.current) {
-      return;
+    if (audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
   }, []);
 
   useEffect(() => {
@@ -85,8 +92,11 @@ const AudioPlayButton = ({
     if (autoPlay) {
       void playAudio();
     }
+    return () => {
+      stopAudio();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text]);
+  }, [autoPlay, text]);
 
   return (
     <>

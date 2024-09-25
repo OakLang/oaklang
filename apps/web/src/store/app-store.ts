@@ -1,14 +1,16 @@
 import { createStore } from "zustand/vanilla";
 
 interface AppState {
-  promptTemplate: string;
+  generateSentencesPromptTemplate: string;
+  generateSentenceWordsPromptTemplate: string;
   inspectedWordId: string | null;
   inspectionPanelOpen: boolean;
   fontSize: number;
 }
 
 interface AppActions {
-  setPromptTemplate: (template: string) => void;
+  setGenerateSentencesPromptTemplate: (template: string) => void;
+  setGenerateSentenceWordsPromptTemplate: (template: string) => void;
   setInspectedWordId: (wordId: string | null) => void;
   setInspectionPanelOpen: (sidebarOpen: boolean) => void;
   setFontSize: (fontSize: number) => void;
@@ -19,9 +21,21 @@ export type AppStore = AppState & AppActions;
 export const createAppStore = (initState: AppState) => {
   return createStore<AppStore>()((set) => ({
     ...initState,
-    setPromptTemplate: (promptTemplate) => {
-      set({ promptTemplate });
-      localStorage.setItem("prompt_template", promptTemplate);
+    setGenerateSentencesPromptTemplate: (generateSentencesPromptTemplate) => {
+      set({ generateSentencesPromptTemplate });
+      localStorage.setItem(
+        "GENERATE_SENTENCES_PROMPT_TEMPLATE",
+        generateSentencesPromptTemplate,
+      );
+    },
+    setGenerateSentenceWordsPromptTemplate: (
+      generateSentenceWordsPromptTemplate,
+    ) => {
+      set({ generateSentenceWordsPromptTemplate });
+      localStorage.setItem(
+        "GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE",
+        generateSentenceWordsPromptTemplate,
+      );
     },
     setFontSize: (fontSize) => {
       set({ fontSize });
@@ -40,20 +54,39 @@ export const createAppStore = (initState: AppState) => {
   }));
 };
 
-export const DEFAULT_PROMPT_TEMPLATE = `You are a {{PRACTICE_LANGUAGE}} tutor providing carefully constructed sentences to a student designed to help them practice the new vocabulary and grammar they are learning and exercise already known vocabulary and grammar. You thoughtfully construct sentences, stories, dialogues, and exercises that use your language naturally while using known vocabulary.
+const GENERATE_SENTENCES_PROMPT_TEMPLATE = `
+You are an expert {PRACTICE_LANGUAGE} tutor specializing in creating effective practice exercises for students. Your task is to generate a set of sentences that help a student practice new vocabulary at their current proficiency level. Each sentence should:
 
-Please provide a series of {{SENTENCE_COUNT}} sentences suitable for an {{COMPLEXITY}} {{PRACTICE_LANGUAGE}} student using as many words from the PRACTICE WORDS list as possible and restricting other words to those in the KNOWN WORDS list. Also make sure not to regenerate previously generated sentences.
+	•	Be grammatically correct and contextually natural.
+	•	Use words primarily from the PRACTICE WORDS list while limiting other vocabulary to the most relevant words from the KNOWN WORDS list.
+	•	Match the student’s {COMPLEXITY} proficiency level in {PRACTICE_LANGUAGE}.
+	•	Ensure variety in sentence structure, avoiding repetition of PREVIOUSLY GENERATED SENTENCES.
+	•	Align with the natural flow of {PRACTICE_LANGUAGE}, while maximizing the usage of PRACTICE WORDS in a meaningful way.
 
-PRACTICE WORDS: "{{PRACTICE_WORDS}}"
+Please generate {SENTENCE_COUNT} sentences based on the following constraints:
 
-PREVIOUSLY GENERATED SENTENCES: """
-{{PREVIOUSLY_GENERATED_SENTENCES}}
-"""`;
+PRACTICE WORDS: {PRACTICE_WORDS}
+
+KNOWN WORDS: {KNOWN_WORDS}
+
+PREVIOUSLY GENERATED SENTENCES: 
+{PREVIOUSLY_GENERATED_SENTENCES}
+`;
+
+const GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE = `
+You are a {PRACTICE_LANGUAGE} tutor providing detailed interlinear breakdowns for individual words in a sentence. For each word in the SENTENCE below, generate the corresponding lines based on the schema.
+
+SENTENCE: {SENTENCE}
+`;
 
 export const initAppStore = (): AppState => {
   return {
-    promptTemplate:
-      localStorage.getItem("prompt_template") ?? DEFAULT_PROMPT_TEMPLATE,
+    generateSentencesPromptTemplate:
+      localStorage.getItem("GENERATE_SENTENCES_PROMPT_TEMPLATE") ??
+      GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
+    generateSentenceWordsPromptTemplate:
+      localStorage.getItem("GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE") ??
+      GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
     inspectedWordId: null,
     inspectionPanelOpen:
       localStorage.getItem("inspection_panel_open") === "true",

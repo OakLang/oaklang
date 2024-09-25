@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import { Label } from "@radix-ui/react-label";
 import { PlusIcon, RefreshCcwIcon } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
@@ -105,26 +106,38 @@ export default function PreferencesPage() {
 }
 
 const PromptTemplate = () => {
-  const promptTemplate = useAppStore((state) => state.promptTemplate);
-  const setPromptTemplate = useAppStore((state) => state.setPromptTemplate);
+  const generateSentencesPromptTemplate = useAppStore(
+    (state) => state.generateSentencesPromptTemplate,
+  );
+  const setGenerateSentencesPromptTemplate = useAppStore(
+    (state) => state.setGenerateSentencesPromptTemplate,
+  );
+  const generateSentenceWordsPromptTemplate = useAppStore(
+    (state) => state.generateSentenceWordsPromptTemplate,
+  );
+  const setGenerateSentenceWordsPromptTemplate = useAppStore(
+    (state) => state.setGenerateSentenceWordsPromptTemplate,
+  );
   const format = useFormatter();
 
   return (
     <section id="interlinear-lines" className="my-8">
       <div className="mb-4">
-        <h2 className="text-xl font-medium">GPT Prompt Template</h2>
-        <p className="text-muted-foreground text-sm">
-          This prompt will be used as a context to generate sentences using GPT
-        </p>
+        <h2 className="text-xl font-medium">GPT Prompt Templates</h2>
       </div>
-      <div className="grid gap-2">
+
+      <div className="mb-6 grid gap-2">
+        <Label htmlFor="generateSentencesPromptTemplate">
+          Generate Sentences Prompt Template
+        </Label>
         <Textarea
-          value={promptTemplate}
+          id="generateSentencesPromptTemplate"
+          value={generateSentencesPromptTemplate}
           onChange={(e) => {
-            setPromptTemplate(e.currentTarget.value);
+            setGenerateSentencesPromptTemplate(e.currentTarget.value);
           }}
           className="resize-y"
-          rows={20}
+          rows={10}
         />
         <p className="text-muted-foreground text-sm">
           Available Keys{" "}
@@ -134,6 +147,33 @@ const PromptTemplate = () => {
                 {key}
               </code>
             )),
+          )}
+        </p>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="generateSentenceWordsPromptTemplate">
+          Generate Sentence Words Prompt Template
+        </Label>
+        <Textarea
+          id="generateSentenceWordsPromptTemplate"
+          value={generateSentenceWordsPromptTemplate}
+          onChange={(e) => {
+            setGenerateSentenceWordsPromptTemplate(e.currentTarget.value);
+          }}
+          className="resize-y"
+          rows={10}
+        />
+        <p className="text-muted-foreground text-sm">
+          Available Keys{" "}
+          {format.list(
+            ["{PRACTICE_LANGUAGE}", "{NATIVE_LANGUAGE}", "{SENTENCE}"].map(
+              (key) => (
+                <code key={key} className="font-semibold">
+                  {key}
+                </code>
+              ),
+            ),
           )}
         </p>
       </div>

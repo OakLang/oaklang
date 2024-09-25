@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { useIsFetching } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Skeleton } from "~/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -33,6 +36,13 @@ export default function ContentView() {
     trainingSessionId: string;
   }>();
 
+  const generateSentencesPromptTemplate = useAppStore(
+    (state) => state.generateSentencesPromptTemplate,
+  );
+  const generateSentenceWordsPromptTemplate = useAppStore(
+    (state) => state.generateSentenceWordsPromptTemplate,
+  );
+
   const utils = api.useUtils();
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const updateUserSettingsMutation = useUpdateUserSettingsMutation();
@@ -43,26 +53,18 @@ export default function ContentView() {
     { enabled: trainingSessionQuery.isSuccess },
   );
   const updateTrainingSessionMutation = useUpdateTrainingSessionMutation();
-  const seenWordMutation = api.words.seenWord.useMutation({
+
+  const generateSentencesMut = api.sentences.generateSentences.useMutation({
+    onSuccess: (data, { trainingSessionId }) => {
+      utils.sentences.getSentences.setData(
+        { trainingSessionId },
+        (sentences) => [...(sentences ?? []), ...data],
+      );
+    },
     onError: (error) => {
-      toast(error.message);
+      toast("Failed to generate sentences", { description: error.message });
     },
   });
-
-  const promptTemplate = useAppStore((state) => state.promptTemplate);
-
-  const generateMoreSentencesMut =
-    api.sentences.generateMoreSentences.useMutation({
-      onSuccess: (data, { trainingSessionId }) => {
-        utils.sentences.getSentences.setData(
-          { trainingSessionId },
-          (sentences) => [...(sentences ?? []), ...data],
-        );
-      },
-      onError: (error) => {
-        toast("Failed to generate sentences", { description: error.message });
-      },
-    });
 
   const currentSentence = useMemo(() => {
     if (trainingSessionQuery.isSuccess && sentencesQuery.isSuccess) {
@@ -74,18 +76,25 @@ export default function ContentView() {
     trainingSessionQuery.data?.sentenceIndex,
     trainingSessionQuery.isSuccess,
   ]);
+  const isFetchingCurrentSentenceWords = useIsFetching({
+    queryKey: getQueryKey(
+      api.sentences.getSentenceWords,
+      { sentenceId: currentSentence?.id },
+      "query",
+    ),
+  });
 
   const handleNext = useCallback(() => {
     if (!sentencesQuery.isSuccess || !trainingSessionQuery.isSuccess) {
       return;
     }
     if (
-      !generateMoreSentencesMut.isPending &&
+      !generateSentencesMut.isPending &&
       trainingSessionQuery.data.sentenceIndex >= sentencesQuery.data.length - 3
     ) {
-      generateMoreSentencesMut.mutate({
+      generateSentencesMut.mutate({
         trainingSessionId,
-        promptTemplate,
+        promptTemplate: generateSentencesPromptTemplate,
       });
     }
     if (trainingSessionQuery.data.sentenceIndex >= sentencesQuery.data.length) {
@@ -98,14 +107,14 @@ export default function ContentView() {
       data: { sentenceIndex: newSentenceIndex },
     });
   }, [
-    generateMoreSentencesMut,
+    generateSentencesMut,
     sentencesQuery.data?.length,
     sentencesQuery.isSuccess,
     trainingSessionId,
     trainingSessionQuery.data?.sentenceIndex,
     trainingSessionQuery.isSuccess,
     updateTrainingSessionMutation,
-    promptTemplate,
+    generateSentencesPromptTemplate,
   ]);
 
   const handlePrevious = useCallback(() => {
@@ -131,37 +140,46 @@ export default function ContentView() {
       !initialGenerateSentencesCalled &&
       sentencesQuery.isSuccess &&
       sentencesQuery.data.length === 0 &&
-      !generateMoreSentencesMut.isPending
+      !generateSentencesMut.isPending
     ) {
       setInitialGenerateSentencesCalled(true);
-      generateMoreSentencesMut.mutate({
+      generateSentencesMut.mutate({
         trainingSessionId,
-        promptTemplate,
+        promptTemplate: generateSentencesPromptTemplate,
       });
     }
   }, [
-    generateMoreSentencesMut,
+    generateSentencesMut,
     initialGenerateSentencesCalled,
     sentencesQuery.data?.length,
     sentencesQuery.isSuccess,
     trainingSessionId,
-    promptTemplate,
+    generateSentencesPromptTemplate,
   ]);
 
-  const uniqueWordIds = useMemo(() => {
-    const wordIds =
-      currentSentence?.sentenceWords.map((word) => word.wordId) ?? [];
-    return wordIds.filter(
-      (id, i) => wordIds.findIndex((wid) => wid === id) === i,
-    );
-  }, [currentSentence?.sentenceWords]);
-
   useEffect(() => {
-    void Promise.all(
-      uniqueWordIds.map((wordId) => seenWordMutation.mutate({ wordId })),
+    const index = trainingSessionQuery.data?.sentenceIndex;
+    if (!index) {
+      return;
+    }
+
+    const nextSentence = sentencesQuery.data?.find(
+      (sent) => sent.index === index + 2,
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uniqueWordIds]);
+    if (nextSentence) {
+      void utils.sentences.getSentenceWords.ensureData({
+        sentenceId: nextSentence.id,
+        promptTemplate: generateSentenceWordsPromptTemplate,
+      });
+    }
+  }, [
+    trainingSessionId,
+    trainingSessionQuery.data?.sentenceIndex,
+    utils.sentences.getSentenceWords,
+    utils.sentences.getSentences,
+    sentencesQuery.data,
+    generateSentenceWordsPromptTemplate,
+  ]);
 
   return (
     <div className="flex flex-1 gap-4 py-8 md:py-16">
@@ -190,46 +208,60 @@ export default function ContentView() {
         <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
           {currentSentence ? (
             <>
-              <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
-                <AudioPlayButton
-                  text={currentSentence.sentence}
-                  speed={userSettingsQuery.data?.ttsSpeed ?? 1}
-                  autoPlay={userSettingsQuery.data?.autoPlayAudio ?? false}
-                />
-                <Tooltip>
-                  <Select
-                    value={String(userSettingsQuery.data?.ttsSpeed ?? "1")}
-                    onValueChange={(value) =>
-                      updateUserSettingsMutation.mutate({
-                        ttsSpeed: Number(value),
-                      })
-                    }
-                  >
-                    <TooltipTrigger asChild>
-                      <SelectTrigger
-                        id="voice"
-                        className="h-8 w-fit rounded-full pl-2.5 pr-2"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                    </TooltipTrigger>
-                    <SelectContent>
-                      {TTS_SPEED_OPTIONS.map((value) => (
-                        <SelectItem key={value} value={String(value)}>
-                          {value}x
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <TooltipContent>Playback speed</TooltipContent>
-                </Tooltip>
-              </div>
+              {isFetchingCurrentSentenceWords === 0 ? (
+                <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
+                  <AudioPlayButton
+                    text={currentSentence.sentence}
+                    speed={userSettingsQuery.data?.ttsSpeed ?? 1}
+                    autoPlay={userSettingsQuery.data?.autoPlayAudio === true}
+                  />
+                  <Tooltip>
+                    <Select
+                      value={String(userSettingsQuery.data?.ttsSpeed ?? "1")}
+                      onValueChange={(value) =>
+                        updateUserSettingsMutation.mutate({
+                          ttsSpeed: Number(value),
+                        })
+                      }
+                    >
+                      <TooltipTrigger asChild>
+                        <SelectTrigger
+                          id="voice"
+                          className="h-8 w-fit rounded-full pl-2.5 pr-2"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                      </TooltipTrigger>
+                      <SelectContent>
+                        {TTS_SPEED_OPTIONS.map((value) => (
+                          <SelectItem key={value} value={String(value)}>
+                            {value}x
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <TooltipContent>Playback speed</TooltipContent>
+                  </Tooltip>
+                </div>
+              ) : (
+                <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
+                  <Skeleton className="h-14 w-14 rounded-full" />
+                  <Skeleton className="h-8 w-14 rounded-full" />
+                </div>
+              )}
 
               <InterlinearView sentences={[currentSentence]} />
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center">
-              <Loader2Icon className="h-6 w-6 animate-spin" />
+              <div className="flex flex-col items-center justify-center gap-4">
+                <Loader2Icon className="h-6 w-6 animate-spin" />
+                <p className="text-muted-foreground text-center">
+                  {generateSentencesMut.isPending
+                    ? "Generating Sentences..."
+                    : "Loading..."}
+                </p>
+              </div>
             </div>
           )}
         </div>

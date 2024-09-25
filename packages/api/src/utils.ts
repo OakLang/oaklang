@@ -170,5 +170,5 @@ export const getCurrentPracticeWords = async ({
       ),
     )
     .orderBy(desc(userWords.practiceCount))
-    .limit(40);
+    .limit(50);
 };

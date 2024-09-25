@@ -60,6 +60,8 @@ export const sentenceWords = pgTable(
   }),
 );
 
+export type SentenceWord = typeof sentenceWords.$inferSelect;
+
 export const sentenceWordsRelations = relations(sentenceWords, ({ one }) => ({
   sentence: one(sentences, {
     fields: [sentenceWords.sentenceId],
