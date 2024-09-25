@@ -58,7 +58,7 @@ export default function PracticeLanguageForm() {
               </>
             ) : (
               <span className="text-muted-foreground flex-1 truncate">
-                Choose your native language
+                Choose a practice language
               </span>
             )}
             <ChevronDownIcon className="-mr-1 ml-2 h-4 w-4" />
