@@ -1,1 +1,0 @@
-ALTER TABLE "practice_word" ADD COLUMN "last_seen_at" timestamp DEFAULT now() NOT NULL;

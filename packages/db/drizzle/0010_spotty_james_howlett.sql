@@ -1,1 +1,0 @@
-ALTER TABLE "user_word" ALTER COLUMN "spaced_repetition_stage" SET DEFAULT 1;

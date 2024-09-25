@@ -1,1 +1,0 @@
-ALTER TABLE "practice_word" ALTER COLUMN "practice_count" SET DEFAULT 1;

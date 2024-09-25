@@ -1,1 +1,0 @@
-ALTER TABLE "user_word" ADD COLUMN "spaced_repetition_stage" integer DEFAULT 0 NOT NULL;

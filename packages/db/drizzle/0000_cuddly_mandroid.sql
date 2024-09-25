@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS "verification_token" (
 CREATE TABLE IF NOT EXISTS "user_settings" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
-	"interlinear_lines" jsonb NOT NULL,
+	"interlinear_lines" jsonb DEFAULT '[{"id":"01J8JCN4RNPKJZG64219443K5W","name":"text","style":{"fontFamily":"Times New Roman"},"description":"whitespace delimited text associated with word from the full sentence including capitalization and punctuation","disappearing":"default","hidden":false},{"id":"01J8JCN8ZV0F4VN91GDSN4Q4HR","name":"word","style":{"fontFamily":"Times New Roman","fontWeight":"500"},"description":"word in {{PRACTICE_LANGUAGE}} without whitespace or punctuation or capitalization","disappearing":"default","hidden":false},{"id":"01J8JCND9FJ5AHP5PAXADQVGT9","name":"lemma","style":{"fontFamily":"Times New Roman"},"description":"word in lemma form","disappearing":"default","hidden":false},{"id":"4V908jRdQDbyVmUECtbZj","name":"translation","style":{"fontFamily":"Times New Roman"},"description":"word translation in {{NATIVE_LANGUAGE}}","disappearing":"default","hidden":false},{"id":"01J8JCNHPZMM9M0WPP8DHFSNR5","name":"ipa","style":{"fontFamily":"Times New Roman"},"description":"word pronunciation in IPA format","disappearing":"default","hidden":false},{"id":"01J8JCNNZYACY187W8TE7M7S9B","name":"pronunciation","style":{"fontFamily":"Times New Roman"},"description":"phonetic word pronunciation in {{NATIVE_LANGUAGE}}","disappearing":"default","hidden":false},{"id":"01J8JCNVPVTAXM8XF81M5ZM2YJ","name":"grammar","style":{"fontStyle":"italic"},"description":"Provide an abbreviated grammatical analysis of the word in this context using standard grammatical abbreviations (e.g., adj m s nom), including part of speech, gender, number, case, tense, and other relevant details.","disappearing":"default","hidden":true}]'::jsonb NOT NULL,
+	"spaced_repetition_stages" jsonb DEFAULT '[{"id":"01J8JCKTK8EH36035PXZ16901M","iteration":1,"waitTime":"0","repetitions":5,"timesToShowDisappearing":3},{"id":"01J8JCMFQTDVAJ606MCDR9HJ6Y","iteration":2,"waitTime":"10m","repetitions":5,"timesToShowDisappearing":3},{"id":"01J8JCMP8Q01WX9Z6N6SJQZEXC","iteration":3,"waitTime":"1d","repetitions":4,"timesToShowDisappearing":1},{"id":"01J8JCMWB9HTBJJJ6R4ADS00MH","iteration":4,"waitTime":"5d","repetitions":6,"timesToShowDisappearing":1}]'::jsonb NOT NULL,
 	"auto_play_audio" boolean DEFAULT true NOT NULL,
 	"tts_voice" text DEFAULT 'alloy' NOT NULL,
 	"tts_speed" real DEFAULT 1 NOT NULL,
@@ -111,6 +112,21 @@ CREATE TABLE IF NOT EXISTS "sentence" (
 	"translation" text NOT NULL,
 	"index" integer NOT NULL,
 	CONSTRAINT "sentence_training_session_id_index_unique" UNIQUE("training_session_id","index")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "user_word" (
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"word_id" text NOT NULL,
+	"user_id" text NOT NULL,
+	"known_at" timestamp,
+	"last_seen_at" timestamp,
+	"seen_count" integer DEFAULT 0 NOT NULL,
+	"last_practiced_at" timestamp,
+	"practice_count" integer DEFAULT 0 NOT NULL,
+	"seen_count_since_last_practiced" integer DEFAULT 0 NOT NULL,
+	"next_practice_at" timestamp,
+	"spaced_repetition_stage" integer DEFAULT 1 NOT NULL,
+	CONSTRAINT "user_word_user_id_word_id_unique" UNIQUE("user_id","word_id")
 );
 --> statement-breakpoint
 DO $$ BEGIN
@@ -187,6 +203,18 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "sentence" ADD CONSTRAINT "sentence_training_session_id_training_session_id_fk" FOREIGN KEY ("training_session_id") REFERENCES "public"."training_session"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "user_word" ADD CONSTRAINT "user_word_word_id_word_id_fk" FOREIGN KEY ("word_id") REFERENCES "public"."word"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "user_word" ADD CONSTRAINT "user_word_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
