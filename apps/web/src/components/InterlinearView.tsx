@@ -1,13 +1,26 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { z } from "zod";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useParams } from "next/navigation";
 import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import type { InterlinearLine } from "@acme/core/validators";
+import type {
+  InterlinearLine,
+  interlinearLineActionSchema,
+} from "@acme/core/validators";
 import type { Sentence, SentenceWord } from "@acme/db/schema";
+import { InterlinearLineAction } from "@acme/core/validators";
 
 import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
@@ -16,8 +29,7 @@ import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
-
-const PRIMARY_LINE_NAME = "word";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function InterlinearView({
   sentences,
@@ -115,6 +127,8 @@ export default function InterlinearView({
   );
 }
 
+const SentenceContext = createContext<{ sentence: Sentence } | null>(null);
+
 const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
   const generateSentenceWordsPromptTemplate = useAppStore(
     (state) => state.generateSentenceWordsPromptTemplate,
@@ -174,46 +188,151 @@ const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
     return <p>{sentenceWordsQuery.error.message}</p>;
   }
 
-  return sentenceWordsQuery.data.map((word) => {
-    return <LineWord key={word.index} word={word} />;
-  });
+  return (
+    <SentenceContext.Provider value={{ sentence }}>
+      {sentenceWordsQuery.data.map((word) => {
+        return <InterlinearLineColumn key={word.index} word={word} />;
+      })}
+    </SentenceContext.Provider>
+  );
 };
 
-function LineWord({ word }: { word: SentenceWord }) {
+function InterlinearLineColumn({ word }: { word: SentenceWord }) {
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const fontSize = useAppStore((state) => state.fontSize);
-  const setInspectedWordId = useAppStore((state) => state.setInspectedWordId);
-
-  const onClick = useCallback(
-    (line: InterlinearLine) => {
-      if (line.name === PRIMARY_LINE_NAME) {
-        setInspectedWordId(word.wordId);
-      }
-    },
-    [setInspectedWordId, word.wordId],
-  );
 
   return (
     <span className="mb-16 mr-4 inline-flex flex-col items-center gap-2">
       {userSettingsQuery.data?.interlinearLines
         .filter((line) => !line.hidden)
         .map((line) => {
-          const value = word.interlinearLines[line.name];
-          return (
-            <button
-              className={cn(
-                "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200 focus:ring-yellow-400",
-              )}
-              style={{
-                ...getCSSStyleForInterlinearLine(line),
-                fontSize: line.style.fontSize * (fontSize / 16),
-              }}
-              onClick={() => onClick(line)}
-            >
-              {value}
-            </button>
-          );
+          return <InterlinearLineRow line={line} word={word} />;
         })}
     </span>
   );
 }
+
+const InterlinearLineRow = ({
+  line,
+  word,
+}: {
+  line: InterlinearLine;
+  word: SentenceWord;
+}) => {
+  const sentenceCtx = useContext(SentenceContext);
+  const value = word.interlinearLines[line.name];
+  const fontSize = useAppStore((state) => state.fontSize);
+  const setInspectedWordId = useAppStore((state) => state.setInspectedWordId);
+  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const [showLinePopover, setShowLinePopover] = useState(false);
+  const [popoverLineName, setPopoverLineName] = useState<
+    string | null | undefined
+  >();
+
+  const utils = api.useUtils();
+  const markKnownMut = api.words.markWordKnown.useMutation({
+    onMutate: (vars) => {
+      utils.words.getUserWord.setData({ wordId: vars.wordId }, (word) =>
+        word ? { ...word, knownAt: new Date() } : undefined,
+      );
+    },
+    onSuccess: (_, vars) => {
+      void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
+      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
+      void utils.languages.getPracticeLanguages.invalidate(undefined, {
+        type: "active",
+      });
+      toast("Marked Known");
+    },
+    onError: (error) => {
+      toast(error.message);
+    },
+  });
+
+  const handleAction = useCallback(
+    (action: z.infer<typeof interlinearLineActionSchema>) => {
+      switch (action.action) {
+        case InterlinearLineAction.inspectWord:
+          setInspectedWordId(word.wordId);
+          break;
+        case InterlinearLineAction.markWordKnown:
+          markKnownMut.mutate({ wordId: word.wordId });
+          break;
+        case InterlinearLineAction.showLineInTooltip:
+          setPopoverLineName(action.lineName);
+          setShowLinePopover(true);
+          break;
+        case InterlinearLineAction.readoutLine: {
+          const text =
+            action.lineName && word.interlinearLines[action.lineName];
+          if (text) {
+            toast("Reading Out: " + text);
+          }
+          break;
+        }
+        case InterlinearLineAction.readoutFullSentence: {
+          if (sentenceCtx) {
+            toast("Reading Out: " + sentenceCtx.sentence.sentence);
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    },
+    [
+      setInspectedWordId,
+      word.wordId,
+      word.interlinearLines,
+      markKnownMut,
+      sentenceCtx,
+    ],
+  );
+
+  const onClick = useCallback(() => {
+    if (line.onClick) {
+      handleAction(line.onClick);
+    }
+  }, [handleAction, line.onClick]);
+
+  const onDoubleClick = useCallback(() => {
+    if (line.onDoubleClick) {
+      handleAction(line.onDoubleClick);
+    }
+  }, [handleAction, line.onDoubleClick]);
+
+  const onMouseEnter = useCallback(() => {
+    if (line.onHover) {
+      handleAction(line.onHover);
+    }
+  }, [handleAction, line.onHover]);
+
+  const onMouseLeave = useCallback(() => {
+    setShowLinePopover(false);
+  }, []);
+
+  return (
+    <Tooltip open={showLinePopover}>
+      <TooltipTrigger asChild>
+        <button
+          className={cn(
+            "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200 focus:ring-yellow-400",
+          )}
+          style={{
+            ...getCSSStyleForInterlinearLine(line),
+            fontSize: line.style.fontSize * (fontSize / 16),
+          }}
+          onClick={onClick}
+          onDoubleClick={onDoubleClick}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+        >
+          {value}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent align="center" side="bottom">
+        {(popoverLineName && word.interlinearLines[popoverLineName]) ??
+          "Line not found!"}
+      </TooltipContent>
+    </Tooltip>
+  );
+};

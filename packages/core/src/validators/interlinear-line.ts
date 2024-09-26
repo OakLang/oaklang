@@ -2,12 +2,32 @@ import { z } from "zod";
 
 export const disappearingEnum = z.enum(["default", "sticky"]);
 
+export const InterlinearLineAction = {
+  inspectWord: "inspect-word",
+  markWordKnown: "mark-word-known",
+  showLineInTooltip: "show-line-in-tooltip",
+  readoutLine: "readout-line",
+  readoutFullSentence: "readout-full-sentence",
+} as const;
+
+export const interlinearLineActionSchema = z.object({
+  action: z.string(),
+  lineName: z.string().nullish(),
+});
+
+export type InterlinearLineActionType = z.infer<
+  typeof interlinearLineActionSchema
+>;
+
 export const interlinearLine = z.object({
   id: z.string(),
   name: z.string().min(1).max(50),
   description: z.string().min(1).max(300),
   disappearing: disappearingEnum,
   hidden: z.boolean().nullish(),
+  onClick: interlinearLineActionSchema.nullish(),
+  onDoubleClick: interlinearLineActionSchema.nullish(),
+  onHover: interlinearLineActionSchema.nullish(),
   style: z.object({
     fontSize: z.number().min(12).max(48).default(16),
     fontFamily: z.string().default("Times New Roman"),
@@ -20,7 +40,7 @@ export const interlinearLine = z.object({
 export type Disappearing = z.infer<typeof disappearingEnum>;
 export type InterlinearLine = z.infer<typeof interlinearLine>;
 
-export const NON_EDITABLE_LINE_NAMES = ["word"];
+export const NON_EDITABLE_LINE_NAMES = ["word", "lemma", "text"];
 
 export const DEFAULT_INTERLINEAR_LINE_STYLE: InterlinearLine["style"] = {
   fontFamily: "Times New Roman",
@@ -43,13 +63,16 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
       "whitespace delimited text associated with word from the full sentence including capitalization and punctuation",
     disappearing: "default",
     hidden: false,
+    onClick: {
+      action: InterlinearLineAction.inspectWord,
+    },
   },
   {
     id: "3OQ_IriDgK0JXH4VVxJkl",
     name: "word",
     style: DEFAULT_INTERLINEAR_LINE_STYLE,
     description:
-      "word in {{PRACTICE_LANGUAGE}} without whitespace or punctuation or capitalization",
+      "word in {PRACTICE_LANGUAGE} without whitespace or punctuation or capitalization",
     disappearing: "default",
     hidden: true,
   },
@@ -65,7 +88,7 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
     id: "d2nK5RVUhmIk6owFxvIkn",
     name: "translation",
     style: DEFAULT_INTERLINEAR_LINE_STYLE,
-    description: "word translation in {{NATIVE_LANGUAGE}}",
+    description: "word translation in {NATIVE_LANGUAGE}",
     disappearing: "default",
     hidden: false,
   },
@@ -81,9 +104,13 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
     id: "ZZwf15A56jNMgxxaVT_Gs",
     name: "pronunciation",
     style: DEFAULT_INTERLINEAR_LINE_STYLE,
-    description: "phonetic word pronunciation in {{NATIVE_LANGUAGE}}",
+    description: "phonetic word pronunciation in {NATIVE_LANGUAGE}",
     disappearing: "default",
     hidden: false,
+    onHover: {
+      action: InterlinearLineAction.showLineInTooltip,
+      lineName: "grammar",
+    },
   },
   {
     id: "eBGG0RysMUSQVCfD7YZmA",

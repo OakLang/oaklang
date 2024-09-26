@@ -22,6 +22,6 @@ export const FONTS: string[] = [
 ];
 
 export const INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS = [
-  "{{PRACTICE_LANGUAGE}}",
-  "{{NATIVE_LANGUAGE}}",
+  "{PRACTICE_LANGUAGE}",
+  "{NATIVE_LANGUAGE}",
 ];

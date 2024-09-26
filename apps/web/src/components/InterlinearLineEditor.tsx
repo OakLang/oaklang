@@ -130,7 +130,7 @@ const InterlinearLineRow = ({
                 size="icon"
                 variant="outline"
                 className={cn("h-8 w-8", {
-                  "bg-secondary": isEditing,
+                  "bg-secondary": item.hidden,
                 })}
                 onClick={onToggleHidden}
               >

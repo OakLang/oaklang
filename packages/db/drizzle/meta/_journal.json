@@ -22,6 +22,34 @@
       "when": 1727271136041,
       "tag": "0002_majestic_grey_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1727340447246,
+      "tag": "0003_late_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1727341152056,
+      "tag": "0004_great_bushwacker",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1727341175114,
+      "tag": "0005_robust_roughhouse",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1727345826381,
+      "tag": "0006_large_stepford_cuckoos",
+      "breakpoints": true
     }
   ]
 }
