@@ -3,11 +3,15 @@ import dayjs from "dayjs";
 import ms from "ms";
 import { z } from "zod";
 
-import { and, eq, sql } from "@acme/db";
+import { and, asc, eq, isNull, not, sql } from "@acme/db";
 import { userWords, words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getCurrentPracticeWords, getUserSettings } from "../utils";
+import {
+  getCurrentPracticeWords,
+  getUserSettings,
+  userWordsSelect,
+} from "../utils";
 
 export const wordsRouter = createTRPCRouter({
   getUserWord: protectedProcedure
@@ -156,5 +160,46 @@ export const wordsRouter = createTRPCRouter({
             knownAt: null,
           },
         });
+    }),
+
+  getAllPracticeWords: protectedProcedure
+    .input(
+      z.object({
+        languageCode: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select(userWordsSelect)
+        .from(userWords)
+        .innerJoin(words, eq(words.id, userWords.wordId))
+        .where(
+          and(
+            eq(userWords.userId, ctx.session.user.id),
+            eq(words.languageCode, input.languageCode),
+            isNull(userWords.knownAt),
+          ),
+        )
+        .orderBy(asc(userWords.wordId));
+    }),
+  getAllKnownWords: protectedProcedure
+    .input(
+      z.object({
+        languageCode: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select(userWordsSelect)
+        .from(userWords)
+        .innerJoin(words, eq(words.id, userWords.wordId))
+        .where(
+          and(
+            eq(userWords.userId, ctx.session.user.id),
+            eq(words.languageCode, input.languageCode),
+            not(isNull(userWords.knownAt)),
+          ),
+        )
+        .orderBy(asc(userWords.wordId));
     }),
 });

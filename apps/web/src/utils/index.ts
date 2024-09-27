@@ -41,3 +41,8 @@ export const getCSSStyleForInterlinearLine = (
 export const formatDate = (date: Date) => {
   return dayjs(date).format("MMM D, YYYY h:mm A");
 };
+
+export const camelCaseToWords = (s: string) => {
+  const result = s.replace(/([A-Z])/g, " $1");
+  return result.charAt(0).toUpperCase() + result.slice(1);
+};

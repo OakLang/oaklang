@@ -56,6 +56,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "csv": "^6.3.10",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "dotenv-cli": "^7.4.2",
@@ -64,6 +65,7 @@
     "holy-loader": "^2.3.1",
     "immer": "^10.1.1",
     "jiti": "^1.21.6",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.394.0",
     "nanoid": "^5.0.7",
     "next": "^14.2.3",
@@ -97,6 +99,7 @@
     "initVersion": "7.17.0"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.9",
     "@types/string-template": "^1.0.6"
   }
 }

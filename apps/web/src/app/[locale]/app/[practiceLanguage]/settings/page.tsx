@@ -1,10 +1,16 @@
 "use client";
 
+import { useCallback } from "react";
+import { useParams } from "next/navigation";
+import { useIsFetching } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
+import _ from "lodash";
 import { Loader2 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import type { RouterOutputs } from "~/trpc/react";
 import PageTitle from "~/components/PageTitle";
 import {
   AlertDialog,
@@ -20,6 +26,7 @@ import {
 import { Button } from "~/components/ui/button";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -34,11 +41,110 @@ export default function AccountPage() {
   return (
     <div className="container mx-auto max-w-screen-md px-4 py-16">
       <PageTitle title={t("title")} description={t("description")} />
+
+      <Separator className="my-8" />
+      <DownloadWords />
       <Separator className="my-8" />
       <DeleteAccountCard />
     </div>
   );
 }
+
+const DownloadWords = () => {
+  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const utils = api.useUtils();
+
+  const donwloadWordsAsCSV = useCallback(
+    (words: RouterOutputs["words"]["getAllPracticeWords"]) => {
+      const firstRow = words[0];
+      if (!firstRow) {
+        return;
+      }
+
+      const titleKeys = Object.keys(firstRow).map((title) =>
+        _.startCase(title),
+      );
+
+      const refinedData: string[][] = [];
+      refinedData.push(titleKeys);
+
+      words.forEach((word) => {
+        refinedData.push(Object.values(word).map((value) => String(value)));
+      });
+
+      let csvContent = "";
+
+      refinedData.forEach((row) => {
+        csvContent += row.join(",") + "\n";
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8," });
+      const objUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.setAttribute("href", objUrl);
+      link.setAttribute("download", "Words.csv");
+      link.style.display = "none";
+
+      document.querySelector("body")?.append(link);
+      link.click();
+      link.remove();
+    },
+    [],
+  );
+
+  const isFetchingAllPracticeWords = useIsFetching({
+    queryKey: getQueryKey(api.words.getAllPracticeWords),
+  });
+  const isFetchingAllKnownWords = useIsFetching({
+    queryKey: getQueryKey(api.words.getAllKnownWords),
+  });
+
+  const downloadAllPracticeWords = useCallback(async () => {
+    const words = await utils.words.getAllPracticeWords.fetch(
+      {
+        languageCode: practiceLanguage,
+      },
+      { staleTime: 0 },
+    );
+    donwloadWordsAsCSV(words);
+  }, [donwloadWordsAsCSV, practiceLanguage, utils.words.getAllPracticeWords]);
+
+  const downloadAllKnownWords = useCallback(async () => {
+    const words = await utils.words.getAllKnownWords.fetch(
+      {
+        languageCode: practiceLanguage,
+      },
+      { staleTime: 0 },
+    );
+    donwloadWordsAsCSV(words);
+  }, [donwloadWordsAsCSV, practiceLanguage, utils.words.getAllKnownWords]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Download Words</CardTitle>
+      </CardHeader>
+
+      <CardContent className="grid gap-4">
+        <Button
+          variant="outline"
+          onClick={downloadAllPracticeWords}
+          disabled={isFetchingAllPracticeWords !== 0}
+        >
+          Download All Practice Words
+        </Button>
+        <Button
+          variant="outline"
+          onClick={downloadAllKnownWords}
+          disabled={isFetchingAllKnownWords !== 0}
+        >
+          Download All Known Words
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
 
 const DeleteAccountCard = () => {
   const t = useTranslations("AccountPage.deleteAccountCard");

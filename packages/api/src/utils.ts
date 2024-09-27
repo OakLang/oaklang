@@ -135,28 +135,34 @@ export const getKnownWordsCount = async (
   return row?.count ?? 0;
 };
 
+export const userWordsSelect = {
+  wordId: userWords.wordId,
+  createdAt: userWords.createdAt,
+  word: words.word,
+  languageCode: words.languageCode,
+  seenCount: userWords.seenCount,
+  lastPracticedAt: userWords.lastPracticedAt,
+  practiceCount: userWords.practiceCount,
+  seenCountSinceLastPracticed: userWords.seenCountSinceLastPracticed,
+  nextPracticeAt: userWords.nextPracticeAt,
+  spacedRepetitionStage: userWords.spacedRepetitionStage,
+  lastSeenAt: userWords.lastSeenAt,
+  knownAt: userWords.knownAt,
+};
+
 export const getCurrentPracticeWords = async ({
   db,
   languageCode,
   session,
+  limit = 50,
 }: {
   db: DB;
   session: Session;
   languageCode: string;
+  limit?: number;
 }) => {
   return db
-    .select({
-      word: words.word,
-      wordId: userWords.wordId,
-      seenCount: userWords.seenCount,
-      lastPracticedAt: userWords.lastPracticedAt,
-      practiceCount: userWords.practiceCount,
-      seenCountSinceLastPracticed: userWords.seenCountSinceLastPracticed,
-      nextPracticeAt: userWords.nextPracticeAt,
-      spacedRepetitionStage: userWords.spacedRepetitionStage,
-      lastSeenAt: userWords.lastSeenAt,
-      knownAt: userWords.knownAt,
-    })
+    .select(userWordsSelect)
     .from(userWords)
     .innerJoin(words, eq(words.id, userWords.wordId))
     .where(
@@ -171,5 +177,5 @@ export const getCurrentPracticeWords = async ({
       ),
     )
     .orderBy(desc(userWords.seenCount))
-    .limit(50);
+    .limit(limit);
 };

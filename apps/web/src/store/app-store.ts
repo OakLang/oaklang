@@ -76,7 +76,7 @@ PREVIOUSLY GENERATED SENTENCES:
 `;
 
 const GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE = `
-You are a {PRACTICE_LANGUAGE} tutor providing detailed interlinear breakdowns for individual words in a sentence. For each word in the SENTENCE below, generate the corresponding lines based on the schema.
+You are a {PRACTICE_LANGUAGE} tutor providing detailed interlinear breakdowns for individual words in a sentence. For each word in the SENTENCE below, generate the corresponding lines based on the schema. Do not break punctuation apart from the words they are attached to; in creating this breakdown they will be considered part of that word, and be stripped as specified in certain lines.
 
 SENTENCE: {SENTENCE}
 `;
