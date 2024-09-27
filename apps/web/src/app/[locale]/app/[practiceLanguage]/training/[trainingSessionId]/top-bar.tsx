@@ -104,7 +104,11 @@ export default function TopBar() {
                 </Button>
               </TooltipTrigger>
             </PopoverTrigger>
-            <PopoverContent className="w-96 p-0" side="bottom" align="end">
+            <PopoverContent
+              className="max-h-[calc(100vh-10rem)] w-96 overflow-y-auto p-0"
+              side="bottom"
+              align="end"
+            >
               <div className="p-4 pb-0">
                 <h2 className="text-lg font-semibold">Reader Settings</h2>
               </div>

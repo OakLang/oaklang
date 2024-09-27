@@ -219,7 +219,6 @@ const InterlinearLineRow = ({
   word: SentenceWord;
 }) => {
   const sentenceCtx = useContext(SentenceContext);
-  const value = word.interlinearLines[line.name];
   const fontSize = useAppStore((state) => state.fontSize);
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
   const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
@@ -320,7 +319,7 @@ const InterlinearLineRow = ({
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
         >
-          {value}
+          {word.interlinearLines[line.name] ?? ["-"]}
         </button>
       </TooltipTrigger>
       <TooltipContent align="center" side="bottom">
