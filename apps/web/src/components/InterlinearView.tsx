@@ -22,6 +22,7 @@ import type {
 import type { Sentence, SentenceWord } from "@acme/db/schema";
 import { InterlinearLineAction } from "@acme/core/validators";
 
+import { useDoubleClick } from "~/hooks/useDoubleClick";
 import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
@@ -281,25 +282,31 @@ const InterlinearLineRow = ({
     [setInspectedWord, word, markKnownMut, sentenceCtx],
   );
 
-  const onClick = useCallback(() => {
-    if (line.onClick) {
-      handleAction(line.onClick);
-    }
-  }, [handleAction, line.onClick]);
+  const doubleClickProps = useDoubleClick({
+    onClick: () => {
+      if (line.onClick) {
+        handleAction(line.onClick);
+      }
+    },
+    onDoubleClick: () => {
+      if (line.onDoubleClick) {
+        handleAction(line.onDoubleClick);
+      }
+    },
+  });
 
-  const onDoubleClick = useCallback(() => {
-    if (line.onDoubleClick) {
-      handleAction(line.onDoubleClick);
-    }
-  }, [handleAction, line.onDoubleClick]);
+  const onMouseEnter = useCallback(
+    (e: MouseEvent) => {
+      if (line.onHover) {
+        e.preventDefault();
+        handleAction(line.onHover);
+      }
+    },
+    [handleAction, line.onHover],
+  );
 
-  const onMouseEnter = useCallback(() => {
-    if (line.onHover) {
-      handleAction(line.onHover);
-    }
-  }, [handleAction, line.onHover]);
-
-  const onMouseLeave = useCallback(() => {
+  const onMouseLeave = useCallback((e: MouseEvent) => {
+    e.preventDefault();
     setShowLinePopover(false);
   }, []);
 
@@ -307,6 +314,7 @@ const InterlinearLineRow = ({
     <Tooltip open={showLinePopover}>
       <TooltipTrigger asChild>
         <button
+          {...doubleClickProps}
           className={cn(
             "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200 focus:ring-yellow-400",
           )}
@@ -314,8 +322,6 @@ const InterlinearLineRow = ({
             ...getCSSStyleForInterlinearLine(line),
             fontSize: line.style.fontSize * (fontSize / 16),
           }}
-          onClick={onClick}
-          onDoubleClick={onDoubleClick}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
         >
