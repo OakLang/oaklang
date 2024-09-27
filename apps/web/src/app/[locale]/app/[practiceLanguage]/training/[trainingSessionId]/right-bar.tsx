@@ -6,7 +6,7 @@ import { useAppStore } from "~/providers/app-store-provider";
 
 export default function RightBar() {
   const sidebarOpen = useAppStore((state) => state.inspectionPanelOpen);
-  const inspectedWordId = useAppStore((state) => state.inspectedWordId);
+  const inspectedWord = useAppStore((state) => state.inspectedWord);
 
   if (!sidebarOpen) {
     return null;
@@ -14,8 +14,8 @@ export default function RightBar() {
 
   return (
     <aside className="flex h-[calc(100vh-4rem-1px)] w-96 flex-shrink-0 flex-col overflow-y-auto border-l">
-      {inspectedWordId ? (
-        <WordInspectionPanel wordId={inspectedWordId} />
+      {inspectedWord ? (
+        <WordInspectionPanel word={inspectedWord} />
       ) : (
         <CurrentPracticeWordsPanel />
       )}

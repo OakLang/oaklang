@@ -1,25 +1,36 @@
 import { useParams } from "next/navigation";
-import { CheckIcon, Loader2 } from "lucide-react";
+import { CheckIcon, FilterIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import type { SentenceWord } from "@acme/db/schema";
+
+import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
 import { cn, formatDate } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
 import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-export default function WordInspectionPanel({ wordId }: { wordId: string }) {
+export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
   const openWindow = (url: string, target: string) => {
     window.open(url, target, "width=720,height=480");
   };
   const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
   const userWordQuery = api.words.getUserWord.useQuery(
     {
-      wordId: wordId,
+      wordId: word.wordId,
     },
     { staleTime: 0 },
   );
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const updateUserSettingsMut = useUpdateUserSettingsMutation();
 
   const utils = api.useUtils();
   const markWordKnownMutation = api.words.markWordKnown.useMutation({
@@ -162,31 +173,85 @@ export default function WordInspectionPanel({ wordId }: { wordId: string }) {
         </div>
       </div>
 
-      <div className="grid gap-2 text-sm">
-        {Object.entries({
-          "Known At": userWordQuery.data.knownAt
-            ? formatDate(userWordQuery.data.knownAt)
-            : null,
-          "Last Seen At": userWordQuery.data.lastSeenAt
-            ? formatDate(userWordQuery.data.lastSeenAt)
-            : null,
-          "Last Practiced At": userWordQuery.data.lastPracticedAt
-            ? formatDate(userWordQuery.data.lastPracticedAt)
-            : null,
-          "Next Practice At": userWordQuery.data.nextPracticeAt
-            ? formatDate(userWordQuery.data.nextPracticeAt)
-            : null,
-          "Seen Count": userWordQuery.data.seenCount.toLocaleString(),
-          "Practice Count": userWordQuery.data.practiceCount.toLocaleString(),
-          "Seen Count Since Last Practiced":
-            userWordQuery.data.seenCountSinceLastPracticed.toLocaleString(),
-          "Spaced Repetition Stage": userWordQuery.data.spacedRepetitionStage,
-        }).map((item) => (
-          <div key={item[0]} className="flex items-center justify-between px-4">
-            <p>{item[0]}</p>
-            <p className="text-muted-foreground text-right">{item[1] ?? "-"}</p>
-          </div>
-        ))}
+      <div className="p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Interlinear Lines</h2>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8">
+                <FilterIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {userSettingsQuery.data?.interlinearLines.map((line) => (
+                <DropdownMenuCheckboxItem
+                  checked={line.hiddenInInspectionPanel ?? false}
+                  onCheckedChange={(value) => {
+                    updateUserSettingsMut.mutate({
+                      interlinearLines:
+                        userSettingsQuery.data.interlinearLines.map((l) =>
+                          l.id === line.id
+                            ? { ...l, hiddenInInspectionPanel: value }
+                            : l,
+                        ),
+                    });
+                  }}
+                >
+                  {line.name}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="grid gap-2 text-sm">
+          {userSettingsQuery.data?.interlinearLines
+            .filter((line) => !line.hiddenInInspectionPanel)
+            .map((line) => (
+              <div key={line.id} className="flex items-center justify-between">
+                <p>{line.name}</p>
+                <p className="text-muted-foreground text-right">
+                  {word.interlinearLines[line.name] ?? "-"}
+                </p>
+              </div>
+            ))}
+        </div>
+      </div>
+
+      <div className="p-4">
+        <div className="mb-4 flex items-center">
+          <h2 className="text-lg font-semibold">Word (for test purpose)</h2>
+        </div>
+        <div className="grid gap-2 text-sm">
+          {Object.entries({
+            Id: userWordQuery.data.wordId,
+            Word: userWordQuery.data.word.word,
+            "Language Code": userWordQuery.data.word.languageCode,
+            "Known At": userWordQuery.data.knownAt
+              ? formatDate(userWordQuery.data.knownAt)
+              : null,
+            "Last Seen At": userWordQuery.data.lastSeenAt
+              ? formatDate(userWordQuery.data.lastSeenAt)
+              : null,
+            "Last Practiced At": userWordQuery.data.lastPracticedAt
+              ? formatDate(userWordQuery.data.lastPracticedAt)
+              : null,
+            "Next Practice At": userWordQuery.data.nextPracticeAt
+              ? formatDate(userWordQuery.data.nextPracticeAt)
+              : null,
+            "Seen Count": userWordQuery.data.seenCount.toLocaleString(),
+            "Practice Count": userWordQuery.data.practiceCount.toLocaleString(),
+            "Seen Count Since Last Practiced":
+              userWordQuery.data.seenCountSinceLastPracticed.toLocaleString(),
+            "Spaced Repetition Stage": userWordQuery.data.spacedRepetitionStage,
+          }).map((item) => (
+            <div key={item[0]} className="flex items-center justify-between">
+              <p>{item[0]}</p>
+              <p className="text-muted-foreground text-right">
+                {item[1] ?? "-"}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -113,11 +113,6 @@ export const sentencesRouter = createTRPCRouter({
         session,
       });
 
-      console.log(
-        "PRACTICE WORDS: ",
-        practiceWords.map((word) => word.word).join(", "),
-      );
-
       const knownWords = await db
         .select({ word: words.word })
         .from(userWords)
@@ -132,11 +127,6 @@ export const sentencesRouter = createTRPCRouter({
         .orderBy(desc(userWords.knownAt))
         .limit(50);
 
-      console.log(
-        "KNOWN WORDS: ",
-        knownWords.map((word) => word.word).join(", "),
-      );
-
       const previouslyGeneratedSentences = await db
         .select({ index: sentences.index, sentence: sentences.sentence })
         .from(sentences)
@@ -145,12 +135,6 @@ export const sentencesRouter = createTRPCRouter({
         .limit(30)
         .then((res) => res.reverse());
 
-      console.log(
-        "PREVIOUSLY GENERATED SENTENCES: ",
-        previouslyGeneratedSentences
-          .map((sen) => `${sen.index}. ${sen.sentence}`)
-          .join("\n"),
-      );
       const TEMPLATE_OBJECT = {
         SENTENCE_COUNT: input.limit,
         PRACTICE_LANGUAGE: practiceLanguage.name,
@@ -189,6 +173,8 @@ export const sentencesRouter = createTRPCRouter({
           }),
         ),
       });
+
+      console.log(prompt);
 
       const result = await generateObject({
         model: openai("gpt-4o", { user: session.user.id }),

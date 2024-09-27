@@ -8,7 +8,7 @@ import {
   DEFAULT_INTERLINEAR_LINES,
   interlinearLine,
 } from "@acme/core/validators";
-import { and, count, desc, eq, isNull, lt, not, or, sql } from "@acme/db";
+import { and, count, desc, eq, isNull, lte, not, or, sql } from "@acme/db";
 import {
   trainingSessions,
   userSettings,
@@ -155,6 +155,7 @@ export const getCurrentPracticeWords = async ({
       nextPracticeAt: userWords.nextPracticeAt,
       spacedRepetitionStage: userWords.spacedRepetitionStage,
       lastSeenAt: userWords.lastSeenAt,
+      knownAt: userWords.knownAt,
     })
     .from(userWords)
     .innerJoin(words, eq(words.id, userWords.wordId))
@@ -165,10 +166,10 @@ export const getCurrentPracticeWords = async ({
         isNull(userWords.knownAt),
         or(
           isNull(userWords.nextPracticeAt),
-          lt(userWords.nextPracticeAt, sql`NOW()`),
+          lte(userWords.nextPracticeAt, sql`NOW()`),
         ),
       ),
     )
-    .orderBy(desc(userWords.practiceCount))
+    .orderBy(desc(userWords.seenCount))
     .limit(50);
 };

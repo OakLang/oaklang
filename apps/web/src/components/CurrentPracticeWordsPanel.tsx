@@ -37,6 +37,7 @@ export default function CurrentPracticeWordsPanel() {
                 <p>{word.word}</p>
                 <div className="">
                   {Object.entries({
+                    "Known At": word.knownAt ? formatDate(word.knownAt) : null,
                     "Last Seen At": word.lastSeenAt
                       ? formatDate(word.lastSeenAt)
                       : null,

@@ -41,7 +41,7 @@ export default function InterlinearView({
   const trainingSessionQuery =
     api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
 
-  const setInspectedWordId = useAppStore((state) => state.setInspectedWordId);
+  const setInspectedWord = useAppStore((state) => state.setInspectedWord);
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
 
   const ref = useRef<HTMLDivElement>(null);
@@ -53,7 +53,7 @@ export default function InterlinearView({
 
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     if (e.target === ref.current) {
-      setInspectedWordId(null);
+      setInspectedWord(null);
     }
   };
 
@@ -221,7 +221,7 @@ const InterlinearLineRow = ({
   const sentenceCtx = useContext(SentenceContext);
   const value = word.interlinearLines[line.name];
   const fontSize = useAppStore((state) => state.fontSize);
-  const setInspectedWordId = useAppStore((state) => state.setInspectedWordId);
+  const setInspectedWord = useAppStore((state) => state.setInspectedWord);
   const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
   const [showLinePopover, setShowLinePopover] = useState(false);
   const [popoverLineName, setPopoverLineName] = useState<
@@ -252,7 +252,7 @@ const InterlinearLineRow = ({
     (action: z.infer<typeof interlinearLineActionSchema>) => {
       switch (action.action) {
         case InterlinearLineAction.inspectWord:
-          setInspectedWordId(word.wordId);
+          setInspectedWord(word);
           break;
         case InterlinearLineAction.markWordKnown:
           markKnownMut.mutate({ wordId: word.wordId });
@@ -279,13 +279,7 @@ const InterlinearLineRow = ({
           break;
       }
     },
-    [
-      setInspectedWordId,
-      word.wordId,
-      word.interlinearLines,
-      markKnownMut,
-      sentenceCtx,
-    ],
+    [setInspectedWord, word, markKnownMut, sentenceCtx],
   );
 
   const onClick = useCallback(() => {

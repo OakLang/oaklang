@@ -1,9 +1,11 @@
 import { createStore } from "zustand/vanilla";
 
+import type { SentenceWord } from "@acme/db/schema";
+
 interface AppState {
   generateSentencesPromptTemplate: string;
   generateSentenceWordsPromptTemplate: string;
-  inspectedWordId: string | null;
+  inspectedWord: SentenceWord | null;
   inspectionPanelOpen: boolean;
   fontSize: number;
 }
@@ -11,7 +13,7 @@ interface AppState {
 interface AppActions {
   setGenerateSentencesPromptTemplate: (template: string) => void;
   setGenerateSentenceWordsPromptTemplate: (template: string) => void;
-  setInspectedWordId: (wordId: string | null) => void;
+  setInspectedWord: (word: SentenceWord | null) => void;
   setInspectionPanelOpen: (sidebarOpen: boolean) => void;
   setFontSize: (fontSize: number) => void;
 }
@@ -41,8 +43,8 @@ export const createAppStore = (initState: AppState) => {
       set({ fontSize });
       localStorage.setItem("font_size", String(fontSize));
     },
-    setInspectedWordId: (inspectedWordId) => {
-      set({ inspectedWordId });
+    setInspectedWord: (inspectedWord) => {
+      set({ inspectedWord });
     },
     setInspectionPanelOpen: (inspectionPanelOpen) => {
       set({ inspectionPanelOpen });
@@ -87,7 +89,7 @@ export const initAppStore = (): AppState => {
     generateSentenceWordsPromptTemplate:
       localStorage.getItem("GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE") ??
       GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
-    inspectedWordId: null,
+    inspectedWord: null,
     inspectionPanelOpen:
       localStorage.getItem("inspection_panel_open") === "true",
     fontSize: localStorage.getItem("font_size")

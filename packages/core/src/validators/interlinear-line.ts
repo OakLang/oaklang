@@ -25,6 +25,7 @@ export const interlinearLine = z.object({
   description: z.string().min(1).max(300),
   disappearing: disappearingEnum,
   hidden: z.boolean().nullish(),
+  hiddenInInspectionPanel: z.boolean().nullish(),
   onClick: interlinearLineActionSchema.nullish(),
   onDoubleClick: interlinearLineActionSchema.nullish(),
   onHover: interlinearLineActionSchema.nullish(),
