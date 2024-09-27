@@ -182,111 +182,117 @@ export default function ContentView() {
   ]);
 
   return (
-    <div className="flex flex-1 gap-4 py-8 md:py-16">
-      <div className="md:pl-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              className="text-muted-foreground h-full w-12"
-              size="icon"
-              disabled={
-                sentencesQuery.isSuccess &&
-                trainingSessionQuery.isSuccess &&
-                trainingSessionQuery.data.sentenceIndex <= 0
-              }
-              onClick={handlePrevious}
-            >
-              <ChevronLeftIcon className="h-8 w-8" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">Previous Sentence</TooltipContent>
-        </Tooltip>
-      </div>
-
-      <div className="flex flex-1 flex-col">
-        <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
-          {currentSentence ? (
-            <>
-              {isFetchingCurrentSentenceWords === 0 ? (
-                <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
-                  <AudioPlayButton
-                    text={currentSentence.sentence}
-                    speed={userSettingsQuery.data?.ttsSpeed ?? 1}
-                    autoPlay={userSettingsQuery.data?.autoPlayAudio === true}
-                  />
-                  <Tooltip>
-                    <Select
-                      value={String(userSettingsQuery.data?.ttsSpeed ?? "1")}
-                      onValueChange={(value) =>
-                        updateUserSettingsMutation.mutate({
-                          ttsSpeed: Number(value),
-                        })
-                      }
-                    >
-                      <TooltipTrigger asChild>
-                        <SelectTrigger
-                          id="voice"
-                          className="h-8 w-fit rounded-full pl-2.5 pr-2"
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                      </TooltipTrigger>
-                      <SelectContent>
-                        {TTS_SPEED_OPTIONS.map((value) => (
-                          <SelectItem key={value} value={String(value)}>
-                            {value}x
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <TooltipContent>Playback speed</TooltipContent>
-                  </Tooltip>
-                </div>
-              ) : (
-                <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
-                  <Skeleton className="h-14 w-14 rounded-full" />
-                  <Skeleton className="h-8 w-14 rounded-full" />
-                </div>
-              )}
-
-              <InterlinearView sentences={[currentSentence]} />
-            </>
-          ) : (
-            <div className="flex flex-1 items-center justify-center">
-              <div className="flex flex-col items-center justify-center gap-4">
-                <Loader2Icon className="h-6 w-6 animate-spin" />
-                <p className="text-muted-foreground text-center">
-                  {generateSentencesMut.isPending
-                    ? "Generating Sentences..."
-                    : "Loading..."}
-                </p>
-              </div>
-            </div>
-          )}
+    <div className="flex flex-1 flex-col overflow-y-auto">
+      <div className="flex flex-1 gap-4 py-8 md:py-16">
+        <div className="md:pl-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground h-full w-12"
+                size="icon"
+                disabled={
+                  sentencesQuery.isSuccess &&
+                  trainingSessionQuery.isSuccess &&
+                  trainingSessionQuery.data.sentenceIndex <= 0
+                }
+                onClick={handlePrevious}
+              >
+                <ChevronLeftIcon className="h-8 w-8" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Previous Sentence</TooltipContent>
+          </Tooltip>
         </div>
-      </div>
 
-      <div className="md:pr-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              className="text-muted-foreground h-full w-12"
-              size="icon"
-              disabled={
-                sentencesQuery.isSuccess &&
-                trainingSessionQuery.isSuccess &&
-                trainingSessionQuery.data.sentenceIndex >=
-                  sentencesQuery.data.length
-              }
-              onClick={handleNext}
-            >
-              <ChevronRightIcon className="h-8 w-8" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">Next Sentence</TooltipContent>
-        </Tooltip>
+        <div className="flex flex-1 flex-col">
+          <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
+            {currentSentence ? (
+              <>
+                {isFetchingCurrentSentenceWords === 0 ? (
+                  <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
+                    <AudioPlayButton
+                      text={currentSentence.sentence}
+                      speed={userSettingsQuery.data?.ttsSpeed ?? 1}
+                      autoPlay={userSettingsQuery.data?.autoPlayAudio === true}
+                    />
+                    <Tooltip>
+                      <Select
+                        value={String(userSettingsQuery.data?.ttsSpeed ?? "1")}
+                        onValueChange={(value) =>
+                          updateUserSettingsMutation.mutate({
+                            ttsSpeed: Number(value),
+                          })
+                        }
+                      >
+                        <TooltipTrigger asChild>
+                          <SelectTrigger
+                            id="voice"
+                            className="h-8 w-fit rounded-full pl-2.5 pr-2"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                        </TooltipTrigger>
+                        <SelectContent>
+                          {TTS_SPEED_OPTIONS.map((value) => (
+                            <SelectItem key={value} value={String(value)}>
+                              {value}x
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <TooltipContent>Playback speed</TooltipContent>
+                    </Tooltip>
+                  </div>
+                ) : (
+                  <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
+                    <Skeleton className="h-14 w-14 rounded-full" />
+                    <Skeleton className="h-8 w-14 rounded-full" />
+                  </div>
+                )}
+
+                <InterlinearView
+                  sentences={[currentSentence]}
+                  onNextSentence={handleNext}
+                  onPreviousSentence={handlePrevious}
+                />
+              </>
+            ) : (
+              <div className="flex flex-1 items-center justify-center">
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <Loader2Icon className="h-6 w-6 animate-spin" />
+                  <p className="text-muted-foreground text-center">
+                    {generateSentencesMut.isPending
+                      ? "Generating Sentences..."
+                      : "Loading..."}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="md:pr-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                className="text-muted-foreground h-full w-12"
+                size="icon"
+                disabled={
+                  sentencesQuery.isSuccess &&
+                  trainingSessionQuery.isSuccess &&
+                  trainingSessionQuery.data.sentenceIndex >=
+                    sentencesQuery.data.length
+                }
+                onClick={handleNext}
+              >
+                <ChevronRightIcon className="h-8 w-8" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Next Sentence</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
     </div>
   );

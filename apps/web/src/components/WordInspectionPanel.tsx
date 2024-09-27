@@ -42,9 +42,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
     onSuccess: (_, vars) => {
       void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
       void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
-      void utils.languages.getPracticeLanguages.invalidate(undefined, {
-        type: "active",
-      });
+      void utils.languages.getPracticeLanguages.invalidate();
     },
     onError: (error) => {
       toast(error.message);
@@ -60,9 +58,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
     onSuccess: (_, vars) => {
       void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
       void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
-      void utils.languages.getPracticeLanguages.invalidate(undefined, {
-        type: "active",
-      });
+      void utils.languages.getPracticeLanguages.invalidate();
     },
     onError: (error) => {
       toast(error.message);

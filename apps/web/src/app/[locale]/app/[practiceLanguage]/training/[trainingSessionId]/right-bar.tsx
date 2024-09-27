@@ -13,7 +13,7 @@ export default function RightBar() {
   }
 
   return (
-    <aside className="flex h-[calc(100vh-4rem-1px)] w-96 flex-shrink-0 flex-col overflow-y-auto border-l">
+    <aside className="flex h-full w-96 flex-shrink-0 flex-col overflow-y-auto border-l">
       {inspectedWord ? (
         <WordInspectionPanel word={inspectedWord} />
       ) : (

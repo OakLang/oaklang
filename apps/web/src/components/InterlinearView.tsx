@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 import { useParams } from "next/navigation";
-import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
+import { ArrowRight, ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import type {
@@ -34,16 +34,26 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function InterlinearView({
   sentences,
+  onNextSentence,
 }: {
   sentences: Sentence[];
+  onNextSentence?: () => void;
+  onPreviousSentence?: () => void;
 }) {
+  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
   const [showTranslation, setShowTranslation] = useState(false);
   const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
   const trainingSessionQuery =
     api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
 
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
+  const generateSentenceWordsPromptTemplate = useAppStore(
+    (state) => state.generateSentenceWordsPromptTemplate,
+  );
+
+  const utils = api.useUtils();
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const markWordKnownMut = api.words.markWordKnown.useMutation();
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -52,7 +62,7 @@ export default function InterlinearView({
     [sentences],
   );
 
-  const onClick = (e: MouseEvent<HTMLDivElement>) => {
+  const onBodyClick = (e: MouseEvent<HTMLDivElement>) => {
     if (e.target === ref.current) {
       setInspectedWord(null);
     }
@@ -68,12 +78,46 @@ export default function InterlinearView({
     setShowTranslation(true);
   }, [showTranslation]);
 
+  const handleMarkAllWordsKnownAndNext = useCallback(async () => {
+    try {
+      await Promise.all(
+        sentences.map(async (sentence) => {
+          const words = await utils.sentences.getSentenceWords.fetch({
+            sentenceId: sentence.id,
+            promptTemplate: generateSentenceWordsPromptTemplate,
+          });
+          await Promise.all(
+            words.map(async (word) => {
+              await markWordKnownMut.mutateAsync({ wordId: word.wordId });
+              void utils.words.getUserWord.invalidate({ wordId: word.wordId });
+            }),
+          );
+        }),
+      );
+      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
+      void utils.languages.getPracticeLanguages.invalidate();
+      onNextSentence?.();
+    } catch (error) {
+      toast((error as Error).message);
+    }
+  }, [
+    sentences,
+    utils.languages.getPracticeLanguage,
+    utils.languages.getPracticeLanguages,
+    utils.sentences.getSentenceWords,
+    utils.words.getUserWord,
+    practiceLanguage,
+    onNextSentence,
+    generateSentenceWordsPromptTemplate,
+    markWordKnownMut,
+  ]);
+
   useEffect(() => {
     setShowTranslation(false);
   }, [translation]);
 
   return (
-    <div ref={ref} onClick={onClick} className="flex-1">
+    <div ref={ref} onClick={onBodyClick} className="flex-1">
       <p className="pointer-events-none">
         {sentences.map((sentence) => (
           <SentenceItem key={sentence.id} sentence={sentence} />
@@ -81,21 +125,32 @@ export default function InterlinearView({
       </p>
 
       <div className="pointer-events-none mt-4">
-        <Button
-          variant="ghost"
-          onClick={handleToggleShowTranslation}
-          className="text-muted-foreground pointer-events-auto"
-        >
-          {showTranslation ? "Hide Translation" : "Show Translation"}
-          <ChevronDownIcon
-            className={cn(
-              "-mr-1 ml-2 h-4 w-4 transition-transform duration-200",
-              {
-                "-rotate-180": showTranslation,
-              },
-            )}
-          />
-        </Button>
+        <div className="flex flex-wrap gap-4">
+          <Button
+            variant="outline"
+            onClick={handleToggleShowTranslation}
+            className="text-muted-foreground pointer-events-auto"
+          >
+            {showTranslation ? "Hide Translation" : "Show Translation"}
+            <ChevronDownIcon
+              className={cn(
+                "-mr-1 ml-2 h-4 w-4 transition-transform duration-200",
+                {
+                  "-rotate-180": showTranslation,
+                },
+              )}
+            />
+          </Button>
+          <Button
+            variant="outline"
+            className="text-muted-foreground pointer-events-auto"
+            onClick={handleMarkAllWordsKnownAndNext}
+            disabled={markWordKnownMut.isPending}
+          >
+            Mark all Words Known and Next
+            <ArrowRight className="-mr-1 ml-2 h-4 w-4" />
+          </Button>
+        </div>
         {showTranslation && (
           <div className="text-muted-foreground bg-muted pointer-events-auto mt-2 flex gap-4 overflow-hidden rounded-lg p-2">
             <AudioPlayButton
@@ -238,9 +293,7 @@ const InterlinearLineRow = ({
     onSuccess: (_, vars) => {
       void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
       void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
-      void utils.languages.getPracticeLanguages.invalidate(undefined, {
-        type: "active",
-      });
+      void utils.languages.getPracticeLanguages.invalidate();
       toast("Marked Known");
     },
     onError: (error) => {
