@@ -277,15 +277,18 @@ export const sentencesRouter = createTRPCRouter({
         schema,
       });
 
+      const filterdWords = (
+        result.object.words as unknown as {
+          word: string;
+          lemma: string;
+          text: string;
+          [x: string]: string;
+        }[]
+      ).filter((word) => new RegExp(/\w+/).test(word.lemma));
+
       const values = await Promise.all(
-        result.object.words.map(async (item, index) => {
-          const primaryWord = item.word;
-          if (!primaryWord) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "No primary interlinear line found!",
-            });
-          }
+        filterdWords.map(async (item, index) => {
+          const primaryWord = item.lemma;
           const word = await getOrCreateWord(
             primaryWord,
             practiceLanguage.code,
