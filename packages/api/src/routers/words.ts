@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import ms from "ms";
 import { z } from "zod";
 
-import { and, asc, eq, isNull, not, sql } from "@acme/db";
+import { and, asc, eq, isNull, lte, not, or, sql } from "@acme/db";
 import { userWords, words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -161,7 +161,53 @@ export const wordsRouter = createTRPCRouter({
           },
         });
     }),
-
+  deleteKnown: protectedProcedure
+    .input(z.object({ wordId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .delete(userWords)
+        .where(
+          and(
+            eq(userWords.userId, ctx.session.user.id),
+            eq(userWords.wordId, input.wordId),
+          ),
+        );
+    }),
+  getAllWords: protectedProcedure
+    .input(
+      z.object({
+        languageCode: z.string(),
+        filter: z
+          .enum(["all", "known", "unknown", "practicing"])
+          .default("all"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return ctx.db
+        .select(userWordsSelect)
+        .from(userWords)
+        .innerJoin(words, eq(words.id, userWords.wordId))
+        .where(
+          and(
+            eq(userWords.userId, ctx.session.user.id),
+            eq(words.languageCode, input.languageCode),
+            ...(input.filter === "known"
+              ? [not(isNull(userWords.knownAt))]
+              : input.filter === "unknown"
+                ? [isNull(userWords.knownAt)]
+                : input.filter === "practicing"
+                  ? [
+                      isNull(userWords.knownAt),
+                      or(
+                        isNull(userWords.nextPracticeAt),
+                        lte(userWords.nextPracticeAt, sql`NOW()`),
+                      ),
+                    ]
+                  : []),
+          ),
+        )
+        .orderBy(asc(userWords.wordId));
+    }),
   getAllPracticeWords: protectedProcedure
     .input(
       z.object({
