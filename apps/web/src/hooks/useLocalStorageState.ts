@@ -1,15 +1,25 @@
+import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useState } from "react";
 
 export const usePersistState = <T = undefined>(
   key: string,
   initialState: T,
-): [T, (newState: T) => void] => {
-  const [state, _setState] = useState(initialState);
+): [T, Dispatch<SetStateAction<T>>] => {
+  const [state, setState] = useState<T>(initialState);
 
-  const setState = useCallback(
-    (newState: T) => {
-      _setState(newState);
-      localStorage.setItem(key, JSON.stringify(newState));
+  const handleSetState: Dispatch<SetStateAction<T>> = useCallback(
+    (value) => {
+      setState((prevState) => {
+        if (typeof value === "function") {
+          const newValue = (value as (prevState: T) => T)(prevState);
+          console.log(newValue);
+          localStorage.setItem(key, JSON.stringify(newValue));
+          return newValue;
+        } else {
+          localStorage.setItem(key, JSON.stringify(value));
+          return value;
+        }
+      });
     },
     [key],
   );
@@ -18,10 +28,10 @@ export const usePersistState = <T = undefined>(
     if (typeof window !== "undefined") {
       const stateStr = localStorage.getItem(key);
       if (stateStr) {
-        _setState(JSON.parse(stateStr) as unknown as T);
+        setState(JSON.parse(stateStr) as unknown as T);
       }
     }
   }, [key]);
 
-  return [state, setState];
+  return [state, handleSetState];
 };

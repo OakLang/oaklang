@@ -1,10 +1,10 @@
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
-import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 import type { RouterInputs, RouterOutputs } from "~/trpc/react";
+import { usePersistState } from "~/hooks/useLocalStorageState";
 import { api } from "~/trpc/react";
 import { formatDate } from "~/utils";
 import { DataTable } from "./DataTable";
@@ -92,6 +92,7 @@ export const columns: ColumnDef<Word>[] = [
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
+        className="my-auto"
       />
     ),
     enableSorting: false,
@@ -178,8 +179,9 @@ export const columns: ColumnDef<Word>[] = [
 
 export default function PracticeWordsManager() {
   const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
-  const [filter, setFilter] =
-    useState<RouterInputs["words"]["getAllWords"]["filter"]>("all");
+  const [filter, setFilter] = usePersistState<
+    RouterInputs["words"]["getAllWords"]["filter"]
+  >("all-words-filter", "all");
   const allWords = api.words.getAllWords.useQuery({
     languageCode: practiceLanguage,
     filter,
@@ -198,6 +200,7 @@ export default function PracticeWordsManager() {
           data={allWords.data ?? []}
           isLoading={allWords.isPending}
           filterColumn="word"
+          persistKeyPrefix="words-data-table"
           renderActions={() => (
             <>
               <Tabs value={filter}>
@@ -224,6 +227,12 @@ export default function PracticeWordsManager() {
               </Tabs>
             </>
           )}
+          initialState={{
+            columnPinning: {
+              left: ["select"],
+              right: ["actions"],
+            },
+          }}
         />
       )}
     </section>

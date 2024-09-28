@@ -1,13 +1,15 @@
 "use client";
 
 import type {
+  Column,
   ColumnDef,
   ColumnFiltersState,
+  InitialTableState,
   SortingState,
   Table as TanstackTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import {
   flexRender,
@@ -20,6 +22,7 @@ import {
 import { Loader2 } from "lucide-react";
 import pluralize from "pluralize";
 
+import { usePersistState } from "~/hooks/useLocalStorageState";
 import { DataTablePagination } from "./DataTablePagination";
 import { DataTableViewOptions } from "./DataTableViewOptions";
 import { Input } from "./ui/input";
@@ -32,6 +35,30 @@ import {
   TableRow,
 } from "./ui/table";
 
+function getCommonPinningStyles<
+  TData = Record<string, unknown>,
+  TValue = unknown,
+>(column: Column<TData, TValue>): CSSProperties {
+  const isPinned = column.getIsPinned();
+  const isLastLeftPinnedColumn =
+    isPinned === "left" && column.getIsLastColumn("left");
+  const isFirstRightPinnedColumn =
+    isPinned === "right" && column.getIsFirstColumn("right");
+
+  return {
+    boxShadow: isLastLeftPinnedColumn
+      ? "-1px 0 0 hsl(var(--border)) inset"
+      : isFirstRightPinnedColumn
+        ? "1px 0 0 hsl(var(--border)) inset"
+        : undefined,
+    left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,
+    right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
+    position: isPinned ? "sticky" : "relative",
+    width: column.getSize(),
+    zIndex: isPinned ? 1 : 0,
+  };
+}
+
 interface DataTableProps<TData = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -39,6 +66,8 @@ interface DataTableProps<TData = Record<string, unknown>, TValue = unknown> {
   isLoading?: boolean;
   renderActions?: ({ table }: { table: TanstackTable<TData> }) => ReactNode;
   renderLoading?: ({ table }: { table: TanstackTable<TData> }) => ReactNode;
+  persistKeyPrefix: string;
+  initialState?: InitialTableState;
 }
 
 export function DataTable<TData, TValue>({
@@ -48,10 +77,19 @@ export function DataTable<TData, TValue>({
   renderActions,
   isLoading,
   renderLoading,
+  persistKeyPrefix,
+  initialState,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = usePersistState<SortingState>(
+    `${persistKeyPrefix}-sorting`,
+    [],
+  );
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] =
+    usePersistState<VisibilityState>(
+      `${persistKeyPrefix}-column-visibility`,
+      {},
+    );
   const [rowSelection, setRowSelection] = useState({});
 
   const table = useReactTable({
@@ -65,6 +103,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    initialState,
     state: {
       sorting,
       columnFilters,
@@ -102,14 +141,19 @@ export function DataTable<TData, TValue>({
           </div>
         )
       ) : (
-        <div className="rounded-md border">
+        <div className="overflow-hidden rounded-md border">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead
+                        key={header.id}
+                        style={{
+                          ...getCommonPinningStyles(header.column),
+                        }}
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -130,7 +174,11 @@ export function DataTable<TData, TValue>({
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="whitespace-nowrap">
+                      <TableCell
+                        key={cell.id}
+                        className="whitespace-nowrap"
+                        style={{ ...getCommonPinningStyles(cell.column) }}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
