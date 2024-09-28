@@ -85,11 +85,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
     <div>
       <div className="grid gap-4 border-b p-4">
         <div className="flex items-center gap-4">
-          <AudioPlayButton
-            text={userWordQuery.data.word.word}
-            className="h-12 w-12"
-            autoPlay
-          />
+          <AudioPlayButton value={userWordQuery.data.word.word} autoPlay />
           <div className="flex-1">
             <p>{userWordQuery.data.word.word}</p>
           </div>

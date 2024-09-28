@@ -1,151 +1,63 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2Icon, PlayIcon, SquareIcon } from "lucide-react";
+import { forwardRef } from "react";
+import { Loader2Icon, PauseIcon, PlayIcon } from "lucide-react";
 
+import type { ButtonProps } from "./ui/button";
+import useTextToSpeechPlayer from "~/hooks/useTextToSpeechPlayer";
 import { cn } from "~/utils";
-import { generateAudioAsync } from "~/utils/helpers";
 import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-const AudioPlayButton = ({
-  text,
-  speed = 1,
-  className,
-  autoPlay,
-  iconSize = 24,
-}: {
-  text: string;
-  speed?: number;
+export interface AudioPlayButton
+  extends Omit<ButtonProps, "children" | "onClick"> {
+  asChild?: boolean;
+  value: string;
   className?: string;
   autoPlay?: boolean;
-  iconSize?: number;
-}) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+}
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+const AudioPlayButton = forwardRef<HTMLButtonElement, AudioPlayButton>(
+  (
+    {
+      value,
+      autoPlay,
+      className,
+      size = "icon",
+      variant = "secondary",
+      ...props
+    },
+    ref,
+  ) => {
+    const { audioRef, isFetching, isPlaying, pause, play } =
+      useTextToSpeechPlayer({ input: value, autoPlay });
 
-  const audioQuery = useQuery({
-    enabled: false,
-    queryFn: () => generateAudioAsync({ input: text, speed }),
-    queryKey: [text, speed],
-    staleTime: 1000 * 60 * 60, // 1h
-  });
-
-  const playAudio = useCallback(async () => {
-    let audioUrl: string | undefined = audioQuery.data;
-    if (!audioUrl && audioQuery.fetchStatus === "idle") {
-      const { data } = await audioQuery.refetch();
-      audioUrl = data;
-    }
-
-    if (!audioUrl) {
-      return;
-    }
-
-    if (!audioRef.current) {
-      return;
-    }
-
-    if (!audioRef.current.paused) {
-      audioRef.current.currentTime = 0;
-    } else {
-      audioRef.current.src = audioUrl;
-      try {
-        await audioRef.current.play();
-      } catch (error) {
-        /* empty */
-      }
-    }
-  }, [audioQuery]);
-
-  const stopAudio = useCallback(() => {
-    if (audioRef.current && !audioRef.current.paused) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-  }, []);
-
-  useEffect(() => {
-    const audioEl = audioRef.current;
-    if (!audioEl) {
-      return;
-    }
-
-    const onPlay = () => {
-      setIsPlaying(true);
-    };
-
-    const onPause = () => {
-      setIsPlaying(false);
-    };
-
-    audioEl.addEventListener("play", onPlay);
-    audioEl.addEventListener("pause", onPause);
-
-    return () => {
-      audioEl.removeEventListener("play", onPlay);
-      audioEl.removeEventListener("pause", onPause);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (autoPlay) {
-      void playAudio();
-    }
-    return () => {
-      stopAudio();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoPlay, text]);
-
-  return (
-    <>
-      <audio ref={audioRef} />
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className={cn("h-14 w-14 rounded-full", className)}
-            onClick={() => {
-              if (isPlaying) {
-                stopAudio();
-              } else {
-                void playAudio();
-              }
-            }}
-            disabled={audioQuery.isFetching}
-          >
-            {audioQuery.isFetching ? (
-              <Loader2Icon
-                style={{
-                  width: iconSize,
-                  height: iconSize,
-                }}
-                className="animate-spin"
-              />
-            ) : isPlaying ? (
-              <SquareIcon
-                style={{
-                  width: iconSize,
-                  height: iconSize,
-                }}
-              />
-            ) : (
-              <PlayIcon
-                style={{
-                  width: iconSize,
-                  height: iconSize,
-                }}
-              />
-            )}
-            <span className="sr-only">{isPlaying ? "Stop" : "Play"}</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{isPlaying ? "Stop" : "Play"}</TooltipContent>
-      </Tooltip>
-    </>
-  );
-};
+    return (
+      <>
+        <audio ref={audioRef} />
+        <Button
+          className={cn("rounded-full", className)}
+          size={size}
+          variant={variant}
+          {...props}
+          ref={ref}
+          onClick={() => {
+            if (isPlaying) {
+              pause();
+            } else {
+              void play();
+            }
+          }}
+          disabled={isFetching}
+        >
+          {isFetching ? (
+            <Loader2Icon className="h-4 w-4 animate-spin" />
+          ) : isPlaying ? (
+            <PauseIcon className="h-4 w-4" />
+          ) : (
+            <PlayIcon className="h-4 w-4" />
+          )}
+        </Button>
+      </>
+    );
+  },
+);
 
 export default AudioPlayButton;

@@ -3,10 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useIsFetching } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
-import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Loader2Icon,
+  PauseIcon,
+  PlayIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import AudioPlayButton from "~/components/AudioPlayButton";
 import InterlinearView from "~/components/InterlinearView";
 import { Button } from "~/components/ui/button";
 import {
@@ -22,12 +27,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { usePersistState } from "~/hooks/useLocalStorageState";
+import useTextToSpeechPlayer from "~/hooks/useTextToSpeechPlayer";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useUpdateTrainingSessionMutation } from "~/hooks/useUpdateTrainingSessionMutation";
-import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
-import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 
 export default function ContentView() {
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
@@ -43,7 +48,6 @@ export default function ContentView() {
 
   const utils = api.useUtils();
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
   const trainingSessionQuery =
     api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
   const sentencesQuery = api.sentences.getSentences.useQuery(
@@ -209,38 +213,10 @@ export default function ContentView() {
               <>
                 {isFetchingCurrentSentenceWords === 0 ? (
                   <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
-                    <AudioPlayButton
+                    <AudioPlayer
                       text={currentSentence.sentence}
-                      speed={userSettingsQuery.data?.ttsSpeed ?? 1}
                       autoPlay={userSettingsQuery.data?.autoPlayAudio === true}
                     />
-                    <Tooltip>
-                      <Select
-                        value={String(userSettingsQuery.data?.ttsSpeed ?? "1")}
-                        onValueChange={(value) =>
-                          updateUserSettingsMutation.mutate({
-                            ttsSpeed: Number(value),
-                          })
-                        }
-                      >
-                        <TooltipTrigger asChild>
-                          <SelectTrigger
-                            id="voice"
-                            className="h-8 w-fit rounded-full pl-2.5 pr-2"
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                        </TooltipTrigger>
-                        <SelectContent>
-                          {TTS_SPEED_OPTIONS.map((value) => (
-                            <SelectItem key={value} value={String(value)}>
-                              {value}x
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <TooltipContent>Playback speed</TooltipContent>
-                    </Tooltip>
                   </div>
                 ) : (
                   <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
@@ -295,3 +271,60 @@ export default function ContentView() {
     </div>
   );
 }
+
+const AudioPlayer = ({
+  text,
+  autoPlay,
+}: {
+  text: string;
+  autoPlay?: boolean;
+}) => {
+  const [playbackRate, setPlaybackRate] = usePersistState(
+    "intelinear-line-playback-rate",
+    1,
+  );
+  const { audioRef, isFetching, isPlaying, pause, play } =
+    useTextToSpeechPlayer({ input: text, autoPlay, playbackRate });
+
+  return (
+    <>
+      <audio ref={audioRef} />
+      <Button
+        className="h-14 w-14 rounded-full"
+        size="icon"
+        variant="outline"
+        onClick={() => {
+          if (isPlaying) {
+            pause();
+          } else {
+            void play();
+          }
+        }}
+        disabled={isFetching}
+      >
+        {isFetching ? (
+          <Loader2Icon className="h-6 w-6 animate-spin" />
+        ) : isPlaying ? (
+          <PauseIcon className="h-6 w-6" />
+        ) : (
+          <PlayIcon className="h-6 w-6" />
+        )}
+      </Button>
+      <Select
+        value={String(playbackRate)}
+        onValueChange={(rate) => setPlaybackRate(parseFloat(rate))}
+      >
+        <SelectTrigger className="w-fit gap-2 rounded-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
+            <SelectItem key={String(rate)} value={String(rate)}>
+              {rate}x
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+};

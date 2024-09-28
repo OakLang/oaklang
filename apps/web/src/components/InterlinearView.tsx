@@ -153,12 +153,8 @@ export default function InterlinearView({
           </Button>
         </div>
         {showTranslation && (
-          <div className="text-muted-foreground bg-muted pointer-events-auto mt-2 flex gap-4 overflow-hidden rounded-lg p-2">
-            <AudioPlayButton
-              text={translation}
-              className="h-10 w-10"
-              iconSize={20}
-            />
+          <div className="text-muted-foreground bg-muted/50 pointer-events-auto mt-2 flex gap-4 overflow-hidden rounded-lg p-2">
+            <AudioPlayButton value={translation} variant="outline" />
             <div className="flex-1">
               <p className="italic">{translation}</p>
               <Button

@@ -5,7 +5,7 @@ export const generateAudioAsync = async ({
   speed,
 }: {
   input: string;
-  speed: number;
+  speed?: number;
 }) => {
   console.log("Fetching Audio...");
   const body: TTSBodyParams = { input, speed };
