@@ -22,6 +22,7 @@ import type { Sentence, SentenceWord } from "@acme/db/schema";
 import { InterlinearLineAction } from "@acme/core/validators";
 
 import { useDoubleClick } from "~/hooks/useDoubleClick";
+import usePlayTextToSpeech from "~/hooks/usePlayTextToSpeech";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { Link } from "~/i18n/routing";
@@ -279,6 +280,7 @@ const InterlinearLineRow = ({
   const [popoverLineName, setPopoverLineName] = useState<
     string | null | undefined
   >();
+  const { audioRef, play, isFetching: isFetchingAudio } = usePlayTextToSpeech();
 
   const utils = api.useUtils();
   const markKnownMut = api.words.markWordKnown.useMutation({
@@ -315,13 +317,13 @@ const InterlinearLineRow = ({
           const text =
             action.lineName && word.interlinearLines[action.lineName];
           if (text) {
-            toast("Reading Out: " + text);
+            void play(text);
           }
           break;
         }
         case InterlinearLineAction.readoutFullSentence: {
           if (sentenceCtx) {
-            toast("Reading Out: " + sentenceCtx.sentence.sentence);
+            void play(sentenceCtx.sentence.sentence);
           }
           break;
         }
@@ -329,7 +331,7 @@ const InterlinearLineRow = ({
           break;
       }
     },
-    [setInspectedWord, word, markKnownMut, sentenceCtx],
+    [setInspectedWord, word, markKnownMut, play, sentenceCtx],
   );
 
   const doubleClickProps = useDoubleClick({
@@ -360,28 +362,42 @@ const InterlinearLineRow = ({
     setShowLinePopover(false);
   }, []);
 
+  useEffect(() => {
+    if (isFetchingAudio) {
+      toast("Loading audio...", {
+        id: "loading-audio-toast",
+        dismissible: false,
+      });
+    } else {
+      toast.dismiss("loading-audio-toast");
+    }
+  }, [isFetchingAudio]);
+
   return (
-    <Tooltip open={showLinePopover}>
-      <TooltipTrigger asChild>
-        <button
-          {...doubleClickProps}
-          className={cn(
-            "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200 focus:ring-yellow-400",
-          )}
-          style={{
-            ...getCSSStyleForInterlinearLine(line),
-            fontSize: line.style.fontSize * (fontSize / 16),
-          }}
-          onMouseEnter={onMouseEnter}
-          onMouseLeave={onMouseLeave}
-        >
-          {word.interlinearLines[line.name] ?? ["-"]}
-        </button>
-      </TooltipTrigger>
-      <TooltipContent align="center" side="bottom">
-        {(popoverLineName && word.interlinearLines[popoverLineName]) ??
-          "Line not found!"}
-      </TooltipContent>
-    </Tooltip>
+    <>
+      <audio ref={audioRef} />
+      <Tooltip open={showLinePopover}>
+        <TooltipTrigger asChild>
+          <button
+            {...doubleClickProps}
+            className={cn(
+              "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200 focus:ring-yellow-400",
+            )}
+            style={{
+              ...getCSSStyleForInterlinearLine(line),
+              fontSize: line.style.fontSize * (fontSize / 16),
+            }}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+          >
+            {word.interlinearLines[line.name] ?? ["-"]}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent align="center" side="bottom">
+          {(popoverLineName && word.interlinearLines[popoverLineName]) ??
+            "Line not found!"}
+        </TooltipContent>
+      </Tooltip>
+    </>
   );
 };
