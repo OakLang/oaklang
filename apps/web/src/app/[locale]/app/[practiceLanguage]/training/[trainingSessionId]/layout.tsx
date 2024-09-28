@@ -1,18 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useParams } from "next/navigation";
 
 import FullScreenLoader from "~/app/full-screen-loader";
 import { Button } from "~/components/ui/button";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
+import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { Link } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 
 export default function TrainingLayout({ children }: { children: ReactNode }) {
-  const { practiceLanguage, trainingSessionId } = useParams<{
-    trainingSessionId: string;
-    practiceLanguage: string;
-  }>();
+  const trainingSessionId = useTrainingSessionId();
+  const practiceLanguage = usePracticeLanguageCode();
   const trainingSessionQuery =
     api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
 

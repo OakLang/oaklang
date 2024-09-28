@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslations } from "next-intl";
 
 import StartTrainingDialog from "~/components/dialogs/start-training-dialog";
 import { Button } from "~/components/ui/button";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { Link } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 
@@ -36,7 +36,7 @@ export default function AppPage() {
 
 const TrainingSessionsList = () => {
   const t = useTranslations("App");
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const trainingSessionsQuery =
     api.trainingSessions.getTrainingSessions.useQuery({
       languageCode: practiceLanguage,

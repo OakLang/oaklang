@@ -1,10 +1,10 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { Link } from "~/i18n/routing";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -18,7 +18,7 @@ import {
 import { Skeleton } from "./ui/skeleton";
 
 export default function UserButton() {
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const t = useTranslations("App");
   const { data, status } = useSession();
 

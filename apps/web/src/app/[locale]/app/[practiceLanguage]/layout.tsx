@@ -2,10 +2,10 @@
 
 import type { ReactNode } from "react";
 import { useEffect } from "react";
-import { useParams } from "next/navigation";
 
 import FullScreenLoader from "~/app/full-screen-loader";
 import { Button } from "~/components/ui/button";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { Link, useRouter } from "~/i18n/routing";
 import AppStoreProvider from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
@@ -13,7 +13,7 @@ import { OnboardingRoutes } from "~/utils/constants";
 import AppBar from "./app-bar";
 
 export default function MainAppLayout({ children }: { children: ReactNode }) {
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const practiceLanguageQuery = api.languages.getPracticeLanguage.useQuery(
     practiceLanguage,

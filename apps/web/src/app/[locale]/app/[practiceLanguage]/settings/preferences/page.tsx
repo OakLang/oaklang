@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
 import { Label } from "@radix-ui/react-label";
 import { PlusIcon, RefreshCcwIcon } from "lucide-react";
 import { nanoid } from "nanoid";
@@ -23,6 +22,7 @@ import {
 } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { useRouter } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
@@ -33,7 +33,7 @@ export default function PreferencesPage() {
   const { theme, setTheme } = useTheme();
   const locale = useLocale();
   const router = useRouter();
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const t = useTranslations("PreferencesPage");
 
   return (

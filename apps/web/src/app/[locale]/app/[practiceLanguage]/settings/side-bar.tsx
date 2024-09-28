@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import { useParams } from "next/navigation";
 import {
   BookOpenIcon,
   BookUserIcon,
@@ -14,14 +13,13 @@ import {
 import { useTranslations } from "next-intl";
 
 import { Button } from "~/components/ui/button";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { Link, usePathname } from "~/i18n/routing";
 import { cn } from "~/utils";
 
 export default function SideBar() {
   const t = useTranslations("Settings.SideBar");
-  const { practiceLanguage } = useParams<{
-    practiceLanguage: string;
-  }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const pathname = usePathname();
   const menu: {
     href: string;

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { useParams } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import _ from "lodash";
@@ -33,6 +32,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
 
 export default function AccountPage() {
@@ -51,7 +51,7 @@ export default function AccountPage() {
 }
 
 const DownloadWords = () => {
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const utils = api.useUtils();
 
   const donwloadWordsAsCSV = useCallback(

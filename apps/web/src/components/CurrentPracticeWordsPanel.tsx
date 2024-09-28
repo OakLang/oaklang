@@ -1,13 +1,12 @@
-import React from "react";
-import { useParams } from "next/navigation";
 import { RefreshCcw } from "lucide-react";
 
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
 import { formatDate } from "~/utils";
 import { Button } from "./ui/button";
 
 export default function CurrentPracticeWordsPanel() {
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const words = api.words.getCurrentPracticeWords.useQuery({
     languageCode: practiceLanguage,
   });

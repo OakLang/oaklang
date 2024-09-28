@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 import { Button } from "./ui/button";
@@ -23,7 +23,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function PracticeLanguageSwitcher() {
   const t = useTranslations("App");
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const practiceLanguageQuery =
     api.languages.getPracticeLanguage.useQuery(practiceLanguage);
   const practiceLanguages = api.languages.getPracticeLanguages.useQuery();

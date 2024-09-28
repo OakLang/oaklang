@@ -1,10 +1,10 @@
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
-import { useParams } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 import type { RouterInputs, RouterOutputs } from "~/trpc/react";
 import { usePersistState } from "~/hooks/useLocalStorageState";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
 import { formatDate } from "~/utils";
 import { DataTable } from "./DataTable";
@@ -178,7 +178,7 @@ export const columns: ColumnDef<Word>[] = [
 ];
 
 export default function PracticeWordsManager() {
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const [filter, setFilter] = usePersistState<
     RouterInputs["words"]["getAllWords"]["filter"]
   >("all-words-filter", "all");

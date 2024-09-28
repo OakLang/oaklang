@@ -1,13 +1,13 @@
 "use client";
 
-import { useParams } from "next/navigation";
-
 import PracticeLanguageSwitcher from "~/components/PracticeLanguageSwitcher";
+import { ThemeToggle } from "~/components/ThemeToggle";
 import UserButton from "~/components/UserButton";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { Link } from "~/i18n/routing";
 
 export default function AppBar() {
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
 
   return (
     <header className="bg-card text-card-foreground sticky top-0 z-40 border-b">
@@ -17,6 +17,7 @@ export default function AppBar() {
         </h1>
         <div className="flex-1" />
         <PracticeLanguageSwitcher />
+        <ThemeToggle />
         <UserButton />
       </div>
     </header>

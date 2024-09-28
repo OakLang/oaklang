@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon } from "lucide-react";
@@ -23,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useUpdateTrainingSessionMutation } from "~/hooks/useUpdateTrainingSessionMutation";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { useAppStore } from "~/providers/app-store-provider";
@@ -32,9 +32,7 @@ import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 export default function ContentView() {
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
     useState(false);
-  const { trainingSessionId } = useParams<{
-    trainingSessionId: string;
-  }>();
+  const trainingSessionId = useTrainingSessionId();
 
   const generateSentencesPromptTemplate = useAppStore(
     (state) => state.generateSentencesPromptTemplate,

@@ -1,5 +1,4 @@
 import { useCallback, useEffect } from "react";
-import { useParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -33,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 
@@ -43,7 +43,7 @@ export default function StartTrainingDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery();
 
   const form = useForm<CreateTrainingSessionInput>({

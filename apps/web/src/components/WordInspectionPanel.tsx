@@ -1,9 +1,9 @@
-import { useParams } from "next/navigation";
 import { CheckIcon, FilterIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import type { SentenceWord } from "@acme/db/schema";
 
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
 import { cn, formatDate } from "~/utils";
@@ -22,7 +22,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
   const openWindow = (url: string, target: string) => {
     window.open(url, target, "width=720,height=480");
   };
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const userWordQuery = api.words.getUserWord.useQuery(
     {
       wordId: word.wordId,

@@ -2,7 +2,6 @@
 
 import { Fragment } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,14 +19,13 @@ import {
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 import { APP_NAME } from "~/utils/constants";
 
 export default function LanguagesPage() {
-  const { practiceLanguage } = useParams<{
-    practiceLanguage: string;
-  }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery();
   const utils = api.useUtils();
   const router = useRouter();

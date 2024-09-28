@@ -11,7 +11,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useParams } from "next/navigation";
 import { ArrowRight, ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,6 +22,8 @@ import type { Sentence, SentenceWord } from "@acme/db/schema";
 import { InterlinearLineAction } from "@acme/core/validators";
 
 import { useDoubleClick } from "~/hooks/useDoubleClick";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
+import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
@@ -40,9 +41,9 @@ export default function InterlinearView({
   onNextSentence?: () => void;
   onPreviousSentence?: () => void;
 }) {
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const [showTranslation, setShowTranslation] = useState(false);
-  const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
+  const trainingSessionId = useTrainingSessionId();
   const trainingSessionQuery =
     api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
 
@@ -277,7 +278,7 @@ const InterlinearLineRow = ({
   const sentenceCtx = useContext(SentenceContext);
   const fontSize = useAppStore((state) => state.fontSize);
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
-  const { practiceLanguage } = useParams<{ practiceLanguage: string }>();
+  const practiceLanguage = usePracticeLanguageCode();
   const [showLinePopover, setShowLinePopover] = useState(false);
   const [popoverLineName, setPopoverLineName] = useState<
     string | null | undefined

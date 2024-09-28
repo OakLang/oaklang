@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
 import { Reorder, useDragControls, useMotionValue } from "framer-motion";
 import {
   ArrowLeftIcon,
@@ -37,7 +36,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useRaisedShadow } from "~/hooks/useRaisedShadow";
+import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
@@ -45,7 +46,8 @@ import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 
 export default function TopBar() {
-  const { trainingSessionId } = useParams<{ trainingSessionId: string }>();
+  const trainingSessionId = useTrainingSessionId();
+  const practiceLanguage = usePracticeLanguageCode();
   const trainingSessionQuery =
     api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
 
@@ -55,10 +57,6 @@ export default function TopBar() {
   );
   const fontSize = useAppStore((state) => state.fontSize);
   const setFontSize = useAppStore((state) => state.setFontSize);
-
-  const { practiceLanguage } = useParams<{
-    practiceLanguage: string;
-  }>();
   const { theme, setTheme } = useTheme();
 
   return (
@@ -82,18 +80,6 @@ export default function TopBar() {
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-2">
-        {/* <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="ghost">Edit Prompt</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Prompt Template</DialogTitle>
-            </DialogHeader>
-            <PromptTemplatePopover />
-          </DialogContent>
-        </Dialog> */}
-
         <Tooltip>
           <Popover>
             <PopoverTrigger asChild>
