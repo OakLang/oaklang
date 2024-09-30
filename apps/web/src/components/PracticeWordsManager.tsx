@@ -3,6 +3,10 @@ import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 import type { RouterInputs, RouterOutputs } from "~/trpc/react";
+import {
+  useMarkWordKnownMutation,
+  useMarkWordUnknownMutation,
+} from "~/hooks/mutations";
 import { usePersistState } from "~/hooks/useLocalStorageState";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
@@ -32,19 +36,16 @@ const getDateColumCell = (props: CellContext<Word, unknown>) => {
 
 const WordActionButton = ({ word }: { word: Word }) => {
   const utils = api.useUtils();
-  const markKnownMut = api.words.markWordKnown.useMutation({
-    onSuccess: () => {
-      void utils.words.getAllWords.invalidate({
-        languageCode: word.languageCode,
-      });
-    },
-    onError: (error) => toast(error.message),
-  });
+  const practiceLanguageCode = usePracticeLanguageCode();
+  const markKnownMut = useMarkWordKnownMutation();
+  const markUnknownMut = useMarkWordUnknownMutation();
+
   const deleteWordMut = api.words.deleteKnown.useMutation({
     onSuccess: () => {
       void utils.words.getAllWords.invalidate({
         languageCode: word.languageCode,
       });
+      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
     },
     onError: (error) => toast(error.message),
   });
@@ -57,12 +58,21 @@ const WordActionButton = ({ word }: { word: Word }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem
-          onClick={() => markKnownMut.mutate({ wordId: word.wordId })}
-          disabled={!!word.knownAt}
-        >
-          Mark Known
-        </DropdownMenuItem>
+        {word.knownAt ? (
+          <DropdownMenuItem
+            onClick={() => markUnknownMut.mutate({ wordId: word.wordId })}
+          >
+            Mark Unknown
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            onClick={() =>
+              markKnownMut.mutate({ wordId: word.wordId, sessionId: null })
+            }
+          >
+            Mark Known
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => deleteWordMut.mutate({ wordId: word.wordId })}

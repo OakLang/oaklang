@@ -132,7 +132,7 @@ export const wordsRouter = createTRPCRouter({
       }),
     ),
   markWordKnown: protectedProcedure
-    .input(z.object({ wordId: z.string(), sessionId: z.string() }))
+    .input(z.object({ wordId: z.string(), sessionId: z.string().nullable() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .insert(userWords)

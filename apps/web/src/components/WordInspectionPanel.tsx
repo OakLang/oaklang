@@ -1,9 +1,11 @@
 import { CheckIcon, FilterIcon, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 import type { SentenceWord } from "@acme/db/schema";
 
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
+import {
+  useMarkWordKnownMutation,
+  useMarkWordUnknownMutation,
+} from "~/hooks/mutations";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
@@ -23,7 +25,6 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
   const openWindow = (url: string, target: string) => {
     window.open(url, target, "width=720,height=480");
   };
-  const practiceLanguage = usePracticeLanguageCode();
   const trainingSessionId = useTrainingSessionId();
   const userWordQuery = api.words.getUserWord.useQuery(
     {
@@ -34,40 +35,8 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const updateUserSettingsMut = useUpdateUserSettingsMutation();
 
-  const utils = api.useUtils();
-  const markWordKnownMutation = api.words.markWordKnown.useMutation({
-    onMutate: (vars) => {
-      utils.words.getUserWord.setData({ wordId: vars.wordId }, (word) =>
-        word
-          ? { ...word, knownAt: new Date(), knownFromId: vars.sessionId }
-          : undefined,
-      );
-    },
-    onSuccess: (_, vars) => {
-      void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
-      void utils.languages.getPracticeLanguages.invalidate();
-    },
-    onError: (error) => {
-      toast(error.message);
-    },
-  });
-
-  const markWordUnknownMutation = api.words.markWordUnknown.useMutation({
-    onMutate: (vars) => {
-      utils.words.getUserWord.setData({ wordId: vars.wordId }, (word) =>
-        word ? { ...word, knownAt: null } : undefined,
-      );
-    },
-    onSuccess: (_, vars) => {
-      void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
-      void utils.languages.getPracticeLanguages.invalidate();
-    },
-    onError: (error) => {
-      toast(error.message);
-    },
-  });
+  const markWordKnownMutation = useMarkWordKnownMutation();
+  const markWordUnknownMutation = useMarkWordUnknownMutation();
 
   if (userWordQuery.isPending) {
     return (

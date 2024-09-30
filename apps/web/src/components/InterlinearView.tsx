@@ -21,6 +21,7 @@ import type {
 import type { Sentence, SentenceWord } from "@acme/db/schema";
 import { InterlinearLineAction } from "@acme/core/validators";
 
+import { useMarkWordKnownMutation } from "~/hooks/mutations";
 import { useDoubleClick } from "~/hooks/useDoubleClick";
 import usePlayTextToSpeech from "~/hooks/usePlayTextToSpeech";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
@@ -55,7 +56,7 @@ export default function InterlinearView({
 
   const utils = api.useUtils();
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const markWordKnownMut = api.words.markWordKnown.useMutation();
+  const markWordKnownMut = useMarkWordKnownMutation();
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -284,7 +285,6 @@ const InterlinearLineRow = ({
   const sentenceCtx = useContext(SentenceContext);
   const fontSize = useAppStore((state) => state.fontSize);
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
-  const practiceLanguage = usePracticeLanguageCode();
   const trainingSessionId = useTrainingSessionId();
   const [showLinePopover, setShowLinePopover] = useState(false);
   const [popoverLineName, setPopoverLineName] = useState<
@@ -292,23 +292,7 @@ const InterlinearLineRow = ({
   >();
   const { audioRef, play, isFetching: isFetchingAudio } = usePlayTextToSpeech();
 
-  const utils = api.useUtils();
-  const markKnownMut = api.words.markWordKnown.useMutation({
-    onMutate: (vars) => {
-      utils.words.getUserWord.setData({ wordId: vars.wordId }, (word) =>
-        word ? { ...word, knownAt: new Date() } : undefined,
-      );
-    },
-    onSuccess: (_, vars) => {
-      void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
-      void utils.languages.getPracticeLanguages.invalidate();
-      toast("Marked Known");
-    },
-    onError: (error) => {
-      toast(error.message);
-    },
-  });
+  const markKnownMut = useMarkWordKnownMutation();
 
   const handleAction = useCallback(
     (action: z.infer<typeof interlinearLineActionSchema>) => {
