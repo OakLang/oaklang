@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import type { SentenceWord } from "@acme/db/schema";
 
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
+import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
 import { cn, formatDate } from "~/utils";
@@ -23,6 +24,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
     window.open(url, target, "width=720,height=480");
   };
   const practiceLanguage = usePracticeLanguageCode();
+  const trainingSessionId = useTrainingSessionId();
   const userWordQuery = api.words.getUserWord.useQuery(
     {
       wordId: word.wordId,
@@ -36,7 +38,9 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
   const markWordKnownMutation = api.words.markWordKnown.useMutation({
     onMutate: (vars) => {
       utils.words.getUserWord.setData({ wordId: vars.wordId }, (word) =>
-        word ? { ...word, knownAt: new Date() } : undefined,
+        word
+          ? { ...word, knownAt: new Date(), knownFromId: vars.sessionId }
+          : undefined,
       );
     },
     onSuccess: (_, vars) => {
@@ -109,6 +113,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
                   } else {
                     markWordKnownMutation.mutate({
                       wordId: userWordQuery.data.wordId,
+                      sessionId: trainingSessionId,
                     });
                   }
                 }}

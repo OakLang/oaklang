@@ -26,7 +26,7 @@ export type Word = typeof words.$inferSelect;
 export type WordInsert = typeof words.$inferInsert;
 
 export const wordsRelations = relations(words, ({ many, one }) => ({
-  practiceWords: many(userWords),
+  userWords: many(userWords),
   langauge: one(languages, {
     fields: [words.languageCode],
     references: [languages.code],

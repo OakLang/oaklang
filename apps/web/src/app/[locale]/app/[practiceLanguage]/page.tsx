@@ -72,6 +72,10 @@ const TrainingSessionsList = () => {
               <span>
                 {t("complexity")}: {item.complexity}
               </span>
+              {" • "}
+              <span>New Words: {item.newWordsCount}</span>
+              {" • "}
+              <span>Known Words: {item.knownWordsCount}</span>
             </p>
           </Link>
         ))

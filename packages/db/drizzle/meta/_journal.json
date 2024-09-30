@@ -50,6 +50,13 @@
       "when": 1727345826381,
       "tag": "0006_large_stepford_cuckoos",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1727676879435,
+      "tag": "0007_even_newton_destine",
+      "breakpoints": true
     }
   ]
 }

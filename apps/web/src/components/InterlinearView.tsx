@@ -90,7 +90,10 @@ export default function InterlinearView({
           });
           await Promise.all(
             words.map(async (word) => {
-              await markWordKnownMut.mutateAsync({ wordId: word.wordId });
+              await markWordKnownMut.mutateAsync({
+                wordId: word.wordId,
+                sessionId: trainingSessionId,
+              });
               void utils.words.getUserWord.invalidate({ wordId: word.wordId });
             }),
           );
@@ -112,6 +115,7 @@ export default function InterlinearView({
     onNextSentence,
     generateSentenceWordsPromptTemplate,
     markWordKnownMut,
+    trainingSessionId,
   ]);
 
   useEffect(() => {
@@ -208,7 +212,12 @@ const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
   useEffect(() => {
     const timeout = setTimeout(() => {
       void Promise.all(
-        uniqueWordIds.map((wordId) => seenWordMutation.mutate({ wordId })),
+        uniqueWordIds.map((wordId) =>
+          seenWordMutation.mutate({
+            wordId,
+            sessionId: sentence.trainingSessionId,
+          }),
+        ),
       );
     }, 500);
     return () => {
@@ -276,6 +285,7 @@ const InterlinearLineRow = ({
   const fontSize = useAppStore((state) => state.fontSize);
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
   const practiceLanguage = usePracticeLanguageCode();
+  const trainingSessionId = useTrainingSessionId();
   const [showLinePopover, setShowLinePopover] = useState(false);
   const [popoverLineName, setPopoverLineName] = useState<
     string | null | undefined
@@ -307,7 +317,10 @@ const InterlinearLineRow = ({
           setInspectedWord(word);
           break;
         case InterlinearLineAction.markWordKnown:
-          markKnownMut.mutate({ wordId: word.wordId });
+          markKnownMut.mutate({
+            wordId: word.wordId,
+            sessionId: trainingSessionId,
+          });
           break;
         case InterlinearLineAction.showLineInTooltip:
           setPopoverLineName(action.lineName);
@@ -331,7 +344,14 @@ const InterlinearLineRow = ({
           break;
       }
     },
-    [setInspectedWord, word, markKnownMut, play, sentenceCtx],
+    [
+      setInspectedWord,
+      word,
+      markKnownMut,
+      play,
+      sentenceCtx,
+      trainingSessionId,
+    ],
   );
 
   const doubleClickProps = useDoubleClick({

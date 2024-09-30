@@ -1,11 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { and, desc, eq } from "@acme/db";
+import { and, count, desc, eq } from "@acme/db";
 import {
   languages,
   practiceLanguages,
   trainingSessions,
+  userWords,
 } from "@acme/db/schema";
 import {
   createTrainingSessionInput,
@@ -53,7 +54,24 @@ export const trainingSessionsRouter = createTRPCRouter({
           ),
         )
         .orderBy(desc(trainingSessions.id));
-      return trainingSessionList;
+      return await Promise.all(
+        trainingSessionList.map(async (ts) => {
+          const [newWords] = await db
+            .select({ count: count() })
+            .from(userWords)
+            .where(eq(userWords.createdFromId, ts.id));
+          const [knownWords] = await db
+            .select({ count: count() })
+            .from(userWords)
+            .where(eq(userWords.knownFromId, ts.id));
+
+          return {
+            ...ts,
+            newWordsCount: newWords?.count ?? 0,
+            knownWordsCount: knownWords?.count ?? 0,
+          };
+        }),
+      );
     }),
   createTrainingSession: protectedProcedure
     .input(createTrainingSessionInput)

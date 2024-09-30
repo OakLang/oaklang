@@ -36,7 +36,7 @@ export const wordsRouter = createTRPCRouter({
       };
     }),
   seenWord: protectedProcedure
-    .input(z.object({ wordId: z.string() }))
+    .input(z.object({ wordId: z.string(), sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const [userWord] = await ctx.db
         .insert(userWords)
@@ -46,6 +46,7 @@ export const wordsRouter = createTRPCRouter({
           lastSeenAt: new Date(),
           seenCount: 1,
           seenCountSinceLastPracticed: 1,
+          createdFromId: input.sessionId,
         })
         .onConflictDoUpdate({
           target: [userWords.userId, userWords.wordId],
@@ -74,6 +75,7 @@ export const wordsRouter = createTRPCRouter({
           .update(userWords)
           .set({
             knownAt: new Date(),
+            knownFromId: input.sessionId,
           })
           .where(
             and(
@@ -109,6 +111,7 @@ export const wordsRouter = createTRPCRouter({
                 }
               : {
                   knownAt: new Date(),
+                  knownFromId: input.sessionId,
                 }),
           })
           .where(
@@ -129,7 +132,7 @@ export const wordsRouter = createTRPCRouter({
       }),
     ),
   markWordKnown: protectedProcedure
-    .input(z.object({ wordId: z.string() }))
+    .input(z.object({ wordId: z.string(), sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .insert(userWords)
@@ -137,11 +140,13 @@ export const wordsRouter = createTRPCRouter({
           knownAt: new Date(),
           userId: ctx.session.user.id,
           wordId: input.wordId,
+          knownFromId: input.sessionId,
         })
         .onConflictDoUpdate({
           target: [userWords.userId, userWords.wordId],
           set: {
             knownAt: new Date(),
+            knownFromId: input.sessionId,
           },
         });
     }),
@@ -158,6 +163,7 @@ export const wordsRouter = createTRPCRouter({
           target: [userWords.userId, userWords.wordId],
           set: {
             knownAt: null,
+            knownFromId: null,
           },
         });
     }),
