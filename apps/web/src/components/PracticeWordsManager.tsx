@@ -97,6 +97,7 @@ export const columns: ColumnDef<Word>[] = [
     ),
     enableSorting: false,
     enableHiding: false,
+    size: 48,
   },
   {
     accessorKey: "word",
@@ -174,6 +175,7 @@ export const columns: ColumnDef<Word>[] = [
   {
     id: "actions",
     cell: ({ row }) => <WordActionButton word={row.original} />,
+    size: 48,
   },
 ];
 
@@ -229,7 +231,7 @@ export default function PracticeWordsManager() {
           )}
           initialState={{
             columnPinning: {
-              left: ["select"],
+              left: ["select", "word"],
               right: ["actions"],
             },
           }}
