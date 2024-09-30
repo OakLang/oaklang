@@ -76,6 +76,10 @@ const clickActions: ActionItem[] = [
     name: "Mark Word Unknown",
   },
   {
+    value: InterlinearLineAction.toggleMarkWordKnownOrUnknown,
+    name: "Toggle Mark Word Known or Unknown",
+  },
+  {
     value: InterlinearLineAction.readoutFullSentence,
     name: "Readout Full Sentence",
   },
@@ -91,6 +95,10 @@ const clickActions: ActionItem[] = [
   {
     value: InterlinearLineAction.showLines,
     name: "Show Lines",
+  },
+  {
+    value: InterlinearLineAction.toggleHideOrShowLines,
+    name: "Toggle Hide or Show Lines",
   },
 ];
 

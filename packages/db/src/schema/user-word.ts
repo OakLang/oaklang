@@ -45,6 +45,8 @@ export const userWords = pgTable(
   }),
 );
 
+export type UserWord = typeof userWords.$inferSelect;
+
 export const practiceWordsRelations = relations(userWords, ({ one }) => ({
   word: one(words, {
     fields: [userWords.wordId],

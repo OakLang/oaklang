@@ -18,9 +18,10 @@ import type {
   InterlinearLine,
   interlinearLineActionSchema,
 } from "@acme/core/validators";
-import type { Sentence, SentenceWord } from "@acme/db/schema";
+import type { Sentence } from "@acme/db/schema";
 import { InterlinearLineAction } from "@acme/core/validators";
 
+import type { RouterOutputs } from "~/trpc/react";
 import {
   useMarkWordKnownMutation,
   useMarkWordUnknownMutation,
@@ -271,7 +272,11 @@ const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
   );
 };
 
-function InterlinearLineColumn({ word }: { word: SentenceWord }) {
+function InterlinearLineColumn({
+  word,
+}: {
+  word: RouterOutputs["sentences"]["getSentenceWords"][number];
+}) {
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
 
   return (
@@ -290,8 +295,9 @@ const InterlinearLineRow = ({
   word,
 }: {
   line: InterlinearLine;
-  word: SentenceWord;
+  word: RouterOutputs["sentences"]["getSentenceWords"][number];
 }) => {
+  const practiceLanguageCode = usePracticeLanguageCode();
   const sentenceCtx = useContext(SentenceContext);
   if (!sentenceCtx) {
     throw new Error("SentenceProvider not found in the tree");
@@ -299,7 +305,20 @@ const InterlinearLineRow = ({
   const isPrimaryLine = useMemo(() => line.name === "text", [line.name]);
   const userWordQuery = api.words.getUserWord.useQuery(
     { wordId: word.wordId },
-    { enabled: isPrimaryLine },
+    {
+      enabled: isPrimaryLine,
+      initialData: word.userWord
+        ? {
+            ...word.userWord,
+            word: {
+              id: word.userWord.wordId,
+              createdAt: new Date(),
+              languageCode: practiceLanguageCode,
+              word: "",
+            },
+          }
+        : undefined,
+    },
   );
 
   const lineHidden = useMemo(
@@ -363,12 +382,28 @@ const InterlinearLineRow = ({
         case InterlinearLineAction.markWordUnknown:
           markWordUnknownAction();
           break;
+        case InterlinearLineAction.toggleMarkWordKnownOrUnknown: {
+          if (userWordQuery.data?.knownAt) {
+            markWordUnknownAction();
+          } else {
+            markWordKnownAction();
+          }
+          break;
+        }
         case InterlinearLineAction.hideLines:
           hideLinesAction();
           break;
         case InterlinearLineAction.showLines:
           showLinesAction();
           break;
+        case InterlinearLineAction.toggleHideOrShowLines: {
+          if (userWordQuery.data?.hideLines) {
+            showLinesAction();
+          } else {
+            hideLinesAction();
+          }
+          break;
+        }
         case InterlinearLineAction.readoutFullSentence: {
           void readoutFullSentence();
           break;
@@ -398,6 +433,8 @@ const InterlinearLineRow = ({
       play,
       readoutFullSentence,
       showLinesAction,
+      userWordQuery.data?.hideLines,
+      userWordQuery.data?.knownAt,
       word.interlinearLines,
     ],
   );

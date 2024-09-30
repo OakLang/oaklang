@@ -203,15 +203,28 @@ export const sentencesRouter = createTRPCRouter({
     }),
   getSentenceWords: protectedProcedure
     .input(z.object({ sentenceId: z.string(), promptTemplate: z.string() }))
+    .output(
+      z.array(
+        createSelectSchema(sentenceWords, {
+          interlinearLines: z.object({}).catchall(z.string()),
+        }).extend({
+          userWord: createSelectSchema(userWords).nullable(),
+        }),
+      ),
+    )
     .query(async ({ ctx, input }) => {
       const list = await db
         .select()
         .from(sentenceWords)
+        .leftJoin(userWords, eq(userWords.wordId, sentenceWords.wordId))
         .where(eq(sentenceWords.sentenceId, input.sentenceId))
         .orderBy(asc(sentenceWords.index));
 
       if (list.length > 0) {
-        return list;
+        return list.map((item) => ({
+          ...item.sentence_word,
+          userWord: item.user_word,
+        }));
       }
 
       const [sentence] = await db
@@ -304,7 +317,8 @@ export const sentencesRouter = createTRPCRouter({
       );
 
       if (values.length > 0) {
-        return db.insert(sentenceWords).values(values).returning();
+        const list = await db.insert(sentenceWords).values(values).returning();
+        return list.map((listItem) => ({ ...listItem, userWord: null }));
       }
       return [];
     }),
