@@ -57,6 +57,13 @@
       "when": 1727676879435,
       "tag": "0007_even_newton_destine",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1727687219670,
+      "tag": "0008_regular_the_fury",
+      "breakpoints": true
     }
   ]
 }

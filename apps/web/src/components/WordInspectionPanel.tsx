@@ -26,12 +26,9 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
     window.open(url, target, "width=720,height=480");
   };
   const trainingSessionId = useTrainingSessionId();
-  const userWordQuery = api.words.getUserWord.useQuery(
-    {
-      wordId: word.wordId,
-    },
-    { staleTime: 0 },
-  );
+  const userWordQuery = api.words.getUserWord.useQuery({
+    wordId: word.wordId,
+  });
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const updateUserSettingsMut = useUpdateUserSettingsMutation();
 

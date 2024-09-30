@@ -4,7 +4,7 @@ import { useCallback, useRef } from "react";
 export const useDoubleClick = ({
   onClick,
   onDoubleClick,
-  delay = 250,
+  delay = 200,
 }: {
   onClick?: () => void;
   onDoubleClick?: () => void;

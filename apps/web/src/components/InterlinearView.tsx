@@ -21,7 +21,11 @@ import type {
 import type { Sentence, SentenceWord } from "@acme/db/schema";
 import { InterlinearLineAction } from "@acme/core/validators";
 
-import { useMarkWordKnownMutation } from "~/hooks/mutations";
+import {
+  useMarkWordKnownMutation,
+  useMarkWordUnknownMutation,
+  useUpdateUserWordMutation,
+} from "~/hooks/mutations";
 import { useDoubleClick } from "~/hooks/useDoubleClick";
 import usePlayTextToSpeech from "~/hooks/usePlayTextToSpeech";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
@@ -32,6 +36,12 @@ import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
 import { Button } from "./ui/button";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "./ui/context-menu";
 import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
@@ -283,7 +293,25 @@ const InterlinearLineRow = ({
   word: SentenceWord;
 }) => {
   const sentenceCtx = useContext(SentenceContext);
+  if (!sentenceCtx) {
+    throw new Error("SentenceProvider not found in the tree");
+  }
+  const isPrimaryLine = useMemo(() => line.name === "text", [line.name]);
+  const userWordQuery = api.words.getUserWord.useQuery(
+    { wordId: word.wordId },
+    { enabled: isPrimaryLine },
+  );
+
+  const lineHidden = useMemo(
+    () => userWordQuery.data?.hideLines && line.disappearing === "default",
+    [line.disappearing, userWordQuery.data?.hideLines],
+  );
+
+  const setInspectionPanelOpen = useAppStore(
+    (state) => state.setInspectionPanelOpen,
+  );
   const fontSize = useAppStore((state) => state.fontSize);
+  const inspectedWord = useAppStore((state) => state.inspectedWord);
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
   const trainingSessionId = useTrainingSessionId();
   const [showLinePopover, setShowLinePopover] = useState(false);
@@ -291,25 +319,60 @@ const InterlinearLineRow = ({
     string | null | undefined
   >();
   const { audioRef, play, isFetching: isFetchingAudio } = usePlayTextToSpeech();
+  const markWordKnownMut = useMarkWordKnownMutation();
+  const markWordUnknownMut = useMarkWordUnknownMutation();
+  const updateUserWord = useUpdateUserWordMutation();
 
-  const markKnownMut = useMarkWordKnownMutation();
+  const hideLinesAction = useCallback(() => {
+    updateUserWord.mutate({ wordId: word.wordId, hideLines: true });
+  }, [updateUserWord, word.wordId]);
+
+  const showLinesAction = useCallback(() => {
+    updateUserWord.mutate({ wordId: word.wordId, hideLines: false });
+  }, [updateUserWord, word.wordId]);
+
+  const inspectWordAction = useCallback(() => {
+    setInspectedWord(word);
+    setInspectionPanelOpen(true);
+  }, [setInspectedWord, setInspectionPanelOpen, word]);
+
+  const markWordKnownAction = useCallback(() => {
+    markWordKnownMut.mutate({
+      wordId: word.wordId,
+      sessionId: trainingSessionId,
+    });
+  }, [markWordKnownMut, trainingSessionId, word.wordId]);
+
+  const markWordUnknownAction = useCallback(() => {
+    markWordUnknownMut.mutate({ wordId: word.wordId });
+  }, [markWordUnknownMut, word.wordId]);
+
+  const readoutFullSentence = useCallback(async () => {
+    await play(sentenceCtx.sentence.sentence);
+  }, [play, sentenceCtx.sentence.sentence]);
 
   const handleAction = useCallback(
     (action: z.infer<typeof interlinearLineActionSchema>) => {
       switch (action.action) {
         case InterlinearLineAction.inspectWord:
-          setInspectedWord(word);
+          inspectWordAction();
           break;
         case InterlinearLineAction.markWordKnown:
-          markKnownMut.mutate({
-            wordId: word.wordId,
-            sessionId: trainingSessionId,
-          });
+          markWordKnownAction();
           break;
-        case InterlinearLineAction.showLineInTooltip:
-          setPopoverLineName(action.lineName);
-          setShowLinePopover(true);
+        case InterlinearLineAction.markWordUnknown:
+          markWordUnknownAction();
           break;
+        case InterlinearLineAction.hideLines:
+          hideLinesAction();
+          break;
+        case InterlinearLineAction.showLines:
+          showLinesAction();
+          break;
+        case InterlinearLineAction.readoutFullSentence: {
+          void readoutFullSentence();
+          break;
+        }
         case InterlinearLineAction.readoutLine: {
           const text =
             action.lineName && word.interlinearLines[action.lineName];
@@ -318,10 +381,9 @@ const InterlinearLineRow = ({
           }
           break;
         }
-        case InterlinearLineAction.readoutFullSentence: {
-          if (sentenceCtx) {
-            void play(sentenceCtx.sentence.sentence);
-          }
+        case InterlinearLineAction.showLineInTooltip: {
+          setPopoverLineName(action.lineName);
+          setShowLinePopover(true);
           break;
         }
         default:
@@ -329,12 +391,14 @@ const InterlinearLineRow = ({
       }
     },
     [
-      setInspectedWord,
-      word,
-      markKnownMut,
+      hideLinesAction,
+      inspectWordAction,
+      markWordKnownAction,
+      markWordUnknownAction,
       play,
-      sentenceCtx,
-      trainingSessionId,
+      readoutFullSentence,
+      showLinesAction,
+      word.interlinearLines,
     ],
   );
 
@@ -380,28 +444,70 @@ const InterlinearLineRow = ({
   return (
     <>
       <audio ref={audioRef} />
-      <Tooltip open={showLinePopover}>
-        <TooltipTrigger asChild>
-          <button
-            {...doubleClickProps}
-            className={cn(
-              "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center leading-none ring-1 ring-transparent transition-colors duration-200 focus:ring-yellow-400",
-            )}
-            style={{
-              ...getCSSStyleForInterlinearLine(line),
-              fontSize: line.style.fontSize * (fontSize / 16),
-            }}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-          >
-            {word.interlinearLines[line.name] ?? ["-"]}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent align="center" side="bottom">
-          {(popoverLineName && word.interlinearLines[popoverLineName]) ??
-            "Line not found!"}
-        </TooltipContent>
-      </Tooltip>
+      <ContextMenu>
+        <Tooltip open={showLinePopover}>
+          <TooltipTrigger asChild>
+            <ContextMenuTrigger asChild>
+              <button
+                {...doubleClickProps}
+                className={cn(
+                  "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center ring-1 ring-transparent transition-colors duration-200",
+                  isPrimaryLine
+                    ? {
+                        "bg-yellow-400/20": !!userWordQuery.data?.knownAt,
+                        "ring-yellow-400 hover:ring-yellow-400":
+                          inspectedWord?.wordId === word.wordId,
+                      }
+                    : {},
+                  {
+                    "pointer-events-none opacity-50 blur-sm": lineHidden,
+                  },
+                )}
+                style={{
+                  ...getCSSStyleForInterlinearLine(line),
+                  fontSize: line.style.fontSize * (fontSize / 16),
+                }}
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
+              >
+                {word.interlinearLines[line.name] ?? "-"}
+              </button>
+            </ContextMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent align="center" side="bottom">
+            {(popoverLineName && word.interlinearLines[popoverLineName]) ??
+              "Line not found!"}
+          </TooltipContent>
+          {isPrimaryLine && (
+            <ContextMenuContent>
+              <ContextMenuItem
+                onClick={inspectWordAction}
+                disabled={inspectedWord?.wordId === word.wordId}
+              >
+                Inspect Word
+              </ContextMenuItem>
+              {userWordQuery.data?.knownAt ? (
+                <ContextMenuItem onClick={markWordUnknownAction}>
+                  Mark Word Unknown
+                </ContextMenuItem>
+              ) : (
+                <ContextMenuItem onClick={markWordKnownAction}>
+                  Mark Word Known
+                </ContextMenuItem>
+              )}
+              {userWordQuery.data?.hideLines ? (
+                <ContextMenuItem onClick={showLinesAction}>
+                  Show Lines
+                </ContextMenuItem>
+              ) : (
+                <ContextMenuItem onClick={hideLinesAction}>
+                  Hide Lines
+                </ContextMenuItem>
+              )}
+            </ContextMenuContent>
+          )}
+        </Tooltip>
+      </ContextMenu>
     </>
   );
 };

@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
   pgTable,
@@ -35,6 +36,7 @@ export const userWords = pgTable(
     spacedRepetitionStage: integer("spaced_repetition_stage")
       .notNull()
       .default(1),
+    hideLines: boolean("hide_lines").notNull().default(false),
   },
   (table) => ({
     uniqueIdx: unique().on(table.userId, table.wordId),

@@ -40,7 +40,7 @@ const WordActionButton = ({ word }: { word: Word }) => {
   const markKnownMut = useMarkWordKnownMutation();
   const markUnknownMut = useMarkWordUnknownMutation();
 
-  const deleteWordMut = api.words.deleteKnown.useMutation({
+  const deleteWordMut = api.words.deleteWord.useMutation({
     onSuccess: () => {
       void utils.words.getAllWords.invalidate({
         languageCode: word.languageCode,

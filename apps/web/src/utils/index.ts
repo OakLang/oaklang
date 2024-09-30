@@ -30,6 +30,7 @@ export const getCSSStyleForInterlinearLine = (
   line: InterlinearLine,
 ): CSSProperties => {
   return {
+    lineHeight: 1,
     fontSize: line.style.fontSize,
     fontFamily: line.style.fontFamily,
     fontWeight: line.style.fontWeight,

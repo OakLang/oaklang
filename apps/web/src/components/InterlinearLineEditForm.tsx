@@ -72,6 +72,10 @@ const clickActions: ActionItem[] = [
     name: "Mark Word Known",
   },
   {
+    value: InterlinearLineAction.markWordUnknown,
+    name: "Mark Word Unknown",
+  },
+  {
     value: InterlinearLineAction.readoutFullSentence,
     name: "Readout Full Sentence",
   },
@@ -79,6 +83,14 @@ const clickActions: ActionItem[] = [
     value: InterlinearLineAction.readoutLine,
     name: "Readout Line",
     requireLineName: true,
+  },
+  {
+    value: InterlinearLineAction.hideLines,
+    name: "Hide Lines",
+  },
+  {
+    value: InterlinearLineAction.showLines,
+    name: "Show Lines",
   },
 ];
 

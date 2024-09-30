@@ -110,3 +110,33 @@ export const useMarkWordUnknownMutation = () => {
     },
   });
 };
+
+export const useUpdateUserWordMutation = () => {
+  const utils = api.useUtils();
+  return api.words.updateUserWord.useMutation({
+    onMutate: (vars) => {
+      const oldWord = utils.words.getUserWord.getData();
+      if (oldWord) {
+        utils.words.getUserWord.setData(
+          { wordId: vars.wordId },
+          {
+            ...oldWord,
+            ...(typeof vars.hideLines !== "undefined"
+              ? { hideLines: vars.hideLines }
+              : {}),
+          },
+        );
+      }
+      return { oldWord };
+    },
+    onSuccess: (data, vars) => {
+      void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
+    },
+    onError: (error, vars, ctx) => {
+      toast(error.message);
+      if (ctx?.oldWord) {
+        utils.words.getUserWord.setData({ wordId: vars.wordId }, ctx.oldWord);
+      }
+    },
+  });
+};

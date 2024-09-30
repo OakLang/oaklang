@@ -1,0 +1,1 @@
+ALTER TABLE "user_word" ADD COLUMN "hide_lines" boolean DEFAULT false NOT NULL;

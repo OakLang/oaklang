@@ -167,7 +167,32 @@ export const wordsRouter = createTRPCRouter({
           },
         });
     }),
-  deleteKnown: protectedProcedure
+  updateUserWord: protectedProcedure
+    .input(
+      z.object({
+        wordId: z.string(),
+        hideLines: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [word] = await ctx.db
+        .update(userWords)
+        .set({
+          hideLines: input.hideLines,
+        })
+        .where(
+          and(
+            eq(userWords.userId, ctx.session.user.id),
+            eq(userWords.wordId, input.wordId),
+          ),
+        )
+        .returning();
+      if (!word) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+      return word;
+    }),
+  deleteWord: protectedProcedure
     .input(z.object({ wordId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db

@@ -5,9 +5,12 @@ export const disappearingEnum = z.enum(["default", "sticky"]);
 export const InterlinearLineAction = {
   inspectWord: "inspect-word",
   markWordKnown: "mark-word-known",
+  markWordUnknown: "mark-word-unknown",
   showLineInTooltip: "show-line-in-tooltip",
   readoutLine: "readout-line",
   readoutFullSentence: "readout-full-sentence",
+  hideLines: "hide-lines",
+  showLines: "show-lines",
 } as const;
 
 export const interlinearLineActionSchema = z.object({
