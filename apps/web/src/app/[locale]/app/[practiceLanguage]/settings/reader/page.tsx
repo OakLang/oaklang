@@ -96,7 +96,7 @@ const InterlinearLinesConfigurationSection = () => {
           onChange={handleChange}
         />
         <div className="flex flex-wrap gap-4 pt-4">
-          <Button onClick={handleAddNewLine}>
+          <Button onClick={handleAddNewLine} variant="outline">
             <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
             Add New Line
           </Button>

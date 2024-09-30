@@ -57,9 +57,9 @@ export const userSettingsRelations = relations(userSettings, ({ one }) => ({
 }));
 
 export const updateUserSettingsSchema = createInsertSchema(userSettings, {
-  interlinearLines: z.array(interlinearLine).min(1).optional(),
-  spacedRepetitionStages: z.array(spacedRepetitionStage).min(1).optional(),
-  ttsSpeed: z.number().min(0.25).max(4).optional(),
+  interlinearLines: z.array(interlinearLine).min(1),
+  spacedRepetitionStages: z.array(spacedRepetitionStage).min(1),
+  ttsSpeed: z.number().min(0.25).max(4),
 }).pick({
   autoPlayAudio: true,
   interlinearLines: true,

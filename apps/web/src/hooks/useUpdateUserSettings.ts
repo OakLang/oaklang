@@ -1,25 +1,28 @@
 import { toast } from "sonner";
 
+import type { InterlinearLine } from "@acme/core/validators";
+
 import { api } from "~/trpc/react";
 
 export const useUpdateUserSettingsMutation = () => {
   const utils = api.useUtils();
 
   return api.userSettings.updateUserSettings.useMutation({
-    onMutate: (vars) => {
+    onMutate: ({ interlinearLines, ...vars }) => {
       const oldData = utils.userSettings.getUserSettings.getData();
-      utils.userSettings.getUserSettings.setData(undefined, (oldData) =>
-        oldData
-          ? {
-              ...oldData,
-              ...vars,
-            }
-          : undefined,
-      );
+      if (oldData) {
+        utils.userSettings.getUserSettings.setData(undefined, {
+          ...oldData,
+          ...vars,
+          interlinearLines: interlinearLines
+            ? (interlinearLines as InterlinearLine[])
+            : oldData.interlinearLines,
+        });
+      }
       return { oldData };
     },
-    onSuccess: (newData) => {
-      utils.userSettings.getUserSettings.setData(undefined, newData);
+    onSuccess: () => {
+      void utils.userSettings.getUserSettings.invalidate();
     },
     onError: (error, _, ctx) => {
       toast("Failed to update user settings", { description: error.message });
