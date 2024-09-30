@@ -1,4 +1,3 @@
-// import type { ZodString } from "zod";
 import type { ZodString } from "zod";
 import { openai } from "@ai-sdk/openai";
 import { TRPCError } from "@trpc/server";
@@ -7,9 +6,6 @@ import stringTemplate from "string-template";
 import { z } from "zod";
 
 import type { Language, UserSettings } from "@acme/db/schema";
-// import type { Session } from "@acme/auth";
-// import type { DB } from "@acme/db/client";
-// import type { Language, TrainingSession, UserSettings } from "@acme/db/schema";
 import { and, asc, createSelectSchema, desc, eq, isNull, not } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
@@ -174,8 +170,6 @@ export const sentencesRouter = createTRPCRouter({
         ),
       });
 
-      console.log(prompt);
-
       const result = await generateObject({
         model: openai("gpt-4o", { user: session.user.id }),
         prompt,
@@ -209,6 +203,7 @@ export const sentencesRouter = createTRPCRouter({
           interlinearLines: z.object({}).catchall(z.string()),
         }).extend({
           userWord: createSelectSchema(userWords).nullable(),
+          word: createSelectSchema(words),
         }),
       ),
     )
@@ -216,6 +211,7 @@ export const sentencesRouter = createTRPCRouter({
       const list = await db
         .select()
         .from(sentenceWords)
+        .innerJoin(words, eq(words.id, sentenceWords.wordId))
         .leftJoin(userWords, eq(userWords.wordId, sentenceWords.wordId))
         .where(eq(sentenceWords.sentenceId, input.sentenceId))
         .orderBy(asc(sentenceWords.index));
@@ -224,6 +220,7 @@ export const sentencesRouter = createTRPCRouter({
         return list.map((item) => ({
           ...item.sentence_word,
           userWord: item.user_word,
+          word: item.word,
         }));
       }
 
@@ -299,7 +296,7 @@ export const sentencesRouter = createTRPCRouter({
         }[]
       ).filter((word) => new RegExp(/\w+/).test(word.lemma));
 
-      const values = await Promise.all(
+      const newList = await Promise.all(
         filterdWords.map(async (item, index) => {
           const primaryWord = item.lemma;
           const word = await getOrCreateWord(
@@ -307,20 +304,39 @@ export const sentencesRouter = createTRPCRouter({
             practiceLanguage.code,
             db,
           );
-          return {
-            interlinearLines: item,
-            index,
-            sentenceId: sentence.id,
-            wordId: word.id,
-          } satisfies typeof sentenceWords.$inferInsert;
+          const [userWord] = await db
+            .select()
+            .from(userWords)
+            .where(
+              and(
+                eq(userWords.userId, ctx.session.user.id),
+                eq(userWords.wordId, word.id),
+              ),
+            );
+
+          const [sentenceWord] = await db
+            .insert(sentenceWords)
+            .values({
+              interlinearLines: item,
+              index,
+              sentenceId: sentence.id,
+              wordId: word.id,
+            })
+            .returning();
+          if (!sentenceWord) {
+            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+          }
+          return { sentenceWord, word, userWord };
         }),
       );
 
-      if (values.length > 0) {
-        const list = await db.insert(sentenceWords).values(values).returning();
-        return list.map((listItem) => ({ ...listItem, userWord: null }));
-      }
-      return [];
+      return newList
+        .map((item) => ({
+          ...item.sentenceWord,
+          word: item.word,
+          userWord: item.userWord ?? null,
+        }))
+        .sort((a, b) => a.index - b.index);
     }),
 });
 

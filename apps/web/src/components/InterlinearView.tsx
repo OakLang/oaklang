@@ -297,7 +297,6 @@ const InterlinearLineRow = ({
   line: InterlinearLine;
   word: RouterOutputs["sentences"]["getSentenceWords"][number];
 }) => {
-  const practiceLanguageCode = usePracticeLanguageCode();
   const sentenceCtx = useContext(SentenceContext);
   if (!sentenceCtx) {
     throw new Error("SentenceProvider not found in the tree");
@@ -310,12 +309,7 @@ const InterlinearLineRow = ({
       initialData: word.userWord
         ? {
             ...word.userWord,
-            word: {
-              id: word.userWord.wordId,
-              createdAt: new Date(),
-              languageCode: practiceLanguageCode,
-              word: "",
-            },
+            word: word.word,
           }
         : undefined,
     },
