@@ -39,6 +39,10 @@ export const userSettings = pgTable("user_settings", {
   nativeLanguage: text("native_language").references(() => languages.code, {
     onDelete: "set null",
   }),
+  // promptModes: jsonb("prompt_modes")
+  //   .notNull()
+  //   .$type<PromptMode[]>()
+  //   .default(DEFAULT_PROMPT_MODES),
 });
 
 export type UserSettings = typeof userSettings.$inferSelect;

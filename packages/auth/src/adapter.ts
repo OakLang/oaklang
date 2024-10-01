@@ -31,9 +31,7 @@ export const adapter: Adapter = {
     if (!user) {
       throw new Error("User not found!");
     }
-    await db.insert(userSettings).values({
-      userId: user.id,
-    });
+    await db.insert(userSettings).values({ userId: user.id });
     return user;
   },
   async getUser(userId: string) {
