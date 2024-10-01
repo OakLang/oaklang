@@ -16,7 +16,12 @@ export const useMarkWordKnownMutation = () => {
       if (oldUserWord) {
         utils.words.getUserWord.setData(
           { wordId: vars.wordId },
-          { ...oldUserWord, knownAt: new Date(), knownFromId: vars.sessionId },
+          {
+            ...oldUserWord,
+            knownAt: new Date(),
+            knownFromId: vars.sessionId,
+            hideLines: true,
+          },
         );
       }
 
@@ -70,7 +75,12 @@ export const useMarkWordUnknownMutation = () => {
       if (oldUserWord) {
         utils.words.getUserWord.setData(
           { wordId: vars.wordId },
-          { ...oldUserWord, knownAt: null, knownFromId: null },
+          {
+            ...oldUserWord,
+            knownAt: null,
+            hideLines: false,
+            knownFromId: null,
+          },
         );
       }
 

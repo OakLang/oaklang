@@ -76,6 +76,7 @@ export const wordsRouter = createTRPCRouter({
           .set({
             knownAt: new Date(),
             knownFromId: input.sessionId,
+            hideLines: true,
           })
           .where(
             and(
@@ -112,6 +113,7 @@ export const wordsRouter = createTRPCRouter({
               : {
                   knownAt: new Date(),
                   knownFromId: input.sessionId,
+                  hideLines: true,
                 }),
           })
           .where(
@@ -141,12 +143,14 @@ export const wordsRouter = createTRPCRouter({
           userId: ctx.session.user.id,
           wordId: input.wordId,
           knownFromId: input.sessionId,
+          hideLines: true,
         })
         .onConflictDoUpdate({
           target: [userWords.userId, userWords.wordId],
           set: {
             knownAt: new Date(),
             knownFromId: input.sessionId,
+            hideLines: true,
           },
         });
     }),
@@ -164,6 +168,7 @@ export const wordsRouter = createTRPCRouter({
           set: {
             knownAt: null,
             knownFromId: null,
+            hideLines: false,
           },
         });
     }),

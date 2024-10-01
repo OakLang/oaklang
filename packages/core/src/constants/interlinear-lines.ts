@@ -56,7 +56,7 @@ export const DEFAULT_INTERLINEAR_LINES: InterlinearLine[] = [
     },
     description:
       "whitespace delimited text associated with word from the full sentence including capitalization and punctuation",
-    disappearing: "default",
+    disappearing: "sticky",
     hidden: false,
     onClick: {
       action: InterlinearLineAction.inspectWord,
