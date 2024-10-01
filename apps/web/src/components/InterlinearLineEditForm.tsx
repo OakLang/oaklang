@@ -8,13 +8,11 @@ import type {
   InterlinearLineActionType,
 } from "@acme/core/validators";
 import {
-  FONTS,
+  FONT_FAMILIES,
   INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS,
-} from "@acme/core/constants";
-import {
   InterlinearLineAction,
   NON_EDITABLE_LINE_NAMES,
-} from "@acme/core/validators";
+} from "@acme/core/constants";
 
 import { api } from "~/trpc/react";
 import SimpleSelect from "./simple-select";
@@ -238,7 +236,7 @@ export const InterlinearLineEditForm = ({
           <fieldset className="grid gap-2">
             <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Family</Label>
             <SimpleSelect
-              options={FONTS.map((font) => ({ value: font }))}
+              options={FONT_FAMILIES.map((font) => ({ value: font }))}
               value={item.style.fontFamily}
               onValueChange={(fontFamily) => onChangeStyle({ fontFamily })}
             />

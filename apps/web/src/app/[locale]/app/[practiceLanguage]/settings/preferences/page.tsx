@@ -9,6 +9,7 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 import type { SpacedRepetitionStage } from "@acme/core/validators";
+import { AVAILABLE_PROMPT_TEMPLATE_KEYS } from "@acme/core/constants";
 
 import PageTitle from "~/components/PageTitle";
 import SpacedRepetitionStagesEditor from "~/components/SpacedRepetitionStagesEditor";
@@ -27,7 +28,6 @@ import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { useRouter } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
-import { AVAILABLE_PROMPT_TEMPLATE_KEYS } from "~/utils/constants";
 
 export default function PreferencesPage() {
   const { theme, setTheme } = useTheme();

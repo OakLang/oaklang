@@ -11,7 +11,7 @@ import {
 import { useTheme } from "next-themes";
 
 import type { InterlinearLine } from "@acme/core/validators";
-import { NON_EDITABLE_LINE_NAMES } from "@acme/core/validators";
+import { NON_EDITABLE_LINE_NAMES } from "@acme/core/constants";
 
 import { useRaisedShadow } from "~/hooks/useRaisedShadow";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";

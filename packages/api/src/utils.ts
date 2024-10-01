@@ -4,10 +4,8 @@ import { z } from "zod";
 import type { Session } from "@acme/auth";
 import type { DB } from "@acme/db/client";
 import type { UserSettings, Word } from "@acme/db/schema";
-import {
-  DEFAULT_INTERLINEAR_LINES,
-  interlinearLine,
-} from "@acme/core/validators";
+import { DEFAULT_INTERLINEAR_LINES } from "@acme/core/constants";
+import { interlinearLine } from "@acme/core/validators";
 import { and, count, desc, eq, isNull, lte, not, or, sql } from "@acme/db";
 import {
   trainingSessions,

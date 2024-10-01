@@ -19,7 +19,7 @@ import type {
   interlinearLineActionSchema,
 } from "@acme/core/validators";
 import type { Sentence } from "@acme/db/schema";
-import { InterlinearLineAction } from "@acme/core/validators";
+import { InterlinearLineAction } from "@acme/core/constants";
 
 import type { RouterOutputs } from "~/trpc/react";
 import {

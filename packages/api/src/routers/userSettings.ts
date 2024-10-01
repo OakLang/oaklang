@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import {
   DEFAULT_INTERLINEAR_LINES,
   DEFAULT_SPACED_REPETITION_STAGES,
-} from "@acme/core/validators";
+} from "@acme/core/constants";
 import { eq } from "@acme/db";
 import { updateUserSettingsSchema, userSettings } from "@acme/db/schema";
 

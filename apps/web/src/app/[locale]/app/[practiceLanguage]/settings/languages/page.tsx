@@ -5,6 +5,8 @@ import Image from "next/image";
 import { Loader2, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { APP_NAME } from "@acme/core/constants";
+
 import PageTitle from "~/components/PageTitle";
 import {
   AlertDialog,
@@ -22,7 +24,6 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
-import { APP_NAME } from "~/utils/constants";
 
 export default function LanguagesPage() {
   const practiceLanguage = usePracticeLanguageCode();

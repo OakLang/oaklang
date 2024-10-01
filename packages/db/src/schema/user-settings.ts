@@ -10,9 +10,8 @@ import type {
 import {
   DEFAULT_INTERLINEAR_LINES,
   DEFAULT_SPACED_REPETITION_STAGES,
-  interlinearLine,
-  spacedRepetitionStage,
-} from "@acme/core/validators";
+} from "@acme/core/constants";
+import { interlinearLine, spacedRepetitionStage } from "@acme/core/validators";
 
 import { createPrefixedId } from "../utils";
 import { users } from "./auth";

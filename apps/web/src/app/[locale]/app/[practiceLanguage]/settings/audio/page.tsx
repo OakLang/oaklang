@@ -1,5 +1,7 @@
 "use client";
 
+import { TTS_SPEED_OPTIONS } from "@acme/core/constants";
+
 import PageTitle from "~/components/PageTitle";
 import { Label } from "~/components/ui/label";
 import {
@@ -13,7 +15,6 @@ import { Separator } from "~/components/ui/separator";
 import { Switch } from "~/components/ui/switch";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
-import { TTS_SPEED_OPTIONS } from "~/utils/constants";
 
 const voices: { voice: string; name: string }[] = [
   { voice: "alloy", name: "Alloy" },

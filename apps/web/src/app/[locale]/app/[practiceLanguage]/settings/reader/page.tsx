@@ -6,7 +6,7 @@ import { nanoid } from "nanoid";
 import { toast } from "sonner";
 
 import type { InterlinearLine } from "@acme/core/validators";
-import { DEFAULT_INTERLINEAR_LINE_STYLE } from "@acme/core/validators";
+import { DEFAULT_INTERLINEAR_LINE_STYLE } from "@acme/core/constants";
 
 import InterlinearLinesEditor from "~/components/InterlinearLineEditor";
 import PageTitle from "~/components/PageTitle";
