@@ -45,6 +45,8 @@ export default function AccountPage() {
       <Separator className="my-8" />
       <DownloadWords />
       <Separator className="my-8" />
+      <ResetAccountCard />
+      <Separator className="my-8" />
       <DeleteAccountCard />
     </div>
   );
@@ -146,6 +148,59 @@ const DownloadWords = () => {
   );
 };
 
+const ResetAccountCard = () => {
+  const resetAccountMut = api.users.resetAccount.useMutation({
+    onSuccess: () => {
+      localStorage.clear();
+      window.location.reload();
+    },
+    onError: (error) => {
+      toast("Failed to reset your account", { description: error.message });
+    },
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Reset Account</CardTitle>
+        <CardDescription>
+          Erase all your language progress, training sessions, and personalized
+          settings. This action is irreversible.
+        </CardDescription>
+      </CardHeader>
+      <CardFooter>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" disabled={resetAccountMut.isPending}>
+              {resetAccountMut.isPending && (
+                <Loader2 className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+              )}
+              Reset My Data
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset Your Data</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action will permanently delete all your data, including the
+                words you’re practicing, words you’ve mastered, all training
+                sessions, language progress, and your personalized settings.
+                This cannot be undone. Are you sure you want to reset
+                everything?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Never mind</AlertDialogCancel>
+              <AlertDialogAction onClick={() => resetAccountMut.mutate()}>
+                I understand, delete all my data
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </CardFooter>
+    </Card>
+  );
+};
 const DeleteAccountCard = () => {
   const t = useTranslations("AccountPage.deleteAccountCard");
   const deleteAccountMut = api.users.deleteAccount.useMutation({
