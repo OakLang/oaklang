@@ -36,8 +36,8 @@ export const useMarkWordKnownMutation = () => {
 
       return { oldUserWord, oldPracticeLanguage };
     },
-    onSuccess: () => {
-      void utils.words.invalidate();
+    onSuccess: (_, vars) => {
+      void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
       void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
       void utils.languages.getPracticeLanguages.invalidate();
       toast("Marked word known");
@@ -95,8 +95,8 @@ export const useMarkWordUnknownMutation = () => {
 
       return { oldUserWord, oldPracticeLanguage };
     },
-    onSuccess: () => {
-      void utils.words.invalidate();
+    onSuccess: (_, vars) => {
+      void utils.words.getUserWord.invalidate({ wordId: vars.wordId });
       void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
       void utils.languages.getPracticeLanguages.invalidate();
       toast("Marked word unknown");

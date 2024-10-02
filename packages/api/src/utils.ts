@@ -1,11 +1,8 @@
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 
 import type { Session } from "@acme/auth";
 import type { DB } from "@acme/db/client";
-import type { UserSettings, Word } from "@acme/db/schema";
-import { DEFAULT_INTERLINEAR_LINES } from "@acme/core/constants";
-import { interlinearLine } from "@acme/core/validators";
+import type { Word } from "@acme/db/schema";
 import { and, count, eq, isNull, not, sql } from "@acme/db";
 import {
   trainingSessions,
@@ -50,40 +47,15 @@ export const getUserSettings = async (userId: string, db: DB) => {
   return settings;
 };
 
-export const getInterlinearLines = async (
-  userId: string,
-  db: DB,
-  settings?: UserSettings,
-) => {
-  if (!settings) {
-    settings = await getUserSettings(userId, db);
-  }
-  try {
-    const interlinearLines = await z
-      .array(interlinearLine)
-      .min(1)
-      .parseAsync(settings.interlinearLines);
-    return interlinearLines;
-  } catch (error) {
-    const lines = DEFAULT_INTERLINEAR_LINES;
-    await db.update(userSettings).set({
-      interlinearLines: lines,
-    });
-    return lines;
-  }
-};
-
 export const getOrCreateWord = async (
   word: string,
   langaugeCode: string,
   db: DB,
 ): Promise<Word> => {
-  const cleanWord = word.trim().toLowerCase();
-
   const [newWord] = await db
     .insert(words)
     .values({
-      word: cleanWord,
+      word: word.trim().toLowerCase(),
       languageCode: langaugeCode,
     })
     .onConflictDoUpdate({
@@ -94,8 +66,10 @@ export const getOrCreateWord = async (
       },
     })
     .returning();
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return newWord!;
+  if (!newWord) {
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+  }
+  return newWord;
 };
 
 export const getKnownWordsCountForLanguage = async (
@@ -115,35 +89,4 @@ export const getKnownWordsCountForLanguage = async (
       ),
     );
   return row?.count ?? 0;
-};
-
-export const getKnownWordsCount = async (
-  session: Session,
-  db: DB,
-): Promise<number> => {
-  const [row] = await db
-    .select({ count: count() })
-    .from(userWords)
-    .where(
-      and(
-        eq(userWords.userId, session.user.id),
-        not(isNull(userWords.knownAt)),
-      ),
-    );
-  return row?.count ?? 0;
-};
-
-export const userWordsSelect = {
-  wordId: userWords.wordId,
-  createdAt: userWords.createdAt,
-  word: words.word,
-  languageCode: words.languageCode,
-  seenCount: userWords.seenCount,
-  lastPracticedAt: userWords.lastPracticedAt,
-  practiceCount: userWords.practiceCount,
-  seenCountSinceLastPracticed: userWords.seenCountSinceLastPracticed,
-  nextPracticeAt: userWords.nextPracticeAt,
-  spacedRepetitionStage: userWords.spacedRepetitionStage,
-  lastSeenAt: userWords.lastSeenAt,
-  knownAt: userWords.knownAt,
 };

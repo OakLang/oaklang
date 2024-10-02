@@ -7,7 +7,53 @@ import { and, asc, eq, isNull, lte, not, or, sql } from "@acme/db";
 import { userWords, words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getUserSettings, userWordsSelect } from "../utils";
+import { getUserSettings } from "../utils";
+
+const {
+  createdAt,
+  createdFromId,
+  dissableHideLinesCount,
+  hideLines,
+  knownAt,
+  knownFromId,
+  lastDissabledHideLinesAt,
+  lastMarkedUnknownAt,
+  lastPracticedAt,
+  lastSeenAt,
+  markedUnknownCount,
+  nextPracticeAt,
+  practiceCount,
+  seenCount,
+  seenCountSinceLastPracticed,
+  spacedRepetitionStage,
+  userId,
+  wordId,
+} = userWords;
+
+const { word, languageCode } = words;
+
+const userWordsSelect = {
+  word,
+  languageCode,
+  createdAt,
+  createdFromId,
+  dissableHideLinesCount,
+  hideLines,
+  knownAt,
+  knownFromId,
+  lastDissabledHideLinesAt,
+  lastMarkedUnknownAt,
+  lastPracticedAt,
+  lastSeenAt,
+  markedUnknownCount,
+  nextPracticeAt,
+  practiceCount,
+  seenCount,
+  seenCountSinceLastPracticed,
+  spacedRepetitionStage,
+  userId,
+  wordId,
+};
 
 export const wordsRouter = createTRPCRouter({
   getUserWord: protectedProcedure
@@ -156,6 +202,8 @@ export const wordsRouter = createTRPCRouter({
             knownAt: null,
             knownFromId: null,
             hideLines: false,
+            lastMarkedUnknownAt: sql`NOW()`,
+            markedUnknownCount: sql`${userWords.markedUnknownCount} + 1`,
           },
         });
     }),
@@ -168,21 +216,46 @@ export const wordsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const [word] = await ctx.db
-        .update(userWords)
-        .set({
-          hideLines: input.hideLines,
-        })
+        .select()
+        .from(userWords)
         .where(
           and(
             eq(userWords.userId, ctx.session.user.id),
             eq(userWords.wordId, input.wordId),
           ),
+        );
+
+      if (!word) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User Word not found!",
+        });
+      }
+
+      const data: Partial<typeof userWords.$inferInsert> = {};
+
+      if (typeof input.hideLines !== "undefined") {
+        data.hideLines = input.hideLines;
+        if (!data.hideLines) {
+          data.dissableHideLinesCount = word.dissableHideLinesCount + 1;
+          data.lastDissabledHideLinesAt = new Date();
+        }
+      }
+
+      const [updatedWord] = await ctx.db
+        .update(userWords)
+        .set(data)
+        .where(
+          and(
+            eq(userWords.userId, word.userId),
+            eq(userWords.wordId, word.wordId),
+          ),
         )
         .returning();
-      if (!word) {
+      if (!updatedWord) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
-      return word;
+      return updatedWord;
     }),
   deleteWord: protectedProcedure
     .input(z.object({ wordId: z.string() }))

@@ -33,6 +33,13 @@ const getDateColumCell = (props: CellContext<Word, unknown>) => {
   }
   return "-";
 };
+const getBooleanColumnCell = (props: CellContext<Word, unknown>) => {
+  const value = props.getValue() as boolean | null;
+  if (value !== null) {
+    return value ? "True" : "False";
+  }
+  return "-";
+};
 
 const WordActionButton = ({ word }: { word: Word }) => {
   const utils = api.useUtils();
@@ -178,6 +185,55 @@ export const columns: ColumnDef<Word>[] = [
         <DataTableColumnHeader
           column={props.column}
           title="Seen Count Since Last Practiced"
+        />
+      );
+    },
+  },
+  {
+    accessorKey: "hideLines",
+    header: (props) => {
+      return <DataTableColumnHeader column={props.column} title="Hide Lines" />;
+    },
+    cell: getBooleanColumnCell,
+  },
+  {
+    accessorKey: "lastDissabledHideLinesAt",
+    header: (props) => (
+      <DataTableColumnHeader
+        column={props.column}
+        title="Last Dissabled Hide Lines At"
+      />
+    ),
+    cell: getDateColumCell,
+  },
+  {
+    accessorKey: "dissableHideLinesCount",
+    header: (props) => {
+      return (
+        <DataTableColumnHeader
+          column={props.column}
+          title="Dissable Hide Lines Count"
+        />
+      );
+    },
+  },
+  {
+    accessorKey: "lastMarkedUnknownAt",
+    header: (props) => (
+      <DataTableColumnHeader
+        column={props.column}
+        title="Last Marked Unknown At"
+      />
+    ),
+    cell: getDateColumCell,
+  },
+  {
+    accessorKey: "markedUnknownCount",
+    header: (props) => {
+      return (
+        <DataTableColumnHeader
+          column={props.column}
+          title="Marked Unknown Count"
         />
       );
     },

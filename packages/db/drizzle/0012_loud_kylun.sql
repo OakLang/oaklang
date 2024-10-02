@@ -1,0 +1,1 @@
+ALTER TABLE "user_word" RENAME COLUMN "dissabled_hide_lines_count" TO "dissable_hide_lines_count";

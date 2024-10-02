@@ -37,6 +37,12 @@ export const userWords = pgTable(
       .notNull()
       .default(1),
     hideLines: boolean("hide_lines").notNull().default(false),
+    markedUnknownCount: integer("marked_unknown_count").notNull().default(0),
+    lastMarkedUnknownAt: timestamp("last_marked_unknown_at"),
+    dissableHideLinesCount: integer("dissable_hide_lines_count")
+      .notNull()
+      .default(0),
+    lastDissabledHideLinesAt: timestamp("last_dissabled_hide_lines_at"),
   },
   (table) => ({
     uniqueIdx: unique().on(table.userId, table.wordId),

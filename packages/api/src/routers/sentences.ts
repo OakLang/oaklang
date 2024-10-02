@@ -37,41 +37,44 @@ import {
 } from "../utils";
 
 const getMoreWordsPrompt = ({
-  PRACTICE_LANGUAGE,
-  WORD_COUNT,
-  TOPIC,
+  practiceLanguage,
+  wordCount,
+  topic,
+  currentWords,
 }: {
-  TOPIC?: string;
-  WORD_COUNT: number;
-  PRACTICE_LANGUAGE: string;
+  topic?: string;
+  wordCount: number;
+  practiceLanguage: string;
+  currentWords: string[];
 }) => {
   return stringTemplate(
-    TOPIC
-      ? "Give me a list of {WORD_COUNT} common words from {PRACTICE_LANGUAGE} language in lemma form related to the topic below.\n\nTOPIC: {TOPIC}"
-      : "Give me a list of {WORD_COUNT} common words from {PRACTICE_LANGUAGE} language in lemma form.",
+    topic
+      ? "Give me a list of {WORD_COUNT} common words from {PRACTICE_LANGUAGE} language in lemma form related to the topic below. Also do not provide any word from the CURRENT WORDS list.\n\nTOPIC: {TOPIC}\nCURRENT WORDS: {CURRENT_WORDS}"
+      : "Give me a list of {WORD_COUNT} common words from {PRACTICE_LANGUAGE} language in lemma form..  Also do not provide any word from the CURRENT WORDS list.\nCURRENT WORDS: {CURRENT_WORDS}",
     {
-      WORD_COUNT,
-      PRACTICE_LANGUAGE,
-      TOPIC,
+      WORD_COUNT: wordCount,
+      PRACTICE_LANGUAGE: practiceLanguage,
+      TOPIC: topic,
+      CURRENT_WORDS: currentWords.join(", "),
     },
   );
 };
 
 const pickReleventWordsForATopic = ({
-  TOPIC,
-  WORDS,
-  WORD_COUNT,
+  topic,
+  words,
+  wordCount,
 }: {
-  TOPIC: string;
-  WORDS: string[];
-  WORD_COUNT: number;
+  topic: string;
+  words: string[];
+  wordCount: number;
 }) => {
   return stringTemplate(
     "Pick maximum {WORD_COUNT} words form the WORDS list below which are related to the TOPIC. Do not pick any other words which are not in the WORDS list below.\n\nWORDS: {WORDS}\n\nTOPIC: {TOPIC}",
     {
-      WORDS,
-      TOPIC,
-      WORD_COUNT,
+      WORDS: words.join(", "),
+      TOPIC: topic,
+      WORD_COUNT: wordCount,
     },
   );
 };
@@ -128,7 +131,7 @@ export const sentencesRouter = createTRPCRouter({
         });
       }
 
-      const PRACTICE_WORDS_COUNT = 50;
+      const PRACTICE_WORDS_COUNT = 30;
 
       const [nativeLanguage] = await db
         .select()
@@ -159,14 +162,6 @@ export const sentencesRouter = createTRPCRouter({
 
       const model = openai("gpt-4o", { user: session.user.id });
 
-      const practiceWordsList = await getPracticeWordsList({
-        session,
-        trainingSession,
-        PRACTICE_WORDS_COUNT,
-        practiceLanguage,
-        model,
-      });
-
       const knownWords = await db
         .select({ word: words.word })
         .from(userWords)
@@ -178,22 +173,30 @@ export const sentencesRouter = createTRPCRouter({
             not(isNull(userWords.knownAt)),
           ),
         )
-        .orderBy(desc(userWords.knownAt));
+        .orderBy(desc(userWords.knownAt))
+        .then((res) => res.map((item) => item.word));
+
+      const practiceWordsList = await getPracticeWordsList({
+        session,
+        trainingSession,
+        PRACTICE_WORDS_COUNT,
+        practiceLanguage,
+        model,
+        knownWords,
+      });
 
       const previouslyGeneratedSentences = await db
         .select({ index: sentences.index, sentence: sentences.sentence })
         .from(sentences)
         .where(eq(sentences.trainingSessionId, trainingSession.id))
-        .orderBy(desc(sentences.index))
-        .limit(30)
-        .then((res) => res.reverse());
+        .orderBy(asc(sentences.index));
 
       const TEMPLATE_OBJECT = {
         SENTENCE_COUNT: input.limit,
         PRACTICE_LANGUAGE: practiceLanguage.name,
         NATIVE_LANGUAGE: nativeLanguage.name,
         PRACTICE_WORDS: practiceWordsList.join(", "),
-        KNOWN_WORDS: knownWords.map((word) => word.word).join(", "),
+        KNOWN_WORDS: knownWords.join(", "),
         COMPLEXITY: trainingSession.complexity,
         PREVIOUSLY_GENERATED_SENTENCES: previouslyGeneratedSentences
           .map((sen) => `${sen.index}. ${sen.sentence}`)
@@ -436,12 +439,14 @@ const getPracticeWordsList = async ({
   PRACTICE_WORDS_COUNT,
   practiceLanguage,
   model,
+  knownWords,
 }: {
   model: LanguageModelV1;
   trainingSession: TrainingSession;
   session: Session;
   PRACTICE_WORDS_COUNT: number;
   practiceLanguage: Language;
+  knownWords: string[];
 }): Promise<string[]> => {
   const currentPracticeWordsList = await db
     .select({ word: words.word })
@@ -463,49 +468,52 @@ const getPracticeWordsList = async ({
   let practiceWordsList: string[] = [];
 
   if (trainingSession.topic && currentPracticeWordsList.length > 0) {
+    const _prompt = pickReleventWordsForATopic({
+      topic: trainingSession.topic,
+      wordCount: PRACTICE_WORDS_COUNT,
+      words: currentPracticeWordsList.map((word) => word.word),
+    });
+    console.log("Pick Words Prompt", _prompt);
     const pickedWords = await generateObject({
       model,
       schema: z.object({
-        words: z.array(z.string()).describe("list of words"),
+        words: z.array(z.string()).describe("list of picked words"),
       }),
-      prompt: pickReleventWordsForATopic({
-        TOPIC: trainingSession.topic,
-        WORD_COUNT: PRACTICE_WORDS_COUNT,
-        WORDS: currentPracticeWordsList.map((word) => word.word),
-      }),
+      prompt: _prompt,
     });
-    practiceWordsList = pickedWords.object.words.slice(0, PRACTICE_WORDS_COUNT);
-    console.log("PICKED PRACTICE WORDS: ", practiceWordsList);
+    practiceWordsList = pickedWords.object.words;
   } else {
     practiceWordsList = currentPracticeWordsList
       .map((word) => word.word)
       .slice(0, PRACTICE_WORDS_COUNT);
   }
 
+  console.log("PICKED PRACTICE WORDS: ", practiceWordsList);
+
   if (practiceWordsList.length < PRACTICE_WORDS_COUNT) {
     const NEW_WORD_COUNT = PRACTICE_WORDS_COUNT - practiceWordsList.length;
-    const newPracticeWords = await generateObject({
+    const _prompt = getMoreWordsPrompt({
+      wordCount: NEW_WORD_COUNT,
+      practiceLanguage: practiceLanguage.name,
+      topic: trainingSession.topic?.trim(),
+      currentWords: [...practiceWordsList, ...knownWords],
+    });
+
+    console.log("More Words Prompt", _prompt);
+
+    const _result = await generateObject({
       model,
       schema: z.object({
         words: z.array(z.string()).describe("list of words in lemma form"),
       }),
-      prompt: getMoreWordsPrompt({
-        WORD_COUNT: NEW_WORD_COUNT,
-        PRACTICE_LANGUAGE: practiceLanguage.name,
-        TOPIC: trainingSession.topic?.trim(),
-      }),
+      prompt: _prompt,
     });
 
-    const newWords = await db
-      .insert(words)
-      .values(
-        newPracticeWords.object.words.slice(0, NEW_WORD_COUNT).map((word) => ({
-          word,
-          languageCode: practiceLanguage.code,
-        })),
-      )
-      .onConflictDoNothing()
-      .returning();
+    const newWords = await Promise.all(
+      _result.object.words.map((word) =>
+        getOrCreateWord(word, trainingSession.languageCode, db),
+      ),
+    );
 
     await db
       .insert(userWords)
@@ -524,8 +532,12 @@ const getPracticeWordsList = async ({
       "NEW WORDS",
       newWords.map((word) => word.word),
     );
-    practiceWordsList.push(...newWords.map((word) => word.word));
+    practiceWordsList = [
+      ...new Set([...practiceWordsList, ...newWords.map((word) => word.word)]),
+    ];
   }
+
+  console.log("Final Practice Words", practiceWordsList);
 
   return practiceWordsList;
 };

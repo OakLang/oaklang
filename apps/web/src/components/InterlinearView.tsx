@@ -492,9 +492,6 @@ const InterlinearLineRow = ({
                           inspectedWord.index === word.index,
                       }
                     : {},
-                  {
-                    "pointer-events-none opacity-50 blur-sm": lineHidden,
-                  },
                 )}
                 style={{
                   ...getCSSStyleForInterlinearLine(line),
@@ -503,7 +500,14 @@ const InterlinearLineRow = ({
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
               >
-                {word.interlinearLines[line.name] ?? "-"}
+                <p
+                  className={cn({
+                    "pointer-events-none select-none opacity-50 blur-sm":
+                      lineHidden,
+                  })}
+                >
+                  {word.interlinearLines[line.name] ?? "-"}
+                </p>
               </button>
             </ContextMenuTrigger>
           </TooltipTrigger>
