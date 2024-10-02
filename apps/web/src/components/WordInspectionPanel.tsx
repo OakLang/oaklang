@@ -159,13 +159,13 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
               <DropdownMenuContent>
                 {userSettingsQuery.data?.interlinearLines.map((line) => (
                   <DropdownMenuCheckboxItem
-                    checked={line.hiddenInInspectionPanel ?? false}
+                    checked={!line.hiddenInInspectionPanel}
                     onCheckedChange={(value) => {
                       updateUserSettingsMut.mutate({
                         interlinearLines:
                           userSettingsQuery.data.interlinearLines.map((l) =>
                             l.id === line.id
-                              ? { ...l, hiddenInInspectionPanel: value }
+                              ? { ...l, hiddenInInspectionPanel: !value }
                               : l,
                           ),
                       });
