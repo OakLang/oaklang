@@ -71,6 +71,13 @@
       "when": 1727796421878,
       "tag": "0009_ancient_baron_strucker",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1727867356521,
+      "tag": "0010_lame_whistler",
+      "breakpoints": true
     }
   ]
 }

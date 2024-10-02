@@ -1,0 +1,1 @@
+ALTER TABLE "user_settings" ALTER COLUMN "auto_play_audio" SET DEFAULT false;

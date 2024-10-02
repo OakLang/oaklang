@@ -33,16 +33,12 @@ export const userSettings = pgTable("user_settings", {
     .notNull()
     .$type<SpacedRepetitionStage[]>()
     .default(DEFAULT_SPACED_REPETITION_STAGES),
-  autoPlayAudio: boolean("auto_play_audio").notNull().default(true),
+  autoPlayAudio: boolean("auto_play_audio").notNull().default(false),
   ttsVoice: text("tts_voice").notNull().default("alloy"),
   ttsSpeed: real("tts_speed").notNull().default(1),
   nativeLanguage: text("native_language").references(() => languages.code, {
     onDelete: "set null",
   }),
-  // promptModes: jsonb("prompt_modes")
-  //   .notNull()
-  //   .$type<PromptMode[]>()
-  //   .default(DEFAULT_PROMPT_MODES),
 });
 
 export type UserSettings = typeof userSettings.$inferSelect;
