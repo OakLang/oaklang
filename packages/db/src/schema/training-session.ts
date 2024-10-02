@@ -24,6 +24,7 @@ export const trainingSessions = pgTable("training_session", {
   languageCode: text("language_code")
     .notNull()
     .references(() => languages.code, { onDelete: "cascade" }),
+  topic: text("topic"),
 });
 
 export type TrainingSession = typeof trainingSessions.$inferSelect;

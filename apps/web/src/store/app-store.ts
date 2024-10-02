@@ -56,7 +56,7 @@ export const createAppStore = (initState: AppState) => {
   }));
 };
 
-const GENERATE_SENTENCES_PROMPT_TEMPLATE = `
+export const DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE = `
 You are an expert {PRACTICE_LANGUAGE} tutor specializing in creating effective practice exercises for students. Your task is to generate a set of sentences that help a student practice new vocabulary at their current proficiency level. Each sentence should:
 
 	•	Be grammatically correct and contextually natural.
@@ -65,6 +65,7 @@ You are an expert {PRACTICE_LANGUAGE} tutor specializing in creating effective p
 	•	Match the student’s {COMPLEXITY} proficiency level in {PRACTICE_LANGUAGE}.
 	•	Ensure variety in sentence structure, avoiding repetition of PREVIOUSLY GENERATED SENTENCES.
 	•	Align with the natural flow of {PRACTICE_LANGUAGE}, while maximizing the usage of PRACTICE WORDS in a meaningful way.
+  • Generate sentences centered around the provided {TOPIC} if specified.
 
 Please generate {SENTENCE_COUNT} sentences based on the following constraints:
 
@@ -72,11 +73,13 @@ PRACTICE WORDS: {PRACTICE_WORDS}
 
 KNOWN WORDS: {KNOWN_WORDS}
 
+TOPIC: {TOPIC}
+
 PREVIOUSLY GENERATED SENTENCES: 
 {PREVIOUSLY_GENERATED_SENTENCES}
 `;
 
-const GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE = `
+export const DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE = `
 You are a {PRACTICE_LANGUAGE} tutor providing detailed interlinear breakdowns for individual words in a sentence. For each word in the SENTENCE below, generate the corresponding lines based on the schema. Do not break punctuation apart from the words they are attached to; in creating this breakdown they will be considered part of that word, and be stripped as specified in certain lines.
 
 SENTENCE: {SENTENCE}
@@ -86,10 +89,10 @@ export const initAppStore = (): AppState => {
   return {
     generateSentencesPromptTemplate:
       localStorage.getItem("GENERATE_SENTENCES_PROMPT_TEMPLATE") ??
-      GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
+      DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
     generateSentenceWordsPromptTemplate:
       localStorage.getItem("GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE") ??
-      GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
+      DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
     inspectedWord: null,
     inspectionPanelOpen:
       localStorage.getItem("inspection_panel_open") === "true",

@@ -27,6 +27,10 @@ import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { useRouter } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
+import {
+  DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE,
+  DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
+} from "~/store/app-store";
 import { api } from "~/trpc/react";
 
 export default function PreferencesPage() {
@@ -127,9 +131,23 @@ const PromptTemplate = () => {
       </div>
 
       <div className="mb-6 grid gap-2">
-        <Label htmlFor="generateSentencesPromptTemplate">
-          Generate Sentences Prompt Template
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="generateSentencesPromptTemplate">
+            Generate Sentences Prompt Template
+          </Label>
+          <Button
+            onClick={() =>
+              setGenerateSentencesPromptTemplate(
+                DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
+              )
+            }
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+          >
+            <RefreshCcwIcon className="h-4 w-4" />
+          </Button>
+        </div>
         <Textarea
           id="generateSentencesPromptTemplate"
           value={generateSentencesPromptTemplate}
@@ -152,9 +170,23 @@ const PromptTemplate = () => {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="generateSentenceWordsPromptTemplate">
-          Generate Sentence Words Prompt Template
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="generateSentenceWordsPromptTemplate">
+            Generate Sentence Words Prompt Template
+          </Label>
+          <Button
+            onClick={() =>
+              setGenerateSentenceWordsPromptTemplate(
+                DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE,
+              )
+            }
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+          >
+            <RefreshCcwIcon className="h-4 w-4" />
+          </Button>
+        </div>
         <Textarea
           id="generateSentenceWordsPromptTemplate"
           value={generateSentenceWordsPromptTemplate}

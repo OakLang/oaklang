@@ -106,6 +106,7 @@ export const trainingSessionsRouter = createTRPCRouter({
           complexity: opts.input.complexity,
           title: opts.input.title,
           userId: opts.ctx.session.user.id,
+          topic: opts.input.topic,
         })
         .returning();
 

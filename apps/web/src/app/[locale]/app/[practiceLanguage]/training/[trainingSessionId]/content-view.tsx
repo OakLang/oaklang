@@ -60,8 +60,19 @@ export default function ContentView() {
     onSuccess: (data, { trainingSessionId }) => {
       utils.sentences.getSentences.setData(
         { trainingSessionId },
-        (sentences) => [...(sentences ?? []), ...data],
+        (sentences) => [...(sentences ?? []), ...data.sentences],
       );
+      toast(`Generated ${data.sentences.length} new sentences`, {
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.navigator.clipboard.writeText(data.prompt)}
+          >
+            Copy Prompt
+          </Button>
+        ),
+      });
     },
     onError: (error) => {
       toast("Failed to generate sentences", { description: error.message });

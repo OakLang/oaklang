@@ -64,6 +64,13 @@
       "when": 1727687219670,
       "tag": "0008_regular_the_fury",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1727796421878,
+      "tag": "0009_ancient_baron_strucker",
+      "breakpoints": true
     }
   ]
 }
