@@ -6,7 +6,7 @@ import type { DB } from "@acme/db/client";
 import type { UserSettings, Word } from "@acme/db/schema";
 import { DEFAULT_INTERLINEAR_LINES } from "@acme/core/constants";
 import { interlinearLine } from "@acme/core/validators";
-import { and, count, desc, eq, isNull, lte, not, or, sql } from "@acme/db";
+import { and, count, eq, isNull, not, sql } from "@acme/db";
 import {
   trainingSessions,
   userSettings,
@@ -146,34 +146,4 @@ export const userWordsSelect = {
   spacedRepetitionStage: userWords.spacedRepetitionStage,
   lastSeenAt: userWords.lastSeenAt,
   knownAt: userWords.knownAt,
-};
-
-export const getCurrentPracticeWords = async ({
-  db,
-  languageCode,
-  session,
-  limit = 50,
-}: {
-  db: DB;
-  session: Session;
-  languageCode: string;
-  limit?: number;
-}) => {
-  return db
-    .select(userWordsSelect)
-    .from(userWords)
-    .innerJoin(words, eq(words.id, userWords.wordId))
-    .where(
-      and(
-        eq(userWords.userId, session.user.id),
-        eq(words.languageCode, languageCode),
-        isNull(userWords.knownAt),
-        or(
-          isNull(userWords.nextPracticeAt),
-          lte(userWords.nextPracticeAt, sql`NOW()`),
-        ),
-      ),
-    )
-    .orderBy(desc(userWords.seenCount))
-    .limit(limit);
 };

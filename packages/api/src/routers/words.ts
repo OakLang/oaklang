@@ -7,11 +7,7 @@ import { and, asc, eq, isNull, lte, not, or, sql } from "@acme/db";
 import { userWords, words } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import {
-  getCurrentPracticeWords,
-  getUserSettings,
-  userWordsSelect,
-} from "../utils";
+import { getUserSettings, userWordsSelect } from "../utils";
 
 export const wordsRouter = createTRPCRouter({
   getUserWord: protectedProcedure
@@ -124,15 +120,6 @@ export const wordsRouter = createTRPCRouter({
           );
       }
     }),
-  getCurrentPracticeWords: protectedProcedure
-    .input(z.object({ languageCode: z.string() }))
-    .query(({ ctx, input }) =>
-      getCurrentPracticeWords({
-        db: ctx.db,
-        languageCode: input.languageCode,
-        session: ctx.session,
-      }),
-    ),
   markWordKnown: protectedProcedure
     .input(z.object({ wordId: z.string(), sessionId: z.string().nullable() }))
     .mutation(async ({ ctx, input }) => {

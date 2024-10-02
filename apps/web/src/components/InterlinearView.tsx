@@ -487,7 +487,9 @@ const InterlinearLineRow = ({
                     ? {
                         "bg-yellow-400/20": !!userWordQuery.data?.knownAt,
                         "ring-yellow-400 hover:ring-yellow-400":
-                          inspectedWord?.wordId === word.wordId,
+                          inspectedWord &&
+                          inspectedWord.wordId === word.wordId &&
+                          inspectedWord.index === word.index,
                       }
                     : {},
                   {

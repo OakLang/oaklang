@@ -24,7 +24,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
-type Word = RouterOutputs["words"]["getCurrentPracticeWords"][number];
+type Word = RouterOutputs["words"]["getAllWords"][number];
 
 const getDateColumCell = (props: CellContext<Word, unknown>) => {
   const value = props.getValue() as Date | null;
@@ -194,6 +194,7 @@ export default function PracticeWordsManager() {
   const [filter, setFilter] = usePersistState<
     RouterInputs["words"]["getAllWords"]["filter"]
   >("all-words-filter", "all");
+
   const allWords = api.words.getAllWords.useQuery({
     languageCode: practiceLanguage,
     filter,

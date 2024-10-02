@@ -1,72 +1,45 @@
-import { RefreshCcw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
+import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { api } from "~/trpc/react";
 import { formatDate } from "~/utils";
-import { Button } from "./ui/button";
+import ObjectDetailsList from "./ObjectDetailsList";
 
 export default function CurrentPracticeWordsPanel() {
-  const practiceLanguage = usePracticeLanguageCode();
-  const words = api.words.getCurrentPracticeWords.useQuery({
-    languageCode: practiceLanguage,
-  });
-  return (
-    <div className="p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Current Practice Words</h2>
-        <Button
-          size="icon"
-          variant="outline"
-          disabled={words.isPending}
-          onClick={() => words.refetch()}
-        >
-          <RefreshCcw className="h-4 w-4" />
-        </Button>
-      </div>
+  const trainingSessionId = useTrainingSessionId();
+  const trainingSessionQuery =
+    api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
 
-      <div>
-        {words.isPending ? (
-          <p>Loading...</p>
-        ) : words.isError ? (
-          <p>{words.error.message}</p>
-        ) : (
-          <div className="grid gap-4">
-            {words.data.map((word) => (
-              <div>
-                <p>{word.word}</p>
-                <div className="">
-                  {Object.entries({
-                    "Known At": word.knownAt ? formatDate(word.knownAt) : null,
-                    "Last Seen At": word.lastSeenAt
-                      ? formatDate(word.lastSeenAt)
-                      : null,
-                    "Last Practiced At": word.lastPracticedAt
-                      ? formatDate(word.lastPracticedAt)
-                      : null,
-                    "Next Practice At": word.nextPracticeAt
-                      ? formatDate(word.nextPracticeAt)
-                      : null,
-                    "Seen Count": word.seenCount.toLocaleString(),
-                    "Practice Count": word.practiceCount.toLocaleString(),
-                    "Seen Count Since Last Practiced":
-                      word.seenCountSinceLastPracticed.toLocaleString(),
-                    "Spaced Repetition Stage": word.spacedRepetitionStage,
-                  }).map((item) => (
-                    <div
-                      key={item[0]}
-                      className="flex items-center justify-between"
-                    >
-                      <p className="text-muted-foreground text-sm">{item[0]}</p>
-                      <p className="text-muted-foreground text-sm">
-                        {item[1] ?? "-"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+  if (trainingSessionQuery.isPending) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (trainingSessionQuery.isError) {
+    return <p>{trainingSessionQuery.error.message}</p>;
+  }
+
+  return (
+    <div className="space-y-8 py-4">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-4">
+          <h2 className="font-semibold">Training Session Details</h2>
+        </div>
+
+        <ObjectDetailsList
+          data={{
+            Id: trainingSessionQuery.data.id,
+            "User Id": trainingSessionQuery.data.userId,
+            "Created At": formatDate(trainingSessionQuery.data.createdAt),
+            Name: trainingSessionQuery.data.title,
+            Complexity: trainingSessionQuery.data.complexity,
+            "Language Code": trainingSessionQuery.data.languageCode,
+            Topic: trainingSessionQuery.data.topic,
+          }}
+        />
       </div>
     </div>
   );
