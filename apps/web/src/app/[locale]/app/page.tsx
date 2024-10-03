@@ -3,11 +3,12 @@ import { RedirectType } from "next/navigation";
 import { redirect } from "~/i18n/routing";
 import { trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
+import { getUserNativeLanguage } from "~/utils/queries";
 
 export default async function AppPage() {
-  const userSettingsQuery = await trpc.userSettings.getUserSettings();
+  const nativeLanguage = await getUserNativeLanguage();
 
-  if (!userSettingsQuery.nativeLanguage) {
+  if (!nativeLanguage) {
     return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
   }
 

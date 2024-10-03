@@ -1,17 +1,20 @@
 import { RedirectType } from "next/navigation";
 
 import { redirect } from "~/i18n/routing";
-import { trpc } from "~/trpc/server";
+import { HydrateClient, trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
+import { getUserNativeLanguage } from "~/utils/queries";
 import NativeLanguageForm from "./native-language-form";
 
 export default async function OnboardingNativeLanguagePage() {
-  const userSettingsQuery = await trpc.userSettings.getUserSettings();
+  const nativeLanguage = await getUserNativeLanguage();
   const nextPath = OnboardingRoutes.practiceLanguage;
 
-  if (userSettingsQuery.nativeLanguage) {
+  if (nativeLanguage) {
     return redirect(nextPath, RedirectType.replace);
   }
+
+  void trpc.languages.getLanguages.prefetch();
 
   return (
     <div className="flex flex-1 items-center justify-center">
@@ -23,7 +26,9 @@ export default async function OnboardingNativeLanguagePage() {
           <p className="text-muted-foreground mt-2 text-sm">
             This will set the language of your dictionary translations.
           </p>
-          <NativeLanguageForm />
+          <HydrateClient>
+            <NativeLanguageForm />
+          </HydrateClient>
         </div>
       </div>
     </div>

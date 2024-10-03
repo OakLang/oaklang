@@ -5,6 +5,7 @@ import { redirect } from "~/i18n/routing";
 import AppStoreProvider from "~/providers/app-store-provider";
 import { HydrateClient, trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
+import { getUserNativeLanguage } from "~/utils/queries";
 import AppBar from "./app-bar";
 
 export default async function MainAppLayout({
@@ -14,20 +15,23 @@ export default async function MainAppLayout({
   children: ReactNode;
   params: { practiceLanguage: string };
 }) {
-  const userSettingsQuery = await trpc.userSettings.getUserSettings();
-  if (!userSettingsQuery.nativeLanguage) {
+  const nativeLanguage = await getUserNativeLanguage();
+  if (!nativeLanguage) {
     return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
   }
 
   try {
-    await trpc.languages.getPracticeLanguage(params.practiceLanguage);
-    void trpc.languages.getPracticeLanguage.prefetch(params.practiceLanguage);
-    void trpc.languages.getPracticeLanguages.prefetch();
+    const practiceLanguage = await trpc.languages.getPracticeLanguage(
+      params.practiceLanguage,
+    );
+    void trpc.languages.getPracticeLanguage.prefetch(params.practiceLanguage, {
+      initialData: practiceLanguage,
+    });
 
     return (
       <HydrateClient>
         <AppStoreProvider>
-          <AppBar />
+          <AppBar practiceLanguage={params.practiceLanguage} />
           {children}
         </AppStoreProvider>
       </HydrateClient>

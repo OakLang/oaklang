@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 import { Button } from "./ui/button";
@@ -21,14 +20,18 @@ import {
 import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-export default function PracticeLanguageSwitcher() {
+export default function PracticeLanguageSwitcher({
+  practiceLanguage,
+}: {
+  practiceLanguage: string;
+}) {
   const t = useTranslations("App");
-  const practiceLanguage = usePracticeLanguageCode();
   const practiceLanguageQuery =
     api.languages.getPracticeLanguage.useQuery(practiceLanguage);
   const practiceLanguages = api.languages.getPracticeLanguages.useQuery();
   const languagesQuery = api.languages.getLanguages.useQuery();
   const router = useRouter();
+  const utils = api.useUtils();
 
   const otherLanguages = useMemo(
     () =>
@@ -37,6 +40,15 @@ export default function PracticeLanguageSwitcher() {
       ) ?? [],
     [languagesQuery.data, practiceLanguages.data],
   );
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      void utils.languages.getPracticeLanguages.invalidate();
+    }, 0);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [practiceLanguage, utils.languages.getPracticeLanguages]);
 
   if (!practiceLanguageQuery.isSuccess) {
     return <Skeleton className="h-10 w-14 rounded-full lg:w-32" />;

@@ -13,7 +13,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   void trpc.userSettings.getUserSettings.prefetch();
-  void trpc.languages.getLanguages.prefetch();
 
   return <HydrateClient>{children}</HydrateClient>;
 }
