@@ -4,7 +4,7 @@ import { Link } from "~/i18n/routing";
 import EmailSignInForm from "../email-signin-form";
 import OAuthProviders from "../oauth-providers";
 
-export default function LogInPage({
+export default function SignUpPage({
   searchParams: { callbackUrl },
 }: {
   searchParams: { callbackUrl?: string };
@@ -22,22 +22,22 @@ export default function LogInPage({
             Log in to {APP_NAME}
           </h1>
           <p className="text-muted-foreground text-sm">
-            Don't have an account?{" "}
+            Already have an account?{" "}
             <Link
               href={{
-                pathname: "/signup",
+                pathname: "/login",
                 search: search.toString(),
               }}
               className="hover:text-primary underline underline-offset-4"
             >
-              Sign up
+              Log in
             </Link>
             .
           </p>
         </div>
 
         <div className="grid gap-6">
-          <EmailSignInForm type="signin" callbackUrl={callbackUrl} />
+          <EmailSignInForm type="signup" callbackUrl={callbackUrl} />
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -50,11 +50,11 @@ export default function LogInPage({
             </div>
           </div>
 
-          <OAuthProviders type="signin" callbackUrl={callbackUrl} />
+          <OAuthProviders type="signup" callbackUrl={callbackUrl} />
         </div>
 
         <p className="text-muted-foreground px-8 text-center text-sm">
-          By signing in, you agree to our{" "}
+          By signing up, you agree to our{" "}
           <Link
             className="hover:text-primary underline underline-offset-4"
             href="/terms"

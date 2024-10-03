@@ -28,7 +28,7 @@ export const nextAuthConfig = {
         trustHost: true,
       }
     : {}),
-  // debug: !isSecureContext,
+  debug: !isSecureContext,
 } satisfies NextAuthConfig;
 
 export const validateToken = async (
