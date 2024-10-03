@@ -1,39 +1,21 @@
-"use client";
+import { RedirectType } from "next/navigation";
 
-import { useEffect } from "react";
-
-import FullScreenLoader from "~/components/FullScreenLoader";
-import { useRouter } from "~/i18n/routing";
-import { api } from "~/trpc/react";
+import { redirect } from "~/i18n/routing";
+import { trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
 
-export default function AppPage() {
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const lastPracticeLang = api.languages.getLastPracticeLanguage.useQuery(
-    undefined,
-    { enabled: !!userSettingsQuery.data?.nativeLanguage },
-  );
-  const router = useRouter();
+export default async function AppPage() {
+  const userSettingsQuery = await trpc.userSettings.getUserSettings();
 
-  useEffect(() => {
-    if (userSettingsQuery.isSuccess && !userSettingsQuery.data.nativeLanguage) {
-      router.replace(OnboardingRoutes.nativeLanguage);
-    }
-  }, [
-    router,
-    userSettingsQuery.data?.nativeLanguage,
-    userSettingsQuery.isSuccess,
-  ]);
+  if (!userSettingsQuery.nativeLanguage) {
+    return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
+  }
 
-  useEffect(() => {
-    if (lastPracticeLang.isSuccess) {
-      if (lastPracticeLang.data) {
-        router.replace(`/app/${lastPracticeLang.data.languageCode}`);
-      } else {
-        router.replace(OnboardingRoutes.practiceLanguage);
-      }
-    }
-  }, [lastPracticeLang.data, lastPracticeLang.isSuccess, router]);
+  const lastPracticeLang = await trpc.languages.getLastPracticeLanguage();
 
-  return <FullScreenLoader />;
+  if (!lastPracticeLang) {
+    return redirect(OnboardingRoutes.practiceLanguage, RedirectType.replace);
+  }
+
+  return redirect(`/app/${lastPracticeLang.languageCode}`);
 }

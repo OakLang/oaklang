@@ -1,26 +1,16 @@
-"use client";
+import { RedirectType } from "next/navigation";
 
-import { useEffect } from "react";
-
-import FullScreenLoader from "~/components/FullScreenLoader";
-import { useRouter } from "~/i18n/routing";
-import { api } from "~/trpc/react";
+import { redirect } from "~/i18n/routing";
+import { trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
 import NativeLanguageForm from "./native-language-form";
 
-export default function OnboardingNativeLanguagePage() {
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+export default async function OnboardingNativeLanguagePage() {
+  const userSettingsQuery = await trpc.userSettings.getUserSettings();
   const nextPath = OnboardingRoutes.practiceLanguage;
-  const router = useRouter();
 
-  useEffect(() => {
-    if (userSettingsQuery.data?.nativeLanguage) {
-      router.replace(nextPath);
-    }
-  }, [nextPath, router, userSettingsQuery.data?.nativeLanguage]);
-
-  if (!userSettingsQuery.isSuccess || userSettingsQuery.data.nativeLanguage) {
-    return <FullScreenLoader />;
+  if (userSettingsQuery.nativeLanguage) {
+    return redirect(nextPath, RedirectType.replace);
   }
 
   return (

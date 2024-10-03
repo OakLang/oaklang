@@ -54,6 +54,7 @@ export const trainingSessionsRouter = createTRPCRouter({
           ),
         )
         .orderBy(desc(trainingSessions.id));
+
       return await Promise.all(
         trainingSessionList.map(async (ts) => {
           const [newWords] = await db

@@ -15,7 +15,7 @@ export default async function LogInPage({
   const session = await auth();
 
   if (session) {
-    redirect(callbackUrl, RedirectType.replace);
+    return redirect(callbackUrl, RedirectType.replace);
   }
 
   const search = new URLSearchParams();

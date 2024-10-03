@@ -1,16 +1,26 @@
-import ContentView from "./content-view";
-import RightBar from "./right-bar";
-import TopBar from "./top-bar";
+import dynamic from "next/dynamic";
 
-export default function TrainingPage() {
+import { HydrateClient, trpc } from "~/trpc/server";
+
+const ContentView = dynamic(() => import("./content-view"), { ssr: false });
+const TopBar = dynamic(() => import("./top-bar"), { ssr: false });
+const RightBar = dynamic(() => import("./right-bar"), { ssr: false });
+
+export default function TrainingPage({
+  params: { trainingSessionId },
+}: {
+  params: { trainingSessionId: string };
+}) {
+  void trpc.sentences.getSentences.prefetch({ trainingSessionId });
   return (
-    <div className="relative flex h-[calc(100vh-4rem-1px)] overflow-hidden">
-      <div className="relative flex flex-1 flex-col overflow-hidden">
-        <TopBar />
-        <ContentView />
-        {/* <BottomBar /> */}
+    <HydrateClient>
+      <div className="relative flex h-[calc(100vh-4rem-1px)] overflow-hidden">
+        <div className="relative flex flex-1 flex-col overflow-hidden">
+          <TopBar />
+          <ContentView />
+        </div>
+        <RightBar />
       </div>
-      <RightBar />
-    </div>
+    </HydrateClient>
   );
 }

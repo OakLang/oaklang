@@ -88,16 +88,21 @@ SENTENCE: {SENTENCE}
 export const initAppStore = (): AppState => {
   return {
     generateSentencesPromptTemplate:
-      localStorage.getItem("GENERATE_SENTENCES_PROMPT_TEMPLATE") ??
-      DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
+      (typeof window !== "undefined"
+        ? localStorage.getItem("GENERATE_SENTENCES_PROMPT_TEMPLATE")
+        : null) ?? DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
     generateSentenceWordsPromptTemplate:
-      localStorage.getItem("GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE") ??
-      DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
+      (typeof window !== "undefined"
+        ? localStorage.getItem("GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE")
+        : null) ?? DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
     inspectedWord: null,
     inspectionPanelOpen:
-      localStorage.getItem("inspection_panel_open") === "true",
-    fontSize: localStorage.getItem("font_size")
-      ? Number(localStorage.getItem("font_size"))
-      : 16,
+      typeof window !== "undefined"
+        ? localStorage.getItem("inspection_panel_open") === "true"
+        : false,
+    fontSize:
+      typeof window !== "undefined" && localStorage.getItem("font_size")
+        ? Number(localStorage.getItem("font_size"))
+        : 16,
   };
 };

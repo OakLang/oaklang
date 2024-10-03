@@ -18,8 +18,8 @@ import { Link, usePathname } from "~/i18n/routing";
 import { cn } from "~/utils";
 
 export default function SideBar() {
-  const t = useTranslations("Settings.SideBar");
   const practiceLanguage = usePracticeLanguageCode();
+  const t = useTranslations("Settings.SideBar");
   const pathname = usePathname();
   const menu: {
     href: string;

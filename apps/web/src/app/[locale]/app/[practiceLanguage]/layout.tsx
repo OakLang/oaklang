@@ -1,59 +1,38 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { notFound, RedirectType } from "next/navigation";
 
-import FullScreenLoader from "~/components/FullScreenLoader";
-import { Button } from "~/components/ui/button";
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
-import { Link, useRouter } from "~/i18n/routing";
+import { redirect } from "~/i18n/routing";
 import AppStoreProvider from "~/providers/app-store-provider";
-import { api } from "~/trpc/react";
+import { HydrateClient, trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
 import AppBar from "./app-bar";
 
-export default function MainAppLayout({ children }: { children: ReactNode }) {
-  const practiceLanguage = usePracticeLanguageCode();
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const practiceLanguageQuery = api.languages.getPracticeLanguage.useQuery(
-    practiceLanguage,
-    { enabled: !!userSettingsQuery.data?.nativeLanguage },
-  );
-  const router = useRouter();
-
-  useEffect(() => {
-    if (userSettingsQuery.isSuccess && !userSettingsQuery.data.nativeLanguage) {
-      router.replace(OnboardingRoutes.nativeLanguage);
-    }
-  }, [
-    router,
-    userSettingsQuery.isSuccess,
-    userSettingsQuery.data?.nativeLanguage,
-  ]);
-
-  if (practiceLanguageQuery.isPending) {
-    return <FullScreenLoader />;
+export default async function MainAppLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: { practiceLanguage: string };
+}) {
+  const userSettingsQuery = await trpc.userSettings.getUserSettings();
+  if (!userSettingsQuery.nativeLanguage) {
+    return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
   }
 
-  if (practiceLanguageQuery.isError) {
-    return <NotFound />;
+  try {
+    await trpc.languages.getPracticeLanguage(params.practiceLanguage);
+    void trpc.languages.getPracticeLanguage.prefetch(params.practiceLanguage);
+    void trpc.languages.getPracticeLanguages.prefetch();
+
+    return (
+      <HydrateClient>
+        <AppStoreProvider>
+          <AppBar />
+          {children}
+        </AppStoreProvider>
+      </HydrateClient>
+    );
+  } catch (error) {
+    notFound();
   }
-
-  return (
-    <AppStoreProvider>
-      <AppBar />
-      {children}
-    </AppStoreProvider>
-  );
-}
-
-function NotFound() {
-  return (
-    <div>
-      <p>Practice Language Not Found!</p>
-      <Button asChild>
-        <Link href="/app">Dashboard</Link>
-      </Button>
-    </div>
-  );
 }

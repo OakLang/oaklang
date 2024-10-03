@@ -1,25 +1,19 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { useSession } from "next-auth/react";
+import { RedirectType } from "next/navigation";
 
-import FullScreenLoader from "~/components/FullScreenLoader";
-import { api } from "~/trpc/react";
+import { auth } from "@acme/auth";
 
-export default function AppLayout({ children }: { children: ReactNode }) {
-  const { status } = useSession({ required: true });
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery(
-    undefined,
-    { enabled: status === "authenticated" },
-  );
+import { redirect } from "~/i18n/routing";
+import { HydrateClient, trpc } from "~/trpc/server";
 
-  if (status != "authenticated" || userSettingsQuery.isPending) {
-    return <FullScreenLoader />;
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  const session = await auth();
+  if (!session) {
+    return redirect("/login", RedirectType.replace);
   }
 
-  if (userSettingsQuery.isError) {
-    return <p>{userSettingsQuery.error.message}</p>;
-  }
+  void trpc.userSettings.getUserSettings.prefetch();
+  void trpc.languages.getLanguages.prefetch();
 
-  return children;
+  return <HydrateClient>{children}</HydrateClient>;
 }

@@ -201,6 +201,7 @@ const ResetAccountCard = () => {
     </Card>
   );
 };
+
 const DeleteAccountCard = () => {
   const t = useTranslations("AccountPage.deleteAccountCard");
   const deleteAccountMut = api.users.deleteAccount.useMutation({

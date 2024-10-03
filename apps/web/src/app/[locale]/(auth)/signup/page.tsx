@@ -15,7 +15,7 @@ export default async function SignUpPage({
   const session = await auth();
 
   if (session) {
-    redirect(callbackUrl, RedirectType.replace);
+    return redirect(callbackUrl, RedirectType.replace);
   }
 
   const search = new URLSearchParams();

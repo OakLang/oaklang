@@ -1,50 +1,24 @@
-"use client";
+import { RedirectType } from "next/navigation";
 
-import { useEffect } from "react";
-
-import FullScreenLoader from "~/components/FullScreenLoader";
-import { useRouter } from "~/i18n/routing";
-import { api } from "~/trpc/react";
+import { redirect } from "~/i18n/routing";
+import { trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
 import PracticeLanguageForm from "./practice-language-form";
 
-export default function OnboardinPracticeLanguagePage() {
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const lastPracticedLanguage = api.languages.getLastPracticeLanguage.useQuery(
-    undefined,
-    {
-      enabled: !!userSettingsQuery.data?.nativeLanguage,
-    },
-  );
+export default async function OnboardinPracticeLanguagePage() {
+  const userSettingsQuery = await trpc.userSettings.getUserSettings();
 
-  const router = useRouter();
-
-  useEffect(() => {
-    if (userSettingsQuery.isSuccess && !userSettingsQuery.data.nativeLanguage) {
-      router.replace(OnboardingRoutes.nativeLanguage);
-    }
-  }, [
-    router,
-    userSettingsQuery.isSuccess,
-    userSettingsQuery.data?.nativeLanguage,
-  ]);
-
-  useEffect(() => {
-    if (lastPracticedLanguage.data) {
-      router.replace(`/app/${lastPracticedLanguage.data.languageCode}`);
-    }
-  }, [lastPracticedLanguage.data, router]);
-
-  if (
-    lastPracticedLanguage.isPending ||
-    userSettingsQuery.isPending ||
-    lastPracticedLanguage.data
-  ) {
-    return <FullScreenLoader />;
+  if (!userSettingsQuery.nativeLanguage) {
+    return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
   }
 
-  if (lastPracticedLanguage.isError) {
-    return <p>{lastPracticedLanguage.error.message}</p>;
+  const lastPracticedLanguage = await trpc.languages.getLastPracticeLanguage();
+
+  if (lastPracticedLanguage) {
+    return redirect(
+      `/app/${lastPracticedLanguage.languageCode}`,
+      RedirectType.replace,
+    );
   }
 
   return (

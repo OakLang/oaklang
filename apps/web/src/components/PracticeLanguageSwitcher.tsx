@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 
@@ -29,7 +29,6 @@ export default function PracticeLanguageSwitcher() {
   const practiceLanguages = api.languages.getPracticeLanguages.useQuery();
   const languagesQuery = api.languages.getLanguages.useQuery();
   const router = useRouter();
-  const utils = api.useUtils();
 
   const otherLanguages = useMemo(
     () =>
@@ -38,11 +37,6 @@ export default function PracticeLanguageSwitcher() {
       ) ?? [],
     [languagesQuery.data, practiceLanguages.data],
   );
-
-  useEffect(() => {
-    void utils.languages.getPracticeLanguages.invalidate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [practiceLanguage]);
 
   if (!practiceLanguageQuery.isSuccess) {
     return <Skeleton className="h-10 w-14 rounded-full lg:w-32" />;
@@ -94,6 +88,7 @@ export default function PracticeLanguageSwitcher() {
               <DropdownMenuLabel>{t("add-a-new-language")}</DropdownMenuLabel>
               {otherLanguages.map((item) => (
                 <DropdownMenuItem
+                  key={item.code}
                   onClick={() => router.push(`/app/${item.code}`)}
                 >
                   <Image
