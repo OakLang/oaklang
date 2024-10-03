@@ -257,7 +257,7 @@ export const wordsRouter = createTRPCRouter({
       }
       return updatedWord;
     }),
-  deleteWord: protectedProcedure
+  deleteUserWord: protectedProcedure
     .input(z.object({ wordId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db

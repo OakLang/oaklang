@@ -5,6 +5,8 @@ import type {
   ColumnDef,
   ColumnFiltersState,
   InitialTableState,
+  Row,
+  RowSelectionState,
   SortingState,
   Table as TanstackTable,
   VisibilityState,
@@ -66,8 +68,18 @@ interface DataTableProps<TData = Record<string, unknown>, TValue = unknown> {
   isLoading?: boolean;
   renderActions?: ({ table }: { table: TanstackTable<TData> }) => ReactNode;
   renderLoading?: ({ table }: { table: TanstackTable<TData> }) => ReactNode;
+  renderRowSelectionActios?: ({
+    table,
+  }: {
+    table: TanstackTable<TData>;
+  }) => ReactNode;
   persistKeyPrefix: string;
   initialState?: InitialTableState;
+  getRowId?: (
+    originalRow: TData,
+    index: number,
+    parent?: Row<TData> | undefined,
+  ) => string;
 }
 
 export function DataTable<TData, TValue>({
@@ -79,6 +91,8 @@ export function DataTable<TData, TValue>({
   renderLoading,
   persistKeyPrefix,
   initialState,
+  renderRowSelectionActios,
+  getRowId,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = usePersistState<SortingState>(
     `${persistKeyPrefix}-sorting`,
@@ -90,9 +104,9 @@ export function DataTable<TData, TValue>({
       `${persistKeyPrefix}-column-visibility`,
       {},
     );
-  const [rowSelection, setRowSelection] = useState({});
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  const table = useReactTable({
+  const table = useReactTable<TData>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -103,6 +117,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    getRowId,
     initialState,
     state: {
       sorting,
@@ -115,18 +130,22 @@ export function DataTable<TData, TValue>({
   return (
     <div>
       <div className="flex items-center py-4">
-        <Input
-          placeholder={`Filter ${pluralize(filterColumn)}...`}
-          value={
-            (table.getColumn(filterColumn)?.getFilterValue() as
-              | string
-              | undefined) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn(filterColumn)?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        {Object.values(rowSelection).filter(Boolean).length > 0 ? (
+          (renderRowSelectionActios?.({ table }) ?? null)
+        ) : (
+          <Input
+            placeholder={`Filter ${pluralize(filterColumn)}...`}
+            value={
+              (table.getColumn(filterColumn)?.getFilterValue() as
+                | string
+                | undefined) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn(filterColumn)?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+        )}
         <div className="flex flex-1 items-center justify-end gap-2">
           {renderActions?.({ table })}
           <DataTableViewOptions table={table} />

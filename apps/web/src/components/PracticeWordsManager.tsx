@@ -1,12 +1,10 @@
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
+import { useCallback } from "react";
 import { MoreHorizontal } from "lucide-react";
+import pluralize from "pluralize";
 import { toast } from "sonner";
 
 import type { RouterInputs, RouterOutputs } from "~/trpc/react";
-import {
-  useMarkWordKnownMutation,
-  useMarkWordUnknownMutation,
-} from "~/hooks/mutations";
 import { usePersistState } from "~/hooks/useLocalStorageState";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
@@ -44,15 +42,36 @@ const getBooleanColumnCell = (props: CellContext<Word, unknown>) => {
 const WordActionButton = ({ word }: { word: Word }) => {
   const utils = api.useUtils();
   const practiceLanguageCode = usePracticeLanguageCode();
-  const markKnownMut = useMarkWordKnownMutation();
-  const markUnknownMut = useMarkWordUnknownMutation();
 
-  const deleteWordMut = api.words.deleteWord.useMutation({
+  const markKnownMut = api.words.markWordKnown.useMutation({
     onSuccess: () => {
       void utils.words.getAllWords.invalidate({
-        languageCode: word.languageCode,
+        languageCode: practiceLanguageCode,
       });
       void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguages.invalidate();
+    },
+    onError: (error) => toast(error.message),
+  });
+
+  const markUnknownMut = api.words.markWordUnknown.useMutation({
+    onSuccess: () => {
+      void utils.words.getAllWords.invalidate({
+        languageCode: practiceLanguageCode,
+      });
+      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguages.invalidate();
+    },
+    onError: (error) => toast(error.message),
+  });
+
+  const deleteUserWordMut = api.words.deleteUserWord.useMutation({
+    onSuccess: () => {
+      void utils.words.getAllWords.invalidate({
+        languageCode: practiceLanguageCode,
+      });
+      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguages.invalidate();
     },
     onError: (error) => toast(error.message),
   });
@@ -82,7 +101,7 @@ const WordActionButton = ({ word }: { word: Word }) => {
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => deleteWordMut.mutate({ wordId: word.wordId })}
+          onClick={() => deleteUserWordMut.mutate({ wordId: word.wordId })}
         >
           Delete Word
         </DropdownMenuItem>
@@ -246,15 +265,58 @@ export const columns: ColumnDef<Word>[] = [
 ];
 
 export default function PracticeWordsManager() {
-  const practiceLanguage = usePracticeLanguageCode();
+  const practiceLanguageCode = usePracticeLanguageCode();
   const [filter, setFilter] = usePersistState<
     RouterInputs["words"]["getAllWords"]["filter"]
   >("all-words-filter", "all");
 
   const allWords = api.words.getAllWords.useQuery({
-    languageCode: practiceLanguage,
+    languageCode: practiceLanguageCode,
     filter,
   });
+
+  const utils = api.useUtils();
+
+  const markWordKnownMutation = api.words.markWordKnown.useMutation();
+  const deleteUserWordMut = api.words.deleteUserWord.useMutation();
+
+  const handleMarkSelectedWordsKnown = useCallback(
+    async (wordIds: string[]) => {
+      await Promise.all(
+        wordIds.map((wordId) =>
+          markWordKnownMutation.mutateAsync({ wordId, sessionId: null }),
+        ),
+      );
+      void allWords.refetch();
+      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguages.invalidate();
+    },
+    [
+      allWords,
+      markWordKnownMutation,
+      practiceLanguageCode,
+      utils.languages.getPracticeLanguage,
+      utils.languages.getPracticeLanguages,
+    ],
+  );
+
+  const handleDeleteSelectedWords = useCallback(
+    async (wordIds: string[]) => {
+      await Promise.all(
+        wordIds.map((wordId) => deleteUserWordMut.mutateAsync({ wordId })),
+      );
+      void allWords.refetch();
+      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguages.invalidate();
+    },
+    [
+      allWords,
+      deleteUserWordMut,
+      practiceLanguageCode,
+      utils.languages.getPracticeLanguage,
+      utils.languages.getPracticeLanguages,
+    ],
+  );
 
   return (
     <section id="practice-words" className="my-8">
@@ -270,24 +332,43 @@ export default function PracticeWordsManager() {
           isLoading={allWords.isPending}
           filterColumn="word"
           persistKeyPrefix="words-data-table"
-          renderActions={() => (
+          getRowId={(row) => row.wordId}
+          renderActions={({ table }) => (
             <>
               <Tabs value={filter}>
                 <TabsList>
-                  <TabsTrigger onClick={() => setFilter("all")} value="all">
+                  <TabsTrigger
+                    onClick={() => {
+                      setFilter("all");
+                      table.setRowSelection({});
+                    }}
+                    value="all"
+                  >
                     All
                   </TabsTrigger>
-                  <TabsTrigger onClick={() => setFilter("known")} value="known">
+                  <TabsTrigger
+                    onClick={() => {
+                      setFilter("known");
+                      table.setRowSelection({});
+                    }}
+                    value="known"
+                  >
                     Known
                   </TabsTrigger>
                   <TabsTrigger
-                    onClick={() => setFilter("unknown")}
+                    onClick={() => {
+                      setFilter("unknown");
+                      table.setRowSelection({});
+                    }}
                     value="unknown"
                   >
                     Unknown
                   </TabsTrigger>
                   <TabsTrigger
-                    onClick={() => setFilter("practicing")}
+                    onClick={() => {
+                      setFilter("practicing");
+                      table.setRowSelection({});
+                    }}
                     value="practicing"
                   >
                     Practicing
@@ -301,6 +382,45 @@ export default function PracticeWordsManager() {
               left: ["select", "word"],
               right: ["actions"],
             },
+          }}
+          renderRowSelectionActios={({ table }) => {
+            const selectedWordIds = table
+              .getSelectedRowModel()
+              .rows.map((row) => row.original.wordId);
+            return (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="destructive"
+                  disabled={deleteUserWordMut.isPending}
+                  onClick={async () => {
+                    await handleDeleteSelectedWords(selectedWordIds);
+                    table.setRowSelection({});
+                  }}
+                >
+                  Delete {selectedWordIds.length}{" "}
+                  {pluralize("Word", selectedWordIds.length)}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={markWordKnownMutation.isPending}
+                  onClick={async () => {
+                    await handleMarkSelectedWordsKnown(selectedWordIds);
+                    table.setRowSelection({});
+                  }}
+                >
+                  Mark {selectedWordIds.length}{" "}
+                  {pluralize("Word", selectedWordIds.length)} Known
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    table.setRowSelection({});
+                  }}
+                >
+                  Deselect All
+                </Button>
+              </div>
+            );
           }}
         />
       )}
