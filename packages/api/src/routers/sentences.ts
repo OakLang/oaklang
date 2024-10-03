@@ -342,6 +342,8 @@ export const sentencesRouter = createTRPCRouter({
         NATIVE_LANGUAGE: nativeLanguage.name,
         SENTENCE: sentence.sentence,
       });
+
+      console.log("Interlinear Lines Generation Prompt", prompt);
       const schema = buildSentenceWordsGPTSchema({
         nativeLanguage,
         practiceLanguage,
@@ -354,14 +356,16 @@ export const sentencesRouter = createTRPCRouter({
         schema,
       });
 
-      const filterdWords = (
-        result.object.words as unknown as {
-          word: string;
-          lemma: string;
-          text: string;
-          [x: string]: string;
-        }[]
-      ).filter((word) => new RegExp(/\w+/).test(word.lemma));
+      console.log("GPT Generated interlinear word lines", result.object.words);
+
+      const filterdWords = result.object.words as unknown as {
+        word: string;
+        lemma: string;
+        text: string;
+        [x: string]: string;
+      }[];
+
+      console.log({ filterdWords });
 
       const newList = await Promise.all(
         filterdWords.map(async (item, index) => {
