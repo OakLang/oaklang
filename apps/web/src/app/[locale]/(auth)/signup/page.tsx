@@ -1,14 +1,23 @@
+import { RedirectType } from "next/navigation";
+
+import { auth } from "@acme/auth";
 import { APP_NAME } from "@acme/core/constants";
 
-import { Link } from "~/i18n/routing";
+import { Link, redirect } from "~/i18n/routing";
 import EmailSignInForm from "../email-signin-form";
 import OAuthProviders from "../oauth-providers";
 
-export default function SignUpPage({
-  searchParams: { callbackUrl },
+export default async function SignUpPage({
+  searchParams: { callbackUrl = "/app" },
 }: {
   searchParams: { callbackUrl?: string };
 }) {
+  const session = await auth();
+
+  if (session) {
+    redirect(callbackUrl, RedirectType.replace);
+  }
+
   const search = new URLSearchParams();
   if (callbackUrl) {
     search.set("callbackUrl", callbackUrl);
