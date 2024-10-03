@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import FullScreenLoader from "~/app/full-screen-loader";
+import FullScreenLoader from "~/components/FullScreenLoader";
 import { Button } from "~/components/ui/button";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";

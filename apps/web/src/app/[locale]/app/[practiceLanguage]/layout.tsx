@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 
-import FullScreenLoader from "~/app/full-screen-loader";
+import FullScreenLoader from "~/components/FullScreenLoader";
 import { Button } from "~/components/ui/button";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { Link, useRouter } from "~/i18n/routing";

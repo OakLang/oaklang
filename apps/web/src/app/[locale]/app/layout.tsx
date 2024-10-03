@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useSession } from "next-auth/react";
 
-import FullScreenLoader from "~/app/full-screen-loader";
+import FullScreenLoader from "~/components/FullScreenLoader";
 import { api } from "~/trpc/react";
 
 export default function AppLayout({ children }: { children: ReactNode }) {

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import FullScreenLoader from "~/app/full-screen-loader";
+import FullScreenLoader from "~/components/FullScreenLoader";
 import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 import { OnboardingRoutes } from "~/utils/constants";
