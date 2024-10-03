@@ -138,7 +138,7 @@ const PromptTemplate = () => {
           <Button
             onClick={() =>
               setGenerateSentencesPromptTemplate(
-                DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
+                DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
               )
             }
             variant="ghost"
@@ -177,7 +177,7 @@ const PromptTemplate = () => {
           <Button
             onClick={() =>
               setGenerateSentenceWordsPromptTemplate(
-                DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE,
+                DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
               )
             }
             variant="ghost"

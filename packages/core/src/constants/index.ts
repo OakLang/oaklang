@@ -15,6 +15,7 @@ export const AVAILABLE_PROMPT_TEMPLATE_KEYS = [
   "{PREVIOUSLY_GENERATED_SENTENCES}",
   "{SENTENCE_COUNT}",
   "{COMPLEXITY}",
+  "{TOPIC}",
 ];
 
 export const TTS_SPEED_OPTIONS: number[] = [
