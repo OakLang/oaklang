@@ -21,9 +21,6 @@ export const useUpdateUserSettingsMutation = () => {
       }
       return { oldData };
     },
-    onSuccess: () => {
-      void utils.userSettings.getUserSettings.invalidate();
-    },
     onError: (error, _, ctx) => {
       toast("Failed to update user settings", { description: error.message });
       if (ctx?.oldData) {
