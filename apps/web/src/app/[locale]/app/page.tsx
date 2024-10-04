@@ -18,5 +18,8 @@ export default async function AppPage() {
     return redirect(OnboardingRoutes.practiceLanguage, RedirectType.replace);
   }
 
-  return redirect(`/app/${lastPracticeLang.languageCode}`);
+  return redirect(
+    `/app/${lastPracticeLang.languageCode}`,
+    RedirectType.replace,
+  );
 }
