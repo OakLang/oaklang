@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { notFound, RedirectType } from "next/navigation";
 
+import type { PracticeLanguageParams } from "~/types";
 import { redirect } from "~/i18n/routing";
 import AppStoreProvider from "~/providers/app-store-provider";
 import { HydrateClient, trpc } from "~/trpc/server";
@@ -11,10 +12,10 @@ import AppBar from "./app-bar";
 export default async function MainAppLayout({
   children,
   params,
-}: {
+}: Readonly<{
   children: ReactNode;
-  params: { practiceLanguage: string };
-}) {
+  params: PracticeLanguageParams;
+}>) {
   const nativeLanguage = await getUserNativeLanguage();
   if (!nativeLanguage) {
     return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);

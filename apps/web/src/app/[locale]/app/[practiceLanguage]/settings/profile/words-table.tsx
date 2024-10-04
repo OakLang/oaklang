@@ -1,26 +1,27 @@
+"use client";
+
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import pluralize from "pluralize";
 import { toast } from "sonner";
 
 import type { RouterInputs, RouterOutputs } from "~/trpc/react";
-import { usePersistState } from "~/hooks/useLocalStorageState";
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
-import { api } from "~/trpc/react";
-import { formatDate } from "~/utils";
-import { DataTable } from "./DataTable";
-import { DataTableColumnHeader } from "./DataTableColumnHeader";
-import { Button } from "./ui/button";
-import { Checkbox } from "./ui/checkbox";
+import { DataTable } from "~/components/DataTable";
+import { DataTableColumnHeader } from "~/components/DataTableColumnHeader";
+import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+} from "~/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
+import { api } from "~/trpc/react";
+import { formatDate } from "~/utils";
 
 type Word = RouterOutputs["words"]["getAllWords"][number];
 
@@ -39,7 +40,7 @@ const getBooleanColumnCell = (props: CellContext<Word, unknown>) => {
   return "-";
 };
 
-const WordActionButton = ({ word }: { word: Word }) => {
+function WordActionButton({ word }: { word: Word }) {
   const utils = api.useUtils();
   const practiceLanguageCode = usePracticeLanguageCode();
 
@@ -108,9 +109,9 @@ const WordActionButton = ({ word }: { word: Word }) => {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+}
 
-export const columns: ColumnDef<Word>[] = [
+const columns: ColumnDef<Word>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -264,14 +265,16 @@ export const columns: ColumnDef<Word>[] = [
   },
 ];
 
-export default function PracticeWordsManager() {
-  const practiceLanguageCode = usePracticeLanguageCode();
-  const [filter, setFilter] = usePersistState<
-    RouterInputs["words"]["getAllWords"]["filter"]
-  >("all-words-filter", "all");
+export default function WardsTable({
+  practiceLanguage,
+}: {
+  practiceLanguage: string;
+}) {
+  const [filter, setFilter] =
+    useState<RouterInputs["words"]["getAllWords"]["filter"]>("all");
 
   const allWords = api.words.getAllWords.useQuery({
-    languageCode: practiceLanguageCode,
+    languageCode: practiceLanguage,
     filter,
   });
 
@@ -288,13 +291,13 @@ export default function PracticeWordsManager() {
         ),
       );
       void allWords.refetch();
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
       void utils.languages.getPracticeLanguages.invalidate();
     },
     [
       allWords,
       markWordKnownMutation,
-      practiceLanguageCode,
+      practiceLanguage,
       utils.languages.getPracticeLanguage,
       utils.languages.getPracticeLanguages,
     ],
@@ -306,13 +309,13 @@ export default function PracticeWordsManager() {
         wordIds.map((wordId) => deleteUserWordMut.mutateAsync({ wordId })),
       );
       void allWords.refetch();
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
       void utils.languages.getPracticeLanguages.invalidate();
     },
     [
       allWords,
       deleteUserWordMut,
-      practiceLanguageCode,
+      practiceLanguage,
       utils.languages.getPracticeLanguage,
       utils.languages.getPracticeLanguages,
     ],

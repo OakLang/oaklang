@@ -1,15 +1,16 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 
+import type { TrainingSessionParams } from "~/types";
 import { HydrateClient, trpc } from "~/trpc/server";
 
 export default async function TrainingLayout({
   children,
   params,
-}: {
+}: Readonly<{
   children: ReactNode;
-  params: { trainingSessionId: string; practiceLanguage: string };
-}) {
+  params: TrainingSessionParams;
+}>) {
   const trainingSessionQuery = await trpc.trainingSessions.getTrainingSession(
     params.trainingSessionId,
   );

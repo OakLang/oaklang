@@ -10,6 +10,7 @@ import { ThemeProvider } from "next-themes";
 
 import { auth } from "@acme/auth";
 
+import type { LocaleParams } from "~/types";
 import ListenForTooltipHotkey from "~/components/ListenForTooltipHotkey";
 import { Toaster } from "~/components/ui/sonner";
 import { TooltipProvider } from "~/components/ui/tooltip";
@@ -26,18 +27,6 @@ export const metadata: Metadata = {
       : "http://localhost:3000",
   ),
   title: "Oaklang",
-  // description: "Simple monorepo with shared backend for web & mobile apps",
-  // openGraph: {
-  //   title: "Oaklang",
-  //   description: "Simple monorepo with shared backend for web & mobile apps",
-  //   url: "https://create-t3-turbo.vercel.app",
-  //   siteName: "Oaklang",
-  // },
-  // twitter: {
-  //   card: "summary_large_image",
-  //   site: "@jullerino",
-  //   creator: "@jullerino",
-  // },
 };
 
 export const viewport: Viewport = {
@@ -49,13 +38,13 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({
   children,
-  params: { locale },
-}: Readonly<{ children: React.ReactNode; params: { locale: string } }>) {
+  params,
+}: Readonly<{ children: React.ReactNode; params: LocaleParams }>) {
   const session = await auth();
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={params.locale} suppressHydrationWarning>
       <body
         className={cn(
           "bg-background text-foreground flex min-h-screen flex-col",
@@ -64,7 +53,7 @@ export default async function RootLayout({
       >
         <ListenForTooltipHotkey />
         <HolyLoader color="#2666FF" height={3} showSpinner={false} />
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider locale={params.locale} messages={messages}>
           <SessionProvider session={session}>
             <TRPCReactProvider>
               <ThemeProvider

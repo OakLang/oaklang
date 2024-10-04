@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import {
   BookOpenIcon,
   BookUserIcon,
-  HeadphonesIcon,
   LanguagesIcon,
   SettingsIcon,
   UserIcon,
@@ -46,11 +45,6 @@ export default function SideBar() {
         href: `/app/${practiceLanguage}/settings/reader`,
         name: t("reader"),
         icon: <BookOpenIcon className="h-4 w-4" />,
-      },
-      {
-        href: `/app/${practiceLanguage}/settings/audio`,
-        name: t("audio"),
-        icon: <HeadphonesIcon className="h-4 w-4" />,
       },
       {
         href: `/app/${practiceLanguage}/settings/languages`,

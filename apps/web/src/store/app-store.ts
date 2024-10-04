@@ -86,23 +86,28 @@ SENTENCE: {SENTENCE}
 `;
 
 export const initAppStore = (): AppState => {
+  if (typeof window === "undefined") {
+    return {
+      fontSize: 16,
+      generateSentencesPromptTemplate: "",
+      generateSentenceWordsPromptTemplate: "",
+      inspectedWord: null,
+      inspectionPanelOpen: false,
+    };
+  }
+
   return {
     generateSentencesPromptTemplate:
-      (typeof window !== "undefined"
-        ? localStorage.getItem("GENERATE_SENTENCES_PROMPT_TEMPLATE")
-        : null) ?? DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
+      localStorage.getItem("GENERATE_SENTENCES_PROMPT_TEMPLATE") ??
+      DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
     generateSentenceWordsPromptTemplate:
-      (typeof window !== "undefined"
-        ? localStorage.getItem("GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE")
-        : null) ?? DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
+      localStorage.getItem("GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE") ??
+      DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
     inspectedWord: null,
     inspectionPanelOpen:
-      typeof window !== "undefined"
-        ? localStorage.getItem("inspection_panel_open") === "true"
-        : false,
-    fontSize:
-      typeof window !== "undefined" && localStorage.getItem("font_size")
-        ? Number(localStorage.getItem("font_size"))
-        : 16,
+      localStorage.getItem("inspection_panel_open") === "true",
+    fontSize: localStorage.getItem("font_size")
+      ? Number(localStorage.getItem("font_size"))
+      : 16,
   };
 };
