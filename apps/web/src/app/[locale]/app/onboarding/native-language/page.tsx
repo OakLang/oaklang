@@ -17,20 +17,20 @@ export default async function OnboardingNativeLanguagePage() {
   void trpc.languages.getLanguages.prefetch();
 
   return (
-    <div className="flex flex-1 items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            What is your Native Language?
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            This will set the language of your dictionary translations.
-          </p>
-          <HydrateClient>
+    <HydrateClient>
+      <div className="flex flex-1 items-center justify-center">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+          <div className="flex flex-col text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              What is your Native Language?
+            </h1>
+            <p className="text-muted-foreground mt-2 text-sm">
+              This will set the language of your dictionary translations.
+            </p>
             <NativeLanguageForm />
-          </HydrateClient>
+          </div>
         </div>
       </div>
-    </div>
+    </HydrateClient>
   );
 }

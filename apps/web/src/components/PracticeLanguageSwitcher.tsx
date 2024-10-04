@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
+import { CheckIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { useRouter } from "~/i18n/routing";
+import type { Language } from "@acme/db/schema";
+
+import { Link } from "~/i18n/routing";
 import { api } from "~/trpc/react";
+import { cn } from "~/utils";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
@@ -21,37 +24,24 @@ import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function PracticeLanguageSwitcher({
-  practiceLanguage,
+  practiceLanguageCode,
 }: {
-  practiceLanguage: string;
+  practiceLanguageCode: string;
 }) {
   const t = useTranslations("App");
-  const practiceLanguageQuery =
-    api.languages.getPracticeLanguage.useQuery(practiceLanguage);
-  const practiceLanguages = api.languages.getPracticeLanguages.useQuery();
-  const languagesQuery = api.languages.getLanguages.useQuery();
-  const router = useRouter();
-  const utils = api.useUtils();
+  const {
+    data: practiceLanguage,
+    isPending,
+    isError,
+    error,
+  } = api.languages.getPracticeLanguage.useQuery(practiceLanguageCode);
 
-  const otherLanguages = useMemo(
-    () =>
-      languagesQuery.data?.filter(
-        (item) => !practiceLanguages.data?.find((pl) => pl.code === item.code),
-      ) ?? [],
-    [languagesQuery.data, practiceLanguages.data],
-  );
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      void utils.languages.getPracticeLanguages.invalidate();
-    }, 0);
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [practiceLanguage, utils.languages.getPracticeLanguages]);
-
-  if (!practiceLanguageQuery.isSuccess) {
+  if (isPending) {
     return <Skeleton className="h-10 w-14 rounded-full lg:w-32" />;
+  }
+
+  if (isError) {
+    return <p>{error.message}</p>;
   }
 
   return (
@@ -61,64 +51,99 @@ export default function PracticeLanguageSwitcher({
           <TooltipTrigger asChild>
             <Button variant="secondary" className="rounded-full">
               <Image
-                src={`https://hatscripts.github.io/circle-flags/flags/${practiceLanguageQuery.data.countryCode}.svg`}
-                alt={practiceLanguageQuery.data.name}
+                src={`https://hatscripts.github.io/circle-flags/flags/${practiceLanguage.countryCode}.svg`}
+                alt={practiceLanguage.name}
                 className="-ml-2 mr-2 h-6 w-6 object-cover"
                 width={24}
                 height={24}
               />
-              {practiceLanguageQuery.data.knownWords.toLocaleString()}{" "}
+              {practiceLanguage.knownWords.toLocaleString()}{" "}
               <span className="ml-1 max-lg:hidden">{t("known-words")}</span>
             </Button>
           </TooltipTrigger>
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuGroup>
-            {practiceLanguages.data?.map((item) => (
-              <DropdownMenuCheckboxItem
-                key={item.code}
-                checked={item.code === practiceLanguage}
-                onClick={() => router.push(`/app/${item.code}`)}
-              >
-                <Image
-                  src={`https://hatscripts.github.io/circle-flags/flags/${item.countryCode}.svg`}
-                  alt={item.name}
-                  className="mr-2 h-5 w-5 object-cover"
-                  width={24}
-                  height={24}
-                />
-                <span className="mr-2">{item.name}</span>
-                <span className="text-muted-foreground ml-auto">
-                  {item.knownWords}
-                </span>
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          {otherLanguages.length > 0 && (
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{t("add-a-new-language")}</DropdownMenuLabel>
-              {otherLanguages.map((item) => (
-                <DropdownMenuItem
-                  key={item.code}
-                  onClick={() => router.push(`/app/${item.code}`)}
-                >
-                  <Image
-                    src={`https://hatscripts.github.io/circle-flags/flags/${item.countryCode}.svg`}
-                    alt={item.name}
-                    className="mr-2 h-5 w-5 object-cover"
-                    width={24}
-                    height={24}
-                  />
-                  {item.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-          )}
-        </DropdownMenuContent>
+        <LanguagesDropdownContent practiceLanguageCode={practiceLanguageCode} />
       </DropdownMenu>
 
       <TooltipContent>{t("practice-language")}</TooltipContent>
     </Tooltip>
   );
 }
+
+const LanguagesDropdownContent = ({
+  practiceLanguageCode,
+}: {
+  practiceLanguageCode: string;
+}) => {
+  const t = useTranslations("App");
+
+  const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery(
+    undefined,
+    { staleTime: 0 },
+  );
+  const languagesQuery = api.languages.getLanguages.useQuery();
+
+  const otherLanguages = useMemo(
+    () =>
+      languagesQuery.data?.filter(
+        (item) =>
+          !practiceLanguagesQuery.data?.find((pl) => pl.code === item.code),
+      ) ?? [],
+    [languagesQuery.data, practiceLanguagesQuery.data],
+  );
+
+  return (
+    <DropdownMenuContent>
+      <DropdownMenuGroup>
+        {practiceLanguagesQuery.data?.map((item) => (
+          <LanguageItem
+            key={item.code}
+            lang={item}
+            checked={item.code === practiceLanguageCode}
+          />
+        ))}
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      {otherLanguages.length > 0 && (
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("add-a-new-language")}</DropdownMenuLabel>
+          {otherLanguages.map((item) => (
+            <LanguageItem
+              key={item.code}
+              lang={item}
+              checked={item.code === practiceLanguageCode}
+            />
+          ))}
+        </DropdownMenuGroup>
+      )}
+    </DropdownMenuContent>
+  );
+};
+
+const LanguageItem = ({
+  lang,
+  checked,
+}: {
+  lang: Language;
+  checked?: boolean;
+}) => {
+  return (
+    <DropdownMenuItem key={lang.code} asChild>
+      <Link href={`/app/${lang.code}`}>
+        <CheckIcon
+          className={cn("mr-2 h-4 w-4 opacity-0", {
+            "opacity-100": checked,
+          })}
+        />
+        <Image
+          src={`https://hatscripts.github.io/circle-flags/flags/${lang.countryCode}.svg`}
+          alt={lang.name}
+          className="mr-2 h-5 w-5 object-cover"
+          width={24}
+          height={24}
+        />
+        {lang.name}
+      </Link>
+    </DropdownMenuItem>
+  );
+};

@@ -1,5 +1,3 @@
-"use client";
-
 import PracticeLanguageSwitcher from "~/components/PracticeLanguageSwitcher";
 import { ThemeToggle } from "~/components/ThemeToggle";
 import UserButton from "~/components/UserButton";
@@ -17,7 +15,7 @@ export default function AppBar({
           <Link href={`/app/${practiceLanguage}`}>Oaklang</Link>
         </h1>
         <div className="flex-1" />
-        <PracticeLanguageSwitcher practiceLanguage={practiceLanguage} />
+        <PracticeLanguageSwitcher practiceLanguageCode={practiceLanguage} />
         <ThemeToggle />
         <UserButton />
       </div>

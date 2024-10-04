@@ -25,21 +25,21 @@ export default async function OnboardinPracticeLanguagePage() {
   void trpc.languages.getLanguages.prefetch();
 
   return (
-    <div className="flex flex-1 items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Which language would you like to practice?
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            You can always add more languages to practice later or change your
-            preferences at any time.
-          </p>
-          <HydrateClient>
+    <HydrateClient>
+      <div className="flex flex-1 items-center justify-center">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+          <div className="flex flex-col text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Which language would you like to practice?
+            </h1>
+            <p className="text-muted-foreground mt-2 text-sm">
+              You can always add more languages to practice later or change your
+              preferences at any time.
+            </p>
             <PracticeLanguageForm />
-          </HydrateClient>
+          </div>
         </div>
       </div>
-    </div>
+    </HydrateClient>
   );
 }
