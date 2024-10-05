@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight } from "lucide-react";
 import { signIn } from "next-auth/react";
@@ -67,6 +67,10 @@ export default function EmailSignInForm({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    form.setFocus("email");
+  }, [form]);
 
   return (
     <Form {...form}>

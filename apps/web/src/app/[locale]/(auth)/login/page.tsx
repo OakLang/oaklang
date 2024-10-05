@@ -66,14 +66,14 @@ export default async function LogInPage({
           By signing in, you agree to our{" "}
           <Link
             className="hover:text-primary underline underline-offset-4"
-            href="/terms"
+            href="/legal/terms"
           >
             Terms of Service
           </Link>{" "}
           and{" "}
           <Link
             className="hover:text-primary underline underline-offset-4"
-            href="/privacy"
+            href="/legal/privacy"
           >
             Privacy Policy
           </Link>

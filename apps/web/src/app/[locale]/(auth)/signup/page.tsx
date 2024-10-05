@@ -28,7 +28,7 @@ export default async function SignUpPage({
       <div className="mx-auto flex w-full flex-col justify-center space-y-8 sm:w-[350px]">
         <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
-            Log in to {APP_NAME}
+            Create an {APP_NAME} account
           </h1>
           <p className="text-muted-foreground text-sm">
             Already have an account?{" "}
@@ -66,14 +66,14 @@ export default async function SignUpPage({
           By signing up, you agree to our{" "}
           <Link
             className="hover:text-primary underline underline-offset-4"
-            href="/terms"
+            href="/legal/terms"
           >
             Terms of Service
           </Link>{" "}
           and{" "}
           <Link
             className="hover:text-primary underline underline-offset-4"
-            href="/privacy"
+            href="/legal/privacy"
           >
             Privacy Policy
           </Link>
