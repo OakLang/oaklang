@@ -25,19 +25,21 @@ export default function PracticeLanguageForm() {
     () => languagesQuery.data?.find((item) => item.code === languageCode),
     [languageCode, languagesQuery.data],
   );
+  const utils = api.useUtils();
 
   const router = useRouter();
 
   const handleSubmit = useCallback(
-    (e: FormEvent<HTMLFormElement>) => {
+    async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (!languageCode) {
         return;
       }
       setIsLoading(true);
+      await utils.languages.getPracticeLanguage.fetch(languageCode);
       router.push(`/app/${languageCode}`);
     },
-    [languageCode, router],
+    [languageCode, router, utils.languages.getPracticeLanguage],
   );
 
   return (

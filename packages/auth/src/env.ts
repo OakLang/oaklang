@@ -10,7 +10,6 @@ export const env = createEnv({
     AUTH_GOOGLE_SECRET: z.string().min(1),
     AUTH_SECRET: z.string().min(1),
     RESEND_API_KEY: z.string().min(1),
-    RESEND_FROM: z.string().min(1),
   },
   client: {},
   shared: {

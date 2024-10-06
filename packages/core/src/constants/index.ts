@@ -1,4 +1,7 @@
 export const APP_NAME = "Oaklang";
+export const APP_URL = "https://oaklang.com";
+export const AUTH_REQUEST_EMAIL = "auth_request@oaklang.com";
+export const SUPPORT_EMAIL = "support@oaklang.com";
 
 export const COMPLEXITY_LIST = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
@@ -25,3 +28,5 @@ export const TTS_SPEED_OPTIONS: number[] = [
 export * from "./interlinear-lines";
 export * from "./spaced-repetition-stages";
 export * from "./prompt-modes";
+
+export const NO_REPLY_EMAIL = "noreply@oaklang.com";

@@ -5,3 +5,4 @@ export * from "./training-session";
 export * from "./word";
 export * from "./sentence";
 export * from "./user-word";
+export * from "./access-request";

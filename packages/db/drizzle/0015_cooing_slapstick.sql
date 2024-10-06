@@ -1,0 +1,2 @@
+ALTER TABLE "access_request_question_option" ADD COLUMN "is_custom_answer" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "access_request_question_option" ADD COLUMN "custom_answer_placeholder_text" text;

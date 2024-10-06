@@ -5,6 +5,7 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     OPENAI_API_KEY: z.string().min(1),
+    ACCESS_REQUEST_RECEIVERS: z.string().min(1),
   },
   shared: {
     NODE_ENV: z

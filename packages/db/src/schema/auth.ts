@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import {
   boolean,
   integer,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
@@ -13,6 +14,8 @@ import { createPrefixedId } from "../utils";
 import { userSettings } from "./user-settings";
 import { userWords } from "./user-word";
 
+export const userRole = pgEnum("user_role", ["user", "admin"]);
+
 export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
@@ -22,6 +25,11 @@ export const users = pgTable("user", {
   email: text("email").notNull(),
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
+  role: userRole("role").notNull().default("user"),
+  isBlocked: boolean("is_blocked").notNull().default(false),
+  isAllowedForTesting: boolean("is_allowed_for_testing")
+    .notNull()
+    .default(false),
 });
 export type User = typeof users.$inferSelect;
 

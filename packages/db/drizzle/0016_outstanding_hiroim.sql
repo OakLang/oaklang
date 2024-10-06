@@ -1,0 +1,1 @@
+ALTER TABLE "access_request_user_respons" ALTER COLUMN "option_id" SET NOT NULL;

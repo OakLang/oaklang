@@ -27,7 +27,7 @@ export default async function OnboardingNativeLanguagePage() {
             <p className="text-muted-foreground mt-2 text-sm">
               This will set the language of your dictionary translations.
             </p>
-            <NativeLanguageForm />
+            <NativeLanguageForm nextPath={nextPath} />
           </div>
         </div>
       </div>

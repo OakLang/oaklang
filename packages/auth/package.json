@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@acme/db": "*",
+    "@acme/email": "*",
     "@acme/eslint-config": "*",
     "@acme/prettier-config": "*",
     "@acme/tsconfig": "*",
