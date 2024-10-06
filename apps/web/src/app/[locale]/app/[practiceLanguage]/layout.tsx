@@ -15,7 +15,6 @@ import {
   getUserNativeLanguage,
 } from "~/utils/queries";
 import AppBar from "./app-bar";
-import ResendEmail from "./resend-email";
 
 export default async function MainAppLayout({
   children,
@@ -58,7 +57,6 @@ export default async function MainAppLayout({
               <Button asChild variant="outline">
                 <Link href="mailto:auth_request@oaklang.com">Contact Us</Link>
               </Button>
-              <ResendEmail />
               <form
                 action={async () => {
                   "use server";
