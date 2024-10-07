@@ -1,11 +1,20 @@
-import { notFound } from "next/navigation";
+import { notFound, RedirectType } from "next/navigation";
 import { MailCheckIcon } from "lucide-react";
 
-export default function VerfiyPage({
+import { auth } from "@acme/auth";
+
+import { redirect } from "~/i18n/routing";
+
+export default async function VerfiyPage({
   searchParams,
 }: {
   searchParams: { provider?: string; type?: string };
 }) {
+  const session = await auth();
+  if (session) {
+    return redirect("/app", RedirectType.replace);
+  }
+
   if (searchParams.type === "email" && searchParams.provider === "resend") {
     return (
       <div className="flex flex-1 items-center justify-center">

@@ -1,16 +1,22 @@
 import type { ReactNode } from "react";
 
+import { auth } from "@acme/auth";
 import { CONTACT_EMAIL } from "@acme/core/constants";
 
 import FullScreenMessage from "~/components/FullScreenMessage";
 import LogoutButton from "~/components/logout-button";
 import { Button } from "~/components/ui/button";
-import { Link } from "~/i18n/routing";
+import { Link, redirect } from "~/i18n/routing";
 import { HydrateClient, trpc } from "~/trpc/server";
 import { getUser } from "~/utils/queries";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const user = await getUser();
+  const session = await auth();
+  if (!session) {
+    return redirect("/login");
+  }
+
+  const user = await getUser(session);
 
   if (!user) {
     throw new Error("User not found!");
