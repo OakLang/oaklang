@@ -18,7 +18,6 @@ const { auth } = NextAuth({
 
 const intlMiddleware = createMiddleware(routing);
 
-export default intlMiddleware;
 const matchPathname = (pages: string[], pathanme: string) => {
   return RegExp(
     `^(/(${routing.locales.join("|")}))?(${pages
@@ -28,36 +27,36 @@ const matchPathname = (pages: string[], pathanme: string) => {
   ).test(pathanme);
 };
 
-// export default auth((req) => {
-//   const isAuthorized = !!req.auth?.user.id;
+export default auth((req) => {
+  const isAuthorized = !!req.auth?.user.id;
 
-//   if (matchPathname(["/"], req.nextUrl.pathname) && isAuthorized) {
-//     return NextResponse.redirect(new URL("/app", req.url));
-//   }
+  if (matchPathname(["/"], req.nextUrl.pathname) && isAuthorized) {
+    return NextResponse.redirect(new URL("/app", req.url));
+  }
 
-//   if (matchPathname(["/app.*"], req.nextUrl.pathname) && !isAuthorized) {
-//     let callbackUrl = req.nextUrl.pathname;
-//     if (req.nextUrl.search) {
-//       callbackUrl += req.nextUrl.search;
-//     }
-//     return NextResponse.redirect(
-//       new URL(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`, req.url),
-//     );
-//   }
+  if (matchPathname(["/app.*"], req.nextUrl.pathname) && !isAuthorized) {
+    let callbackUrl = req.nextUrl.pathname;
+    if (req.nextUrl.search) {
+      callbackUrl += req.nextUrl.search;
+    }
+    return NextResponse.redirect(
+      new URL(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`, req.url),
+    );
+  }
 
-//   if (
-//     matchPathname(
-//       ["/login", "/signup", "/verify-request"],
-//       req.nextUrl.pathname,
-//     ) &&
-//     isAuthorized
-//   ) {
-//     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
-//     return NextResponse.redirect(new URL(callbackUrl ?? "/app", req.url));
-//   }
+  if (
+    matchPathname(
+      ["/login", "/signup", "/verify-request"],
+      req.nextUrl.pathname,
+    ) &&
+    isAuthorized
+  ) {
+    const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
+    return NextResponse.redirect(new URL(callbackUrl ?? "/app", req.url));
+  }
 
-//   return intlMiddleware(req);
-// });
+  return intlMiddleware(req);
+});
 
 export const config = {
   // Skip all paths that should not be internationalized
