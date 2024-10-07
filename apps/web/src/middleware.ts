@@ -1,5 +1,4 @@
 import type { VerificationToken } from "next-auth/adapters";
-import { NextResponse } from "next/server";
 import NextAuth from "next-auth";
 import createMiddleware from "next-intl/middleware";
 
@@ -18,7 +17,10 @@ const { auth } = NextAuth({
 
 const intlMiddleware = createMiddleware(routing);
 
-const matchPathname = (pages: string[], pathanme: string) => {
+const matchPathname = (pages: string | string[], pathanme: string) => {
+  if (typeof pages === "string") {
+    pages = [pages];
+  }
   return RegExp(
     `^(/(${routing.locales.join("|")}))?(${pages
       .flatMap((p) => (p === "/" ? ["", "/"] : p))
@@ -30,22 +32,23 @@ const matchPathname = (pages: string[], pathanme: string) => {
 export default auth((req) => {
   const isAuthorized = !!req.auth?.user.id;
 
-  if (matchPathname(["/"], req.nextUrl.pathname) && isAuthorized) {
-    return NextResponse.redirect(new URL("/app", req.nextUrl.origin), 307);
+  if (matchPathname("/", req.nextUrl.pathname) && isAuthorized) {
+    const url = new URL("/app", req.nextUrl.origin);
+    req.nextUrl.pathname = url.pathname;
+    req.nextUrl.search = url.search;
   }
 
-  if (matchPathname(["/app.*"], req.nextUrl.pathname) && !isAuthorized) {
+  if (matchPathname("/app.*", req.nextUrl.pathname) && !isAuthorized) {
     let callbackUrl = req.nextUrl.pathname;
     if (req.nextUrl.search) {
       callbackUrl += req.nextUrl.search;
     }
-    return NextResponse.redirect(
-      new URL(
-        `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
-        req.nextUrl.origin,
-      ),
-      307,
+    const url = new URL(
+      `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+      req.nextUrl.origin,
     );
+    req.nextUrl.pathname = url.pathname;
+    req.nextUrl.search = url.search;
   }
 
   if (
@@ -56,10 +59,9 @@ export default auth((req) => {
     isAuthorized
   ) {
     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
-    return NextResponse.redirect(
-      new URL(callbackUrl ?? "/app", req.nextUrl.origin),
-      307,
-    );
+    const url = new URL(callbackUrl ?? "/app", req.nextUrl.origin);
+    req.nextUrl.pathname = url.pathname;
+    req.nextUrl.search = url.search;
   }
 
   return intlMiddleware(req);
