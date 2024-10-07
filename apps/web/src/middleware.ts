@@ -31,7 +31,7 @@ export default auth((req) => {
   const isAuthorized = !!req.auth?.user.id;
 
   if (matchPathname(["/"], req.nextUrl.pathname) && isAuthorized) {
-    return NextResponse.redirect(new URL("/app", req.url));
+    return NextResponse.redirect(new URL("/app", req.nextUrl.origin), 307);
   }
 
   if (matchPathname(["/app.*"], req.nextUrl.pathname) && !isAuthorized) {
@@ -40,7 +40,11 @@ export default auth((req) => {
       callbackUrl += req.nextUrl.search;
     }
     return NextResponse.redirect(
-      new URL(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`, req.url),
+      new URL(
+        `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+        req.nextUrl.origin,
+      ),
+      307,
     );
   }
 
@@ -52,7 +56,10 @@ export default auth((req) => {
     isAuthorized
   ) {
     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
-    return NextResponse.redirect(new URL(callbackUrl ?? "/app", req.url));
+    return NextResponse.redirect(
+      new URL(callbackUrl ?? "/app", req.nextUrl.origin),
+      307,
+    );
   }
 
   return intlMiddleware(req);
