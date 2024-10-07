@@ -8,6 +8,7 @@ import type { PracticeLanguageParams } from "~/types";
 import FullScreenMessage from "~/components/FullScreenMessage";
 import LogoutButton from "~/components/logout-button";
 import { Button } from "~/components/ui/button";
+import UserNotFound from "~/components/user-not-found";
 import AppStoreProvider from "~/providers/app-store-provider";
 import { HydrateClient, trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
@@ -43,7 +44,7 @@ export default async function MainAppLayout({
 
   const user = await getUser();
   if (!user) {
-    throw new Error("User not found!");
+    return <UserNotFound />;
   }
 
   if (!user.isAllowedForTesting) {

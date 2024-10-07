@@ -7,13 +7,14 @@ import {
   accessRequestQuestions,
 } from "@acme/db/schema";
 
+import UserNotFound from "~/components/user-not-found";
 import { getAccessRequest, getUser } from "~/utils/queries";
 import RequestAccess from "./request-access";
 
 export default async function RequestAccessPage() {
   const user = await getUser();
   if (!user) {
-    throw new Error("User not found!");
+    return <UserNotFound />;
   }
   if (user.isAllowedForTesting) {
     redirect("/app", RedirectType.replace);

@@ -6,14 +6,14 @@ import { CONTACT_EMAIL } from "@acme/core/constants";
 import FullScreenMessage from "~/components/FullScreenMessage";
 import LogoutButton from "~/components/logout-button";
 import { Button } from "~/components/ui/button";
+import UserNotFound from "~/components/user-not-found";
 import { HydrateClient, trpc } from "~/trpc/server";
 import { getUser } from "~/utils/queries";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await getUser();
-
   if (!user) {
-    throw new Error("User not found!");
+    return <UserNotFound />;
   }
 
   if (user.isBlocked) {
