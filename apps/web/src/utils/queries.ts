@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import type { Session } from "@acme/auth";
 import { auth } from "@acme/auth";
 import { eq } from "@acme/db";
 import { db } from "@acme/db/client";
@@ -21,8 +22,17 @@ export const getUserNativeLanguage = cache(async () => {
   return row?.nativeLanguage ?? null;
 });
 
-export const getUser = cache(async (userId: string) => {
-  const [user] = await db.select().from(users).where(eq(users.id, userId));
+export const getUser = cache(async (session?: Session | null) => {
+  if (typeof session === "undefined") {
+    session = await auth();
+  }
+  if (!session) {
+    return null;
+  }
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, session.user.id));
   return user ?? null;
 });
 

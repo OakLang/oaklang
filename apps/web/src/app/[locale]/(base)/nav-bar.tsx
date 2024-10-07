@@ -12,7 +12,7 @@ export default function NavBar() {
     <header className="bg-card text-card-foreground sticky top-0 z-40 border-b">
       <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-2 px-4 md:px-8">
         <h1 className="text-lg font-semibold">
-          <Link href="/">{APP_NAME}</Link>
+          <Link href="/home">{APP_NAME}</Link>
         </h1>
         <div className="flex-1" />
         <Suspense fallback={<Skeleton className="h-10 w-32" />}>

@@ -1,15 +1,11 @@
-import { RedirectType } from "next/navigation";
+import { APP_NAME } from "@acme/core/constants";
 
-import { auth } from "@acme/auth";
-
-import { redirect } from "~/i18n/routing";
-import HomePage from "../home/page";
-
-export default async function Home() {
-  const session = await auth();
-  if (session) {
-    redirect("/app", RedirectType.replace);
-  }
-
-  return <HomePage />;
+export default function HomePage() {
+  return (
+    <div className="my-32">
+      <h1 className="text-center text-5xl font-semibold">
+        Welcome to {APP_NAME}
+      </h1>
+    </div>
+  );
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Circle, Loader2 } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { Circle } from "lucide-react";
 import { toast } from "sonner";
 
 import type {
@@ -10,10 +9,11 @@ import type {
   AccessRequestQuestionOption,
 } from "@acme/db/schema";
 
+import FullScreenLoader from "~/components/FullScreenLoader";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Textarea } from "~/components/ui/textarea";
-import { Link } from "~/i18n/routing";
+import { Link, useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 
 type QuestionWithOptions = AccessRequestQuestion & {
@@ -39,11 +39,15 @@ export default function RequestAccess({
     understandAllSecurityConsiderations,
     setUnderstandAllSecurityConsiderations,
   ] = useState(false);
+  const router = useRouter();
 
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const reqeustAccessMut = api.users.requestAccess.useMutation({
     onError: (error) => {
       toast(error.message);
+    },
+    onSuccess: () => {
+      router.replace(`/app/request-access/success`);
     },
   });
 
@@ -51,41 +55,8 @@ export default function RequestAccess({
     reqeustAccessMut.mutate({ answers });
   }, [answers, reqeustAccessMut]);
 
-  if (reqeustAccessMut.isSuccess) {
-    return (
-      <div className="flex flex-1 flex-col justify-center">
-        <div className="mx-auto my-16 w-full max-w-screen-md space-y-4 px-8">
-          <h1 className="text-2xl font-semibold">
-            Access Request Submitted Successfully!
-          </h1>
-          <p className="text-muted-foreground">
-            Thank you! Your request has been successfully submitted. Our team is
-            reviewing it, and we’ll get back to you shortly with further
-            details.
-          </p>
-          <div className="flex gap-2">
-            <Button asChild>
-              <Link href="/app">Go Home</Link>
-            </Button>
-            <form
-              action={async () => {
-                await signOut();
-              }}
-            >
-              <Button variant="outline">Log Out</Button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (reqeustAccessMut.isPending) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
+  if (reqeustAccessMut.isPending || reqeustAccessMut.isSuccess) {
+    return <FullScreenLoader />;
   }
 
   if (page < 0) {
@@ -133,7 +104,7 @@ export default function RequestAccess({
     );
   }
 
-  return <p>Done</p>;
+  return <p>Page not found!</p>;
 }
 
 function AgreementPage({

@@ -19,7 +19,7 @@ export default function OAuthProviders({
   const signInWithGoogle = useCallback(async () => {
     try {
       setLoading(true);
-      await signIn("google", { callbackUrl });
+      await signIn("google", { callbackUrl: callbackUrl ?? "/app" });
     } catch (error) {
       toast("Failed to sign in with google", {
         description: (error as Error).message,

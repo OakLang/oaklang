@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import { notFound, RedirectType } from "next/navigation";
 
-import { auth, signOut } from "@acme/auth";
+import { CONTACT_EMAIL } from "@acme/core/constants";
 
 import type { PracticeLanguageParams } from "~/types";
+import FullScreenMessage from "~/components/FullScreenMessage";
+import LogoutButton from "~/components/logout-button";
 import { Button } from "~/components/ui/button";
 import { Link, redirect } from "~/i18n/routing";
 import AppStoreProvider from "~/providers/app-store-provider";
@@ -27,77 +29,6 @@ export default async function MainAppLayout({
   if (!nativeLanguage) {
     return redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
   }
-  const session = await auth();
-  if (!session) {
-    notFound();
-  }
-
-  const user = await getUser(session.user.id);
-
-  if (!user) {
-    notFound();
-  }
-
-  if (!user.isAllowedForTesting) {
-    const accessRequest = await getAccessRequest(session.user.id);
-    if (accessRequest) {
-      return (
-        <div className="flex flex-1 flex-col justify-center">
-          <div className="mx-auto my-16 w-full max-w-screen-md space-y-4 px-8">
-            <h1 className="text-2xl font-semibold">
-              Access Request Received - Review in Progress
-            </h1>
-            <p className="text-muted-foreground">
-              Thank you for submitting your access request! Our team is
-              currently reviewing your application, and we’ll notify you as soon
-              as your request is processed. We appreciate your interest and
-              patience during this beta phase.
-            </p>
-            <div className="flex gap-2">
-              <Button asChild variant="outline">
-                <Link href="mailto:auth_request@oaklang.com">Contact Us</Link>
-              </Button>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut();
-                }}
-              >
-                <Button variant="outline">Log Out</Button>
-              </form>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="flex flex-1 flex-col justify-center">
-        <div className="mx-auto my-16 w-full max-w-screen-md space-y-4 px-8">
-          <h1 className="text-2xl font-semibold">
-            Access Needed - Request to Join Testing
-          </h1>
-          <p className="text-muted-foreground">
-            You currently do not have access to the testing phase. To
-            participate, please click the button below to request access. Our
-            team will review your request and get back to you shortly.
-          </p>
-          <div className="flex gap-2">
-            <Button asChild>
-              <Link href="/app/request-access">Request Access</Link>
-            </Button>
-            <form
-              action={async () => {
-                "use server";
-                await signOut();
-              }}
-            >
-              <Button variant="outline">Log Out</Button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   try {
     const practiceLanguage = await trpc.languages.getPracticeLanguage(
@@ -106,16 +37,50 @@ export default async function MainAppLayout({
     void trpc.languages.getPracticeLanguage.prefetch(params.practiceLanguage, {
       initialData: practiceLanguage,
     });
+  } catch (error) {
+    return notFound();
+  }
+
+  const user = await getUser();
+  if (!user) {
+    throw new Error("User not found!");
+  }
+
+  if (!user.isAllowedForTesting) {
+    const accessRequest = await getAccessRequest(user.id);
+    if (accessRequest) {
+      return (
+        <FullScreenMessage
+          title="Access Request Received - Review in Progress"
+          description="Thank you for submitting your access request! Our team is currently reviewing your application, and we’ll notify you as soon as your request is processed. We appreciate your interest and patience during this beta phase."
+        >
+          <Button asChild variant="outline">
+            <Link href={`mailto:${CONTACT_EMAIL}`}>Contact Us</Link>
+          </Button>
+          <LogoutButton />
+        </FullScreenMessage>
+      );
+    }
 
     return (
-      <HydrateClient>
-        <AppStoreProvider>
-          <AppBar practiceLanguage={params.practiceLanguage} />
-          {children}
-        </AppStoreProvider>
-      </HydrateClient>
+      <FullScreenMessage
+        title="Access Needed - Request to Join Testing"
+        description="You currently do not have access to the testing phase. To participate, please click the button below to request access. Our team will review your request and get back to you shortly."
+      >
+        <Button asChild>
+          <Link href="/app/request-access">Request Access</Link>
+        </Button>
+        <LogoutButton />
+      </FullScreenMessage>
     );
-  } catch (error) {
-    notFound();
   }
+
+  return (
+    <HydrateClient>
+      <AppStoreProvider>
+        <AppBar practiceLanguage={params.practiceLanguage} />
+        {children}
+      </AppStoreProvider>
+    </HydrateClient>
+  );
 }

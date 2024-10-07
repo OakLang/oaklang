@@ -10,7 +10,7 @@ export default function NotFound() {
     <div className="flex flex-1 flex-col items-center justify-center text-center">
       <p className="text-muted-foreground">{t("title")}</p>
       <Button asChild className="mt-4">
-        <Link href="/">{t("home")}</Link>
+        <Link href="/home">{t("home")}</Link>
       </Button>
     </div>
   );

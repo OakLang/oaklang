@@ -46,7 +46,7 @@ export default function EmailSignInForm({
       setLoading(true);
       const data = await signIn("resend", {
         email,
-        callbackUrl,
+        callbackUrl: callbackUrl ?? "/app",
         redirect: false,
       });
       console.log(data);
