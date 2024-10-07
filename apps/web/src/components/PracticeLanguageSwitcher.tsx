@@ -2,12 +2,12 @@
 
 import { useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { CheckIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { Language } from "@acme/db/schema";
 
-import { Link } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 import { Button } from "./ui/button";

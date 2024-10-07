@@ -1,12 +1,16 @@
+import { useParams } from "next/navigation";
 import * as Tabs from "@radix-ui/react-tabs";
 
-import LanguagesPage from "~/app/[locale]/app/[practiceLanguage]/settings/languages/page";
-import PreferencesPage from "~/app/[locale]/app/[practiceLanguage]/settings/preferences/page";
-import ReaderPage from "~/app/[locale]/app/[practiceLanguage]/settings/reader/page";
+import type { PracticeLanguageParams } from "~/types";
+import LanguagesPage from "~/app/app/[practiceLanguage]/settings/languages/page";
+import PreferencesPage from "~/app/app/[practiceLanguage]/settings/preferences/page";
+import ReaderPage from "~/app/app/[practiceLanguage]/settings/reader/page";
 import { cn } from "~/utils";
 import { buttonVariants } from "./ui/button";
 
 export default function AppSettings() {
+  const params = useParams<PracticeLanguageParams>();
+
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
       <div className="flex h-16 flex-shrink-0 items-center border-b px-4">
@@ -46,13 +50,13 @@ export default function AppSettings() {
         </aside>
         <div className="flex-1 overflow-y-auto">
           <Tabs.Content value="preferences">
-            <PreferencesPage />
+            <PreferencesPage params={params} />
           </Tabs.Content>
           <Tabs.Content value="reader">
-            <ReaderPage />
+            <ReaderPage params={params} />
           </Tabs.Content>
           <Tabs.Content value="languages">
-            <LanguagesPage />
+            <LanguagesPage params={params} />
           </Tabs.Content>
         </div>
       </Tabs.Root>

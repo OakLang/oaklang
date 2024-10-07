@@ -1,8 +1,4 @@
-export interface LocaleParams {
-  locale: string;
-}
-
-export interface PracticeLanguageParams extends LocaleParams {
+export interface PracticeLanguageParams extends Record<string, string> {
   practiceLanguage: string;
 }
 

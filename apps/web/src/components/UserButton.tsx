@@ -1,11 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
-import { Link } from "~/i18n/routing";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {

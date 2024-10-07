@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -33,7 +34,6 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
-import { useRouter } from "~/i18n/routing";
 import { api } from "~/trpc/react";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Textarea } from "../ui/textarea";

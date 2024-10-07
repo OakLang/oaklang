@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import Link from "next/link";
 import { ArrowRight, ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,7 +32,6 @@ import { useDoubleClick } from "~/hooks/useDoubleClick";
 import usePlayTextToSpeech from "~/hooks/usePlayTextToSpeech";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
-import { Link } from "~/i18n/routing";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
