@@ -314,7 +314,8 @@ export default function StartTrainingDialog({
 
             <DialogFooter>
               <Button disabled={startTrainingSession.isSuccess}>
-                {startTrainingSession.isPending && (
+                {(startTrainingSession.isPending ||
+                  startTrainingSession.isSuccess) && (
                   <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
                 )}
                 Start Training
