@@ -25,25 +25,25 @@
   },
   "dependencies": {
     "@acme/core": "workspace:*",
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
     "@t3-oss/env-nextjs": "^0.10.1",
     "dotenv-cli": "^7.4.2",
     "drizzle-dbml-generator": "^0.9.0",
     "drizzle-kit": "0.24.2",
     "drizzle-orm": "0.33.0",
     "drizzle-zod": "^0.5.1",
-    "esbuild-register": "^3.6.0",
-    "eslint": "^8.57.0",
     "ksuid": "^3.0.0",
-    "nanoid": "^5.0.7",
+    "next-auth": "5.0.0-beta.18",
     "postgres": "^3.4.4",
-    "prettier": "^3.3.1",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.19.0",
-    "typescript": "^5.4.5",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.1",
+    "@acme/eslint-config": "workspace:*",
+    "@acme/prettier-config": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
+    "eslint": "^8.57.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.4.5"
   },
   "prettier": "@acme/prettier-config"
 }
