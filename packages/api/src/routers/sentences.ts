@@ -1,4 +1,4 @@
-import type { LanguageModelV1 } from "ai";
+import type { LanguageModel } from "ai";
 import type { ZodString } from "zod";
 import { openai } from "@ai-sdk/openai";
 import { TRPCError } from "@trpc/server";
@@ -445,7 +445,7 @@ const getPracticeWordsList = async ({
   model,
   knownWords,
 }: {
-  model: LanguageModelV1;
+  model: LanguageModel;
   trainingSession: TrainingSession;
   session: Session;
   PRACTICE_WORDS_COUNT: number;
