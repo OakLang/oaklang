@@ -44,6 +44,7 @@ export const trainingSessionsRouter = createTRPCRouter({
           complexity: trainingSessions.complexity,
           languageCode: trainingSessions.languageCode,
           languageName: languages.name,
+          topic: trainingSessions.topic,
         })
         .from(trainingSessions)
         .innerJoin(languages, eq(languages.code, trainingSessions.languageCode))

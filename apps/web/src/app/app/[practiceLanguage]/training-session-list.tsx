@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslations } from "next-intl";
 
+import { Skeleton } from "~/components/ui/skeleton";
 import { api } from "~/trpc/react";
 
 export default function TrainingSessionList({
@@ -18,7 +19,13 @@ export default function TrainingSessionList({
     });
 
   if (isPending) {
-    return <p>Loading...</p>;
+    return (
+      <div className="grid gap-2">
+        <Skeleton className="h-32 w-full rounded-lg border" />
+        <Skeleton className="h-32 w-full rounded-lg border" />
+        <Skeleton className="h-32 w-full rounded-lg border" />
+      </div>
+    );
   }
 
   if (isError) {
@@ -26,14 +33,17 @@ export default function TrainingSessionList({
   }
 
   return (
-    <div>
+    <div className="grid gap-2">
       {data.map((item) => (
         <Link
           key={item.id}
           href={`/app/${item.languageCode}/training/${item.id}`}
-          className="hover:bg-secondary/50 block rounded-md p-4"
+          className="hover:bg-secondary bg-secondary/50 block rounded-lg border px-6 py-4 shadow-sm"
         >
-          <p>{item.title}</p>
+          <p className="font-medium">{item.title}</p>
+          <p className="text-muted-foreground text-sm">
+            Topic: {item.topic ?? "No topic"}
+          </p>
           <p className="text-muted-foreground text-sm">
             <span>
               {t("started")}{" "}

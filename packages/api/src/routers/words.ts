@@ -1,4 +1,6 @@
+import { openai } from "@ai-sdk/openai";
 import { TRPCError } from "@trpc/server";
+import { generateObject } from "ai";
 import dayjs from "dayjs";
 import ms from "ms";
 import { z } from "zod";
@@ -343,5 +345,57 @@ export const wordsRouter = createTRPCRouter({
           ),
         )
         .orderBy(asc(userWords.wordId));
+    }),
+  parseTextAndAddWordsToPracticeList: protectedProcedure
+    .input(
+      z.object({
+        text: z.string().min(1).max(1000),
+        languageCode: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const model = openai("gpt-4o", { user: ctx.session.user.id });
+      const result = await generateObject({
+        model,
+        schema: z.object({
+          lemmas: z.array(z.string()).describe("lemma list"),
+        }),
+        prompt: `Please extract all the words from the following text and return each word in its lemma form. Ensure no word is omitted, and return each lemma only once, without repetition. Once a lemma has been listed, it should not appear again. Maintain the order of their first appearance. The text is as follows:\n\n${input.text}`,
+      });
+      const uniqueWords = [...new Set(result.object.lemmas)];
+      console.log({ uniqueWords });
+      const insertedWords = await ctx.db
+        .insert(words)
+        .values(
+          uniqueWords.map(
+            (word) =>
+              ({
+                languageCode: input.languageCode,
+                word,
+              }) satisfies typeof words.$inferInsert,
+          ),
+        )
+        .onConflictDoUpdate({
+          target: [words.word, words.languageCode],
+          set: {
+            word: sql`${words.word}`,
+            languageCode: sql`${words.languageCode}`,
+          },
+        })
+        .returning();
+      const practiceWordsList = await ctx.db
+        .insert(userWords)
+        .values(
+          insertedWords.map(
+            (word) =>
+              ({
+                userId: ctx.session.user.id,
+                wordId: word.id,
+              }) satisfies typeof userWords.$inferInsert,
+          ),
+        )
+        .onConflictDoNothing()
+        .returning();
+      return practiceWordsList;
     }),
 });
