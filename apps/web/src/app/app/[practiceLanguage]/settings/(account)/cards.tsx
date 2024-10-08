@@ -186,9 +186,9 @@ export const ResetAccountCard = () => {
 export const DeleteAccountCard = () => {
   const t = useTranslations("AccountPage.deleteAccountCard");
   const deleteAccountMut = api.users.deleteAccount.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
+      await signOut();
       localStorage.clear();
-      void signOut();
     },
     onError: (error) => {
       toast("Failed to delete account", { description: error.message });

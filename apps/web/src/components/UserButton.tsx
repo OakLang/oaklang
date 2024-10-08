@@ -52,9 +52,9 @@ export default function UserButton() {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => {
+          onClick={async () => {
+            await signOut();
             localStorage.clear();
-            void signOut();
           }}
         >
           <LogOutIcon className="mr-2 h-4 w-4" />

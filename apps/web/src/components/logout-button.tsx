@@ -10,7 +10,13 @@ export default function LogoutButton({
   title?: string;
 }) {
   return (
-    <Button variant="outline" onClick={() => signOut()}>
+    <Button
+      variant="outline"
+      onClick={async () => {
+        await signOut();
+        localStorage.clear();
+      }}
+    >
       {title}
     </Button>
   );
