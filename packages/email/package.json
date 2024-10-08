@@ -20,14 +20,15 @@
     "dayjs": "^1.11.13",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "resend": "^4.0.0"
+    "resend": "^4.0.0",
+    "zod": "^3.23.8"
   },
   "prettier": "@acme/prettier-config",
   "devDependencies": {
-    "@acme/db": "*",
-    "@acme/eslint-config": "*",
-    "@acme/prettier-config": "*",
-    "@acme/tsconfig": "*",
+    "@acme/db": "workspace:*",
+    "@acme/eslint-config": "workspace:*",
+    "@acme/prettier-config": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
     "@types/ms": "^0.7.34",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",

@@ -18,11 +18,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@acme/db": "*",
-    "@acme/email": "*",
-    "@acme/eslint-config": "*",
-    "@acme/prettier-config": "*",
-    "@acme/tsconfig": "*",
+    "@acme/core": "workspace:*",
+    "@acme/db": "workspace:*",
+    "@acme/email": "workspace:*",
+    "@acme/eslint-config": "workspace:*",
+    "@acme/prettier-config": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
     "@auth/core": "0.31.0",
     "@t3-oss/env-nextjs": "^0.10.1",
     "eslint": "^8.57.0",
@@ -30,10 +31,12 @@
     "next-auth": "5.0.0-beta.18",
     "prettier": "^3.3.1",
     "react": "18.3.1",
-    "react-dom": "18.3.1",
     "resend": "^4.0.0",
     "typescript": "^5.4.5",
     "zod": "^3.23.8"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@acme/prettier-config",
+  "devDependencies": {
+    "@types/react": "^18.3.11"
+  }
 }

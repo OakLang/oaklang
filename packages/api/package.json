@@ -16,13 +16,13 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@acme/auth": "*",
-    "@acme/core": "*",
-    "@acme/db": "*",
-    "@acme/email": "*",
-    "@acme/eslint-config": "*",
-    "@acme/prettier-config": "*",
-    "@acme/tsconfig": "*",
+    "@acme/auth": "workspace:*",
+    "@acme/core": "workspace:*",
+    "@acme/db": "workspace:*",
+    "@acme/email": "workspace:*",
+    "@acme/eslint-config": "workspace:*",
+    "@acme/prettier-config": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
     "@ai-sdk/openai": "^0.0.66",
     "@t3-oss/env-nextjs": "^0.10.1",
     "@tanstack/react-query": "^5.59.0",
@@ -38,12 +38,14 @@
     "openai": "^4.49.1",
     "prettier": "^3.3.1",
     "resend": "^4.0.0",
+    "string-template": "^1.0.0",
     "superjson": "2.2.1",
     "typescript": "^5.4.5",
     "zod": "^3.23.8"
   },
   "prettier": "@acme/prettier-config",
   "devDependencies": {
-    "@types/ms": "^0.7.34"
+    "@types/ms": "^0.7.34",
+    "@types/string-template": "^1.0.6"
   }
 }

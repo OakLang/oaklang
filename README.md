@@ -14,9 +14,9 @@ psql -c "CREATE ROLE oaklang WITH LOGIN SUPERUSER PASSWORD 'oaklang';"
 psql -c "CREATE DATABASE oaklang WITH OWNER oaklang;"
 psql -d oaklang -c "CREATE EXTENSION citext;"
 cp .env.example .env
-npm i
-npm run migrate
-npm run dev
+pnpm i
+pnpm migrate
+pnpm dev
 ```
 
 ## Reset DB
@@ -26,16 +26,16 @@ psql -c 'DROP DATABASE oaklang;'
 psql -c "CREATE ROLE oaklang WITH LOGIN SUPERUSER PASSWORD 'oaklang';"
 psql -c "CREATE DATABASE oaklang WITH OWNER oaklang;"
 psql -d oaklang -c "CREATE EXTENSION citext;"
-npm run generate
-npm run migrate
-npm run seed
+pnpm generate
+pnpm migrate
+pnpm seed
 ```
 
 ## Seed
 
 ```
 Supported Languages
-npm run seed
+pnpm seed
 ```
 
 ## Tech Stack

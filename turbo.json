@@ -3,7 +3,7 @@
   "globalDependencies": ["**/.env"],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["lint", "^build"],
       "outputs": [
         "dist/**",
         ".next/**",
