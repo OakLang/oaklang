@@ -18,6 +18,7 @@
     "generate": "pnpm with-env drizzle-kit generate",
     "studio": "pnpm with-env drizzle-kit studio",
     "check": "pnpm with-env drizzle-kit check:pg",
+    "up": "pnpm with-env drizzle-kit up",
     "seed": "node --import tsx --env-file ../../.env ./src/seed.ts",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env -c --",
@@ -28,8 +29,8 @@
     "@t3-oss/env-nextjs": "^0.10.1",
     "dotenv-cli": "^7.4.2",
     "drizzle-dbml-generator": "^0.9.0",
-    "drizzle-kit": "0.24.2",
-    "drizzle-orm": "0.33.0",
+    "drizzle-kit": "0.25.0",
+    "drizzle-orm": "0.34.1",
     "drizzle-zod": "^0.5.1",
     "ksuid": "^3.0.0",
     "next-auth": "5.0.0-beta.18",
@@ -37,13 +38,13 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "prettier": "^3.3.1",
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
-    "eslint": "^8.57.0",
+    "eslint": "^8.57.1",
+    "prettier": "^3.3.3",
     "tsx": "^4.19.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.6.3"
   },
   "prettier": "@acme/prettier-config"
 }

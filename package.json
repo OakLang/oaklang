@@ -14,6 +14,7 @@
     "migrate": "pnpm --filter db migrate",
     "studio": "pnpm --filter db studio",
     "seed": "pnpm --filter db seed",
+    "dbupgrade": "pnpm --filter db up",
     "clean": "turbo run clean && git clean -xdf .turbo node_modules"
   },
   "license": "ISC",
