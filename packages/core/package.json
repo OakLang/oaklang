@@ -5,7 +5,8 @@
   "exports": {
     "./types": "./src/types/index.ts",
     "./validators": "./src/validators/index.ts",
-    "./constants": "./src/constants/index.ts"
+    "./constants": "./src/constants/index.ts",
+    "./helpers": "./src/helpers/index.ts"
   },
   "license": "MIT",
   "scripts": {

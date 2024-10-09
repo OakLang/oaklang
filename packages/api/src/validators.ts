@@ -1,7 +1,13 @@
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-import { languages, sentences, sentenceWords, words } from "@acme/db/schema";
+import {
+  languages,
+  sentences,
+  sentenceWords,
+  userWords,
+  words,
+} from "@acme/db/schema";
 
 export const languageWithStats = createSelectSchema(languages).and(
   z.object({
@@ -22,3 +28,10 @@ export const sentenceWithWords = createSelectSchema(sentences).extend({
 });
 
 export type SentenceWithWords = z.infer<typeof sentenceWithWords>;
+
+export const userWordWithWordSchema = createSelectSchema(userWords).extend({
+  word: z.string(),
+  languageCode: z.string(),
+});
+
+export type UserWordWithWord = z.infer<typeof userWordWithWordSchema>;

@@ -14,7 +14,8 @@ import { createPrefixedId } from "../utils";
 import { userSettings } from "./user-settings";
 import { userWords } from "./user-word";
 
-export const userRole = pgEnum("user_role", ["user", "admin"]);
+export const userRole = pgEnum("user_role", ["user", "power", "admin"]);
+export type UserRole = (typeof userRole.enumValues)[number];
 
 export const users = pgTable("user", {
   id: text("id")

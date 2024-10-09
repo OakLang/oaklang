@@ -6,56 +6,12 @@ import ms from "ms";
 import { z } from "zod";
 
 import { and, asc, eq, isNull, lte, not, or, sql } from "@acme/db";
-import { userWords, words } from "@acme/db/schema";
+import { languages, userWords, words } from "@acme/db/schema";
 
+import type { UserWordWithWord } from "../validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getUserSettings } from "../utils";
-
-const {
-  createdAt,
-  createdFromId,
-  dissableHideLinesCount,
-  hideLines,
-  knownAt,
-  knownFromId,
-  lastDissabledHideLinesAt,
-  lastMarkedUnknownAt,
-  lastPracticedAt,
-  lastSeenAt,
-  markedUnknownCount,
-  nextPracticeAt,
-  practiceCount,
-  seenCount,
-  seenCountSinceLastPracticed,
-  spacedRepetitionStage,
-  userId,
-  wordId,
-} = userWords;
-
-const { word, languageCode } = words;
-
-const userWordsSelect = {
-  word,
-  languageCode,
-  createdAt,
-  createdFromId,
-  dissableHideLinesCount,
-  hideLines,
-  knownAt,
-  knownFromId,
-  lastDissabledHideLinesAt,
-  lastMarkedUnknownAt,
-  lastPracticedAt,
-  lastSeenAt,
-  markedUnknownCount,
-  nextPracticeAt,
-  practiceCount,
-  seenCount,
-  seenCountSinceLastPracticed,
-  spacedRepetitionStage,
-  userId,
-  wordId,
-};
+import { userWordWithWordSchema } from "../validators";
 
 export const wordsRouter = createTRPCRouter({
   getUserWord: protectedProcedure
@@ -280,9 +236,10 @@ export const wordsRouter = createTRPCRouter({
           .default("all"),
       }),
     )
+    .output(z.array(userWordWithWordSchema))
     .query(async ({ ctx, input }) => {
-      return ctx.db
-        .select(userWordsSelect)
+      const list = await ctx.db
+        .select()
         .from(userWords)
         .innerJoin(words, eq(words.id, userWords.wordId))
         .where(
@@ -305,6 +262,11 @@ export const wordsRouter = createTRPCRouter({
           ),
         )
         .orderBy(asc(userWords.wordId));
+      return list.map(({ user_word, word }) => ({
+        ...user_word,
+        word: word.word,
+        languageCode: word.languageCode,
+      }));
     }),
   getAllPracticeWords: protectedProcedure
     .input(
@@ -312,9 +274,10 @@ export const wordsRouter = createTRPCRouter({
         languageCode: z.string(),
       }),
     )
+    .output(z.array(userWordWithWordSchema))
     .query(async ({ ctx, input }) => {
-      return ctx.db
-        .select(userWordsSelect)
+      const list = await ctx.db
+        .select()
         .from(userWords)
         .innerJoin(words, eq(words.id, userWords.wordId))
         .where(
@@ -325,6 +288,11 @@ export const wordsRouter = createTRPCRouter({
           ),
         )
         .orderBy(asc(userWords.wordId));
+      return list.map(({ user_word, word }) => ({
+        ...user_word,
+        word: word.word,
+        languageCode: word.languageCode,
+      }));
     }),
   getAllKnownWords: protectedProcedure
     .input(
@@ -332,9 +300,10 @@ export const wordsRouter = createTRPCRouter({
         languageCode: z.string(),
       }),
     )
+    .output(z.array(userWordWithWordSchema))
     .query(async ({ ctx, input }) => {
-      return ctx.db
-        .select(userWordsSelect)
+      const list = await ctx.db
+        .select()
         .from(userWords)
         .innerJoin(words, eq(words.id, userWords.wordId))
         .where(
@@ -345,25 +314,43 @@ export const wordsRouter = createTRPCRouter({
           ),
         )
         .orderBy(asc(userWords.wordId));
+      return list.map(({ user_word, word }) => ({
+        ...user_word,
+        word: word.word,
+        languageCode: word.languageCode,
+      }));
     }),
-  parseTextAndAddWordsToPracticeList: protectedProcedure
+  addWordsToPracticeListFromPieceOfText: protectedProcedure
     .input(
       z.object({
         text: z.string().min(1).max(1000),
         languageCode: z.string(),
       }),
     )
+    .output(z.array(userWordWithWordSchema))
     .mutation(async ({ ctx, input }) => {
+      const [language] = await ctx.db
+        .select()
+        .from(languages)
+        .where(eq(languages.code, input.languageCode));
+
+      if (!language) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Language not found!",
+        });
+      }
+
       const model = openai("gpt-4o", { user: ctx.session.user.id });
       const result = await generateObject({
         model,
         schema: z.object({
           lemmas: z.array(z.string()).describe("lemma list"),
         }),
-        prompt: `Please extract all the words from the following text and return each word in its lemma form. Ensure no word is omitted, and return each lemma only once, without repetition. Once a lemma has been listed, it should not appear again. Maintain the order of their first appearance. The text is as follows:\n\n${input.text}`,
+        prompt: `Please extract all the words from the following text and return each word in its lemma form in ${language.name} language. Ensure no word is omitted, and return each lemma only once, without repetition. Once a lemma has been listed, it should not appear again. Maintain the order of their first appearance. The text is as follows:\n\n${input.text}`,
       });
       const uniqueWords = [...new Set(result.object.lemmas)];
-      console.log({ uniqueWords });
+
       const insertedWords = await ctx.db
         .insert(words)
         .values(
@@ -383,6 +370,7 @@ export const wordsRouter = createTRPCRouter({
           },
         })
         .returning();
+
       const practiceWordsList = await ctx.db
         .insert(userWords)
         .values(
@@ -394,8 +382,119 @@ export const wordsRouter = createTRPCRouter({
               }) satisfies typeof userWords.$inferInsert,
           ),
         )
-        .onConflictDoNothing()
+        .onConflictDoUpdate({
+          target: [userWords.userId, userWords.wordId],
+          set: {
+            userId: sql`${userWords.userId}`,
+            wordId: sql`${userWords.wordId}`,
+          },
+        })
         .returning();
-      return practiceWordsList;
+
+      return practiceWordsList
+        .map((userWord) => {
+          const word = insertedWords.find((w) => w.id === userWord.wordId);
+          if (!word) {
+            return null;
+          }
+          return {
+            ...userWord,
+            word: word.word,
+            languageCode: word.languageCode,
+          } satisfies UserWordWithWord;
+        })
+        .filter((item) => !!item);
+    }),
+  addWordsToPracticeListFromCommaSeparatedList: protectedProcedure
+    .input(
+      z.object({
+        text: z.string().min(1).max(1000),
+        languageCode: z.string(),
+      }),
+    )
+    .output(z.array(userWordWithWordSchema))
+    .mutation(async ({ ctx, input }) => {
+      const [language] = await ctx.db
+        .select()
+        .from(languages)
+        .where(eq(languages.code, input.languageCode));
+
+      if (!language) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Language not found!",
+        });
+      }
+
+      // const model = openai("gpt-4o", { user: ctx.session.user.id });
+      // const result = await generateObject({
+      //   model,
+      //   schema: z.object({
+      //     lemmas: z.array(z.string()).describe("lemma list"),
+      //   }),
+      //   prompt: `Please extract all the words from the following text and return each word in its lemma form in ${language.name} language. Ensure no word is omitted, and return each lemma only once, without repetition. Once a lemma has been listed, it should not appear again. Maintain the order of their first appearance. The text is as follows:\n\n${input.text}`,
+      // });
+      const uniqueWords = [
+        ...new Set(
+          input.text
+            .split(",")
+            .map((item) => item.trim())
+            .filter((item) => !!item),
+        ),
+      ];
+
+      const insertedWords = await ctx.db
+        .insert(words)
+        .values(
+          uniqueWords.map(
+            (word) =>
+              ({
+                languageCode: input.languageCode,
+                word,
+              }) satisfies typeof words.$inferInsert,
+          ),
+        )
+        .onConflictDoUpdate({
+          target: [words.word, words.languageCode],
+          set: {
+            word: sql`${words.word}`,
+            languageCode: sql`${words.languageCode}`,
+          },
+        })
+        .returning();
+
+      const practiceWordsList = await ctx.db
+        .insert(userWords)
+        .values(
+          insertedWords.map(
+            (word) =>
+              ({
+                userId: ctx.session.user.id,
+                wordId: word.id,
+              }) satisfies typeof userWords.$inferInsert,
+          ),
+        )
+        .onConflictDoUpdate({
+          target: [userWords.userId, userWords.wordId],
+          set: {
+            userId: sql`${userWords.userId}`,
+            wordId: sql`${userWords.wordId}`,
+          },
+        })
+        .returning();
+
+      return practiceWordsList
+        .map((userWord) => {
+          const word = insertedWords.find((w) => w.id === userWord.wordId);
+          if (!word) {
+            return null;
+          }
+          return {
+            ...userWord,
+            word: word.word,
+            languageCode: word.languageCode,
+          } satisfies UserWordWithWord;
+        })
+        .filter((item) => !!item);
     }),
 });

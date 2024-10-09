@@ -27,24 +27,35 @@ export default auth((req) => {
   const isAuthorized = !!req.auth?.user.id;
 
   if (matchPathname("/", req.nextUrl.pathname) && isAuthorized) {
-    const redirectUrl = new URL("/app", req.nextUrl.origin);
+    const redirectUrl = new URL("/app", req.url);
     return NextResponse.redirect(redirectUrl, 307);
   }
-  if (matchPathname("/home", req.nextUrl.pathname) && isAuthorized) {
-    const rewriteUrl = new URL("/", req.nextUrl.origin);
+
+  if (matchPathname("/home", req.nextUrl.pathname)) {
+    const rewriteUrl = new URL("/", req.url);
     return NextResponse.rewrite(rewriteUrl);
   }
 
-  if (matchPathname("/app.*", req.nextUrl.pathname) && !isAuthorized) {
+  if (
+    matchPathname(["/app.*", "/admin.*"], req.nextUrl.pathname) &&
+    !isAuthorized
+  ) {
     let callbackUrl = req.nextUrl.pathname;
     if (req.nextUrl.search) {
       callbackUrl += req.nextUrl.search;
     }
     const redirectUrl = new URL(
       `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
-      req.nextUrl.origin,
+      req.url,
     );
     return NextResponse.redirect(redirectUrl, 307);
+  }
+
+  if (
+    matchPathname("/admin.*", req.nextUrl.pathname) &&
+    req.auth?.user.role !== "admin"
+  ) {
+    return NextResponse.rewrite(new URL("/not-found", req.url));
   }
 
   if (
@@ -55,7 +66,7 @@ export default auth((req) => {
     isAuthorized
   ) {
     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
-    const redirectUrl = new URL(callbackUrl ?? "/app", req.nextUrl.origin);
+    const redirectUrl = new URL(callbackUrl ?? "/app", req.url);
     return NextResponse.redirect(redirectUrl, 307);
   }
 });

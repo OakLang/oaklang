@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 import type { TTSBodyParams } from "~/app/api/ai/tts/route";
 
 export const generateAudioAsync = async ({
@@ -22,4 +24,8 @@ export const generateAudioAsync = async ({
   const buffer = await res.arrayBuffer();
   const blob = new Blob([buffer], { type: "audio/mp3" });
   return URL.createObjectURL(blob);
+};
+
+export const unimplementedToast = () => {
+  toast("Unimplemented");
 };

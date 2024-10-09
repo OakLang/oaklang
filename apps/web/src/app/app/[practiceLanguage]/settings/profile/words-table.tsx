@@ -2,11 +2,13 @@
 
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useCallback, useState } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { CheckIcon, MoreHorizontal, XIcon } from "lucide-react";
 import pluralize from "pluralize";
 import { toast } from "sonner";
 
-import type { RouterInputs, RouterOutputs } from "~/trpc/react";
+import type { UserWordWithWord } from "@acme/api/validators";
+
+import type { RouterInputs } from "~/trpc/react";
 import { DataTable } from "~/components/DataTable";
 import { DataTableColumnHeader } from "~/components/DataTableColumnHeader";
 import { Button } from "~/components/ui/button";
@@ -23,24 +25,28 @@ import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
 import { formatDate } from "~/utils";
 
-type Word = RouterOutputs["words"]["getAllWords"][number];
-
-const getDateColumCell = (props: CellContext<Word, unknown>) => {
+const getDateColumCell = (props: CellContext<UserWordWithWord, unknown>) => {
   const value = props.getValue() as Date | null;
   if (value) {
     return formatDate(value);
   }
   return "-";
 };
-const getBooleanColumnCell = (props: CellContext<Word, unknown>) => {
+const getBooleanColumnCell = (
+  props: CellContext<UserWordWithWord, unknown>,
+) => {
   const value = props.getValue() as boolean | null;
   if (value !== null) {
-    return value ? "True" : "False";
+    return value ? (
+      <CheckIcon className="h-4 w-4" />
+    ) : (
+      <XIcon className="h-4 w-4" />
+    );
   }
   return "-";
 };
 
-function WordActionButton({ word }: { word: Word }) {
+function WordActionButton({ word }: { word: UserWordWithWord }) {
   const utils = api.useUtils();
   const practiceLanguageCode = usePracticeLanguageCode();
 
@@ -111,7 +117,7 @@ function WordActionButton({ word }: { word: Word }) {
   );
 }
 
-const columns: ColumnDef<Word>[] = [
+const columns: ColumnDef<UserWordWithWord>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -334,6 +340,7 @@ export default function WardsTable({
           data={allWords.data ?? []}
           isLoading={allWords.isPending}
           filterColumn="word"
+          filterPlaceholder="Filter words..."
           persistKeyPrefix="words-data-table"
           getRowId={(row) => row.wordId}
           renderActions={({ table }) => (

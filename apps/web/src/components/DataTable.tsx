@@ -22,7 +22,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Loader2 } from "lucide-react";
-import pluralize from "pluralize";
 
 import { usePersistState } from "~/hooks/useLocalStorageState";
 import { DataTablePagination } from "./DataTablePagination";
@@ -64,7 +63,8 @@ function getCommonPinningStyles<
 interface DataTableProps<TData = Record<string, unknown>, TValue = unknown> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  filterColumn: string;
+  filterColumn?: string;
+  filterPlaceholder?: string;
   isLoading?: boolean;
   renderActions?: ({ table }: { table: TanstackTable<TData> }) => ReactNode;
   renderLoading?: ({ table }: { table: TanstackTable<TData> }) => ReactNode;
@@ -93,6 +93,7 @@ export function DataTable<TData, TValue>({
   initialState,
   renderRowSelectionActios,
   getRowId,
+  filterPlaceholder,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = usePersistState<SortingState>(
     `${persistKeyPrefix}-sorting`,
@@ -132,9 +133,9 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center py-4">
         {Object.values(rowSelection).filter(Boolean).length > 0 ? (
           (renderRowSelectionActios?.({ table }) ?? null)
-        ) : (
+        ) : filterColumn ? (
           <Input
-            placeholder={`Filter ${pluralize(filterColumn)}...`}
+            placeholder={filterPlaceholder ?? "Filter rows"}
             value={
               (table.getColumn(filterColumn)?.getFilterValue() as
                 | string
@@ -145,7 +146,7 @@ export function DataTable<TData, TValue>({
             }
             className="max-w-sm"
           />
-        )}
+        ) : null}
         <div className="flex flex-1 items-center justify-end gap-2">
           {renderActions?.({ table })}
           <DataTableViewOptions table={table} />

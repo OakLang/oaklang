@@ -23,7 +23,7 @@ export default function GrowButton() {
   const [inputText, setInputText] = useState("");
   const practiceLanguageCode = usePracticeLanguageCode();
   const parseTextAndAddWordsToPracticeListMut =
-    api.words.parseTextAndAddWordsToPracticeList.useMutation({
+    api.words.addWordsToPracticeListFromPieceOfText.useMutation({
       onSuccess: (words) => {
         toast(
           `${words.length} new ${pluralize("word", words.length)} add to your practice list.`,
