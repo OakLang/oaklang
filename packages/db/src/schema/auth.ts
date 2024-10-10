@@ -17,19 +17,17 @@ import { userWords } from "./user-word";
 export const userRole = pgEnum("user_role", ["user", "admin"]);
 
 export const users = pgTable("user", {
-  id: text("id")
+  id: text()
     .primaryKey()
     .$defaultFn(() => createPrefixedId("user")),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  name: text("name"),
-  email: text("email").notNull(),
-  emailVerified: timestamp("email_verified", { mode: "date" }),
-  image: text("image"),
-  role: userRole("role").notNull().default("user"),
-  isBlocked: boolean("is_blocked").notNull().default(false),
-  isAllowedForTesting: boolean("is_allowed_for_testing")
-    .notNull()
-    .default(false),
+  createdAt: timestamp().notNull().defaultNow(),
+  name: text(),
+  email: text().notNull(),
+  emailVerified: timestamp(),
+  image: text(),
+  role: userRole().notNull().default("user"),
+  isBlocked: boolean().notNull().default(false),
+  isAllowedForTesting: boolean().notNull().default(false),
 });
 export type User = typeof users.$inferSelect;
 
@@ -43,20 +41,20 @@ export const usersRelations = relations(users, ({ many }) => ({
 export const accounts = pgTable(
   "account",
   {
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    userId: text("user_id")
+    createdAt: timestamp().notNull().defaultNow(),
+    userId: text()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type").$type<AdapterAccountType>().notNull(),
-    provider: text("provider").notNull(),
-    providerAccountId: text("provider_account_id").notNull(),
-    refreshToken: text("refresh_token"),
-    accessToken: text("access_token"),
-    expiresAt: integer("expires_at"),
-    tokenType: text("token_type"),
-    scope: text("scope"),
-    idToken: text("id_token"),
-    sessionState: text("session_state"),
+    type: text().$type<AdapterAccountType>().notNull(),
+    provider: text().notNull(),
+    providerAccountId: text().notNull(),
+    refreshToken: text(),
+    accessToken: text(),
+    expiresAt: integer(),
+    tokenType: text(),
+    scope: text(),
+    idToken: text(),
+    sessionState: text(),
   },
   (account) => ({
     compoundKey: primaryKey({
@@ -74,12 +72,12 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 }));
 
 export const sessions = pgTable("session", {
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  sessionToken: text("session_token").primaryKey(),
-  userId: text("user_id")
+  createdAt: timestamp().notNull().defaultNow(),
+  sessionToken: text().primaryKey(),
+  userId: text()
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  expires: timestamp("expires", { mode: "date" }).notNull(),
+  expires: timestamp().notNull(),
 });
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -93,10 +91,10 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
 export const verificationTokens = pgTable(
   "verification_token",
   {
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    identifier: text("identifier").notNull(),
-    token: text("token").notNull(),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
+    createdAt: timestamp().notNull().defaultNow(),
+    identifier: text().notNull(),
+    token: text().notNull(),
+    expires: timestamp().notNull(),
   },
   (verificationToken) => ({
     compositePk: primaryKey({
@@ -108,17 +106,17 @@ export const verificationTokens = pgTable(
 export const authenticators = pgTable(
   "authenticator",
   {
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    credentialID: text("credential_id").notNull().unique(),
-    userId: text("user_id")
+    createdAt: timestamp().notNull().defaultNow(),
+    credentialID: text().notNull().unique(),
+    userId: text()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    providerAccountId: text("provider_account_id").notNull(),
-    credentialPublicKey: text("credential_public_key").notNull(),
-    counter: integer("counter").notNull(),
-    credentialDeviceType: text("credential_device_type").notNull(),
-    credentialBackedUp: boolean("credential_backed_up").notNull(),
-    transports: text("transports"),
+    providerAccountId: text().notNull(),
+    credentialPublicKey: text().notNull(),
+    counter: integer().notNull(),
+    credentialDeviceType: text().notNull(),
+    credentialBackedUp: boolean().notNull(),
+    transports: text(),
   },
   (authenticator) => ({
     compositePK: primaryKey({

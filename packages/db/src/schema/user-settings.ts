@@ -18,25 +18,25 @@ import { users } from "./auth";
 import { languages } from "./language";
 
 export const userSettings = pgTable("user_settings", {
-  id: text("id")
+  id: text()
     .primaryKey()
     .$defaultFn(() => createPrefixedId("sett")),
-  userId: text("user_id")
+  userId: text()
     .notNull()
     .unique()
     .references(() => users.id, { onDelete: "cascade" }),
-  interlinearLines: jsonb("interlinear_lines")
+  interlinearLines: jsonb()
     .$type<InterlinearLine[]>()
     .notNull()
     .default(DEFAULT_INTERLINEAR_LINES),
-  spacedRepetitionStages: jsonb("spaced_repetition_stages")
+  spacedRepetitionStages: jsonb()
     .notNull()
     .$type<SpacedRepetitionStage[]>()
     .default(DEFAULT_SPACED_REPETITION_STAGES),
-  autoPlayAudio: boolean("auto_play_audio").notNull().default(false),
-  ttsVoice: text("tts_voice").notNull().default("alloy"),
-  ttsSpeed: real("tts_speed").notNull().default(1),
-  nativeLanguage: text("native_language").references(() => languages.code, {
+  autoPlayAudio: boolean().notNull().default(false),
+  ttsVoice: text().notNull().default("alloy"),
+  ttsSpeed: real().notNull().default(1),
+  nativeLanguage: text().references(() => languages.code, {
     onDelete: "set null",
   }),
 });

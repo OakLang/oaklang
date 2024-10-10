@@ -8,13 +8,13 @@ import { userWords } from "./user-word";
 export const words = pgTable(
   "word",
   {
-    id: text("id")
+    id: text()
       .notNull()
       .primaryKey()
       .$defaultFn(() => createPrefixedId("word")),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    word: text("word").notNull(),
-    languageCode: text("language_code")
+    createdAt: timestamp().notNull().defaultNow(),
+    word: text().notNull(),
+    languageCode: text()
       .notNull()
       .references(() => languages.code, { onDelete: "cascade" }),
   },

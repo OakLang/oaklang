@@ -15,16 +15,16 @@ import { words } from "./word";
 export const sentences = pgTable(
   "sentence",
   {
-    id: text("id")
+    id: text()
       .primaryKey()
       .$defaultFn(() => createPrefixedId("sent")),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    trainingSessionId: text("training_session_id")
+    createdAt: timestamp().notNull().defaultNow(),
+    trainingSessionId: text()
       .notNull()
       .references(() => trainingSessions.id, { onDelete: "cascade" }),
-    sentence: text("sentence").notNull(),
-    translation: text("translation").notNull(),
-    index: integer("index").notNull(),
+    sentence: text().notNull(),
+    translation: text().notNull(),
+    index: integer().notNull(),
   },
   (table) => ({
     uniqueIdx: unique().on(table.trainingSessionId, table.index),
@@ -44,16 +44,14 @@ export const sentencesRelations = relations(sentences, ({ one, many }) => ({
 export const sentenceWords = pgTable(
   "sentence_word",
   {
-    sentenceId: text("sentence_id")
+    sentenceId: text()
       .notNull()
       .references(() => sentences.id, { onDelete: "cascade" }),
-    wordId: text("word_id")
+    wordId: text()
       .notNull()
       .references(() => words.id, { onDelete: "cascade" }),
-    index: integer("index").notNull(),
-    interlinearLines: jsonb("interlinear_lines")
-      .notNull()
-      .$type<Record<string, string>>(),
+    index: integer().notNull(),
+    interlinearLines: jsonb().notNull().$type<Record<string, string>>(),
   },
   (table) => ({
     uniqueIdx: unique().on(table.sentenceId, table.index),

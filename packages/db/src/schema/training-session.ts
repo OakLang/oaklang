@@ -9,22 +9,20 @@ import { languages } from "./language";
 import { sentences } from "./sentence";
 
 export const trainingSessions = pgTable("training_session", {
-  id: text("id")
+  id: text()
     .primaryKey()
     .$defaultFn(() => createPrefixedId("ts")),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  userId: text("user_id")
+  createdAt: timestamp().notNull().defaultNow(),
+  userId: text()
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  sentenceIndex: integer("sentence_index").notNull().default(0),
-  complexity: text("complexity", { enum: COMPLEXITY_LIST })
-    .notNull()
-    .default("A1"),
-  languageCode: text("language_code")
+  title: text().notNull(),
+  sentenceIndex: integer().notNull().default(0),
+  complexity: text({ enum: COMPLEXITY_LIST }).notNull().default("A1"),
+  languageCode: text()
     .notNull()
     .references(() => languages.code, { onDelete: "cascade" }),
-  topic: text("topic"),
+  topic: text(),
 });
 
 export type TrainingSession = typeof trainingSessions.$inferSelect;

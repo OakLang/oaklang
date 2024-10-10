@@ -7,4 +7,5 @@ export default {
   dialect: "postgresql",
   out: "drizzle",
   schema: "src/schema/index.ts",
+  casing: "snake_case",
 } satisfies Config;

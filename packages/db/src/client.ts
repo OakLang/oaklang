@@ -12,7 +12,8 @@ const globalForDb = globalThis as unknown as {
 
 const client = postgres(env.DATABASE_URL);
 
-export const db = globalForDb.db ?? drizzle(client, { schema });
+export const db =
+  globalForDb.db ?? drizzle(client, { schema, casing: "snake_case" });
 
 if (env.NODE_ENV !== "production") {
   globalForDb.db = db;

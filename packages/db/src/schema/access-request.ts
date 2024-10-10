@@ -12,8 +12,8 @@ import {
 import { users } from "./auth";
 
 export const accessRequests = pgTable("access_request", {
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  userId: text("user_id")
+  createdAt: timestamp().notNull().defaultNow(),
+  userId: text()
     .notNull()
     .primaryKey()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -27,11 +27,11 @@ export const accessRequestsRelations = relations(accessRequests, ({ one }) => ({
 }));
 
 export const accessRequestQuestions = pgTable("access_request_question", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  question: text("question").notNull(),
-  isMultiChoice: boolean("is_multi_choice").notNull().default(false),
-  order: integer("order").notNull().default(0),
+  id: uuid().primaryKey().defaultRandom(),
+  createdAt: timestamp().notNull().defaultNow(),
+  question: text().notNull(),
+  isMultiChoice: boolean().notNull().default(false),
+  order: integer().notNull().default(0),
 });
 
 export type AccessRequestQuestion = typeof accessRequestQuestions.$inferSelect;
@@ -39,15 +39,15 @@ export type AccessRequestQuestion = typeof accessRequestQuestions.$inferSelect;
 export const accessRequestQuestionOptions = pgTable(
   "access_request_question_option",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    questionId: uuid("question_id")
+    id: uuid().primaryKey().defaultRandom(),
+    createdAt: timestamp().notNull().defaultNow(),
+    questionId: uuid()
       .notNull()
       .references(() => accessRequestQuestions.id, { onDelete: "cascade" }),
-    option: text("option").notNull(),
-    order: integer("order").notNull().default(0),
-    isCustomAnswer: boolean("is_custom_answer").notNull().default(false),
-    customAnswerPlaceholderText: text("custom_answer_placeholder_text"),
+    option: text().notNull(),
+    order: integer().notNull().default(0),
+    isCustomAnswer: boolean().notNull().default(false),
+    customAnswerPlaceholderText: text(),
   },
 );
 
@@ -57,20 +57,20 @@ export type AccessRequestQuestionOption =
 export const accessRequestUserResponses = pgTable(
   "access_request_user_response",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    userId: text("user_id")
+    id: uuid().primaryKey().defaultRandom(),
+    createdAt: timestamp().notNull().defaultNow(),
+    userId: text()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    questionId: uuid("question_id")
+    questionId: uuid()
       .notNull()
       .references(() => accessRequestQuestions.id, { onDelete: "cascade" }),
-    optionId: uuid("option_id")
+    optionId: uuid()
       .notNull()
       .references(() => accessRequestQuestionOptions.id, {
         onDelete: "cascade",
       }),
-    customAnswer: text("custom_answer"),
+    customAnswer: text(),
   },
   (table) => ({
     uniqueIdx: unique().on(table.userId, table.questionId, table.optionId),
