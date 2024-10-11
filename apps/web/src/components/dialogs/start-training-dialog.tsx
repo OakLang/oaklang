@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, PaintbrushIcon, PlusIcon, XIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -12,6 +12,7 @@ import { createTrainingSessionInput } from "@acme/db/validators";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -35,6 +36,8 @@ import {
 } from "~/components/ui/select";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
+import { unimplementedToast } from "~/utils/helpers";
+import { Label } from "../ui/label";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Textarea } from "../ui/textarea";
 
@@ -136,21 +139,26 @@ const topics: {
 export default function StartTrainingDialog({
   open,
   onOpenChange,
+  words: initWords,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  words?: string[];
 }) {
   const practiceLanguage = usePracticeLanguageCode();
 
   const form = useForm<CreateTrainingSessionInput>({
     resolver: zodResolver(createTrainingSessionInput),
     defaultValues: {
-      complexity: "A1",
-      languageCode: practiceLanguage,
       title: "",
       topic: "",
+      complexity: "A1",
+      languageCode: practiceLanguage,
+      words: initWords ?? [],
     },
   });
+
+  const words = form.watch("words");
 
   const router = useRouter();
   const utils = api.useUtils();
@@ -178,6 +186,14 @@ export default function StartTrainingDialog({
     [startTrainingSession],
   );
 
+  const handleRemoveWord = useCallback(
+    (word: string) => {
+      const words = form.getValues("words");
+      form.setValue("words", words?.filter((w) => w !== word) ?? []);
+    },
+    [form],
+  );
+
   useEffect(() => {
     if (practiceLanguagesQuery.isSuccess) {
       form.setValue(
@@ -192,13 +208,22 @@ export default function StartTrainingDialog({
     practiceLanguagesQuery.isSuccess,
   ]);
 
+  useEffect(() => {
+    form.setValue("words", initWords ?? []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Start a new Training Session</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          onReset={() => form.reset()}
+          className="grid gap-6"
+        >
           <Form {...form}>
             <FormField
               control={form.control}
@@ -312,7 +337,69 @@ export default function StartTrainingDialog({
               )}
             />
 
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <Label>Words</Label>
+                <div className="flex flex-1 items-center justify-end gap-2">
+                  {words && words.length > 0 && (
+                    <Button
+                      type="button"
+                      onClick={() => form.setValue("words", [])}
+                      className="h-8 w-8"
+                      variant="outline"
+                      size="icon"
+                    >
+                      <PaintbrushIcon className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    className="h-8 w-8"
+                    variant="outline"
+                    size="icon"
+                    onClick={unimplementedToast}
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              {words && words.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {words.map((word) => (
+                    <div
+                      key={word}
+                      className="text-muted-foreground flex items-center gap-1 rounded-full border p-1 pl-3 text-sm"
+                    >
+                      {word}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-full"
+                        onClick={() => handleRemoveWord(word)}
+                      >
+                        <XIcon className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div>
+                  <p className="text-muted-foreground text-sm">No words...</p>
+                  <p className="text-muted-foreground text-sm">
+                    If no words are provided, we’ll automatically select words
+                    from your practice list, tailored to the topic you’ve
+                    chosen.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="ghost" type="reset">
+                  Cancel
+                </Button>
+              </DialogClose>
               <Button disabled={startTrainingSession.isSuccess}>
                 {(startTrainingSession.isPending ||
                   startTrainingSession.isSuccess) && (

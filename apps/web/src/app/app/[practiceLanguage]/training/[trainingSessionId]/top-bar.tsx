@@ -49,8 +49,9 @@ import { api } from "~/trpc/react";
 export default function TopBar() {
   const trainingSessionId = useTrainingSessionId();
   const practiceLanguage = usePracticeLanguageCode();
-  const trainingSessionQuery =
-    api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
+  const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
+    { trainingSessionId },
+  );
   const [settingsSheetOpen, setSettingsSheetOpen] = useState(false);
 
   const inspectionPanelOpen = useAppStore((state) => state.inspectionPanelOpen);

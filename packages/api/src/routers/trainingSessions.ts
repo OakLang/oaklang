@@ -1,12 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { and, count, desc, eq } from "@acme/db";
+import { and, count, desc, eq, sql } from "@acme/db";
 import {
   languages,
   practiceLanguages,
   trainingSessions,
+  trainingSessionWords,
   userWords,
+  words,
 } from "@acme/db/schema";
 import {
   createTrainingSessionInput,
@@ -18,10 +20,14 @@ import { getTrainingSessionOrThrow } from "../utils";
 
 export const trainingSessionsRouter = createTRPCRouter({
   getTrainingSession: protectedProcedure
-    .input(z.string())
+    .input(
+      z.object({
+        trainingSessionId: z.string(),
+      }),
+    )
     .query(async ({ ctx: { db, session }, input }) => {
       const trainingSession = await getTrainingSessionOrThrow(
-        input,
+        input.trainingSessionId,
         db,
         session,
       );
@@ -117,6 +123,45 @@ export const trainingSessionsRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create training session",
         });
+      }
+
+      if (opts.input.words && opts.input.words.length > 0) {
+        const insertedWords = await opts.ctx.db
+          .insert(words)
+          .values(
+            opts.input.words.map((word) => ({
+              word,
+              languageCode: opts.input.languageCode,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: [words.word, words.languageCode],
+            set: {
+              word: sql`${words.word}`,
+              languageCode: sql`${words.languageCode}`,
+            },
+          })
+          .returning({ id: words.id });
+
+        await opts.ctx.db
+          .insert(userWords)
+          .values(
+            insertedWords.map((word) => ({
+              userId: opts.ctx.session.user.id,
+              wordId: word.id,
+            })),
+          )
+          .onConflictDoNothing();
+
+        await opts.ctx.db
+          .insert(trainingSessionWords)
+          .values(
+            insertedWords.map((word) => ({
+              wordId: word.id,
+              trainingSessionId: trainingSession.id,
+            })),
+          )
+          .onConflictDoNothing();
       }
 
       return trainingSession;

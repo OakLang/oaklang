@@ -19,7 +19,7 @@
     "next/router.d.ts",
     "next/dist/client/router.d.ts"
   ],
-  "typescript.tsdk": "node_modules/typescript/lib",
+  // "typescript.tsdk": "node_modules/typescript/lib",
   "i18n-ally.localesPaths": ["apps/web/messages"], // E.g. "./messages"
   "i18n-ally.keystyle": "nested",
   "i18n-ally.editor.preferEditor": true,

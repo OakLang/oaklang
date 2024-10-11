@@ -5,13 +5,17 @@ import { trainingSessions } from "./schema/training-session";
 
 export const createTrainingSessionInput = createInsertSchema(trainingSessions, {
   title: z.string().min(1).max(100),
-  topic: z.string().min(30).max(400),
-}).pick({
-  title: true,
-  complexity: true,
-  languageCode: true,
-  topic: true,
-});
+  topic: z.string().min(1).max(400),
+})
+  .pick({
+    title: true,
+    complexity: true,
+    languageCode: true,
+    topic: true,
+  })
+  .extend({
+    words: z.array(z.string()).optional(),
+  });
 export type CreateTrainingSessionInput = z.infer<
   typeof createTrainingSessionInput
 >;

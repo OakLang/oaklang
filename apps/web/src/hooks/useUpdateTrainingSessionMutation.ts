@@ -7,11 +7,11 @@ export const useUpdateTrainingSessionMutation = () => {
 
   return api.trainingSessions.updateTrainingSession.useMutation({
     onMutate: (vars) => {
-      const oldData = utils.trainingSessions.getTrainingSession.getData(
-        vars.trainingSessionId,
-      );
+      const oldData = utils.trainingSessions.getTrainingSession.getData({
+        trainingSessionId: vars.trainingSessionId,
+      });
       utils.trainingSessions.getTrainingSession.setData(
-        vars.trainingSessionId,
+        { trainingSessionId: vars.trainingSessionId },
         (oldData) =>
           oldData
             ? {
@@ -24,7 +24,7 @@ export const useUpdateTrainingSessionMutation = () => {
     },
     onSuccess: (newData, vars) => {
       utils.trainingSessions.getTrainingSession.setData(
-        vars.trainingSessionId,
+        { trainingSessionId: vars.trainingSessionId },
         newData,
       );
     },
@@ -34,7 +34,7 @@ export const useUpdateTrainingSessionMutation = () => {
       });
       if (ctx?.oldData) {
         utils.trainingSessions.getTrainingSession.setData(
-          vars.trainingSessionId,
+          { trainingSessionId: vars.trainingSessionId },
           ctx.oldData,
         );
       }

@@ -67,7 +67,7 @@ export const sentenceWordsRelations = relations(sentenceWords, ({ one }) => ({
     fields: [sentenceWords.sentenceId],
     references: [sentences.id],
   }),
-  words: one(words, {
+  word: one(words, {
     fields: [sentenceWords.wordId],
     references: [words.id],
   }),

@@ -75,7 +75,7 @@ export default function LanguagesList({
         practiceLanguagesQuery.data.map((item, i) => {
           const isDeleting =
             deletePracticeLanguageMut.isPending &&
-            deletePracticeLanguageMut.variables === item.code;
+            deletePracticeLanguageMut.variables.languageCode === item.code;
           return (
             <Fragment key={item.code}>
               <div className="flex items-center">
@@ -113,7 +113,9 @@ export default function LanguagesList({
                     <AlertDialogFooter>
                       <AlertDialogAction
                         onClick={() =>
-                          deletePracticeLanguageMut.mutate(item.code)
+                          deletePracticeLanguageMut.mutate({
+                            languageCode: item.code,
+                          })
                         }
                       >
                         I understand, Delete my {item.name} data

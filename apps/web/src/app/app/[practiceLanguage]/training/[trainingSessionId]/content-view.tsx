@@ -48,8 +48,9 @@ export default function ContentView() {
 
   const utils = api.useUtils();
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const trainingSessionQuery =
-    api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
+  const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
+    { trainingSessionId },
+  );
   const sentencesQuery = api.sentences.getSentences.useQuery(
     { trainingSessionId },
     { enabled: trainingSessionQuery.isSuccess },

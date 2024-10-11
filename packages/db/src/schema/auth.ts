@@ -34,7 +34,8 @@ export const users = pgTable("user", {
 });
 export type User = typeof users.$inferSelect;
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
+  userSettings: one(userSettings),
   accounts: many(accounts),
   sessions: many(sessions),
   authenticators: many(authenticators),
@@ -88,7 +89,6 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
     fields: [sessions.userId],
     references: [users.id],
   }),
-  userSettings: one(userSettings),
 }));
 
 export const verificationTokens = pgTable(

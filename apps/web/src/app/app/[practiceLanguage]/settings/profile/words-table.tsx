@@ -55,7 +55,9 @@ function WordActionButton({ word }: { word: UserWordWithWord }) {
       void utils.words.getAllWords.invalidate({
         languageCode: practiceLanguageCode,
       });
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguage.invalidate({
+        languageCode: practiceLanguageCode,
+      });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     onError: (error) => toast(error.message),
@@ -66,7 +68,9 @@ function WordActionButton({ word }: { word: UserWordWithWord }) {
       void utils.words.getAllWords.invalidate({
         languageCode: practiceLanguageCode,
       });
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguage.invalidate({
+        languageCode: practiceLanguageCode,
+      });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     onError: (error) => toast(error.message),
@@ -77,7 +81,9 @@ function WordActionButton({ word }: { word: UserWordWithWord }) {
       void utils.words.getAllWords.invalidate({
         languageCode: practiceLanguageCode,
       });
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguage.invalidate({
+        languageCode: practiceLanguageCode,
+      });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     onError: (error) => toast(error.message),
@@ -297,7 +303,9 @@ export default function WardsTable({
         ),
       );
       void allWords.refetch();
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
+      void utils.languages.getPracticeLanguage.invalidate({
+        languageCode: practiceLanguage,
+      });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     [
@@ -315,7 +323,9 @@ export default function WardsTable({
         wordIds.map((wordId) => deleteUserWordMut.mutateAsync({ wordId })),
       );
       void allWords.refetch();
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
+      void utils.languages.getPracticeLanguage.invalidate({
+        languageCode: practiceLanguage,
+      });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     [

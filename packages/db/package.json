@@ -37,11 +37,11 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "prettier": "^3.3.1",
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "eslint": "^8.57.0",
+    "prettier": "^3.3.1",
     "tsx": "^4.19.1",
     "typescript": "^5.4.5"
   },

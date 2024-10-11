@@ -34,7 +34,9 @@ export default function PracticeLanguageSwitcher({
     isPending,
     isError,
     error,
-  } = api.languages.getPracticeLanguage.useQuery(practiceLanguageCode);
+  } = api.languages.getPracticeLanguage.useQuery({
+    languageCode: practiceLanguageCode,
+  });
 
   if (isPending) {
     return <Skeleton className="h-10 w-14 rounded-full lg:w-32" />;

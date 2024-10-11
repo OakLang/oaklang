@@ -57,8 +57,9 @@ export default function InterlinearView({
   const practiceLanguage = usePracticeLanguageCode();
   const [showTranslation, setShowTranslation] = useState(false);
   const trainingSessionId = useTrainingSessionId();
-  const trainingSessionQuery =
-    api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
+  const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
+    { trainingSessionId },
+  );
 
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
   const generateSentenceWordsPromptTemplate = useAppStore(
@@ -111,7 +112,9 @@ export default function InterlinearView({
           );
         }),
       );
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguage);
+      void utils.languages.getPracticeLanguage.invalidate({
+        languageCode: practiceLanguage,
+      });
       void utils.languages.getPracticeLanguages.invalidate();
       onNextSentence?.();
     } catch (error) {
@@ -136,11 +139,11 @@ export default function InterlinearView({
 
   return (
     <div ref={ref} onClick={onBodyClick} className="flex-1">
-      <p className="pointer-events-none">
+      <div className="pointer-events-none">
         {sentences.map((sentence) => (
           <SentenceItem key={sentence.id} sentence={sentence} />
         ))}
-      </p>
+      </div>
 
       <div className="pointer-events-none mt-4">
         <div className="flex flex-wrap gap-4">
@@ -240,7 +243,7 @@ const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
 
   if (sentenceWordsQuery.isPending) {
     return new Array(5).fill(0).map((_, i) => (
-      <span
+      <div
         className="mb-16 mr-4 inline-flex flex-col items-center gap-2"
         key={i}
       >
@@ -255,7 +258,7 @@ const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
             key={line.id}
           />
         ))}
-      </span>
+      </div>
     ));
   }
 
@@ -280,13 +283,13 @@ function InterlinearLineColumn({
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
 
   return (
-    <span className="mb-16 mr-4 inline-flex flex-col items-center gap-2">
+    <div className="mb-16 mr-4 inline-flex flex-col items-center gap-2">
       {userSettingsQuery.data?.interlinearLines
         .filter((line) => !line.hidden)
         .map((line) => {
-          return <InterlinearLineRow line={line} word={word} />;
+          return <InterlinearLineRow key={line.id} line={line} word={word} />;
         })}
-    </span>
+    </div>
   );
 }
 
@@ -305,7 +308,6 @@ const InterlinearLineRow = ({
   const userWordQuery = api.words.getUserWord.useQuery(
     { wordId: word.wordId },
     {
-      enabled: isPrimaryLine,
       initialData: word.userWord
         ? {
             ...word.userWord,

@@ -7,8 +7,9 @@ import ObjectDetailsList from "./ObjectDetailsList";
 
 export default function CurrentPracticeWordsPanel() {
   const trainingSessionId = useTrainingSessionId();
-  const trainingSessionQuery =
-    api.trainingSessions.getTrainingSession.useQuery(trainingSessionId);
+  const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
+    { trainingSessionId },
+  );
 
   if (trainingSessionQuery.isPending) {
     return (

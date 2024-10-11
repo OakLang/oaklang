@@ -28,7 +28,9 @@ export const useMarkWordKnownMutation = () => {
       return { oldUserWord };
     },
     onSuccess: () => {
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguage.invalidate({
+        languageCode: practiceLanguageCode,
+      });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     onError: (error, { wordId }, ctx) => {
@@ -64,7 +66,9 @@ export const useMarkWordUnknownMutation = () => {
       return { oldUserWord };
     },
     onSuccess: () => {
-      void utils.languages.getPracticeLanguage.invalidate(practiceLanguageCode);
+      void utils.languages.getPracticeLanguage.invalidate({
+        languageCode: practiceLanguageCode,
+      });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     onError: (error, { wordId }, ctx) => {

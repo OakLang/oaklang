@@ -7,7 +7,6 @@ import type { UserWordWithWord } from "@acme/api/validators";
 
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
-import { unimplementedToast } from "~/utils/helpers";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -20,6 +19,7 @@ import {
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Textarea } from "../ui/textarea";
+import StartTrainingDialog from "./start-training-dialog";
 
 export default function AddWordsToPracticeListDialog({
   open,
@@ -28,26 +28,50 @@ export default function AddWordsToPracticeListDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [showTrainigSessionDialog, setShowTrainigSessionDialog] =
+    useState(false);
   const [wordsList, setWordsList] = useState<UserWordWithWord[]>([]);
 
   useEffect(() => {
-    setWordsList([]);
+    if (open) {
+      setWordsList([]);
+    }
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        {wordsList.length > 0 ? (
-          <WordsListTable wordsList={wordsList} />
-        ) : (
-          <AddWordsToListContent onWordsListGenerated={setWordsList} />
-        )}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          {wordsList.length > 0 ? (
+            <WordsListTable
+              wordsList={wordsList}
+              onStartTraining={() => {
+                setShowTrainigSessionDialog(true);
+                onOpenChange(false);
+              }}
+            />
+          ) : (
+            <AddWordsToListContent onWordsListGenerated={setWordsList} />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <StartTrainingDialog
+        open={showTrainigSessionDialog}
+        onOpenChange={setShowTrainigSessionDialog}
+        words={wordsList.map((word) => word.word)}
+      />
+    </>
   );
 }
 
-function WordsListTable({ wordsList }: { wordsList: UserWordWithWord[] }) {
+function WordsListTable({
+  wordsList,
+  onStartTraining,
+}: {
+  wordsList: UserWordWithWord[];
+  onStartTraining?: () => void;
+}) {
   return (
     <>
       <DialogHeader>
@@ -78,7 +102,7 @@ function WordsListTable({ wordsList }: { wordsList: UserWordWithWord[] }) {
         <DialogClose asChild>
           <Button variant="secondary">Done</Button>
         </DialogClose>
-        <Button onClick={unimplementedToast}>Start Training</Button>
+        <Button onClick={onStartTraining}>Start Training</Button>
       </DialogFooter>
     </>
   );

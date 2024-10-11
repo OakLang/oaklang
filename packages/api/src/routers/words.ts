@@ -6,11 +6,11 @@ import ms from "ms";
 import { z } from "zod";
 
 import { and, asc, eq, isNull, lte, not, or, sql } from "@acme/db";
-import { languages, userWords, words } from "@acme/db/schema";
+import { userWords, words } from "@acme/db/schema";
 
 import type { UserWordWithWord } from "../validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getUserSettings } from "../utils";
+import { getLanguageOrThrow, getUserSettings } from "../utils";
 import { userWordWithWordSchema } from "../validators";
 
 export const wordsRouter = createTRPCRouter({
@@ -65,7 +65,7 @@ export const wordsRouter = createTRPCRouter({
       if (userWord.knownAt) {
         return;
       }
-      const userSettings = await getUserSettings(ctx.session.user.id, ctx.db);
+      const userSettings = await getUserSettings(ctx);
 
       const spacedRepetitionStage = userSettings.spacedRepetitionStages.find(
         (stage) => stage.iteration === userWord.spacedRepetitionStage,
@@ -329,17 +329,7 @@ export const wordsRouter = createTRPCRouter({
     )
     .output(z.array(userWordWithWordSchema))
     .mutation(async ({ ctx, input }) => {
-      const [language] = await ctx.db
-        .select()
-        .from(languages)
-        .where(eq(languages.code, input.languageCode));
-
-      if (!language) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Language not found!",
-        });
-      }
+      const language = await getLanguageOrThrow(input.languageCode, ctx.db);
 
       const model = openai("gpt-4o", { user: ctx.session.user.id });
       const result = await generateObject({
@@ -414,17 +404,7 @@ export const wordsRouter = createTRPCRouter({
     )
     .output(z.array(userWordWithWordSchema))
     .mutation(async ({ ctx, input }) => {
-      const [language] = await ctx.db
-        .select()
-        .from(languages)
-        .where(eq(languages.code, input.languageCode));
-
-      if (!language) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Language not found!",
-        });
-      }
+      // const language = await getLanguageOrThrow(input.languageCode, ctx.db);
 
       // const model = openai("gpt-4o", { user: ctx.session.user.id });
       // const result = await generateObject({

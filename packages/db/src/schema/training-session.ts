@@ -1,5 +1,11 @@
 import { relations } from "drizzle-orm";
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 import { COMPLEXITY_LIST } from "@acme/core/constants";
 
@@ -7,6 +13,7 @@ import { createPrefixedId } from "../utils";
 import { users } from "./auth";
 import { languages } from "./language";
 import { sentences } from "./sentence";
+import { words } from "./word";
 
 export const trainingSessions = pgTable("training_session", {
   id: text("id")
@@ -41,5 +48,38 @@ export const trainingSessionsRelations = relations(
       references: [languages.code],
     }),
     sentences: many(sentences),
+    trainingSessionWords: many(trainingSessionWords),
+  }),
+);
+
+export const trainingSessionWords = pgTable(
+  "training_session_word",
+  {
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    trainingSessionId: text("training_session_id")
+      .notNull()
+      .references(() => trainingSessions.id, { onDelete: "cascade" }),
+    wordId: text("word_id")
+      .notNull()
+      .references(() => words.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    compositePk: primaryKey({
+      columns: [table.trainingSessionId, table.wordId],
+    }),
+  }),
+);
+
+export const trainingSessionWordsRelations = relations(
+  trainingSessionWords,
+  ({ one }) => ({
+    trainingSession: one(trainingSessions, {
+      fields: [trainingSessionWords.trainingSessionId],
+      references: [trainingSessions.id],
+    }),
+    word: one(words, {
+      fields: [trainingSessionWords.wordId],
+      references: [words.id],
+    }),
   }),
 );

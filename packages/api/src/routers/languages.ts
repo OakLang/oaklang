@@ -1,22 +1,26 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { and, count, desc, eq } from "@acme/db";
+import { and, asc, count, desc, eq, inArray } from "@acme/db";
 import {
   languages,
   practiceLanguages,
   trainingSessions,
+  userWords,
+  words,
 } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { getKnownWordsCountForLanguage } from "../utils";
+import { getKnownWordsCountForLanguage, getLanguageOrThrow } from "../utils";
 import { languageWithStats } from "../validators";
 
 export const languagesRouter = createTRPCRouter({
-  getLanguages: publicProcedure.query(async ({ ctx: { db } }) => {
-    const languagesList = await db.select().from(languages);
-    return languagesList;
-  }),
+  getLanguages: publicProcedure.query(({ ctx: { db } }) =>
+    db.select().from(languages).orderBy(asc(languages.name)),
+  ),
+  getLanguage: publicProcedure
+    .input(z.object({ languageCode: z.string() }))
+    .query(({ ctx, input }) => getLanguageOrThrow(input.languageCode, ctx.db)),
   getPracticeLanguages: protectedProcedure
     .output(z.array(languageWithStats))
     .query(async ({ ctx }) => {
@@ -42,30 +46,11 @@ export const languagesRouter = createTRPCRouter({
         }),
       );
     }),
-  getLastPracticeLanguage: protectedProcedure.query(async ({ ctx }) => {
-    const [lang] = await ctx.db
-      .select()
-      .from(practiceLanguages)
-      .where(eq(practiceLanguages.userId, ctx.session.user.id))
-      .orderBy(desc(practiceLanguages.lastPracticed))
-      .limit(1);
-    return lang ?? null;
-  }),
   getPracticeLanguage: protectedProcedure
-    .input(z.string())
+    .input(z.object({ languageCode: z.string() }))
     .output(languageWithStats)
     .query(async ({ ctx, input }) => {
-      const [language] = await ctx.db
-        .select()
-        .from(languages)
-        .where(eq(languages.code, input));
-
-      if (!language) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Language not found!",
-        });
-      }
+      const language = await getLanguageOrThrow(input.languageCode, ctx.db);
 
       const [practiceLanguage] = await ctx.db
         .select()
@@ -116,7 +101,11 @@ export const languagesRouter = createTRPCRouter({
       };
     }),
   deletePracticeLanguage: protectedProcedure
-    .input(z.string())
+    .input(
+      z.object({
+        languageCode: z.string(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const [practiceLanguage] = await ctx.db
         .select()
@@ -127,7 +116,7 @@ export const languagesRouter = createTRPCRouter({
         )
         .where(
           and(
-            eq(practiceLanguages.languageCode, input),
+            eq(practiceLanguages.languageCode, input.languageCode),
             eq(practiceLanguages.userId, ctx.session.user.id),
           ),
         );
@@ -144,10 +133,7 @@ export const languagesRouter = createTRPCRouter({
         .from(practiceLanguages)
         .where(eq(practiceLanguages.userId, ctx.session.user.id));
 
-      if (!practiceLanguagesCount) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
-      if (practiceLanguagesCount.count <= 1) {
+      if ((practiceLanguagesCount?.count ?? 0) <= 1) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:
@@ -160,7 +146,7 @@ export const languagesRouter = createTRPCRouter({
         .delete(practiceLanguages)
         .where(
           and(
-            eq(practiceLanguages.languageCode, input),
+            eq(practiceLanguages.languageCode, input.languageCode),
             eq(practiceLanguages.userId, ctx.session.user.id),
           ),
         );
@@ -171,10 +157,38 @@ export const languagesRouter = createTRPCRouter({
         .where(
           and(
             eq(trainingSessions.userId, ctx.session.user.id),
-            eq(trainingSessions.languageCode, input),
+            eq(trainingSessions.languageCode, input.languageCode),
           ),
         );
 
+      // Delete User Words
+      const userWordsList = await ctx.db
+        .select({ id: userWords.wordId })
+        .from(userWords)
+        .innerJoin(words, eq(words.id, userWords.wordId))
+        .where(
+          and(
+            eq(userWords.userId, ctx.session.user.id),
+            eq(words.languageCode, input.languageCode),
+          ),
+        );
+
+      await ctx.db.delete(userWords).where(
+        inArray(
+          userWords.wordId,
+          userWordsList.map((word) => word.id),
+        ),
+      );
+
       return practiceLanguage;
     }),
+  getLastPracticeLanguage: protectedProcedure.query(async ({ ctx }) => {
+    const [lang] = await ctx.db
+      .select()
+      .from(practiceLanguages)
+      .where(eq(practiceLanguages.userId, ctx.session.user.id))
+      .orderBy(desc(practiceLanguages.lastPracticed))
+      .limit(1);
+    return lang ?? null;
+  }),
 });

@@ -11,16 +11,17 @@ export default async function TrainingLayout({
   children: ReactNode;
   params: TrainingSessionParams;
 }>) {
-  const trainingSessionQuery = await trpc.trainingSessions.getTrainingSession(
-    params.trainingSessionId,
-  );
+  const trainingSession = await trpc.trainingSessions.getTrainingSession({
+    trainingSessionId: params.trainingSessionId,
+  });
 
-  if (trainingSessionQuery.languageCode !== params.practiceLanguage) {
+  if (trainingSession.languageCode !== params.practiceLanguage) {
     notFound();
   }
 
   void trpc.trainingSessions.getTrainingSession.prefetch(
-    params.trainingSessionId,
+    { trainingSessionId: params.trainingSessionId },
+    { initialData: trainingSession },
   );
 
   return <HydrateClient>{children}</HydrateClient>;

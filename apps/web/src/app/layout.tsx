@@ -49,6 +49,7 @@ export default async function RootLayout({
           "bg-background text-foreground flex min-h-screen flex-col",
           inter.className,
         )}
+        suppressHydrationWarning
       >
         <ListenForTooltipHotkey />
         <HolyLoader color="#2666FF" height={3} showSpinner={false} />

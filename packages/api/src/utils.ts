@@ -2,14 +2,20 @@ import { TRPCError } from "@trpc/server";
 
 import type { Session } from "@acme/auth";
 import type { DB } from "@acme/db/client";
-import type { Word } from "@acme/db/schema";
+import type { Language, UserSettings, Word } from "@acme/db/schema";
 import { and, count, eq, isNull, not, sql } from "@acme/db";
 import {
+  languages,
   trainingSessions,
   userSettings,
   userWords,
   words,
 } from "@acme/db/schema";
+
+export interface ProtectedCtx {
+  db: DB;
+  session: Session;
+}
 
 export const getTrainingSessionOrThrow = async (
   trainingSessionId: string,
@@ -29,22 +35,43 @@ export const getTrainingSessionOrThrow = async (
   return trainingSession;
 };
 
-export const getUserSettings = async (userId: string, db: DB) => {
+export const getUserSettings = async ({ db, session }: ProtectedCtx) => {
   const [settings] = await db
     .select()
     .from(userSettings)
-    .where(eq(userSettings.userId, userId));
+    .where(eq(userSettings.userId, session.user.id));
   if (!settings) {
     const [newSettings] = await db
       .insert(userSettings)
-      .values({ userId })
+      .values({ userId: session.user.id })
       .returning();
     if (!newSettings) {
-      throw new Error("Failed to create user settings");
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to create user settings",
+      });
     }
     return newSettings;
   }
   return settings;
+};
+
+export const getNativeLanguageOrThrow = async (
+  ctx: ProtectedCtx,
+  settings?: UserSettings,
+): Promise<Language> => {
+  if (!settings) {
+    settings = await getUserSettings(ctx);
+  }
+
+  if (!settings.nativeLanguage) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "No native language found in user settings!",
+    });
+  }
+
+  return getLanguageOrThrow(settings.nativeLanguage, ctx.db);
 };
 
 export const getOrCreateWord = async (
@@ -89,4 +116,18 @@ export const getKnownWordsCountForLanguage = async (
       ),
     );
   return row?.count ?? 0;
+};
+
+export const getLanguageOrThrow = async (languageCode: string, db: DB) => {
+  const [language] = await db
+    .select()
+    .from(languages)
+    .where(eq(languages.code, languageCode));
+  if (!language) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: `No language found with code ${languageCode}`,
+    });
+  }
+  return language;
 };

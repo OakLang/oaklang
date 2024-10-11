@@ -32,12 +32,15 @@ export default async function MainAppLayout({
   }
 
   try {
-    const practiceLanguage = await trpc.languages.getPracticeLanguage(
-      params.practiceLanguage,
-    );
-    void trpc.languages.getPracticeLanguage.prefetch(params.practiceLanguage, {
-      initialData: practiceLanguage,
+    const practiceLanguage = await trpc.languages.getPracticeLanguage({
+      languageCode: params.practiceLanguage,
     });
+    void trpc.languages.getPracticeLanguage.prefetch(
+      { languageCode: params.practiceLanguage },
+      {
+        initialData: practiceLanguage,
+      },
+    );
   } catch (error) {
     notFound();
   }
