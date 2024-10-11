@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
 import type { RouterInputs } from "~/trpc/react";
+import TablePagination from "~/components/TablePagination";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -32,10 +33,12 @@ export default function AccessRequestsTable() {
     useState<RouterInputs["admin"]["users"]["getAccessRequests"]["status"]>(
       "pending",
     );
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const accessRequestsQuery = api.admin.users.getAccessRequests.useQuery({
-    page: 1,
-    size: 10,
+    page: pageIndex,
+    size: pageSize,
     status: status,
   });
 
@@ -136,6 +139,16 @@ export default function AccessRequestsTable() {
           </TableBody>
         </Table>
       </div>
+
+      {accessRequestsQuery.isSuccess && (
+        <TablePagination
+          totalCount={accessRequestsQuery.data.total}
+          onPageIndexChange={setPageIndex}
+          onPageSizeChange={setPageSize}
+          pageIndex={pageIndex}
+          pageSize={pageSize}
+        />
+      )}
     </div>
   );
 }

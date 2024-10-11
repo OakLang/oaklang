@@ -52,7 +52,9 @@ export default function TablePagination({
   return (
     <div className="flex items-center pt-4">
       <p className="text-muted-foreground flex-1 text-sm">
-        {selectedCount ?? 0} of {totalCount} row(s) selected.
+        {selectedCount
+          ? `${selectedCount} of ${totalCount} row(s) selected.`
+          : `Total ${totalCount} row(s)`}
       </p>
 
       <div className="flex items-center space-x-6 lg:space-x-8">
