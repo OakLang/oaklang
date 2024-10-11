@@ -84,7 +84,7 @@ const TableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     className={cn(
-      "group-hover/row:bg-muted bg-background group-data-[state=selected]/row:bg-muted p-4 align-middle",
+      "group-hover/row:bg-muted bg-background group-data-[state=selected]/row:bg-muted whitespace-nowrap p-4 align-middle",
       className,
     )}
     ref={ref}

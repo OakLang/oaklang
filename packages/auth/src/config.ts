@@ -3,7 +3,7 @@ import { skipCSRFCheck } from "@auth/core";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 
-import { APP_NAME, NO_REPLY_EMAIL } from "@acme/core/constants";
+import { APP_NAME } from "@acme/core/constants";
 import { resend } from "@acme/email";
 import VerificationRequest from "@acme/email/emails/verification-request";
 
@@ -20,7 +20,7 @@ export const nextAuthConfig = {
       apiKey: env.RESEND_API_KEY,
       sendVerificationRequest: async ({ url, identifier }) => {
         const { error } = await resend.emails.send({
-          from: `Sign in to ${APP_NAME} <${NO_REPLY_EMAIL}>`,
+          from: `Sign in to ${APP_NAME} <no_reply@oaklang.com>`,
           to: identifier,
           subject: `Sign in to ${APP_NAME}`,
           react: VerificationRequest({

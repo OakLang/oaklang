@@ -16,9 +16,6 @@ export default async function RequestAccessPage() {
   if (!user) {
     return <UserNotFound />;
   }
-  if (user.isAllowedForTesting) {
-    redirect("/app", RedirectType.replace);
-  }
   const accessRequest = await getAccessRequest(user.id);
   if (accessRequest) {
     redirect("/app", RedirectType.replace);

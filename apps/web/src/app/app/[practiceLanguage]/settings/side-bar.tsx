@@ -1,9 +1,4 @@
-"use client";
-
-import type { ReactNode } from "react";
 import { useMemo } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   BookOpenIcon,
   BookUserIcon,
@@ -13,24 +8,22 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "~/components/ui/button";
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
-import { cn } from "~/utils";
+import type { SideBarMenuItem } from "~/components/SideBarMenu";
+import SideBarMenu from "~/components/SideBarMenu";
 
-export default function SideBar() {
-  const practiceLanguage = usePracticeLanguageCode();
+export default function SideBar({
+  practiceLanguage,
+}: {
+  practiceLanguage: string;
+}) {
   const t = useTranslations("Settings.SideBar");
-  const pathname = usePathname();
-  const menu: {
-    href: string;
-    name: string;
-    icon: ReactNode;
-  }[] = useMemo(
+  const menu: SideBarMenuItem[] = useMemo(
     () => [
       {
         href: `/app/${practiceLanguage}/settings`,
         name: t("account"),
         icon: <UserIcon className="h-4 w-4" />,
+        exact: true,
       },
       {
         href: `/app/${practiceLanguage}/settings/profile`,
@@ -61,30 +54,7 @@ export default function SideBar() {
       <header className="flex h-14 items-center px-8">
         <h1 className="text-lg font-semibold">{t("title")}</h1>
       </header>
-
-      <nav className="grid gap-1 p-4 pt-0">
-        {menu.map((item) => {
-          const isActive = item.href === pathname;
-          return (
-            <Button
-              key={item.href}
-              asChild
-              className={cn(
-                "text-muted-foreground flex items-center justify-start text-left",
-                {
-                  "bg-secondary text-foreground": isActive,
-                },
-              )}
-              variant="ghost"
-            >
-              <Link href={item.href}>
-                <span className="-ml-1 mr-2">{item.icon}</span>
-                {item.name}
-              </Link>
-            </Button>
-          );
-        })}
-      </nav>
+      <SideBarMenu data={menu} />
     </aside>
   );
 }

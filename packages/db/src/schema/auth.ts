@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
+import { accessRequestUserResponses } from "./access-request";
 import { userSettings } from "./user-settings";
 import { userWords } from "./user-word";
 
@@ -28,9 +29,6 @@ export const users = pgTable("user", {
   image: text("image"),
   role: userRole("role").notNull().default("user"),
   isBlocked: boolean("is_blocked").notNull().default(false),
-  isAllowedForTesting: boolean("is_allowed_for_testing")
-    .notNull()
-    .default(false),
 });
 export type User = typeof users.$inferSelect;
 
@@ -40,6 +38,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
   authenticators: many(authenticators),
   practiceWords: many(userWords),
+  accessRequestUserResponses: many(accessRequestUserResponses),
 }));
 
 export const accounts = pgTable(

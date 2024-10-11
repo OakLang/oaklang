@@ -35,3 +35,8 @@ export const userWordWithWordSchema = createSelectSchema(userWords).extend({
 });
 
 export type UserWordWithWord = z.infer<typeof userWordWithWordSchema>;
+
+export const paginationBaseSchema = z.object({
+  size: z.number().min(1).max(100).optional().default(10),
+  page: z.number().optional().default(1),
+});

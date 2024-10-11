@@ -1,0 +1,1 @@
+ALTER TABLE "access_request" ADD COLUMN "reviewed_at" timestamp;

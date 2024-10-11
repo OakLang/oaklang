@@ -4,10 +4,13 @@ import type { User, UserRole } from "@acme/db/schema";
 
 import { env } from "./env";
 
+import "next-auth/jwt";
+
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      email: string;
     } & DefaultSession["user"];
   }
 

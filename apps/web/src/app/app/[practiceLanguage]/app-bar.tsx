@@ -18,7 +18,7 @@ export default function AppBar({
         <div className="flex-1" />
         <PracticeLanguageSwitcher practiceLanguageCode={practiceLanguage} />
         <ThemeToggle />
-        <UserButton />
+        <UserButton practiceLanguage={practiceLanguage} />
       </div>
     </header>
   );

@@ -50,22 +50,9 @@ export default async function MainAppLayout({
     return <UserNotFound />;
   }
 
-  if (!user.isAllowedForTesting) {
-    const accessRequest = await getAccessRequest(user.id);
-    if (accessRequest) {
-      return (
-        <FullScreenMessage
-          title="Access Request Received - Review in Progress"
-          description="Thank you for submitting your access request! Our team is currently reviewing your application, and we’ll notify you as soon as your request is processed. We appreciate your interest and patience during this beta phase."
-        >
-          <Button asChild variant="outline">
-            <Link href={`mailto:${CONTACT_EMAIL}`}>Contact Us</Link>
-          </Button>
-          <LogoutButton />
-        </FullScreenMessage>
-      );
-    }
+  const accessRequest = await getAccessRequest(user.id);
 
+  if (!accessRequest) {
     return (
       <FullScreenMessage
         title="Access Needed - Request to Join Testing"
@@ -73,6 +60,35 @@ export default async function MainAppLayout({
       >
         <Button asChild>
           <Link href="/app/request-access">Request Access</Link>
+        </Button>
+        <LogoutButton />
+      </FullScreenMessage>
+    );
+  }
+
+  if (accessRequest.status === "pending") {
+    return (
+      <FullScreenMessage
+        title="Access Request Received - Review in Progress"
+        description="Thank you for submitting your access request! Our team is currently reviewing your application, and we’ll notify you as soon as your request is processed. We appreciate your interest and patience during this beta phase."
+      >
+        <Button asChild variant="outline">
+          <Link href={`mailto:${CONTACT_EMAIL}`}>Contact Us</Link>
+        </Button>
+        <LogoutButton />
+      </FullScreenMessage>
+    );
+  }
+
+  if (accessRequest.status === "rejected") {
+    return (
+      <FullScreenMessage
+        title="Access Request Rejected"
+        description="We’re sorry, but your request has not been approved at this time.
+As we are currently offering limited access, we could not accommodate your request."
+      >
+        <Button asChild variant="outline">
+          <Link href={`mailto:${CONTACT_EMAIL}`}>Contact Us</Link>
         </Button>
         <LogoutButton />
       </FullScreenMessage>

@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   boolean,
   integer,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -11,17 +12,32 @@ import {
 
 import { users } from "./auth";
 
+export const accessRequestStatus = pgEnum("access_request_status", [
+  "pending",
+  "accepted",
+  "rejected",
+]);
+
 export const accessRequests = pgTable("access_request", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   userId: text("user_id")
     .notNull()
     .primaryKey()
     .references(() => users.id, { onDelete: "cascade" }),
+  status: accessRequestStatus("status").notNull().default("pending"),
+  reviewedBy: text("reviewed_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  reviewedAt: timestamp("reviewed_at"),
 });
 
 export const accessRequestsRelations = relations(accessRequests, ({ one }) => ({
   user: one(users, {
     fields: [accessRequests.userId],
+    references: [users.id],
+  }),
+  reviewer: one(users, {
+    fields: [accessRequests.reviewedBy],
     references: [users.id],
   }),
 }));
@@ -35,6 +51,13 @@ export const accessRequestQuestions = pgTable("access_request_question", {
 });
 
 export type AccessRequestQuestion = typeof accessRequestQuestions.$inferSelect;
+
+export const accessRequestQuestionsRelations = relations(
+  accessRequestQuestions,
+  ({ many }) => ({
+    options: many(accessRequestQuestionOptions),
+  }),
+);
 
 export const accessRequestQuestionOptions = pgTable(
   "access_request_question_option",
@@ -53,6 +76,16 @@ export const accessRequestQuestionOptions = pgTable(
 
 export type AccessRequestQuestionOption =
   typeof accessRequestQuestionOptions.$inferSelect;
+
+export const accessRequestQuestionOptionsRelations = relations(
+  accessRequestQuestionOptions,
+  ({ one }) => ({
+    question: one(accessRequestQuestions, {
+      fields: [accessRequestQuestionOptions.questionId],
+      references: [accessRequestQuestions.id],
+    }),
+  }),
+);
 
 export const accessRequestUserResponses = pgTable(
   "access_request_user_response",
@@ -79,3 +112,21 @@ export const accessRequestUserResponses = pgTable(
 
 export type AccessRequestUserResponse =
   typeof accessRequestUserResponses.$inferSelect;
+
+export const accessRequestUserResponsesRelations = relations(
+  accessRequestUserResponses,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [accessRequestUserResponses.userId],
+      references: [users.id],
+    }),
+    question: one(accessRequestQuestions, {
+      fields: [accessRequestUserResponses.questionId],
+      references: [accessRequestQuestions.id],
+    }),
+    option: one(accessRequestQuestionOptions, {
+      fields: [accessRequestUserResponses.optionId],
+      references: [accessRequestQuestionOptions.id],
+    }),
+  }),
+);

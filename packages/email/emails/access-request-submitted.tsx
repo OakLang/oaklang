@@ -1,11 +1,17 @@
 import * as React from "react";
-import { Container, Font, Head, Html, Text } from "@react-email/components";
+import {
+  Container,
+  Font,
+  Head,
+  Html,
+  Link,
+  Text,
+} from "@react-email/components";
 
 import type {
   AccessRequestQuestion,
   AccessRequestQuestionOption,
   AccessRequestUserResponse,
-  User,
 } from "@acme/db/schema";
 
 export default function AccessRequestSubmitted({
@@ -13,14 +19,8 @@ export default function AccessRequestSubmitted({
   appName = "Oaklang",
   user = {
     id: "my_id",
-    createdAt: new Date(),
     email: "name@example.com",
-    emailVerified: new Date(),
-    image: "",
     name: "Jhon Doe",
-    role: "user",
-    isAllowedForTesting: false,
-    isBlocked: false,
   },
   submittedOn = new Date(),
   agreedToPrivacyPolicy = true,
@@ -125,7 +125,11 @@ export default function AccessRequestSubmitted({
 }: {
   agreedToTermsOfServices: boolean;
   agreedToPrivacyPolicy: boolean;
-  user: User;
+  user: {
+    id: string;
+    email: string;
+    name?: string | null;
+  };
   submittedOn: Date;
   title: string;
   appName?: string;
@@ -183,10 +187,6 @@ export default function AccessRequestSubmitted({
             <span style={{ fontWeight: "bold" }}>User Email:</span> {user.email}
           </li>
           <li>
-            <span style={{ fontWeight: "bold" }}>Email Verified:</span>{" "}
-            {user.emailVerified ? "Yes" : "No"}
-          </li>
-          <li>
             <span style={{ fontWeight: "bold" }}>Submitted On:</span>{" "}
             {submittedOn.toLocaleString()}
           </li>
@@ -238,8 +238,10 @@ export default function AccessRequestSubmitted({
 
         <Text>
           Please review this request at your earliest convenience. You can
-          manage and approve requests through the admin dashboard here: Coming
-          soon....
+          manage and approve requests through the admin dashboard here:{" "}
+          <Link href={`https://oaklang.com/admin/access-requests/${user.id}`}>
+            Review Request
+          </Link>
         </Text>
 
         <Text>Thank you for your attention to this request.</Text>

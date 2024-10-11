@@ -1,3 +1,4 @@
+import { adminRouter } from "./routers/admin";
 import { languagesRouter } from "./routers/languages";
 import { sentencesRouter } from "./routers/sentences";
 import { trainingSessionsRouter } from "./routers/trainingSessions";
@@ -18,6 +19,7 @@ export const appRouter = createTRPCRouter({
   words: wordsRouter,
   sentences: sentencesRouter,
   userSettings: userSettingsRouter,
+  admin: adminRouter,
 });
 
 // export type definition of API

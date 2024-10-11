@@ -30,4 +30,4 @@ export * from "./interlinear-lines";
 export * from "./spaced-repetition-stages";
 export * from "./prompt-modes";
 
-export const NO_REPLY_EMAIL = "noreply@oaklang.com";
+export const NO_REPLY_EMAIL = `${APP_NAME} <no_reply@oaklang.com>`;

@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
+import { LayoutIcon, LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -17,8 +16,11 @@ import {
 } from "./ui/dropdown-menu";
 import { Skeleton } from "./ui/skeleton";
 
-export default function UserButton() {
-  const practiceLanguage = usePracticeLanguageCode();
+export default function UserButton({
+  practiceLanguage,
+}: {
+  practiceLanguage?: string;
+}) {
   const t = useTranslations("App");
   const { data, status } = useSession();
 
@@ -43,13 +45,25 @@ export default function UserButton() {
           <p className="text-muted-foreground text-sm">{t("signed-in-as")}</p>
           <p className="font-medium">{data.user.email}</p>
         </div>
+
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={`/app/${practiceLanguage}/settings`}>
-            <SettingsIcon className="mr-2 h-4 w-4" />
-            {t("settings")}
+          <Link href="/app">
+            <LayoutIcon className="mr-2 h-4 w-4" />
+            Dashboard
           </Link>
         </DropdownMenuItem>
+        {practiceLanguage && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href={`/app/${practiceLanguage}/settings`}>
+                <SettingsIcon className="mr-2 h-4 w-4" />
+                {t("settings")}
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={async () => {

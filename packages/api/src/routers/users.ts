@@ -119,12 +119,15 @@ export const usersRouter = createTRPCRouter({
 
       const { error: accessRequestReceivedEmailError } =
         await resend.emails.send({
-          from: `${APP_NAME} <${NO_REPLY_EMAIL}>`,
+          from: NO_REPLY_EMAIL,
           to: user.email,
           subject: "Access Request Received - We’ll Get Back to You Soon!",
           react: AccessRequestReceived({
             title: "Access Request Received - We’ll Get Back to You Soon!",
-            name: user.name ?? user.email,
+            name:
+              user.name ??
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              user.email.split("@")[0]!,
             appName: APP_NAME,
             appUrl: APP_URL,
             supportEmail: AUTH_REQUEST_EMAIL,
@@ -137,31 +140,14 @@ export const usersRouter = createTRPCRouter({
           message: accessRequestReceivedEmailError.message,
         });
       }
-      await sendRequestSubmittedEmailToReceivers({ db: ctx.db, user });
+      await sendRequestSubmittedEmailToReceivers(user, ctx.db);
     }),
-  testReceiverEmail: protectedProcedure.mutation(async ({ ctx }) => {
-    const [user] = await ctx.db
-      .select()
-      .from(users)
-      .where(eq(users.id, ctx.session.user.id));
-    if (!user) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "User not found!" });
-    }
-    await sendRequestSubmittedEmailToReceivers({ db: ctx.db, user });
-  }),
 });
 
-const sendRequestSubmittedEmailToReceivers = async ({
-  db,
-  user,
-}: {
-  db: DB;
-  user: User;
-}) => {
+const sendRequestSubmittedEmailToReceivers = async (user: User, db: DB) => {
   const accessRequestReceivers = env.ACCESS_REQUEST_RECEIVERS.split(",").map(
     (email) => email.trim(),
   );
-  console.log({ accessRequestReceivers });
   const questions = await db.select().from(accessRequestQuestions);
 
   const questionsAnswers = await Promise.all(
@@ -192,18 +178,22 @@ const sendRequestSubmittedEmailToReceivers = async ({
     }),
   );
 
-  console.log(questionsAnswers);
+  const subject = `New Access Request Submitted by ${user.email}`;
 
   await resend.emails.send({
-    from: `${APP_NAME} <${NO_REPLY_EMAIL}>`,
+    from: NO_REPLY_EMAIL,
     to: accessRequestReceivers,
-    subject: `New Access Request Submitted by ${user.email}`,
+    subject,
     react: AccessRequestSubmitted({
       agreedToPrivacyPolicy: true,
       agreedToTermsOfServices: true,
       submittedOn: new Date(),
-      title: `New Access Request Submitted by ${user.email}`,
-      user,
+      title: subject,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
       appName: APP_NAME,
       appUrl: APP_URL,
       questionsAnswers,
