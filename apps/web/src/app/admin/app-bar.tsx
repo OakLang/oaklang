@@ -16,7 +16,7 @@ export default function AppBar({
   backHref?: string;
 }) {
   return (
-    <header className="sticky top-0 flex h-16 items-center border-b px-4">
+    <header className="bg-background sticky top-0 z-20 flex h-16 items-center border-b px-4">
       {backHref && (
         <Button asChild size="icon" variant="ghost" className="mr-4">
           <Link href={backHref}>

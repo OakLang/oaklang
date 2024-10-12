@@ -30,17 +30,18 @@ import { formatDate } from "~/utils";
 
 export default function AccessRequestsTable() {
   const [status, setStatus] =
-    useState<RouterInputs["admin"]["users"]["getAccessRequests"]["status"]>(
-      "pending",
-    );
+    useState<
+      RouterInputs["admin"]["accessRequests"]["getAccessRequests"]["status"]
+    >("pending");
   const [pageIndex, setPageIndex] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const accessRequestsQuery = api.admin.users.getAccessRequests.useQuery({
-    page: pageIndex,
-    size: pageSize,
-    status: status,
-  });
+  const accessRequestsQuery =
+    api.admin.accessRequests.getAccessRequests.useQuery({
+      page: pageIndex,
+      size: pageSize,
+      status: status,
+    });
 
   return (
     <div>
@@ -50,7 +51,7 @@ export default function AccessRequestsTable() {
           value={status}
           onValueChange={(value) =>
             setStatus(
-              value as RouterInputs["admin"]["users"]["getAccessRequests"]["status"],
+              value as RouterInputs["admin"]["accessRequests"]["getAccessRequests"]["status"],
             )
           }
         >

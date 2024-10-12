@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CheckIcon, MoreHorizontalIcon, UserIcon, XIcon } from "lucide-react";
 
 import TablePagination from "~/components/TablePagination";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { Input } from "~/components/ui/input";
 import {
   Table,
@@ -106,13 +113,22 @@ export default function UsersTable() {
                       boxShadow: "1px 0 0 hsl(var(--border)) inset",
                     }}
                   >
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={unimplementedToast}
-                    >
-                      <MoreHorizontalIcon className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={unimplementedToast}
+                        >
+                          <MoreHorizontalIcon className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/users/${user.id}`}>View</Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
