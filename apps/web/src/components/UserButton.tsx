@@ -47,6 +47,14 @@ export default function UserButton({
         </div>
 
         <DropdownMenuSeparator />
+        {data.user.role === "admin" && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin">
+              <LayoutIcon className="mr-2 h-4 w-4" />
+              Admin
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem asChild>
           <Link href="/app">
             <LayoutIcon className="mr-2 h-4 w-4" />
