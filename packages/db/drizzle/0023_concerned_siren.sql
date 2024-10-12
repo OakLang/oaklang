@@ -1,0 +1,1 @@
+ALTER TABLE "user" DROP COLUMN IF EXISTS "is_allowed_for_testing";
