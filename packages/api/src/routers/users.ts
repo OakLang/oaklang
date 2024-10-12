@@ -25,7 +25,6 @@ import { resend } from "@acme/email";
 import AccessRequestReceived from "@acme/email/emails/access-request-received";
 import AccessRequestSubmitted from "@acme/email/emails/access-request-submitted";
 
-import { env } from "../env";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 export const usersRouter = createTRPCRouter({
@@ -145,9 +144,11 @@ export const usersRouter = createTRPCRouter({
 });
 
 const sendRequestSubmittedEmailToReceivers = async (user: User, db: DB) => {
-  const accessRequestReceivers = env.ACCESS_REQUEST_RECEIVERS.split(",").map(
-    (email) => email.trim(),
-  );
+  const adminUsers = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.role, "admin"));
+
   const questions = await db.select().from(accessRequestQuestions);
 
   const questionsAnswers = await Promise.all(
@@ -182,7 +183,7 @@ const sendRequestSubmittedEmailToReceivers = async (user: User, db: DB) => {
 
   await resend.emails.send({
     from: NO_REPLY_EMAIL,
-    to: accessRequestReceivers,
+    to: adminUsers.map((user) => user.email),
     subject,
     react: AccessRequestSubmitted({
       agreedToPrivacyPolicy: true,

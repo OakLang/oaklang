@@ -39,8 +39,7 @@
     "AUTH_TRUST_HOST",
     "PORT",
     "OPENAI_API_KEY",
-    "RESEND_API_KEY",
-    "ACCESS_REQUEST_RECEIVERS"
+    "RESEND_API_KEY"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
