@@ -27,8 +27,8 @@ export default async function AdminOverviewPage() {
 
   const [totalUsers, totalTesters, pendingAccessRequests] = await Promise.all([
     totalUsersPromise,
-    pendingAccessRequestsPromise,
     totalTestersPromise,
+    pendingAccessRequestsPromise,
   ]);
 
   return (
