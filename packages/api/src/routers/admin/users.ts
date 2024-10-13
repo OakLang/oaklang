@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { and, count, desc, eq, ilike, or } from "@acme/db";
-import { users } from "@acme/db/schema";
+import { userRole, users } from "@acme/db/schema";
 
 import { adminProcedure, createTRPCRouter } from "../../trpc";
 import { paginationBaseSchema } from "../../validators";
@@ -119,6 +119,34 @@ export const usersRouter = createTRPCRouter({
         .update(users)
         .set({
           isBlocked: false,
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+
+      if (!updatedUser) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+
+      return { ...updatedUser };
+    }),
+  changeRole: adminProcedure
+    .input(z.object({ userId: z.string(), role: z.enum(userRole.enumValues) }))
+    .mutation(async ({ ctx, input }) => {
+      const [user] = await ctx.db
+        .select()
+        .from(users)
+        .where(eq(users.id, input.userId));
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `No user found with id ${input.userId}`,
+        });
+      }
+
+      const [updatedUser] = await ctx.db
+        .update(users)
+        .set({
+          role: input.role,
         })
         .where(eq(users.id, user.id))
         .returning();

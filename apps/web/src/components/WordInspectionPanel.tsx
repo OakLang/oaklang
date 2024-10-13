@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { CheckIcon, FilterIcon, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import type { SentenceWord } from "@acme/db/schema";
+import { hasPowerUserAccess } from "@acme/core/helpers";
 
 import {
   useMarkWordKnownMutation,
@@ -24,6 +26,12 @@ import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
+  const { data } = useSession();
+  const isPowerUser = useMemo(
+    () => hasPowerUserAccess(data?.user.role),
+    [data?.user.role],
+  );
+
   const openWindow = (url: string, target: string) => {
     window.open(url, target, "width=720,height=480");
   };
@@ -189,37 +197,39 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
           />
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center px-4">
-            <h2 className="text-lg font-semibold">Word (for test purpose)</h2>
+        {isPowerUser && (
+          <div className="space-y-4">
+            <div className="flex items-center px-4">
+              <h2 className="text-lg font-semibold">Word (for test purpose)</h2>
+            </div>
+            <ObjectDetailsList
+              data={{
+                Id: userWordQuery.data.wordId,
+                Word: userWordQuery.data.word.word,
+                "Language Code": userWordQuery.data.word.languageCode,
+                "Known At": userWordQuery.data.knownAt
+                  ? formatDate(userWordQuery.data.knownAt)
+                  : null,
+                "Last Seen At": userWordQuery.data.lastSeenAt
+                  ? formatDate(userWordQuery.data.lastSeenAt)
+                  : null,
+                "Last Practiced At": userWordQuery.data.lastPracticedAt
+                  ? formatDate(userWordQuery.data.lastPracticedAt)
+                  : null,
+                "Next Practice At": userWordQuery.data.nextPracticeAt
+                  ? formatDate(userWordQuery.data.nextPracticeAt)
+                  : null,
+                "Seen Count": userWordQuery.data.seenCount.toLocaleString(),
+                "Practice Count":
+                  userWordQuery.data.practiceCount.toLocaleString(),
+                "Seen Count Since Last Practiced":
+                  userWordQuery.data.seenCountSinceLastPracticed.toLocaleString(),
+                "Spaced Repetition Stage":
+                  userWordQuery.data.spacedRepetitionStage,
+              }}
+            />
           </div>
-          <ObjectDetailsList
-            data={{
-              Id: userWordQuery.data.wordId,
-              Word: userWordQuery.data.word.word,
-              "Language Code": userWordQuery.data.word.languageCode,
-              "Known At": userWordQuery.data.knownAt
-                ? formatDate(userWordQuery.data.knownAt)
-                : null,
-              "Last Seen At": userWordQuery.data.lastSeenAt
-                ? formatDate(userWordQuery.data.lastSeenAt)
-                : null,
-              "Last Practiced At": userWordQuery.data.lastPracticedAt
-                ? formatDate(userWordQuery.data.lastPracticedAt)
-                : null,
-              "Next Practice At": userWordQuery.data.nextPracticeAt
-                ? formatDate(userWordQuery.data.nextPracticeAt)
-                : null,
-              "Seen Count": userWordQuery.data.seenCount.toLocaleString(),
-              "Practice Count":
-                userWordQuery.data.practiceCount.toLocaleString(),
-              "Seen Count Since Last Practiced":
-                userWordQuery.data.seenCountSinceLastPracticed.toLocaleString(),
-              "Spaced Repetition Stage":
-                userWordQuery.data.spacedRepetitionStage,
-            }}
-          />
-        </div>
+        )}
       </div>
     </>
   );

@@ -7,7 +7,7 @@ import type {
   VerificationToken,
 } from "next-auth/adapters";
 
-import { and, eq, getTableColumns } from "@acme/db";
+import { and, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
   accounts,
@@ -20,12 +20,11 @@ import {
 
 export const adapter: Adapter = {
   async createUser(data: AdapterUser) {
-    const { id, ...insertData } = data;
-    const hasDefaultId = getTableColumns(users).id.hasDefault;
+    const { email, emailVerified, image, name } = data;
 
     const user = await db
       .insert(users)
-      .values(hasDefaultId ? insertData : { ...insertData, id })
+      .values({ email, emailVerified, image, name })
       .returning()
       .then((res) => res[0]);
     if (!user) {
@@ -74,15 +73,21 @@ export const adapter: Adapter = {
       .innerJoin(users, eq(users.id, sessions.userId))
       .then((res) => res[0] ?? null);
   },
-  async updateUser(data: Partial<AdapterUser> & Pick<AdapterUser, "id">) {
-    if (!data.id) {
+  async updateUser({
+    id,
+    email,
+    emailVerified,
+    image,
+    name,
+  }: Partial<AdapterUser> & Pick<AdapterUser, "id">) {
+    if (!id) {
       throw new Error("No user id.");
     }
 
     const [result] = await db
       .update(users)
-      .set(data)
-      .where(eq(users.id, data.id))
+      .set({ email, emailVerified, image, name })
+      .where(eq(users.id, id))
       .returning();
 
     if (!result) {

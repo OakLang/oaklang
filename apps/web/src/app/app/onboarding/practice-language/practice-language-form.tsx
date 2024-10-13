@@ -36,7 +36,7 @@ export default function PracticeLanguageForm() {
         return;
       }
       setIsLoading(true);
-      await utils.languages.getPracticeLanguage.fetch(languageCode);
+      await utils.languages.getPracticeLanguage.fetch({ languageCode });
       router.push(`/app/${languageCode}`);
     },
     [languageCode, router, utils.languages.getPracticeLanguage],
