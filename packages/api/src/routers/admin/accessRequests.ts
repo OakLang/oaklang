@@ -7,7 +7,7 @@ import {
   NO_REPLY_EMAIL,
   SUPPORT_EMAIL,
 } from "@acme/core/constants";
-import { and, count, eq } from "@acme/db";
+import { and, count, eq, ilike, or } from "@acme/db";
 import {
   accessRequestQuestionOptions,
   accessRequestQuestions,
@@ -30,24 +30,35 @@ export const accessRequestsRouter = createTRPCRouter({
           .enum(["all", "pending", "accepted", "rejected"])
           .optional()
           .default("all"),
+        query: z.string().optional(),
       }),
     )
-    .query(async ({ ctx, input: { page, size, status } }) => {
+    .query(async ({ ctx, input: { page, size, status, query } }) => {
       const where = and(
         ...(status !== "all" ? [eq(accessRequests.status, status)] : []),
+        ...(query
+          ? [
+              or(
+                eq(accessRequests.userId, query),
+                ilike(users.email, `%${query}%`),
+                ilike(users.name, `%${query}%`),
+              ),
+            ]
+          : []),
       );
       const offset = (page - 1) * size;
-
-      const list = await ctx.db.query.accessRequests.findMany({
-        with: { user: true },
-        where,
-        limit: size,
-        offset,
-      });
+      const list = await ctx.db
+        .select()
+        .from(accessRequests)
+        .innerJoin(users, eq(users.id, accessRequests.userId))
+        .where(where)
+        .limit(size)
+        .offset(offset);
 
       const totalRows = await ctx.db
         .select({ count: count() })
         .from(accessRequests)
+        .innerJoin(users, eq(users.id, accessRequests.userId))
         .where(where);
 
       const totalRowsCount = totalRows[0]?.count ?? 0;
@@ -58,7 +69,7 @@ export const accessRequestsRouter = createTRPCRouter({
       }
 
       return {
-        list,
+        list: list.map((item) => ({ ...item.access_request, user: item.user })),
         previousPage: page > 1 ? page - 1 : null,
         nextPage,
         page,

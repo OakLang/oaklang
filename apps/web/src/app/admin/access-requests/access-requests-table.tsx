@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
@@ -35,18 +35,35 @@ export default function AccessRequestsTable() {
     >("pending");
   const [pageIndex, setPageIndex] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [queryText, setQueryText] = useState("");
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const accessRequestsQuery =
     api.admin.accessRequests.getAccessRequests.useQuery({
       page: pageIndex,
       size: pageSize,
       status: status,
+      query: queryText,
     });
+
+  const handleSetQueryText = useCallback((value: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setQueryText(value);
+    }, 300);
+  }, []);
 
   return (
     <div>
       <div className="mb-4 flex justify-start gap-2">
-        <Input className="w-full max-w-md" placeholder="Search" />
+        <Input
+          className="w-full max-w-md"
+          placeholder="Search id, name, email, ..."
+          defaultValue={queryText}
+          onChange={(e) => handleSetQueryText(e.currentTarget.value)}
+        />
         <Select
           value={status}
           onValueChange={(value) =>

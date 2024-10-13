@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckIcon, MoreHorizontalIcon, UserIcon, XIcon } from "lucide-react";
 
@@ -29,16 +29,33 @@ import { unimplementedToast } from "~/utils/helpers";
 export default function UsersTable() {
   const [pageIndex, setPageIndex] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [queryText, setQueryText] = useState("");
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const usersQuery = api.admin.users.getUsers.useQuery({
     size: pageSize,
     page: pageIndex,
+    query: queryText,
   });
+
+  const handleSetQueryText = useCallback((value: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setQueryText(value);
+    }, 300);
+  }, []);
 
   return (
     <div>
       <div className="mb-4 flex">
-        <Input className="w-full max-w-md" placeholder="Search" />
+        <Input
+          className="w-full max-w-md"
+          placeholder="Search id, name, email, ..."
+          defaultValue={queryText}
+          onChange={(e) => handleSetQueryText(e.currentTarget.value)}
+        />
       </div>
       <div className="overflow-hidden rounded-lg border">
         <Table>

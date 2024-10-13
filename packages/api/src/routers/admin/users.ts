@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { count, desc, eq } from "@acme/db";
+import { and, count, desc, eq, ilike, or } from "@acme/db";
 import { users } from "@acme/db/schema";
 
 import { adminProcedure, createTRPCRouter } from "../../trpc";
@@ -9,18 +9,38 @@ import { paginationBaseSchema } from "../../validators";
 
 export const usersRouter = createTRPCRouter({
   getUsers: adminProcedure
-    .input(paginationBaseSchema)
-    .query(async ({ ctx, input: { size, page } }) => {
+    .input(
+      paginationBaseSchema.extend({
+        query: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input: { size, page, query } }) => {
       const offset = (page - 1) * size;
+
+      const where = and(
+        ...(query
+          ? [
+              or(
+                eq(users.id, query),
+                ilike(users.email, `%${query}%`),
+                ilike(users.name, `%${query}%`),
+              ),
+            ]
+          : []),
+      );
 
       const list = await ctx.db
         .select()
         .from(users)
+        .where(where)
         .orderBy(desc(users.createdAt))
         .limit(size)
         .offset(offset);
 
-      const totalRows = await ctx.db.select({ count: count() }).from(users);
+      const totalRows = await ctx.db
+        .select({ count: count() })
+        .from(users)
+        .where(where);
 
       const totalRowsCount = totalRows[0]?.count ?? 0;
 
