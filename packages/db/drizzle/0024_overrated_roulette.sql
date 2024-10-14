@@ -1,0 +1,2 @@
+ALTER TABLE "sentence_word" ADD CONSTRAINT "sentence_word_sentence_id_index_pk" PRIMARY KEY("sentence_id","index");--> statement-breakpoint
+ALTER TABLE "user_word" ADD CONSTRAINT "user_word_user_id_word_id_pk" PRIMARY KEY("user_id","word_id");

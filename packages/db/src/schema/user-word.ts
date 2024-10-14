@@ -4,9 +4,9 @@ import {
   index,
   integer,
   pgTable,
+  primaryKey,
   text,
   timestamp,
-  unique,
 } from "drizzle-orm/pg-core";
 
 import { usersTable } from "./auth";
@@ -45,7 +45,7 @@ export const userWordsTable = pgTable(
     lastDissabledHideLinesAt: timestamp("last_dissabled_hide_lines_at"),
   },
   (table) => ({
-    uniqueIdx: unique().on(table.userId, table.wordId),
+    pk: primaryKey({ columns: [table.userId, table.wordId] }),
     createdFromIdIndex: index().on(table.createdFromId),
     knownFromIdIndex: index().on(table.knownFromId),
   }),

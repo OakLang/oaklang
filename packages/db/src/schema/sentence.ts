@@ -3,6 +3,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   unique,
@@ -59,7 +60,7 @@ export const sentenceWordsTable = pgTable(
       .$type<Record<string, string>>(),
   },
   (table) => ({
-    uniqueIdx: unique().on(table.sentenceId, table.index),
+    pk: primaryKey({ columns: [table.sentenceId, table.index] }),
   }),
 );
 
