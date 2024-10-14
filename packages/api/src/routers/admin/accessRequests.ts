@@ -7,13 +7,13 @@ import {
   NO_REPLY_EMAIL,
   SUPPORT_EMAIL,
 } from "@acme/core/constants";
-import { and, count, eq, ilike, or } from "@acme/db";
+import { alias, and, count, eq, ilike, or } from "@acme/db";
 import {
-  accessRequestQuestionOptions,
-  accessRequestQuestions,
-  accessRequests,
-  accessRequestUserResponses,
-  users,
+  accessRequestQuestionOptionsTable,
+  accessRequestQuestionsTable,
+  accessRequestsTable,
+  accessRequestUserResponsesTable,
+  usersTable,
 } from "@acme/db/schema";
 import { resend } from "@acme/email";
 import AccessRequestAccepted from "@acme/email/emails/access-request-accepted";
@@ -35,13 +35,13 @@ export const accessRequestsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input: { page, size, status, query } }) => {
       const where = and(
-        ...(status !== "all" ? [eq(accessRequests.status, status)] : []),
+        ...(status !== "all" ? [eq(accessRequestsTable.status, status)] : []),
         ...(query
           ? [
               or(
-                eq(accessRequests.userId, query),
-                ilike(users.email, `%${query}%`),
-                ilike(users.name, `%${query}%`),
+                eq(accessRequestsTable.userId, query),
+                ilike(usersTable.email, `%${query}%`),
+                ilike(usersTable.name, `%${query}%`),
               ),
             ]
           : []),
@@ -49,16 +49,16 @@ export const accessRequestsRouter = createTRPCRouter({
       const offset = (page - 1) * size;
       const list = await ctx.db
         .select()
-        .from(accessRequests)
-        .innerJoin(users, eq(users.id, accessRequests.userId))
+        .from(accessRequestsTable)
+        .innerJoin(usersTable, eq(usersTable.id, accessRequestsTable.userId))
         .where(where)
         .limit(size)
         .offset(offset);
 
       const totalRows = await ctx.db
         .select({ count: count() })
-        .from(accessRequests)
-        .innerJoin(users, eq(users.id, accessRequests.userId))
+        .from(accessRequestsTable)
+        .innerJoin(usersTable, eq(usersTable.id, accessRequestsTable.userId))
         .where(where);
 
       const totalRowsCount = totalRows[0]?.count ?? 0;
@@ -84,13 +84,14 @@ export const accessRequestsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const request = await ctx.db.query.accessRequests.findFirst({
-        with: {
-          user: true,
-          reviewer: true,
-        },
-        where: eq(accessRequests.userId, input.userId),
-      });
+      const reviewer = alias(usersTable, "reviewer");
+
+      const [request] = await ctx.db
+        .select()
+        .from(accessRequestsTable)
+        .innerJoin(usersTable, eq(usersTable.id, accessRequestsTable.userId))
+        .leftJoin(reviewer, eq(reviewer.id, accessRequestsTable.reviewedBy))
+        .where(eq(accessRequestsTable.userId, input.userId));
 
       if (!request) {
         throw new TRPCError({
@@ -99,23 +100,23 @@ export const accessRequestsRouter = createTRPCRouter({
         });
       }
 
-      const questions = await ctx.db.select().from(accessRequestQuestions);
+      const questions = await ctx.db.select().from(accessRequestQuestionsTable);
       const questionsAnswers = await Promise.all(
         questions.map(async (question) => {
           const answers = await ctx.db
             .select()
-            .from(accessRequestUserResponses)
+            .from(accessRequestUserResponsesTable)
             .innerJoin(
-              accessRequestQuestionOptions,
+              accessRequestQuestionOptionsTable,
               eq(
-                accessRequestQuestionOptions.id,
-                accessRequestUserResponses.optionId,
+                accessRequestQuestionOptionsTable.id,
+                accessRequestUserResponsesTable.optionId,
               ),
             )
             .where(
               and(
-                eq(accessRequestUserResponses.userId, input.userId),
-                eq(accessRequestUserResponses.questionId, question.id),
+                eq(accessRequestUserResponsesTable.userId, input.userId),
+                eq(accessRequestUserResponsesTable.questionId, question.id),
               ),
             );
 
@@ -128,7 +129,12 @@ export const accessRequestsRouter = createTRPCRouter({
           };
         }),
       );
-      return { ...request, questionsAnswers };
+      return {
+        ...request.access_request,
+        user: request.user,
+        reviewer: request.reviewer,
+        questionsAnswers,
+      };
     }),
   reviewAccessRequest: adminProcedure
     .input(
@@ -140,8 +146,8 @@ export const accessRequestsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [user] = await ctx.db
         .select()
-        .from(users)
-        .where(eq(users.id, input.userId));
+        .from(usersTable)
+        .where(eq(usersTable.id, input.userId));
       if (!user) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -151,8 +157,8 @@ export const accessRequestsRouter = createTRPCRouter({
 
       const [request] = await ctx.db
         .select()
-        .from(accessRequests)
-        .where(eq(accessRequests.userId, input.userId));
+        .from(accessRequestsTable)
+        .where(eq(accessRequestsTable.userId, input.userId));
       if (!request) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -161,13 +167,13 @@ export const accessRequestsRouter = createTRPCRouter({
       }
 
       await ctx.db
-        .update(accessRequests)
+        .update(accessRequestsTable)
         .set({
           status: input.status,
           reviewedBy: ctx.session.user.id,
           reviewedAt: new Date(),
         })
-        .where(eq(accessRequests.userId, input.userId));
+        .where(eq(accessRequestsTable.userId, input.userId));
 
       if (input.status === "accepted") {
         const subject = `Your Access Request Has Been Approved! Welcome to ${APP_NAME} 🎉`;

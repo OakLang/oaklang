@@ -1,12 +1,12 @@
 import { relations } from "drizzle-orm";
 import { pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 
-import { users } from "./auth";
-import { trainingSessions } from "./training-session";
-import { userSettings } from "./user-settings";
-import { words } from "./word";
+import { usersTable } from "./auth";
+import { trainingSessionsTable } from "./training-session";
+import { userSettingsTable } from "./user-settings";
+import { wordsTable } from "./word";
 
-export const languages = pgTable("language", {
+export const languagesTable = pgTable("language", {
   // ISO 639
   code: text("code").notNull().primaryKey(),
   // ISO 3166-1 A-2
@@ -14,27 +14,27 @@ export const languages = pgTable("language", {
   name: text("name").notNull(),
 });
 
-export type Language = typeof languages.$inferSelect;
-export type LanguageInsert = typeof languages.$inferInsert;
+export type Language = typeof languagesTable.$inferSelect;
+export type LanguageInsert = typeof languagesTable.$inferInsert;
 
-export const languagesRelations = relations(languages, ({ many }) => ({
-  words: many(words),
-  trainingSessions: many(trainingSessions),
-  practiceLanguages: many(practiceLanguages),
-  userSettings: many(userSettings),
+export const languagesRelations = relations(languagesTable, ({ many }) => ({
+  words: many(wordsTable),
+  trainingSessions: many(trainingSessionsTable),
+  practiceLanguages: many(practiceLanguagesTable),
+  userSettings: many(userSettingsTable),
 }));
 
-export const practiceLanguages = pgTable(
+export const practiceLanguagesTable = pgTable(
   "practice_language",
   {
     createdAt: timestamp("created_at").notNull().defaultNow(),
     lastPracticed: timestamp("last_practiced").notNull().defaultNow(),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     languageCode: text("language_code")
       .notNull()
-      .references(() => languages.code, { onDelete: "cascade" }),
+      .references(() => languagesTable.code, { onDelete: "cascade" }),
   },
   (table) => ({
     pk: primaryKey({
@@ -43,19 +43,19 @@ export const practiceLanguages = pgTable(
   }),
 );
 
-export type PracticeLanguage = typeof practiceLanguages.$inferSelect;
-export type PracticeLanguageInsert = typeof practiceLanguages.$inferInsert;
+export type PracticeLanguage = typeof practiceLanguagesTable.$inferSelect;
+export type PracticeLanguageInsert = typeof practiceLanguagesTable.$inferInsert;
 
 export const practiceLanguagesRelations = relations(
-  practiceLanguages,
+  practiceLanguagesTable,
   ({ one }) => ({
-    user: one(users, {
-      fields: [practiceLanguages.userId],
-      references: [users.id],
+    user: one(usersTable, {
+      fields: [practiceLanguagesTable.userId],
+      references: [usersTable.id],
     }),
-    language: one(languages, {
-      fields: [practiceLanguages.languageCode],
-      references: [languages.code],
+    language: one(languagesTable, {
+      fields: [practiceLanguagesTable.languageCode],
+      references: [languagesTable.code],
     }),
   }),
 );

@@ -10,19 +10,19 @@ import {
 import { COMPLEXITY_LIST } from "@acme/core/constants";
 
 import { createPrefixedId } from "../utils";
-import { users } from "./auth";
-import { languages } from "./language";
-import { sentences } from "./sentence";
-import { words } from "./word";
+import { usersTable } from "./auth";
+import { languagesTable } from "./language";
+import { sentencesTable } from "./sentence";
+import { wordsTable } from "./word";
 
-export const trainingSessions = pgTable("training_session", {
+export const trainingSessionsTable = pgTable("training_session", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => createPrefixedId("ts")),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => usersTable.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   sentenceIndex: integer("sentence_index").notNull().default(0),
   complexity: text("complexity", { enum: COMPLEXITY_LIST })
@@ -30,38 +30,38 @@ export const trainingSessions = pgTable("training_session", {
     .default("A1"),
   languageCode: text("language_code")
     .notNull()
-    .references(() => languages.code, { onDelete: "cascade" }),
+    .references(() => languagesTable.code, { onDelete: "cascade" }),
   topic: text("topic"),
 });
 
-export type TrainingSession = typeof trainingSessions.$inferSelect;
+export type TrainingSession = typeof trainingSessionsTable.$inferSelect;
 
 export const trainingSessionsRelations = relations(
-  trainingSessions,
+  trainingSessionsTable,
   ({ one, many }) => ({
-    user: one(users, {
-      fields: [trainingSessions.userId],
-      references: [users.id],
+    user: one(usersTable, {
+      fields: [trainingSessionsTable.userId],
+      references: [usersTable.id],
     }),
-    langauge: one(languages, {
-      fields: [trainingSessions.languageCode],
-      references: [languages.code],
+    langauge: one(languagesTable, {
+      fields: [trainingSessionsTable.languageCode],
+      references: [languagesTable.code],
     }),
-    sentences: many(sentences),
-    trainingSessionWords: many(trainingSessionWords),
+    sentences: many(sentencesTable),
+    trainingSessionWords: many(trainingSessionWordsTable),
   }),
 );
 
-export const trainingSessionWords = pgTable(
+export const trainingSessionWordsTable = pgTable(
   "training_session_word",
   {
     createdAt: timestamp("created_at").notNull().defaultNow(),
     trainingSessionId: text("training_session_id")
       .notNull()
-      .references(() => trainingSessions.id, { onDelete: "cascade" }),
+      .references(() => trainingSessionsTable.id, { onDelete: "cascade" }),
     wordId: text("word_id")
       .notNull()
-      .references(() => words.id, { onDelete: "cascade" }),
+      .references(() => wordsTable.id, { onDelete: "cascade" }),
   },
   (table) => ({
     compositePk: primaryKey({
@@ -71,15 +71,15 @@ export const trainingSessionWords = pgTable(
 );
 
 export const trainingSessionWordsRelations = relations(
-  trainingSessionWords,
+  trainingSessionWordsTable,
   ({ one }) => ({
-    trainingSession: one(trainingSessions, {
-      fields: [trainingSessionWords.trainingSessionId],
-      references: [trainingSessions.id],
+    trainingSession: one(trainingSessionsTable, {
+      fields: [trainingSessionWordsTable.trainingSessionId],
+      references: [trainingSessionsTable.id],
     }),
-    word: one(words, {
-      fields: [trainingSessionWords.wordId],
-      references: [words.id],
+    word: one(wordsTable, {
+      fields: [trainingSessionWordsTable.wordId],
+      references: [wordsTable.id],
     }),
   }),
 );

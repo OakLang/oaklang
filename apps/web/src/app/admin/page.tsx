@@ -1,6 +1,6 @@
 import { count, eq } from "@acme/db";
 import { db } from "@acme/db/client";
-import { accessRequests, users } from "@acme/db/schema";
+import { accessRequestsTable, usersTable } from "@acme/db/schema";
 
 import InfoTable from "~/components/InfoTable";
 import AppBar from "./app-bar";
@@ -8,21 +8,21 @@ import AppBar from "./app-bar";
 export default async function AdminOverviewPage() {
   const totalUsersPromise = db
     .select({ count: count() })
-    .from(users)
+    .from(usersTable)
     .then((res) => res[0]?.count ?? 0);
 
   const pendingAccessRequestsPromise = db
     .select({ count: count() })
-    .from(accessRequests)
-    .where(eq(accessRequests.status, "pending"))
+    .from(accessRequestsTable)
+    .where(eq(accessRequestsTable.status, "pending"))
     .then((res) => res[0]?.count ?? 0);
 
   const totalTestersPromise = db
     .select({
       count: count(),
     })
-    .from(accessRequests)
-    .where(eq(accessRequests.status, "accepted"))
+    .from(accessRequestsTable)
+    .where(eq(accessRequestsTable.status, "accepted"))
     .then((res) => res[0]?.count ?? 0);
 
   const [totalUsers, totalTesters, pendingAccessRequests] = await Promise.all([

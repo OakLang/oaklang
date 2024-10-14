@@ -11,14 +11,14 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
-import { accessRequestUserResponses } from "./access-request";
-import { userSettings } from "./user-settings";
-import { userWords } from "./user-word";
+import { accessRequestUserResponsesTable } from "./access-request";
+import { userSettingsTable } from "./user-settings";
+import { userWordsTable } from "./user-word";
 
 export const userRole = pgEnum("user_role", ["user", "power", "admin"]);
 export type UserRole = (typeof userRole.enumValues)[number];
 
-export const users = pgTable("user", {
+export const usersTable = pgTable("user", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => createPrefixedId("user")),
@@ -30,24 +30,24 @@ export const users = pgTable("user", {
   role: userRole("role").notNull().default("user"),
   isBlocked: boolean("is_blocked").notNull().default(false),
 });
-export type User = typeof users.$inferSelect;
+export type User = typeof usersTable.$inferSelect;
 
-export const usersRelations = relations(users, ({ many, one }) => ({
-  userSettings: one(userSettings),
-  accounts: many(accounts),
-  sessions: many(sessions),
-  authenticators: many(authenticators),
-  practiceWords: many(userWords),
-  accessRequestUserResponses: many(accessRequestUserResponses),
+export const usersRelations = relations(usersTable, ({ many, one }) => ({
+  userSettings: one(userSettingsTable),
+  accounts: many(accountsTable),
+  sessions: many(sessionsTable),
+  authenticators: many(authenticatorsTable),
+  practiceWords: many(userWordsTable),
+  accessRequestUserResponses: many(accessRequestUserResponsesTable),
 }));
 
-export const accounts = pgTable(
+export const accountsTable = pgTable(
   "account",
   {
     createdAt: timestamp("created_at").notNull().defaultNow(),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     type: text("type").$type<AdapterAccountType>().notNull(),
     provider: text("provider").notNull(),
     providerAccountId: text("provider_account_id").notNull(),
@@ -65,32 +65,32 @@ export const accounts = pgTable(
     }),
   }),
 );
-export type Account = typeof accounts.$inferSelect;
+export type Account = typeof accountsTable.$inferSelect;
 
-export const accountsRelations = relations(accounts, ({ one }) => ({
-  user: one(users, {
-    fields: [accounts.userId],
-    references: [users.id],
+export const accountsRelations = relations(accountsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [accountsTable.userId],
+    references: [usersTable.id],
   }),
 }));
 
-export const sessions = pgTable("session", {
+export const sessionsTable = pgTable("session", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   sessionToken: text("session_token").primaryKey(),
   userId: text("user_id")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => usersTable.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
+export const sessionsRelations = relations(sessionsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [sessionsTable.userId],
+    references: [usersTable.id],
   }),
 }));
 
-export const verificationTokens = pgTable(
+export const verificationTokensTable = pgTable(
   "verification_token",
   {
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -105,14 +105,14 @@ export const verificationTokens = pgTable(
   }),
 );
 
-export const authenticators = pgTable(
+export const authenticatorsTable = pgTable(
   "authenticator",
   {
     createdAt: timestamp("created_at").notNull().defaultNow(),
     credentialID: text("credential_id").notNull().unique(),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     providerAccountId: text("provider_account_id").notNull(),
     credentialPublicKey: text("credential_public_key").notNull(),
     counter: integer("counter").notNull(),
@@ -127,9 +127,12 @@ export const authenticators = pgTable(
   }),
 );
 
-export const authenticatorsRelations = relations(authenticators, ({ one }) => ({
-  user: one(users, {
-    fields: [authenticators.userId],
-    references: [users.id],
+export const authenticatorsRelations = relations(
+  authenticatorsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [authenticatorsTable.userId],
+      references: [usersTable.id],
+    }),
   }),
-}));
+);

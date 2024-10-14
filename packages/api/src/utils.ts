@@ -5,11 +5,11 @@ import type { DB } from "@acme/db/client";
 import type { Language, UserSettings, Word } from "@acme/db/schema";
 import { and, count, eq, isNull, not, sql } from "@acme/db";
 import {
-  languages,
-  trainingSessions,
-  userSettings,
-  userWords,
-  words,
+  languagesTable,
+  trainingSessionsTable,
+  userSettingsTable,
+  userWordsTable,
+  wordsTable,
 } from "@acme/db/schema";
 
 export interface ProtectedCtx {
@@ -24,8 +24,8 @@ export const getTrainingSessionOrThrow = async (
 ) => {
   const [trainingSession] = await db
     .select()
-    .from(trainingSessions)
-    .where(eq(trainingSessions.id, trainingSessionId));
+    .from(trainingSessionsTable)
+    .where(eq(trainingSessionsTable.id, trainingSessionId));
   if (!trainingSession || trainingSession.userId !== session.user.id) {
     throw new TRPCError({
       code: "NOT_FOUND",
@@ -38,11 +38,11 @@ export const getTrainingSessionOrThrow = async (
 export const getUserSettings = async ({ db, session }: ProtectedCtx) => {
   const [settings] = await db
     .select()
-    .from(userSettings)
-    .where(eq(userSettings.userId, session.user.id));
+    .from(userSettingsTable)
+    .where(eq(userSettingsTable.userId, session.user.id));
   if (!settings) {
     const [newSettings] = await db
-      .insert(userSettings)
+      .insert(userSettingsTable)
       .values({ userId: session.user.id })
       .returning();
     if (!newSettings) {
@@ -80,16 +80,16 @@ export const getOrCreateWord = async (
   db: DB,
 ): Promise<Word> => {
   const [newWord] = await db
-    .insert(words)
+    .insert(wordsTable)
     .values({
       word: word.trim().toLowerCase(),
       languageCode: langaugeCode,
     })
     .onConflictDoUpdate({
-      target: [words.word, words.languageCode],
+      target: [wordsTable.word, wordsTable.languageCode],
       set: {
-        word: sql`${words.word}`,
-        languageCode: sql`${words.languageCode}`,
+        word: sql`${wordsTable.word}`,
+        languageCode: sql`${wordsTable.languageCode}`,
       },
     })
     .returning();
@@ -106,13 +106,13 @@ export const getKnownWordsCountForLanguage = async (
 ): Promise<number> => {
   const [row] = await db
     .select({ count: count() })
-    .from(userWords)
-    .innerJoin(words, eq(words.id, userWords.wordId))
+    .from(userWordsTable)
+    .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
     .where(
       and(
-        eq(userWords.userId, session.user.id),
-        not(isNull(userWords.knownAt)),
-        eq(words.languageCode, languageCode),
+        eq(userWordsTable.userId, session.user.id),
+        not(isNull(userWordsTable.knownAt)),
+        eq(wordsTable.languageCode, languageCode),
       ),
     );
   return row?.count ?? 0;
@@ -121,8 +121,8 @@ export const getKnownWordsCountForLanguage = async (
 export const getLanguageOrThrow = async (languageCode: string, db: DB) => {
   const [language] = await db
     .select()
-    .from(languages)
-    .where(eq(languages.code, languageCode));
+    .from(languagesTable)
+    .where(eq(languagesTable.code, languageCode));
   if (!language) {
     throw new TRPCError({
       code: "NOT_FOUND",

@@ -11,15 +11,15 @@ import {
 } from "@acme/core/constants";
 import { and, eq } from "@acme/db";
 import {
-  accessRequestQuestionOptions,
-  accessRequestQuestions,
-  accessRequests,
-  accessRequestUserResponses,
-  practiceLanguages,
-  trainingSessions,
-  users,
-  userSettings,
-  userWords,
+  accessRequestQuestionOptionsTable,
+  accessRequestQuestionsTable,
+  accessRequestsTable,
+  accessRequestUserResponsesTable,
+  practiceLanguagesTable,
+  trainingSessionsTable,
+  userSettingsTable,
+  usersTable,
+  userWordsTable,
 } from "@acme/db/schema";
 import { resend } from "@acme/email";
 import AccessRequestReceived from "@acme/email/emails/access-request-received";
@@ -33,24 +33,26 @@ export const usersRouter = createTRPCRouter({
   }),
   deleteAccount: protectedProcedure.mutation(async (opts) => {
     await opts.ctx.db
-      .delete(users)
-      .where(eq(users.id, opts.ctx.session.user.id));
+      .delete(usersTable)
+      .where(eq(usersTable.id, opts.ctx.session.user.id));
   }),
   resetAccount: protectedProcedure.mutation(async ({ ctx }) => {
     await ctx.db.transaction(async (tx) => {
       await tx
-        .delete(trainingSessions)
-        .where(eq(trainingSessions.userId, ctx.session.user.id));
+        .delete(trainingSessionsTable)
+        .where(eq(trainingSessionsTable.userId, ctx.session.user.id));
       await tx
-        .delete(userWords)
-        .where(eq(userWords.userId, ctx.session.user.id));
+        .delete(userWordsTable)
+        .where(eq(userWordsTable.userId, ctx.session.user.id));
       await tx
-        .delete(practiceLanguages)
-        .where(eq(practiceLanguages.userId, ctx.session.user.id));
+        .delete(practiceLanguagesTable)
+        .where(eq(practiceLanguagesTable.userId, ctx.session.user.id));
       await tx
-        .delete(userSettings)
-        .where(eq(userSettings.userId, ctx.session.user.id));
-      await tx.insert(userSettings).values({ userId: ctx.session.user.id });
+        .delete(userSettingsTable)
+        .where(eq(userSettingsTable.userId, ctx.session.user.id));
+      await tx
+        .insert(userSettingsTable)
+        .values({ userId: ctx.session.user.id });
     });
   }),
   requestAccess: protectedProcedure
@@ -71,8 +73,8 @@ export const usersRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [request] = await ctx.db
         .select()
-        .from(accessRequests)
-        .where(eq(accessRequests.userId, ctx.session.user.id));
+        .from(accessRequestsTable)
+        .where(eq(accessRequestsTable.userId, ctx.session.user.id));
       if (request) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -81,7 +83,7 @@ export const usersRouter = createTRPCRouter({
         });
       }
 
-      const questions = await ctx.db.select().from(accessRequestQuestions);
+      const questions = await ctx.db.select().from(accessRequestQuestionsTable);
       const userAnswers = questions
         .map((question) => {
           const answer = input.answers[question.id];
@@ -95,23 +97,23 @@ export const usersRouter = createTRPCRouter({
                 userId: ctx.session.user.id,
                 optionId: option.id,
                 customAnswer: option.customAnswer,
-              }) satisfies typeof accessRequestUserResponses.$inferInsert,
+              }) satisfies typeof accessRequestUserResponsesTable.$inferInsert,
           );
         })
         .filter((item) => !!item)
         .flatMap((options) => options);
       await ctx.db
-        .delete(accessRequestUserResponses)
-        .where(eq(accessRequestUserResponses.userId, ctx.session.user.id));
-      await ctx.db.insert(accessRequestUserResponses).values(userAnswers);
+        .delete(accessRequestUserResponsesTable)
+        .where(eq(accessRequestUserResponsesTable.userId, ctx.session.user.id));
+      await ctx.db.insert(accessRequestUserResponsesTable).values(userAnswers);
       await ctx.db
-        .insert(accessRequests)
+        .insert(accessRequestsTable)
         .values({ userId: ctx.session.user.id });
 
       const [user] = await ctx.db
         .select()
-        .from(users)
-        .where(eq(users.id, ctx.session.user.id));
+        .from(usersTable)
+        .where(eq(usersTable.id, ctx.session.user.id));
       if (!user) {
         throw new TRPCError({ code: "NOT_FOUND", message: "User not found!" });
       }
@@ -145,28 +147,28 @@ export const usersRouter = createTRPCRouter({
 
 const sendRequestSubmittedEmailToReceivers = async (user: User, db: DB) => {
   const adminUsers = await db
-    .select({ email: users.email })
-    .from(users)
-    .where(eq(users.role, "admin"));
+    .select({ email: usersTable.email })
+    .from(usersTable)
+    .where(eq(usersTable.role, "admin"));
 
-  const questions = await db.select().from(accessRequestQuestions);
+  const questions = await db.select().from(accessRequestQuestionsTable);
 
   const questionsAnswers = await Promise.all(
     questions.map(async (question) => {
       const answersWithOption = await db
         .select()
-        .from(accessRequestUserResponses)
+        .from(accessRequestUserResponsesTable)
         .innerJoin(
-          accessRequestQuestionOptions,
+          accessRequestQuestionOptionsTable,
           eq(
-            accessRequestQuestionOptions.id,
-            accessRequestUserResponses.optionId,
+            accessRequestQuestionOptionsTable.id,
+            accessRequestUserResponsesTable.optionId,
           ),
         )
         .where(
           and(
-            eq(accessRequestUserResponses.questionId, question.id),
-            eq(accessRequestUserResponses.userId, user.id),
+            eq(accessRequestUserResponsesTable.questionId, question.id),
+            eq(accessRequestUserResponsesTable.userId, user.id),
           ),
         );
       return {

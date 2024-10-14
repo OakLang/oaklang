@@ -9,10 +9,10 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
-import { trainingSessions } from "./training-session";
-import { words } from "./word";
+import { trainingSessionsTable } from "./training-session";
+import { wordsTable } from "./word";
 
-export const sentences = pgTable(
+export const sentencesTable = pgTable(
   "sentence",
   {
     id: text("id")
@@ -21,7 +21,7 @@ export const sentences = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     trainingSessionId: text("training_session_id")
       .notNull()
-      .references(() => trainingSessions.id, { onDelete: "cascade" }),
+      .references(() => trainingSessionsTable.id, { onDelete: "cascade" }),
     sentence: text("sentence").notNull(),
     translation: text("translation").notNull(),
     index: integer("index").notNull(),
@@ -30,26 +30,29 @@ export const sentences = pgTable(
     uniqueIdx: unique().on(table.trainingSessionId, table.index),
   }),
 );
-export type Sentence = typeof sentences.$inferSelect;
-export type SentenceInsert = typeof sentences.$inferInsert;
+export type Sentence = typeof sentencesTable.$inferSelect;
+export type SentenceInsert = typeof sentencesTable.$inferInsert;
 
-export const sentencesRelations = relations(sentences, ({ one, many }) => ({
-  trainingSession: one(trainingSessions, {
-    fields: [sentences.trainingSessionId],
-    references: [trainingSessions.id],
+export const sentencesRelations = relations(
+  sentencesTable,
+  ({ one, many }) => ({
+    trainingSession: one(trainingSessionsTable, {
+      fields: [sentencesTable.trainingSessionId],
+      references: [trainingSessionsTable.id],
+    }),
+    sentenceWords: many(sentenceWordsTable),
   }),
-  sentenceWords: many(sentenceWords),
-}));
+);
 
-export const sentenceWords = pgTable(
+export const sentenceWordsTable = pgTable(
   "sentence_word",
   {
     sentenceId: text("sentence_id")
       .notNull()
-      .references(() => sentences.id, { onDelete: "cascade" }),
+      .references(() => sentencesTable.id, { onDelete: "cascade" }),
     wordId: text("word_id")
       .notNull()
-      .references(() => words.id, { onDelete: "cascade" }),
+      .references(() => wordsTable.id, { onDelete: "cascade" }),
     index: integer("index").notNull(),
     interlinearLines: jsonb("interlinear_lines")
       .notNull()
@@ -60,15 +63,18 @@ export const sentenceWords = pgTable(
   }),
 );
 
-export type SentenceWord = typeof sentenceWords.$inferSelect;
+export type SentenceWord = typeof sentenceWordsTable.$inferSelect;
 
-export const sentenceWordsRelations = relations(sentenceWords, ({ one }) => ({
-  sentence: one(sentences, {
-    fields: [sentenceWords.sentenceId],
-    references: [sentences.id],
+export const sentenceWordsRelations = relations(
+  sentenceWordsTable,
+  ({ one }) => ({
+    sentence: one(sentencesTable, {
+      fields: [sentenceWordsTable.sentenceId],
+      references: [sentencesTable.id],
+    }),
+    word: one(wordsTable, {
+      fields: [sentenceWordsTable.wordId],
+      references: [wordsTable.id],
+    }),
   }),
-  word: one(words, {
-    fields: [sentenceWords.wordId],
-    references: [words.id],
-  }),
-}));
+);

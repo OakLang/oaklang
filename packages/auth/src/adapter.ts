@@ -10,12 +10,12 @@ import type {
 import { and, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
-  accounts,
-  authenticators,
-  sessions,
-  users,
-  userSettings,
-  verificationTokens,
+  accountsTable,
+  authenticatorsTable,
+  sessionsTable,
+  userSettingsTable,
+  usersTable,
+  verificationTokensTable,
 } from "@acme/db/schema";
 
 export const adapter: Adapter = {
@@ -23,28 +23,28 @@ export const adapter: Adapter = {
     const { email, emailVerified, image, name } = data;
 
     const user = await db
-      .insert(users)
+      .insert(usersTable)
       .values({ email, emailVerified, image, name })
       .returning()
       .then((res) => res[0]);
     if (!user) {
       throw new Error("User not found!");
     }
-    await db.insert(userSettings).values({ userId: user.id });
+    await db.insert(userSettingsTable).values({ userId: user.id });
     return user;
   },
   async getUser(userId: string) {
     return db
       .select()
-      .from(users)
-      .where(eq(users.id, userId))
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
       .then((res) => res[0] ?? null);
   },
   async getUserByEmail(email: string) {
     return db
       .select()
-      .from(users)
-      .where(eq(users.email, email))
+      .from(usersTable)
+      .where(eq(usersTable.email, email))
       .then((res) => res[0] ?? null);
   },
   async createSession(data: {
@@ -53,7 +53,7 @@ export const adapter: Adapter = {
     expires: Date;
   }) {
     const session = await db
-      .insert(sessions)
+      .insert(sessionsTable)
       .values(data)
       .returning()
       .then((res) => res[0]);
@@ -65,12 +65,12 @@ export const adapter: Adapter = {
   async getSessionAndUser(sessionToken: string) {
     return db
       .select({
-        session: sessions,
-        user: users,
+        session: sessionsTable,
+        user: usersTable,
       })
-      .from(sessions)
-      .where(eq(sessions.sessionToken, sessionToken))
-      .innerJoin(users, eq(users.id, sessions.userId))
+      .from(sessionsTable)
+      .where(eq(sessionsTable.sessionToken, sessionToken))
+      .innerJoin(usersTable, eq(usersTable.id, sessionsTable.userId))
       .then((res) => res[0] ?? null);
   },
   async updateUser({
@@ -85,9 +85,9 @@ export const adapter: Adapter = {
     }
 
     const [result] = await db
-      .update(users)
+      .update(usersTable)
       .set({ email, emailVerified, image, name })
-      .where(eq(users.id, id))
+      .where(eq(usersTable.id, id))
       .returning();
 
     if (!result) {
@@ -100,29 +100,29 @@ export const adapter: Adapter = {
     data: Partial<AdapterSession> & Pick<AdapterSession, "sessionToken">,
   ) {
     return db
-      .update(sessions)
+      .update(sessionsTable)
       .set(data)
-      .where(eq(sessions.sessionToken, data.sessionToken))
+      .where(eq(sessionsTable.sessionToken, data.sessionToken))
       .returning()
       .then((res) => res[0]);
   },
   async linkAccount(data: AdapterAccount) {
-    await db.insert(accounts).values(data);
+    await db.insert(accountsTable).values(data);
   },
   async getUserByAccount(
     account: Pick<AdapterAccount, "provider" | "providerAccountId">,
   ) {
     const result = await db
       .select({
-        account: accounts,
-        user: users,
+        account: accountsTable,
+        user: usersTable,
       })
-      .from(accounts)
-      .innerJoin(users, eq(accounts.userId, users.id))
+      .from(accountsTable)
+      .innerJoin(usersTable, eq(accountsTable.userId, usersTable.id))
       .where(
         and(
-          eq(accounts.provider, account.provider),
-          eq(accounts.providerAccountId, account.providerAccountId),
+          eq(accountsTable.provider, account.provider),
+          eq(accountsTable.providerAccountId, account.providerAccountId),
         ),
       )
       .then((res) => res[0]);
@@ -130,57 +130,59 @@ export const adapter: Adapter = {
     return result?.user ?? null;
   },
   async deleteSession(sessionToken: string) {
-    await db.delete(sessions).where(eq(sessions.sessionToken, sessionToken));
+    await db
+      .delete(sessionsTable)
+      .where(eq(sessionsTable.sessionToken, sessionToken));
   },
   async createVerificationToken(data: VerificationToken) {
     return db
-      .insert(verificationTokens)
+      .insert(verificationTokensTable)
       .values(data)
       .returning()
       .then((res) => res[0]);
   },
   async useVerificationToken(params: { identifier: string; token: string }) {
     return db
-      .delete(verificationTokens)
+      .delete(verificationTokensTable)
       .where(
         and(
-          eq(verificationTokens.identifier, params.identifier),
-          eq(verificationTokens.token, params.token),
+          eq(verificationTokensTable.identifier, params.identifier),
+          eq(verificationTokensTable.token, params.token),
         ),
       )
       .returning()
       .then((res) => res[0] ?? null);
   },
   async deleteUser(id: string) {
-    await db.delete(users).where(eq(users.id, id));
+    await db.delete(usersTable).where(eq(usersTable.id, id));
   },
   async unlinkAccount(
     params: Pick<AdapterAccount, "provider" | "providerAccountId">,
   ) {
     await db
-      .delete(accounts)
+      .delete(accountsTable)
       .where(
         and(
-          eq(accounts.provider, params.provider),
-          eq(accounts.providerAccountId, params.providerAccountId),
+          eq(accountsTable.provider, params.provider),
+          eq(accountsTable.providerAccountId, params.providerAccountId),
         ),
       );
   },
   async getAccount(providerAccountId: string, provider: string) {
     return db
       .select()
-      .from(accounts)
+      .from(accountsTable)
       .where(
         and(
-          eq(accounts.provider, provider),
-          eq(accounts.providerAccountId, providerAccountId),
+          eq(accountsTable.provider, provider),
+          eq(accountsTable.providerAccountId, providerAccountId),
         ),
       )
       .then((res) => res[0] ?? null) as Promise<AdapterAccount | null>;
   },
   async createAuthenticator(data: AdapterAuthenticator) {
     const authenticator = await db
-      .insert(authenticators)
+      .insert(authenticatorsTable)
       .values(data)
       .returning()
       .then((res) => res[0]);
@@ -192,22 +194,22 @@ export const adapter: Adapter = {
   async getAuthenticator(credentialID: string) {
     return db
       .select()
-      .from(authenticators)
-      .where(eq(authenticators.credentialID, credentialID))
+      .from(authenticatorsTable)
+      .where(eq(authenticatorsTable.credentialID, credentialID))
       .then((res) => res[0] ?? null);
   },
   async listAuthenticatorsByUserId(userId: string) {
     return db
       .select()
-      .from(authenticators)
-      .where(eq(authenticators.userId, userId))
+      .from(authenticatorsTable)
+      .where(eq(authenticatorsTable.userId, userId))
       .then((res) => res);
   },
   async updateAuthenticatorCounter(credentialID: string, newCounter: number) {
     const authenticator = await db
-      .update(authenticators)
+      .update(authenticatorsTable)
       .set({ counter: newCounter })
-      .where(eq(authenticators.credentialID, credentialID))
+      .where(eq(authenticatorsTable.credentialID, credentialID))
       .returning()
       .then((res) => res[0]);
 

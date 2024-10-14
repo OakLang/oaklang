@@ -8,10 +8,10 @@ import { z } from "zod";
 import type { Language, TrainingSession, UserSettings } from "@acme/db/schema";
 import { and, desc, eq, isNull, lte, or, sql } from "@acme/db";
 import {
-  sentences,
-  trainingSessionWords,
-  userWords,
-  words,
+  sentencesTable,
+  trainingSessionWordsTable,
+  userWordsTable,
+  wordsTable,
 } from "@acme/db/schema";
 
 import type { ProtectedCtx } from "../../utils";
@@ -101,30 +101,30 @@ export const getPracticeWordsList = async (
   ctx: ProtectedCtx,
 ): Promise<string[]> => {
   const trainingSessionWordsList = await ctx.db
-    .select({ word: words.word })
-    .from(trainingSessionWords)
-    .innerJoin(words, eq(words.id, trainingSessionWords.wordId))
-    .where(eq(trainingSessionWords.trainingSessionId, trainingSession.id));
+    .select({ word: wordsTable.word })
+    .from(trainingSessionWordsTable)
+    .innerJoin(wordsTable, eq(wordsTable.id, trainingSessionWordsTable.wordId))
+    .where(eq(trainingSessionWordsTable.trainingSessionId, trainingSession.id));
   if (trainingSessionWordsList.length > 0) {
     return trainingSessionWordsList.map((word) => word.word);
   }
 
   const currentPracticeWordsList = await ctx.db
-    .select({ word: words.word })
-    .from(userWords)
-    .innerJoin(words, eq(words.id, userWords.wordId))
+    .select({ word: wordsTable.word })
+    .from(userWordsTable)
+    .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
     .where(
       and(
-        eq(userWords.userId, ctx.session.user.id),
-        eq(words.languageCode, trainingSession.languageCode),
-        isNull(userWords.knownAt),
+        eq(userWordsTable.userId, ctx.session.user.id),
+        eq(wordsTable.languageCode, trainingSession.languageCode),
+        isNull(userWordsTable.knownAt),
         or(
-          isNull(userWords.nextPracticeAt),
-          lte(userWords.nextPracticeAt, sql`NOW()`),
+          isNull(userWordsTable.nextPracticeAt),
+          lte(userWordsTable.nextPracticeAt, sql`NOW()`),
         ),
       ),
     )
-    .orderBy(desc(userWords.seenCount));
+    .orderBy(desc(userWordsTable.seenCount));
 
   let practiceWordsList: string[] = [];
 
@@ -172,14 +172,14 @@ export const getPracticeWordsList = async (
     );
 
     await ctx.db
-      .insert(userWords)
+      .insert(userWordsTable)
       .values(
         newWords.map(
           (word) =>
             ({
               wordId: word.id,
               userId: ctx.session.user.id,
-            }) satisfies typeof userWords.$inferInsert,
+            }) satisfies typeof userWordsTable.$inferInsert,
         ),
       )
       .onConflictDoNothing();
@@ -200,8 +200,8 @@ export const getSentenceOrThrow = async (
 ) => {
   const [sentence] = await ctx.db
     .select()
-    .from(sentences)
-    .where(eq(sentences.id, sentenceId));
+    .from(sentencesTable)
+    .where(eq(sentencesTable.id, sentenceId));
 
   if (!sentence) {
     throw new TRPCError({

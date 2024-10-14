@@ -6,7 +6,7 @@ import ms from "ms";
 import { z } from "zod";
 
 import { and, asc, eq, isNull, lte, not, or, sql } from "@acme/db";
-import { userWords, words } from "@acme/db/schema";
+import { userWordsTable, wordsTable } from "@acme/db/schema";
 
 import type { UserWordWithWord } from "../validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -19,12 +19,12 @@ export const wordsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const [word] = await ctx.db
         .select()
-        .from(userWords)
-        .innerJoin(words, eq(words.id, userWords.wordId))
+        .from(userWordsTable)
+        .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
         .where(
           and(
-            eq(userWords.wordId, input.wordId),
-            eq(userWords.userId, ctx.session.user.id),
+            eq(userWordsTable.wordId, input.wordId),
+            eq(userWordsTable.userId, ctx.session.user.id),
           ),
         );
       if (!word) {
@@ -39,7 +39,7 @@ export const wordsRouter = createTRPCRouter({
     .input(z.object({ wordId: z.string(), sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const [userWord] = await ctx.db
-        .insert(userWords)
+        .insert(userWordsTable)
         .values({
           wordId: input.wordId,
           userId: ctx.session.user.id,
@@ -49,11 +49,11 @@ export const wordsRouter = createTRPCRouter({
           createdFromId: input.sessionId,
         })
         .onConflictDoUpdate({
-          target: [userWords.userId, userWords.wordId],
+          target: [userWordsTable.userId, userWordsTable.wordId],
           set: {
             lastSeenAt: sql`NOW()`,
-            seenCount: sql`${userWords.seenCount} + 1`,
-            seenCountSinceLastPracticed: sql`${userWords.seenCountSinceLastPracticed} + 1`,
+            seenCount: sql`${userWordsTable.seenCount} + 1`,
+            seenCountSinceLastPracticed: sql`${userWordsTable.seenCountSinceLastPracticed} + 1`,
           },
         })
         .returning();
@@ -72,7 +72,7 @@ export const wordsRouter = createTRPCRouter({
       );
       if (!spacedRepetitionStage) {
         await ctx.db
-          .update(userWords)
+          .update(userWordsTable)
           .set({
             knownAt: new Date(),
             knownFromId: input.sessionId,
@@ -80,8 +80,8 @@ export const wordsRouter = createTRPCRouter({
           })
           .where(
             and(
-              eq(userWords.userId, userWord.userId),
-              eq(userWords.wordId, userWord.wordId),
+              eq(userWordsTable.userId, userWord.userId),
+              eq(userWordsTable.wordId, userWord.wordId),
             ),
           );
         return;
@@ -98,7 +98,7 @@ export const wordsRouter = createTRPCRouter({
           );
 
         await ctx.db
-          .update(userWords)
+          .update(userWordsTable)
           .set({
             lastPracticedAt: new Date(),
             practiceCount: userWord.practiceCount + 1,
@@ -118,8 +118,8 @@ export const wordsRouter = createTRPCRouter({
           })
           .where(
             and(
-              eq(userWords.userId, userWord.userId),
-              eq(userWords.wordId, userWord.wordId),
+              eq(userWordsTable.userId, userWord.userId),
+              eq(userWordsTable.wordId, userWord.wordId),
             ),
           );
       }
@@ -128,7 +128,7 @@ export const wordsRouter = createTRPCRouter({
     .input(z.object({ wordId: z.string(), sessionId: z.string().nullable() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .insert(userWords)
+        .insert(userWordsTable)
         .values({
           knownAt: new Date(),
           userId: ctx.session.user.id,
@@ -137,7 +137,7 @@ export const wordsRouter = createTRPCRouter({
           hideLines: true,
         })
         .onConflictDoUpdate({
-          target: [userWords.userId, userWords.wordId],
+          target: [userWordsTable.userId, userWordsTable.wordId],
           set: {
             knownAt: new Date(),
             knownFromId: input.sessionId,
@@ -149,19 +149,19 @@ export const wordsRouter = createTRPCRouter({
     .input(z.object({ wordId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .insert(userWords)
+        .insert(userWordsTable)
         .values({
           userId: ctx.session.user.id,
           wordId: input.wordId,
         })
         .onConflictDoUpdate({
-          target: [userWords.userId, userWords.wordId],
+          target: [userWordsTable.userId, userWordsTable.wordId],
           set: {
             knownAt: null,
             knownFromId: null,
             hideLines: false,
             lastMarkedUnknownAt: sql`NOW()`,
-            markedUnknownCount: sql`${userWords.markedUnknownCount} + 1`,
+            markedUnknownCount: sql`${userWordsTable.markedUnknownCount} + 1`,
           },
         });
     }),
@@ -175,11 +175,11 @@ export const wordsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [word] = await ctx.db
         .select()
-        .from(userWords)
+        .from(userWordsTable)
         .where(
           and(
-            eq(userWords.userId, ctx.session.user.id),
-            eq(userWords.wordId, input.wordId),
+            eq(userWordsTable.userId, ctx.session.user.id),
+            eq(userWordsTable.wordId, input.wordId),
           ),
         );
 
@@ -190,7 +190,7 @@ export const wordsRouter = createTRPCRouter({
         });
       }
 
-      const data: Partial<typeof userWords.$inferInsert> = {};
+      const data: Partial<typeof userWordsTable.$inferInsert> = {};
 
       if (typeof input.hideLines !== "undefined") {
         data.hideLines = input.hideLines;
@@ -201,12 +201,12 @@ export const wordsRouter = createTRPCRouter({
       }
 
       const [updatedWord] = await ctx.db
-        .update(userWords)
+        .update(userWordsTable)
         .set(data)
         .where(
           and(
-            eq(userWords.userId, word.userId),
-            eq(userWords.wordId, word.wordId),
+            eq(userWordsTable.userId, word.userId),
+            eq(userWordsTable.wordId, word.wordId),
           ),
         )
         .returning();
@@ -219,11 +219,11 @@ export const wordsRouter = createTRPCRouter({
     .input(z.object({ wordId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .delete(userWords)
+        .delete(userWordsTable)
         .where(
           and(
-            eq(userWords.userId, ctx.session.user.id),
-            eq(userWords.wordId, input.wordId),
+            eq(userWordsTable.userId, ctx.session.user.id),
+            eq(userWordsTable.wordId, input.wordId),
           ),
         );
     }),
@@ -240,28 +240,28 @@ export const wordsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const list = await ctx.db
         .select()
-        .from(userWords)
-        .innerJoin(words, eq(words.id, userWords.wordId))
+        .from(userWordsTable)
+        .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
         .where(
           and(
-            eq(userWords.userId, ctx.session.user.id),
-            eq(words.languageCode, input.languageCode),
+            eq(userWordsTable.userId, ctx.session.user.id),
+            eq(wordsTable.languageCode, input.languageCode),
             ...(input.filter === "known"
-              ? [not(isNull(userWords.knownAt))]
+              ? [not(isNull(userWordsTable.knownAt))]
               : input.filter === "unknown"
-                ? [isNull(userWords.knownAt)]
+                ? [isNull(userWordsTable.knownAt)]
                 : input.filter === "practicing"
                   ? [
-                      isNull(userWords.knownAt),
+                      isNull(userWordsTable.knownAt),
                       or(
-                        isNull(userWords.nextPracticeAt),
-                        lte(userWords.nextPracticeAt, sql`NOW()`),
+                        isNull(userWordsTable.nextPracticeAt),
+                        lte(userWordsTable.nextPracticeAt, sql`NOW()`),
                       ),
                     ]
                   : []),
           ),
         )
-        .orderBy(asc(userWords.wordId));
+        .orderBy(asc(userWordsTable.wordId));
       return list.map(({ user_word, word }) => ({
         ...user_word,
         word: word.word,
@@ -278,16 +278,16 @@ export const wordsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const list = await ctx.db
         .select()
-        .from(userWords)
-        .innerJoin(words, eq(words.id, userWords.wordId))
+        .from(userWordsTable)
+        .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
         .where(
           and(
-            eq(userWords.userId, ctx.session.user.id),
-            eq(words.languageCode, input.languageCode),
-            isNull(userWords.knownAt),
+            eq(userWordsTable.userId, ctx.session.user.id),
+            eq(wordsTable.languageCode, input.languageCode),
+            isNull(userWordsTable.knownAt),
           ),
         )
-        .orderBy(asc(userWords.wordId));
+        .orderBy(asc(userWordsTable.wordId));
       return list.map(({ user_word, word }) => ({
         ...user_word,
         word: word.word,
@@ -304,16 +304,16 @@ export const wordsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const list = await ctx.db
         .select()
-        .from(userWords)
-        .innerJoin(words, eq(words.id, userWords.wordId))
+        .from(userWordsTable)
+        .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
         .where(
           and(
-            eq(userWords.userId, ctx.session.user.id),
-            eq(words.languageCode, input.languageCode),
-            not(isNull(userWords.knownAt)),
+            eq(userWordsTable.userId, ctx.session.user.id),
+            eq(wordsTable.languageCode, input.languageCode),
+            not(isNull(userWordsTable.knownAt)),
           ),
         )
-        .orderBy(asc(userWords.wordId));
+        .orderBy(asc(userWordsTable.wordId));
       return list.map(({ user_word, word }) => ({
         ...user_word,
         word: word.word,
@@ -342,41 +342,41 @@ export const wordsRouter = createTRPCRouter({
       const uniqueWords = [...new Set(result.object.lemmas)];
 
       const insertedWords = await ctx.db
-        .insert(words)
+        .insert(wordsTable)
         .values(
           uniqueWords.map(
             (word) =>
               ({
                 languageCode: input.languageCode,
                 word,
-              }) satisfies typeof words.$inferInsert,
+              }) satisfies typeof wordsTable.$inferInsert,
           ),
         )
         .onConflictDoUpdate({
-          target: [words.word, words.languageCode],
+          target: [wordsTable.word, wordsTable.languageCode],
           set: {
-            word: sql`${words.word}`,
-            languageCode: sql`${words.languageCode}`,
+            word: sql`${wordsTable.word}`,
+            languageCode: sql`${wordsTable.languageCode}`,
           },
         })
         .returning();
 
       const practiceWordsList = await ctx.db
-        .insert(userWords)
+        .insert(userWordsTable)
         .values(
           insertedWords.map(
             (word) =>
               ({
                 userId: ctx.session.user.id,
                 wordId: word.id,
-              }) satisfies typeof userWords.$inferInsert,
+              }) satisfies typeof userWordsTable.$inferInsert,
           ),
         )
         .onConflictDoUpdate({
-          target: [userWords.userId, userWords.wordId],
+          target: [userWordsTable.userId, userWordsTable.wordId],
           set: {
-            userId: sql`${userWords.userId}`,
-            wordId: sql`${userWords.wordId}`,
+            userId: sql`${userWordsTable.userId}`,
+            wordId: sql`${userWordsTable.wordId}`,
           },
         })
         .returning();
@@ -424,41 +424,41 @@ export const wordsRouter = createTRPCRouter({
       ];
 
       const insertedWords = await ctx.db
-        .insert(words)
+        .insert(wordsTable)
         .values(
           uniqueWords.map(
             (word) =>
               ({
                 languageCode: input.languageCode,
                 word,
-              }) satisfies typeof words.$inferInsert,
+              }) satisfies typeof wordsTable.$inferInsert,
           ),
         )
         .onConflictDoUpdate({
-          target: [words.word, words.languageCode],
+          target: [wordsTable.word, wordsTable.languageCode],
           set: {
-            word: sql`${words.word}`,
-            languageCode: sql`${words.languageCode}`,
+            word: sql`${wordsTable.word}`,
+            languageCode: sql`${wordsTable.languageCode}`,
           },
         })
         .returning();
 
       const practiceWordsList = await ctx.db
-        .insert(userWords)
+        .insert(userWordsTable)
         .values(
           insertedWords.map(
             (word) =>
               ({
                 userId: ctx.session.user.id,
                 wordId: word.id,
-              }) satisfies typeof userWords.$inferInsert,
+              }) satisfies typeof userWordsTable.$inferInsert,
           ),
         )
         .onConflictDoUpdate({
-          target: [userWords.userId, userWords.wordId],
+          target: [userWordsTable.userId, userWordsTable.wordId],
           set: {
-            userId: sql`${userWords.userId}`,
-            wordId: sql`${userWords.wordId}`,
+            userId: sql`${userWordsTable.userId}`,
+            wordId: sql`${userWordsTable.wordId}`,
           },
         })
         .returning();

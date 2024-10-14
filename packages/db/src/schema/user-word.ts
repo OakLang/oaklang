@@ -9,20 +9,20 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
-import { users } from "./auth";
-import { words } from "./word";
+import { usersTable } from "./auth";
+import { wordsTable } from "./word";
 
-export const userWords = pgTable(
+export const userWordsTable = pgTable(
   "user_word",
   {
     createdAt: timestamp("created_at").notNull().defaultNow(),
     createdFromId: text("created_from_id"),
     wordId: text("word_id")
       .notNull()
-      .references(() => words.id, { onDelete: "cascade" }),
+      .references(() => wordsTable.id, { onDelete: "cascade" }),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     knownAt: timestamp("known_at"),
     knownFromId: text("known_from_id"),
     lastSeenAt: timestamp("last_seen_at"),
@@ -51,15 +51,15 @@ export const userWords = pgTable(
   }),
 );
 
-export type UserWord = typeof userWords.$inferSelect;
+export type UserWord = typeof userWordsTable.$inferSelect;
 
-export const practiceWordsRelations = relations(userWords, ({ one }) => ({
-  word: one(words, {
-    fields: [userWords.wordId],
-    references: [words.id],
+export const practiceWordsRelations = relations(userWordsTable, ({ one }) => ({
+  word: one(wordsTable, {
+    fields: [userWordsTable.wordId],
+    references: [wordsTable.id],
   }),
-  user: one(users, {
-    fields: [userWords.userId],
-    references: [users.id],
+  user: one(usersTable, {
+    fields: [userWordsTable.userId],
+    references: [usersTable.id],
   }),
 }));

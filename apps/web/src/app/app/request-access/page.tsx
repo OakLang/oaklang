@@ -3,8 +3,8 @@ import { redirect, RedirectType } from "next/navigation";
 import { asc, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
-  accessRequestQuestionOptions,
-  accessRequestQuestions,
+  accessRequestQuestionOptionsTable,
+  accessRequestQuestionsTable,
 } from "@acme/db/schema";
 
 import UserNotFound from "~/components/user-not-found";
@@ -23,16 +23,16 @@ export default async function RequestAccessPage() {
 
   const questions = await db
     .select()
-    .from(accessRequestQuestions)
-    .orderBy(asc(accessRequestQuestions.order));
+    .from(accessRequestQuestionsTable)
+    .orderBy(asc(accessRequestQuestionsTable.order));
 
   const questionsWithOptions = await Promise.all(
     questions.map(async (question) => {
       const options = await db
         .select()
-        .from(accessRequestQuestionOptions)
-        .where(eq(accessRequestQuestionOptions.questionId, question.id))
-        .orderBy(asc(accessRequestQuestionOptions.order));
+        .from(accessRequestQuestionOptionsTable)
+        .where(eq(accessRequestQuestionOptionsTable.questionId, question.id))
+        .orderBy(asc(accessRequestQuestionOptionsTable.order));
       return {
         ...question,
         options,

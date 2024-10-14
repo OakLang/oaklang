@@ -6,7 +6,7 @@ import { openai } from "@acme/api/openai";
 import { auth } from "@acme/auth";
 import { eq } from "@acme/db";
 import { db } from "@acme/db/client";
-import { userSettings } from "@acme/db/schema";
+import { userSettingsTable } from "@acme/db/schema";
 
 const bodySchema = z.object({
   input: z.string().min(0).max(4096),
@@ -30,11 +30,11 @@ export const POST = async (req: NextRequest) => {
 
   const [settings] = await db
     .select({
-      ttsVoice: userSettings.ttsVoice,
-      ttsSpeed: userSettings.ttsSpeed,
+      ttsVoice: userSettingsTable.ttsVoice,
+      ttsSpeed: userSettingsTable.ttsSpeed,
     })
-    .from(userSettings)
-    .where(eq(userSettings.userId, session.user.id));
+    .from(userSettingsTable)
+    .where(eq(userSettingsTable.userId, session.user.id));
   if (!settings) {
     return new NextResponse("User settings not found", { status: 404 });
   }

@@ -3,12 +3,12 @@ import { z } from "zod";
 
 import { and, count, desc, eq, sql } from "@acme/db";
 import {
-  languages,
-  practiceLanguages,
-  trainingSessions,
-  trainingSessionWords,
-  userWords,
-  words,
+  languagesTable,
+  practiceLanguagesTable,
+  trainingSessionsTable,
+  trainingSessionWordsTable,
+  userWordsTable,
+  wordsTable,
 } from "@acme/db/schema";
 import {
   createTrainingSessionInput,
@@ -42,36 +42,39 @@ export const trainingSessionsRouter = createTRPCRouter({
     .query(async ({ ctx: { db, session }, input }) => {
       const trainingSessionList = await db
         .select({
-          id: trainingSessions.id,
-          createdAt: trainingSessions.createdAt,
-          userId: trainingSessions.userId,
-          title: trainingSessions.title,
-          sentenceIndex: trainingSessions.sentenceIndex,
-          complexity: trainingSessions.complexity,
-          languageCode: trainingSessions.languageCode,
-          languageName: languages.name,
-          topic: trainingSessions.topic,
+          id: trainingSessionsTable.id,
+          createdAt: trainingSessionsTable.createdAt,
+          userId: trainingSessionsTable.userId,
+          title: trainingSessionsTable.title,
+          sentenceIndex: trainingSessionsTable.sentenceIndex,
+          complexity: trainingSessionsTable.complexity,
+          languageCode: trainingSessionsTable.languageCode,
+          languageName: languagesTable.name,
+          topic: trainingSessionsTable.topic,
         })
-        .from(trainingSessions)
-        .innerJoin(languages, eq(languages.code, trainingSessions.languageCode))
+        .from(trainingSessionsTable)
+        .innerJoin(
+          languagesTable,
+          eq(languagesTable.code, trainingSessionsTable.languageCode),
+        )
         .where(
           and(
-            eq(trainingSessions.userId, session.user.id),
-            eq(trainingSessions.languageCode, input.languageCode),
+            eq(trainingSessionsTable.userId, session.user.id),
+            eq(trainingSessionsTable.languageCode, input.languageCode),
           ),
         )
-        .orderBy(desc(trainingSessions.id));
+        .orderBy(desc(trainingSessionsTable.id));
 
       return await Promise.all(
         trainingSessionList.map(async (ts) => {
           const [newWords] = await db
             .select({ count: count() })
-            .from(userWords)
-            .where(eq(userWords.createdFromId, ts.id));
+            .from(userWordsTable)
+            .where(eq(userWordsTable.createdFromId, ts.id));
           const [knownWords] = await db
             .select({ count: count() })
-            .from(userWords)
-            .where(eq(userWords.knownFromId, ts.id));
+            .from(userWordsTable)
+            .where(eq(userWordsTable.knownFromId, ts.id));
 
           return {
             ...ts,
@@ -86,18 +89,18 @@ export const trainingSessionsRouter = createTRPCRouter({
     .mutation(async (opts) => {
       const [language] = await opts.ctx.db
         .select({
-          code: practiceLanguages.languageCode,
-          name: languages.name,
+          code: practiceLanguagesTable.languageCode,
+          name: languagesTable.name,
         })
-        .from(practiceLanguages)
+        .from(practiceLanguagesTable)
         .innerJoin(
-          languages,
-          eq(languages.code, practiceLanguages.languageCode),
+          languagesTable,
+          eq(languagesTable.code, practiceLanguagesTable.languageCode),
         )
         .where(
           and(
-            eq(practiceLanguages.languageCode, opts.input.languageCode),
-            eq(practiceLanguages.userId, opts.ctx.session.user.id),
+            eq(practiceLanguagesTable.languageCode, opts.input.languageCode),
+            eq(practiceLanguagesTable.userId, opts.ctx.session.user.id),
           ),
         );
       if (!language) {
@@ -108,7 +111,7 @@ export const trainingSessionsRouter = createTRPCRouter({
       }
 
       const [trainingSession] = await opts.ctx.db
-        .insert(trainingSessions)
+        .insert(trainingSessionsTable)
         .values({
           languageCode: language.code,
           complexity: opts.input.complexity,
@@ -127,7 +130,7 @@ export const trainingSessionsRouter = createTRPCRouter({
 
       if (opts.input.words && opts.input.words.length > 0) {
         const insertedWords = await opts.ctx.db
-          .insert(words)
+          .insert(wordsTable)
           .values(
             opts.input.words.map((word) => ({
               word,
@@ -135,16 +138,16 @@ export const trainingSessionsRouter = createTRPCRouter({
             })),
           )
           .onConflictDoUpdate({
-            target: [words.word, words.languageCode],
+            target: [wordsTable.word, wordsTable.languageCode],
             set: {
-              word: sql`${words.word}`,
-              languageCode: sql`${words.languageCode}`,
+              word: sql`${wordsTable.word}`,
+              languageCode: sql`${wordsTable.languageCode}`,
             },
           })
-          .returning({ id: words.id });
+          .returning({ id: wordsTable.id });
 
         await opts.ctx.db
-          .insert(userWords)
+          .insert(userWordsTable)
           .values(
             insertedWords.map((word) => ({
               userId: opts.ctx.session.user.id,
@@ -154,7 +157,7 @@ export const trainingSessionsRouter = createTRPCRouter({
           .onConflictDoNothing();
 
         await opts.ctx.db
-          .insert(trainingSessionWords)
+          .insert(trainingSessionWordsTable)
           .values(
             insertedWords.map((word) => ({
               wordId: word.id,
@@ -181,9 +184,9 @@ export const trainingSessionsRouter = createTRPCRouter({
           session,
         );
         const [updatedTrainingSession] = await db
-          .update(trainingSessions)
+          .update(trainingSessionsTable)
           .set(data)
-          .where(eq(trainingSessions.id, trainingSession.id))
+          .where(eq(trainingSessionsTable.id, trainingSession.id))
           .returning();
         if (!updatedTrainingSession) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -205,8 +208,8 @@ export const trainingSessionsRouter = createTRPCRouter({
           session,
         );
         const [deletedTrainingSession] = await db
-          .delete(trainingSessions)
-          .where(eq(trainingSessions.id, trainingSession.id))
+          .delete(trainingSessionsTable)
+          .where(eq(trainingSessionsTable.id, trainingSession.id))
           .returning();
         if (!deletedTrainingSession) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

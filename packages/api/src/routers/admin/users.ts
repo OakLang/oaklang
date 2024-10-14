@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { and, count, desc, eq, ilike, or } from "@acme/db";
-import { userRole, users } from "@acme/db/schema";
+import { userRole, usersTable } from "@acme/db/schema";
 
 import { adminProcedure, createTRPCRouter } from "../../trpc";
 import { paginationBaseSchema } from "../../validators";
@@ -21,9 +21,9 @@ export const usersRouter = createTRPCRouter({
         ...(query
           ? [
               or(
-                eq(users.id, query),
-                ilike(users.email, `%${query}%`),
-                ilike(users.name, `%${query}%`),
+                eq(usersTable.id, query),
+                ilike(usersTable.email, `%${query}%`),
+                ilike(usersTable.name, `%${query}%`),
               ),
             ]
           : []),
@@ -31,15 +31,15 @@ export const usersRouter = createTRPCRouter({
 
       const list = await ctx.db
         .select()
-        .from(users)
+        .from(usersTable)
         .where(where)
-        .orderBy(desc(users.createdAt))
+        .orderBy(desc(usersTable.createdAt))
         .limit(size)
         .offset(offset);
 
       const totalRows = await ctx.db
         .select({ count: count() })
-        .from(users)
+        .from(usersTable)
         .where(where);
 
       const totalRowsCount = totalRows[0]?.count ?? 0;
@@ -63,8 +63,8 @@ export const usersRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const [user] = await ctx.db
         .select()
-        .from(users)
-        .where(eq(users.id, input.userId));
+        .from(usersTable)
+        .where(eq(usersTable.id, input.userId));
       if (!user) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -78,8 +78,8 @@ export const usersRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [user] = await ctx.db
         .select()
-        .from(users)
-        .where(eq(users.id, input.userId));
+        .from(usersTable)
+        .where(eq(usersTable.id, input.userId));
       if (!user) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -88,11 +88,11 @@ export const usersRouter = createTRPCRouter({
       }
 
       const [updatedUser] = await ctx.db
-        .update(users)
+        .update(usersTable)
         .set({
           isBlocked: true,
         })
-        .where(eq(users.id, user.id))
+        .where(eq(usersTable.id, user.id))
         .returning();
 
       if (!updatedUser) {
@@ -106,8 +106,8 @@ export const usersRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [user] = await ctx.db
         .select()
-        .from(users)
-        .where(eq(users.id, input.userId));
+        .from(usersTable)
+        .where(eq(usersTable.id, input.userId));
       if (!user) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -116,11 +116,11 @@ export const usersRouter = createTRPCRouter({
       }
 
       const [updatedUser] = await ctx.db
-        .update(users)
+        .update(usersTable)
         .set({
           isBlocked: false,
         })
-        .where(eq(users.id, user.id))
+        .where(eq(usersTable.id, user.id))
         .returning();
 
       if (!updatedUser) {
@@ -134,8 +134,8 @@ export const usersRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [user] = await ctx.db
         .select()
-        .from(users)
-        .where(eq(users.id, input.userId));
+        .from(usersTable)
+        .where(eq(usersTable.id, input.userId));
       if (!user) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -144,11 +144,11 @@ export const usersRouter = createTRPCRouter({
       }
 
       const [updatedUser] = await ctx.db
-        .update(users)
+        .update(usersTable)
         .set({
           role: input.role,
         })
-        .where(eq(users.id, user.id))
+        .where(eq(usersTable.id, user.id))
         .returning();
 
       if (!updatedUser) {

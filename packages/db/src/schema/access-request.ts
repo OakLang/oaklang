@@ -10,7 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { users } from "./auth";
+import { usersTable } from "./auth";
 
 export const accessRequestStatus = pgEnum("access_request_status", [
   "pending",
@@ -18,31 +18,34 @@ export const accessRequestStatus = pgEnum("access_request_status", [
   "rejected",
 ]);
 
-export const accessRequests = pgTable("access_request", {
+export const accessRequestsTable = pgTable("access_request", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   userId: text("user_id")
     .notNull()
     .primaryKey()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => usersTable.id, { onDelete: "cascade" }),
   status: accessRequestStatus("status").notNull().default("pending"),
-  reviewedBy: text("reviewed_by").references(() => users.id, {
+  reviewedBy: text("reviewed_by").references(() => usersTable.id, {
     onDelete: "set null",
   }),
   reviewedAt: timestamp("reviewed_at"),
 });
 
-export const accessRequestsRelations = relations(accessRequests, ({ one }) => ({
-  user: one(users, {
-    fields: [accessRequests.userId],
-    references: [users.id],
+export const accessRequestsRelations = relations(
+  accessRequestsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [accessRequestsTable.userId],
+      references: [usersTable.id],
+    }),
+    reviewer: one(usersTable, {
+      fields: [accessRequestsTable.reviewedBy],
+      references: [usersTable.id],
+    }),
   }),
-  reviewer: one(users, {
-    fields: [accessRequests.reviewedBy],
-    references: [users.id],
-  }),
-}));
+);
 
-export const accessRequestQuestions = pgTable("access_request_question", {
+export const accessRequestQuestionsTable = pgTable("access_request_question", {
   id: uuid("id").primaryKey().defaultRandom(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   question: text("question").notNull(),
@@ -50,23 +53,26 @@ export const accessRequestQuestions = pgTable("access_request_question", {
   order: integer("order").notNull().default(0),
 });
 
-export type AccessRequestQuestion = typeof accessRequestQuestions.$inferSelect;
+export type AccessRequestQuestion =
+  typeof accessRequestQuestionsTable.$inferSelect;
 
 export const accessRequestQuestionsRelations = relations(
-  accessRequestQuestions,
+  accessRequestQuestionsTable,
   ({ many }) => ({
-    options: many(accessRequestQuestionOptions),
+    options: many(accessRequestQuestionOptionsTable),
   }),
 );
 
-export const accessRequestQuestionOptions = pgTable(
+export const accessRequestQuestionOptionsTable = pgTable(
   "access_request_question_option",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     questionId: uuid("question_id")
       .notNull()
-      .references(() => accessRequestQuestions.id, { onDelete: "cascade" }),
+      .references(() => accessRequestQuestionsTable.id, {
+        onDelete: "cascade",
+      }),
     option: text("option").notNull(),
     order: integer("order").notNull().default(0),
     isCustomAnswer: boolean("is_custom_answer").notNull().default(false),
@@ -75,32 +81,34 @@ export const accessRequestQuestionOptions = pgTable(
 );
 
 export type AccessRequestQuestionOption =
-  typeof accessRequestQuestionOptions.$inferSelect;
+  typeof accessRequestQuestionOptionsTable.$inferSelect;
 
 export const accessRequestQuestionOptionsRelations = relations(
-  accessRequestQuestionOptions,
+  accessRequestQuestionOptionsTable,
   ({ one }) => ({
-    question: one(accessRequestQuestions, {
-      fields: [accessRequestQuestionOptions.questionId],
-      references: [accessRequestQuestions.id],
+    question: one(accessRequestQuestionsTable, {
+      fields: [accessRequestQuestionOptionsTable.questionId],
+      references: [accessRequestQuestionsTable.id],
     }),
   }),
 );
 
-export const accessRequestUserResponses = pgTable(
+export const accessRequestUserResponsesTable = pgTable(
   "access_request_user_response",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     userId: text("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     questionId: uuid("question_id")
       .notNull()
-      .references(() => accessRequestQuestions.id, { onDelete: "cascade" }),
+      .references(() => accessRequestQuestionsTable.id, {
+        onDelete: "cascade",
+      }),
     optionId: uuid("option_id")
       .notNull()
-      .references(() => accessRequestQuestionOptions.id, {
+      .references(() => accessRequestQuestionOptionsTable.id, {
         onDelete: "cascade",
       }),
     customAnswer: text("custom_answer"),
@@ -111,22 +119,22 @@ export const accessRequestUserResponses = pgTable(
 );
 
 export type AccessRequestUserResponse =
-  typeof accessRequestUserResponses.$inferSelect;
+  typeof accessRequestUserResponsesTable.$inferSelect;
 
 export const accessRequestUserResponsesRelations = relations(
-  accessRequestUserResponses,
+  accessRequestUserResponsesTable,
   ({ one }) => ({
-    user: one(users, {
-      fields: [accessRequestUserResponses.userId],
-      references: [users.id],
+    user: one(usersTable, {
+      fields: [accessRequestUserResponsesTable.userId],
+      references: [usersTable.id],
     }),
-    question: one(accessRequestQuestions, {
-      fields: [accessRequestUserResponses.questionId],
-      references: [accessRequestQuestions.id],
+    question: one(accessRequestQuestionsTable, {
+      fields: [accessRequestUserResponsesTable.questionId],
+      references: [accessRequestQuestionsTable.id],
     }),
-    option: one(accessRequestQuestionOptions, {
-      fields: [accessRequestUserResponses.optionId],
-      references: [accessRequestQuestionOptions.id],
+    option: one(accessRequestQuestionOptionsTable, {
+      fields: [accessRequestUserResponsesTable.optionId],
+      references: [accessRequestQuestionOptionsTable.id],
     }),
   }),
 );

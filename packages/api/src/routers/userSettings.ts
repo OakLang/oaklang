@@ -5,7 +5,7 @@ import {
   DEFAULT_SPACED_REPETITION_STAGES,
 } from "@acme/core/constants";
 import { eq } from "@acme/db";
-import { updateUserSettingsSchema, userSettings } from "@acme/db/schema";
+import { updateUserSettingsSchema, userSettingsTable } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getUserSettings } from "../utils";
@@ -36,9 +36,9 @@ export const userSettingsRouter = createTRPCRouter({
           }));
       }
       const [updatedSettings] = await opts.ctx.db
-        .update(userSettings)
+        .update(userSettingsTable)
         .set(opts.input)
-        .where(eq(userSettings.userId, opts.ctx.session.user.id))
+        .where(eq(userSettingsTable.userId, opts.ctx.session.user.id))
         .returning();
       if (!updatedSettings) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -48,21 +48,21 @@ export const userSettingsRouter = createTRPCRouter({
   resetInterlinearLines: protectedProcedure.mutation(async (opts) => {
     const interlinearLines = DEFAULT_INTERLINEAR_LINES;
     await opts.ctx.db
-      .update(userSettings)
+      .update(userSettingsTable)
       .set({
         interlinearLines,
       })
-      .where(eq(userSettings.userId, opts.ctx.session.user.id));
+      .where(eq(userSettingsTable.userId, opts.ctx.session.user.id));
     return interlinearLines;
   }),
   resetSpacedRepetitionStages: protectedProcedure.mutation(async (opts) => {
     const spacedRepetitionStages = DEFAULT_SPACED_REPETITION_STAGES;
     await opts.ctx.db
-      .update(userSettings)
+      .update(userSettingsTable)
       .set({
         spacedRepetitionStages,
       })
-      .where(eq(userSettings.userId, opts.ctx.session.user.id));
+      .where(eq(userSettingsTable.userId, opts.ctx.session.user.id));
     return spacedRepetitionStages;
   }),
 });

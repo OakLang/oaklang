@@ -6,7 +6,12 @@ import { z } from "zod";
 
 import { and, asc, createSelectSchema, desc, eq, isNull, not } from "@acme/db";
 import { db } from "@acme/db/client";
-import { sentences, sentenceWords, userWords, words } from "@acme/db/schema";
+import {
+  sentencesTable,
+  sentenceWordsTable,
+  userWordsTable,
+  wordsTable,
+} from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import {
@@ -25,7 +30,7 @@ import {
 export const sentencesRouter = createTRPCRouter({
   getSentences: protectedProcedure
     .input(z.object({ trainingSessionId: z.string() }))
-    .output(z.array(createSelectSchema(sentences)))
+    .output(z.array(createSelectSchema(sentencesTable)))
     .query(async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
       const trainingSession = await getTrainingSessionOrThrow(
         trainingSessionId,
@@ -34,9 +39,9 @@ export const sentencesRouter = createTRPCRouter({
       );
       return db
         .select()
-        .from(sentences)
-        .where(eq(sentences.trainingSessionId, trainingSession.id))
-        .orderBy(asc(sentences.index));
+        .from(sentencesTable)
+        .where(eq(sentencesTable.trainingSessionId, trainingSession.id))
+        .orderBy(asc(sentencesTable.index));
     }),
   getSentence: protectedProcedure
     .input(z.object({ sentenceId: z.string() }))
@@ -66,17 +71,17 @@ export const sentencesRouter = createTRPCRouter({
       const model = openai("gpt-4o", { user: ctx.session.user.id });
 
       const knownWords = await db
-        .select({ word: words.word })
-        .from(userWords)
-        .innerJoin(words, eq(words.id, userWords.wordId))
+        .select({ word: wordsTable.word })
+        .from(userWordsTable)
+        .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
         .where(
           and(
-            eq(userWords.userId, ctx.session.user.id),
-            eq(words.languageCode, practiceLanguage.code),
-            not(isNull(userWords.knownAt)),
+            eq(userWordsTable.userId, ctx.session.user.id),
+            eq(wordsTable.languageCode, practiceLanguage.code),
+            not(isNull(userWordsTable.knownAt)),
           ),
         )
-        .orderBy(desc(userWords.knownAt))
+        .orderBy(desc(userWordsTable.knownAt))
         .then((res) => res.map((item) => item.word));
 
       const practiceWordsList = await getPracticeWordsList(
@@ -90,10 +95,13 @@ export const sentencesRouter = createTRPCRouter({
       );
 
       const previouslyGeneratedSentences = await db
-        .select({ index: sentences.index, sentence: sentences.sentence })
-        .from(sentences)
-        .where(eq(sentences.trainingSessionId, trainingSession.id))
-        .orderBy(asc(sentences.index));
+        .select({
+          index: sentencesTable.index,
+          sentence: sentencesTable.sentence,
+        })
+        .from(sentencesTable)
+        .where(eq(sentencesTable.trainingSessionId, trainingSession.id))
+        .orderBy(asc(sentencesTable.index));
 
       const TEMPLATE_OBJECT = {
         SENTENCE_COUNT: input.limit,
@@ -147,7 +155,7 @@ export const sentencesRouter = createTRPCRouter({
       const lastSentenceIndex = previouslyGeneratedSentences.at(-1)?.index ?? 0;
 
       const newSentences = await db
-        .insert(sentences)
+        .insert(sentencesTable)
         .values(
           validatedSentences.map((sentence, index) => ({
             index: lastSentenceIndex + 1 + index,
@@ -167,22 +175,25 @@ export const sentencesRouter = createTRPCRouter({
     .input(z.object({ sentenceId: z.string(), promptTemplate: z.string() }))
     .output(
       z.array(
-        createSelectSchema(sentenceWords, {
+        createSelectSchema(sentenceWordsTable, {
           interlinearLines: z.object({}).catchall(z.string()),
         }).extend({
-          userWord: createSelectSchema(userWords).nullable(),
-          word: createSelectSchema(words),
+          userWord: createSelectSchema(userWordsTable).nullable(),
+          word: createSelectSchema(wordsTable),
         }),
       ),
     )
     .query(async ({ ctx, input }) => {
       const list = await db
         .select()
-        .from(sentenceWords)
-        .innerJoin(words, eq(words.id, sentenceWords.wordId))
-        .leftJoin(userWords, eq(userWords.wordId, sentenceWords.wordId))
-        .where(eq(sentenceWords.sentenceId, input.sentenceId))
-        .orderBy(asc(sentenceWords.index));
+        .from(sentenceWordsTable)
+        .innerJoin(wordsTable, eq(wordsTable.id, sentenceWordsTable.wordId))
+        .leftJoin(
+          userWordsTable,
+          eq(userWordsTable.wordId, sentenceWordsTable.wordId),
+        )
+        .where(eq(sentenceWordsTable.sentenceId, input.sentenceId))
+        .orderBy(asc(sentenceWordsTable.index));
 
       if (list.length > 0) {
         return list.map((item) => ({
@@ -240,16 +251,16 @@ export const sentencesRouter = createTRPCRouter({
           );
           const [userWord] = await db
             .select()
-            .from(userWords)
+            .from(userWordsTable)
             .where(
               and(
-                eq(userWords.userId, ctx.session.user.id),
-                eq(userWords.wordId, word.id),
+                eq(userWordsTable.userId, ctx.session.user.id),
+                eq(userWordsTable.wordId, word.id),
               ),
             );
 
           const [sentenceWord] = await db
-            .insert(sentenceWords)
+            .insert(sentenceWordsTable)
             .values({
               interlinearLines: item,
               index,

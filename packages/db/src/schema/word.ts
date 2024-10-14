@@ -2,12 +2,12 @@ import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
 
 import { createPrefixedId } from "../utils";
-import { languages } from "./language";
-import { sentenceWords } from "./sentence";
-import { trainingSessionWords } from "./training-session";
-import { userWords } from "./user-word";
+import { languagesTable } from "./language";
+import { sentenceWordsTable } from "./sentence";
+import { trainingSessionWordsTable } from "./training-session";
+import { userWordsTable } from "./user-word";
 
-export const words = pgTable(
+export const wordsTable = pgTable(
   "word",
   {
     id: text("id")
@@ -18,21 +18,21 @@ export const words = pgTable(
     word: text("word").notNull(),
     languageCode: text("language_code")
       .notNull()
-      .references(() => languages.code, { onDelete: "cascade" }),
+      .references(() => languagesTable.code, { onDelete: "cascade" }),
   },
   (table) => ({
     uniqueIdx: unique().on(table.word, table.languageCode),
   }),
 );
-export type Word = typeof words.$inferSelect;
-export type WordInsert = typeof words.$inferInsert;
+export type Word = typeof wordsTable.$inferSelect;
+export type WordInsert = typeof wordsTable.$inferInsert;
 
-export const wordsRelations = relations(words, ({ many, one }) => ({
-  userWords: many(userWords),
-  trainingSessionWords: many(trainingSessionWords),
-  sentenceWords: many(sentenceWords),
-  langauge: one(languages, {
-    fields: [words.languageCode],
-    references: [languages.code],
+export const wordsRelations = relations(wordsTable, ({ many, one }) => ({
+  userWords: many(userWordsTable),
+  trainingSessionWords: many(trainingSessionWordsTable),
+  sentenceWords: many(sentenceWordsTable),
+  langauge: one(languagesTable, {
+    fields: [wordsTable.languageCode],
+    references: [languagesTable.code],
   }),
 }));

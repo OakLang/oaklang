@@ -3,11 +3,11 @@ import { z } from "zod";
 
 import { and, asc, count, desc, eq, inArray } from "@acme/db";
 import {
-  languages,
-  practiceLanguages,
-  trainingSessions,
-  userWords,
-  words,
+  languagesTable,
+  practiceLanguagesTable,
+  trainingSessionsTable,
+  userWordsTable,
+  wordsTable,
 } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
@@ -16,7 +16,7 @@ import { languageWithStats } from "../validators";
 
 export const languagesRouter = createTRPCRouter({
   getLanguages: publicProcedure.query(({ ctx: { db } }) =>
-    db.select().from(languages).orderBy(asc(languages.name)),
+    db.select().from(languagesTable).orderBy(asc(languagesTable.name)),
   ),
   getLanguage: publicProcedure
     .input(z.object({ languageCode: z.string() }))
@@ -26,13 +26,13 @@ export const languagesRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       const languageList = await ctx.db
         .select()
-        .from(practiceLanguages)
+        .from(practiceLanguagesTable)
         .innerJoin(
-          languages,
-          eq(languages.code, practiceLanguages.languageCode),
+          languagesTable,
+          eq(languagesTable.code, practiceLanguagesTable.languageCode),
         )
-        .where(eq(practiceLanguages.userId, ctx.session.user.id))
-        .orderBy(desc(practiceLanguages.createdAt));
+        .where(eq(practiceLanguagesTable.userId, ctx.session.user.id))
+        .orderBy(desc(practiceLanguagesTable.createdAt));
       return Promise.all(
         languageList.map(async (lang) => {
           return {
@@ -54,17 +54,17 @@ export const languagesRouter = createTRPCRouter({
 
       const [practiceLanguage] = await ctx.db
         .select()
-        .from(practiceLanguages)
+        .from(practiceLanguagesTable)
         .where(
           and(
-            eq(practiceLanguages.languageCode, language.code),
-            eq(practiceLanguages.userId, ctx.session.user.id),
+            eq(practiceLanguagesTable.languageCode, language.code),
+            eq(practiceLanguagesTable.userId, ctx.session.user.id),
           ),
         );
 
       if (!practiceLanguage) {
         const [newPracticeLanguage] = await ctx.db
-          .insert(practiceLanguages)
+          .insert(practiceLanguagesTable)
           .values({
             languageCode: language.code,
             userId: ctx.session.user.id,
@@ -80,14 +80,17 @@ export const languagesRouter = createTRPCRouter({
       }
 
       await ctx.db
-        .update(practiceLanguages)
+        .update(practiceLanguagesTable)
         .set({
           lastPracticed: new Date(),
         })
         .where(
           and(
-            eq(practiceLanguages.languageCode, practiceLanguage.languageCode),
-            eq(practiceLanguages.userId, practiceLanguage.userId),
+            eq(
+              practiceLanguagesTable.languageCode,
+              practiceLanguage.languageCode,
+            ),
+            eq(practiceLanguagesTable.userId, practiceLanguage.userId),
           ),
         );
 
@@ -109,15 +112,15 @@ export const languagesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [practiceLanguage] = await ctx.db
         .select()
-        .from(practiceLanguages)
+        .from(practiceLanguagesTable)
         .innerJoin(
-          languages,
-          eq(languages.code, practiceLanguages.languageCode),
+          languagesTable,
+          eq(languagesTable.code, practiceLanguagesTable.languageCode),
         )
         .where(
           and(
-            eq(practiceLanguages.languageCode, input.languageCode),
-            eq(practiceLanguages.userId, ctx.session.user.id),
+            eq(practiceLanguagesTable.languageCode, input.languageCode),
+            eq(practiceLanguagesTable.userId, ctx.session.user.id),
           ),
         );
 
@@ -130,8 +133,8 @@ export const languagesRouter = createTRPCRouter({
 
       const [practiceLanguagesCount] = await ctx.db
         .select({ count: count() })
-        .from(practiceLanguages)
-        .where(eq(practiceLanguages.userId, ctx.session.user.id));
+        .from(practiceLanguagesTable)
+        .where(eq(practiceLanguagesTable.userId, ctx.session.user.id));
 
       if ((practiceLanguagesCount?.count ?? 0) <= 1) {
         throw new TRPCError({
@@ -143,39 +146,39 @@ export const languagesRouter = createTRPCRouter({
 
       // Delete The Practice Language
       await ctx.db
-        .delete(practiceLanguages)
+        .delete(practiceLanguagesTable)
         .where(
           and(
-            eq(practiceLanguages.languageCode, input.languageCode),
-            eq(practiceLanguages.userId, ctx.session.user.id),
+            eq(practiceLanguagesTable.languageCode, input.languageCode),
+            eq(practiceLanguagesTable.userId, ctx.session.user.id),
           ),
         );
 
       // Delete Training Sessions
       await ctx.db
-        .delete(trainingSessions)
+        .delete(trainingSessionsTable)
         .where(
           and(
-            eq(trainingSessions.userId, ctx.session.user.id),
-            eq(trainingSessions.languageCode, input.languageCode),
+            eq(trainingSessionsTable.userId, ctx.session.user.id),
+            eq(trainingSessionsTable.languageCode, input.languageCode),
           ),
         );
 
       // Delete User Words
       const userWordsList = await ctx.db
-        .select({ id: userWords.wordId })
-        .from(userWords)
-        .innerJoin(words, eq(words.id, userWords.wordId))
+        .select({ id: userWordsTable.wordId })
+        .from(userWordsTable)
+        .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
         .where(
           and(
-            eq(userWords.userId, ctx.session.user.id),
-            eq(words.languageCode, input.languageCode),
+            eq(userWordsTable.userId, ctx.session.user.id),
+            eq(wordsTable.languageCode, input.languageCode),
           ),
         );
 
-      await ctx.db.delete(userWords).where(
+      await ctx.db.delete(userWordsTable).where(
         inArray(
-          userWords.wordId,
+          userWordsTable.wordId,
           userWordsList.map((word) => word.id),
         ),
       );
@@ -185,9 +188,9 @@ export const languagesRouter = createTRPCRouter({
   getLastPracticeLanguage: protectedProcedure.query(async ({ ctx }) => {
     const [lang] = await ctx.db
       .select()
-      .from(practiceLanguages)
-      .where(eq(practiceLanguages.userId, ctx.session.user.id))
-      .orderBy(desc(practiceLanguages.lastPracticed))
+      .from(practiceLanguagesTable)
+      .where(eq(practiceLanguagesTable.userId, ctx.session.user.id))
+      .orderBy(desc(practiceLanguagesTable.lastPracticed))
       .limit(1);
     return lang ?? null;
   }),

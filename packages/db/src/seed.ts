@@ -3,9 +3,9 @@ import { sql } from "drizzle-orm";
 import type { LanguageInsert } from "./schema";
 import { db } from "./client";
 import {
-  accessRequestQuestionOptions,
-  accessRequestQuestions,
-  languages,
+  accessRequestQuestionOptionsTable,
+  accessRequestQuestionsTable,
+  languagesTable,
 } from "./schema";
 
 const seedLanguages = async () => {
@@ -20,10 +20,10 @@ const seedLanguages = async () => {
     { name: "Ukrainian", code: "uk", countryCode: "ua" },
   ];
   await db
-    .insert(languages)
+    .insert(languagesTable)
     .values(data)
     .onConflictDoUpdate({
-      target: [languages.code],
+      target: [languagesTable.code],
       set: {
         name: sql`excluded.name`,
         countryCode: sql`excluded.country_code`,
@@ -32,7 +32,7 @@ const seedLanguages = async () => {
 };
 
 const seedQuestions = async () => {
-  const questions: (typeof accessRequestQuestions.$inferInsert)[] = [
+  const questions: (typeof accessRequestQuestionsTable.$inferInsert)[] = [
     {
       id: "407c490d-0657-4080-9299-24f6c1e6e86e",
       question: "How did you find us?",
@@ -52,7 +52,7 @@ const seedQuestions = async () => {
       order: 2,
     },
   ];
-  const options: (typeof accessRequestQuestionOptions.$inferInsert)[] = [
+  const options: (typeof accessRequestQuestionOptionsTable.$inferInsert)[] = [
     {
       id: "90cbc553-f686-40fa-b13e-9b52c685d6a9",
       questionId: "76e6d7f3-4f45-4b8e-ab4f-57110557b8f8",
@@ -161,10 +161,10 @@ const seedQuestions = async () => {
     },
   ];
   await db
-    .insert(accessRequestQuestions)
+    .insert(accessRequestQuestionsTable)
     .values(questions)
     .onConflictDoUpdate({
-      target: accessRequestQuestions.id,
+      target: accessRequestQuestionsTable.id,
       set: {
         question: sql`excluded.question`,
         order: sql`excluded.order`,
@@ -172,10 +172,10 @@ const seedQuestions = async () => {
       },
     });
   await db
-    .insert(accessRequestQuestionOptions)
+    .insert(accessRequestQuestionOptionsTable)
     .values(options)
     .onConflictDoUpdate({
-      target: accessRequestQuestions.id,
+      target: accessRequestQuestionsTable.id,
       set: {
         option: sql`excluded.option`,
         order: sql`excluded.order`,
