@@ -19,17 +19,21 @@ import {
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Textarea } from "../ui/textarea";
-import StartTrainingDialog from "./start-training-dialog";
 
-export default function AddWordsToPracticeListDialog({
+export default function AddWordsDialog({
   open,
   onOpenChange,
+  action,
+  title = "Add Words",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  action?: {
+    onClick?: (wordList: UserWordWithWord[]) => void;
+    title?: string;
+  };
+  title?: string;
 }) {
-  const [showTrainigSessionDialog, setShowTrainigSessionDialog] =
-    useState(false);
   const [wordsList, setWordsList] = useState<UserWordWithWord[]>([]);
 
   useEffect(() => {
@@ -42,68 +46,55 @@ export default function AddWordsToPracticeListDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
           {wordsList.length > 0 ? (
-            <WordsListTable
-              wordsList={wordsList}
-              onStartTraining={() => {
-                setShowTrainigSessionDialog(true);
-                onOpenChange(false);
-              }}
-            />
+            <>
+              <div>
+                <ScrollArea className="h-[480px] rounded-lg border">
+                  <div>
+                    {wordsList.map((word) => (
+                      <div
+                        key={word.wordId}
+                        className="hover:bg-secondary/50 flex h-14 items-center justify-between border-b px-4 last:border-b-0"
+                      >
+                        <p>{word.word}</p>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            setWordsList(
+                              wordsList.filter((w) => w.wordId !== word.wordId),
+                            )
+                          }
+                        >
+                          <XIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <ScrollBar orientation="vertical" />
+                </ScrollArea>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Total {wordsList.length} {pluralize("word", wordsList.length)}
+                </p>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="secondary">Done</Button>
+                </DialogClose>
+                <Button onClick={() => action?.onClick?.(wordsList)}>
+                  {action?.title ?? "Done"}
+                </Button>
+              </DialogFooter>
+            </>
           ) : (
             <AddWordsToListContent onWordsListGenerated={setWordsList} />
           )}
         </DialogContent>
       </Dialog>
-
-      <StartTrainingDialog
-        open={showTrainigSessionDialog}
-        onOpenChange={setShowTrainigSessionDialog}
-        words={wordsList.map((word) => word.word)}
-      />
-    </>
-  );
-}
-
-function WordsListTable({
-  wordsList,
-  onStartTraining,
-}: {
-  wordsList: UserWordWithWord[];
-  onStartTraining?: () => void;
-}) {
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle>Practice Words</DialogTitle>
-      </DialogHeader>
-      <div>
-        <ScrollArea className="h-[480px] rounded-lg border">
-          <div>
-            {wordsList.map((word) => (
-              <div
-                key={word.wordId}
-                className="hover:bg-secondary/50 flex h-14 items-center justify-between border-b px-4 last:border-b-0"
-              >
-                <p>{word.word}</p>
-                <Button variant="outline" size="icon" className="h-8 w-8">
-                  <XIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-          <ScrollBar orientation="vertical" />
-        </ScrollArea>
-        <p className="text-muted-foreground mt-2 text-sm">
-          Total {wordsList.length} {pluralize("word", wordsList.length)}
-        </p>
-      </div>
-      <DialogFooter>
-        <DialogClose asChild>
-          <Button variant="secondary">Done</Button>
-        </DialogClose>
-        <Button onClick={onStartTraining}>Start Training</Button>
-      </DialogFooter>
     </>
   );
 }
@@ -114,29 +105,24 @@ function AddWordsToListContent({
   onWordsListGenerated: (list: UserWordWithWord[]) => void;
 }) {
   return (
-    <>
-      <DialogHeader>
-        <DialogTitle>Add Words to Practice List</DialogTitle>
-      </DialogHeader>
-      <Tabs>
-        <TabsList>
-          <TabsTrigger value="words-list">From Words List</TabsTrigger>
-          <TabsTrigger value="piece-of-text">From Piece of Text</TabsTrigger>
-          <TabsTrigger value="csv-file">From CSV File</TabsTrigger>
-        </TabsList>
-        <TabsContent className="mt-4" value="words-list">
-          <AddWordsFromList onWordsListGenerated={onWordsListGenerated} />
-        </TabsContent>
-        <TabsContent className="mt-4" value="piece-of-text">
-          <AddWordsFromPieceOfText
-            onWordsListGenerated={onWordsListGenerated}
-          />
-        </TabsContent>
-        <TabsContent className="mt-4" value="csv-file">
-          Coming soon...
-        </TabsContent>
-      </Tabs>
-    </>
+    <Tabs defaultValue="words-list">
+      <TabsList>
+        <TabsTrigger value="words-list">From Words List</TabsTrigger>
+        <TabsTrigger value="piece-of-text">From Piece of Text</TabsTrigger>
+        <TabsTrigger value="csv-file" disabled>
+          From CSV File
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent className="mt-4" value="words-list">
+        <AddWordsFromList onWordsListGenerated={onWordsListGenerated} />
+      </TabsContent>
+      <TabsContent className="mt-4" value="piece-of-text">
+        <AddWordsFromPieceOfText onWordsListGenerated={onWordsListGenerated} />
+      </TabsContent>
+      {/* <TabsContent className="mt-4" value="csv-file">
+        Coming soon...
+      </TabsContent> */}
+    </Tabs>
   );
 }
 
@@ -187,19 +173,21 @@ function AddWordsFromList({
           them to your practice list for continued learning.
         </p>
       </fieldset>
-      <Button
-        disabled={
-          addWordsToPracticeListFromCommaSeparatedListMut.isPending ||
-          addWordsToPracticeListFromCommaSeparatedListMut.isSuccess ||
-          !text
-        }
-      >
-        {(addWordsToPracticeListFromCommaSeparatedListMut.isPending ||
-          addWordsToPracticeListFromCommaSeparatedListMut.isSuccess) && (
-          <Loader2 className="-ml-1 mr-2 h-4 w-4" />
-        )}
-        Add Words to List
-      </Button>
+      <DialogFooter>
+        <Button
+          disabled={
+            addWordsToPracticeListFromCommaSeparatedListMut.isPending ||
+            addWordsToPracticeListFromCommaSeparatedListMut.isSuccess ||
+            !text
+          }
+        >
+          {(addWordsToPracticeListFromCommaSeparatedListMut.isPending ||
+            addWordsToPracticeListFromCommaSeparatedListMut.isSuccess) && (
+            <Loader2 className="-ml-1 mr-2 h-4 w-4" />
+          )}
+          Continue
+        </Button>
+      </DialogFooter>
     </form>
   );
 }
@@ -251,19 +239,21 @@ function AddWordsFromPieceOfText({
           seamlessly add it to your practice list for continuous learning.
         </p>
       </fieldset>
-      <Button
-        disabled={
-          addWordsToPracticeListFromPieceOfTextMut.isPending ||
-          addWordsToPracticeListFromPieceOfTextMut.isSuccess ||
-          !text
-        }
-      >
-        {(addWordsToPracticeListFromPieceOfTextMut.isPending ||
-          addWordsToPracticeListFromPieceOfTextMut.isSuccess) && (
-          <Loader2 className="-ml-1 mr-2 h-4 w-4" />
-        )}
-        Add Words to List
-      </Button>
+      <DialogFooter>
+        <Button
+          disabled={
+            addWordsToPracticeListFromPieceOfTextMut.isPending ||
+            addWordsToPracticeListFromPieceOfTextMut.isSuccess ||
+            !text
+          }
+        >
+          {(addWordsToPracticeListFromPieceOfTextMut.isPending ||
+            addWordsToPracticeListFromPieceOfTextMut.isSuccess) && (
+            <Loader2 className="-ml-1 mr-2 h-4 w-4" />
+          )}
+          Continue
+        </Button>
+      </DialogFooter>
     </form>
   );
 }

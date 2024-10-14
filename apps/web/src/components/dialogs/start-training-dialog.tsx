@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon, PaintbrushIcon, PlusIcon, XIcon } from "lucide-react";
@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import type { CreateTrainingSessionInput } from "@acme/db/validators";
-import { COMPLEXITY_LIST } from "@acme/core/constants";
+import { COMPLEXITY_LIST, TRAINING_SESSION_TOPICS } from "@acme/core/constants";
 import { createTrainingSessionInput } from "@acme/db/validators";
 
 import { Button } from "~/components/ui/button";
@@ -36,105 +36,10 @@ import {
 } from "~/components/ui/select";
 import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
-import { unimplementedToast } from "~/utils/helpers";
 import { Label } from "../ui/label";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Textarea } from "../ui/textarea";
-
-const topics: {
-  name: string;
-  topic: string;
-}[] = [
-  {
-    name: "Travel and Tourism",
-    topic:
-      "Sentences about exploring new cities, landmarks, and travel experiences.",
-  },
-  {
-    name: "Food and Cooking",
-    topic:
-      "Conversations around recipes, cooking techniques, and favorite dishes.",
-  },
-  {
-    name: "Sports and Fitness",
-    topic: "Training, sports events, workouts, and fitness goals.",
-  },
-  {
-    name: "Technology and Gadgets",
-    topic: "Tech trends, gadgets, and innovations in the tech world.",
-  },
-  {
-    name: "Daily Life and Routines",
-    topic:
-      "Common daily tasks like waking up, going to work, and running errands.",
-  },
-  {
-    name: "Entertainment and Movies",
-    topic: "Discussions on favorite movies, TV shows, and entertainment news.",
-  },
-  {
-    name: "Nature and Environment",
-    topic:
-      "Sentences about landscapes, animals, climate change, and sustainability.",
-  },
-  {
-    name: "Fashion and Style",
-    topic: "Conversations on fashion trends, outfits, and personal style.",
-  },
-  {
-    name: "Music and Arts",
-    topic: "Exploring musical genres, instruments, and art forms.",
-  },
-  {
-    name: "Work and Careers",
-    topic: "Topics about professions, job hunting, and office life.",
-  },
-  {
-    name: "Hobbies and Interests",
-    topic:
-      "Sentences about various hobbies like reading, painting, or gardening.",
-  },
-  {
-    name: "Social Media and Influencers",
-    topic: "Conversations about online trends and content creators.",
-  },
-  {
-    name: "Science and Space",
-    topic:
-      "Exploring topics related to space exploration, experiments, and discoveries.",
-  },
-  {
-    name: "Health and Wellness",
-    topic: "Sentences about diet, mental health, and exercise routines.",
-  },
-  {
-    name: "Relationships and Family",
-    topic: "Conversations on friendships, family dynamics, and relationships.",
-  },
-  {
-    name: "Shopping and Retail",
-    topic: "Buying clothes, groceries, or online shopping.",
-  },
-  {
-    name: "Education and Learning",
-    topic:
-      "Sentences focused on schools, universities, and learning new skills.",
-  },
-  {
-    name: "History and Culture",
-    topic: "Sentences about historical events, cultures, and traditions.",
-  },
-  {
-    name: "Politics and News",
-    topic:
-      "Discussions on current events, policies, and international relations.",
-  },
-  {
-    name: "Fantasy and Adventure",
-    topic:
-      "Fun sentences involving imaginary worlds, mythical creatures, or heroic quests.",
-  },
-];
+import AddWordsDialog from "./add-words-dialog";
 
 export default function StartTrainingDialog({
   open,
@@ -145,6 +50,10 @@ export default function StartTrainingDialog({
   onOpenChange: (open: boolean) => void;
   words?: string[];
 }) {
+  const [
+    showAddWordsToPracticeListDialog,
+    setShowAddWordsToPracticeListDialog,
+  ] = useState(false);
   const practiceLanguage = usePracticeLanguageCode();
 
   const form = useForm<CreateTrainingSessionInput>({
@@ -214,203 +123,222 @@ export default function StartTrainingDialog({
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Start a new Training Session</DialogTitle>
-        </DialogHeader>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          onReset={() => form.reset()}
-          className="grid gap-6"
-        >
-          <Form {...form}>
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Learning German" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Start a new Training Session</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            onReset={() => form.reset()}
+            className="grid gap-6"
+          >
+            <Form {...form}>
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Learning German" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="topic"
-              render={({ field }) => (
-                <FormItem className="grid w-full">
-                  <FormLabel>Topic</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Type a topic or choose from the list to generate sentences (e.g., Travel, Cooking, Space Exploration...)"
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <ScrollArea className="max-w-full overflow-x-auto">
-                    <div className="flex w-max gap-2 pb-2">
-                      {topics.map((topic) => (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          key={topic.name}
-                          onClick={() => form.setValue(field.name, topic.topic)}
-                          type="button"
-                          className="text-muted-foreground h-8 rounded-full px-3 py-0 text-sm"
-                        >
-                          {topic.name}
-                        </Button>
-                      ))}
-                    </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="complexity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Complexity</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={(value) =>
-                        form.setValue(
-                          field.name,
-                          value as CreateTrainingSessionInput["complexity"],
-                        )
-                      }
-                      {...field}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COMPLEXITY_LIST.map((item) => (
-                          <SelectItem value={item} key={item}>
-                            {item}
-                          </SelectItem>
+              <FormField
+                control={form.control}
+                name="topic"
+                render={({ field }) => (
+                  <FormItem className="grid w-full">
+                    <FormLabel>Topic</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Type a topic or choose from the list to generate sentences (e.g., Travel, Cooking, Space Exploration...)"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <ScrollArea className="max-w-full overflow-x-auto">
+                      <div className="flex w-max gap-2 pb-2">
+                        {TRAINING_SESSION_TOPICS.map((topic) => (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            key={topic.name}
+                            onClick={() =>
+                              form.setValue(field.name, topic.topic)
+                            }
+                            type="button"
+                            className="text-muted-foreground h-8 rounded-full px-3 py-0 text-sm"
+                          >
+                            {topic.name}
+                          </Button>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      </div>
+                      <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="languageCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Language</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={(value) =>
-                        form.setValue(field.name, value)
-                      }
-                      {...field}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {practiceLanguagesQuery.data?.map((item) => (
-                          <SelectItem value={item.code} key={item.code}>
-                            {item.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="complexity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Complexity</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={(value) =>
+                          form.setValue(
+                            field.name,
+                            value as CreateTrainingSessionInput["complexity"],
+                          )
+                        }
+                        {...field}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COMPLEXITY_LIST.map((item) => (
+                            <SelectItem value={item} key={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label>Words</Label>
-                <div className="flex flex-1 items-center justify-end gap-2">
-                  {words && words.length > 0 && (
+              <FormField
+                control={form.control}
+                name="languageCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Language</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={(value) =>
+                          form.setValue(field.name, value)
+                        }
+                        {...field}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {practiceLanguagesQuery.data?.map((item) => (
+                            <SelectItem value={item.code} key={item.code}>
+                              {item.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label>Words</Label>
+                  <div className="flex flex-1 items-center justify-end gap-2">
+                    {words && words.length > 0 && (
+                      <Button
+                        type="button"
+                        onClick={() => form.setValue("words", [])}
+                        className="h-8 w-8"
+                        variant="outline"
+                        size="icon"
+                      >
+                        <PaintbrushIcon className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       type="button"
-                      onClick={() => form.setValue("words", [])}
                       className="h-8 w-8"
                       variant="outline"
                       size="icon"
+                      onClick={() => setShowAddWordsToPracticeListDialog(true)}
                     >
-                      <PaintbrushIcon className="h-4 w-4" />
+                      <PlusIcon className="h-4 w-4" />
                     </Button>
-                  )}
-                  <Button
-                    type="button"
-                    className="h-8 w-8"
-                    variant="outline"
-                    size="icon"
-                    onClick={unimplementedToast}
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                  </Button>
+                  </div>
                 </div>
-              </div>
-              {words && words.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {words.map((word) => (
-                    <div
-                      key={word}
-                      className="text-muted-foreground flex items-center gap-1 rounded-full border p-1 pl-3 text-sm"
-                    >
-                      {word}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 rounded-full"
-                        onClick={() => handleRemoveWord(word)}
+                {words && words.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {words.map((word) => (
+                      <div
+                        key={word}
+                        className="text-muted-foreground flex items-center gap-1 rounded-full border p-1 pl-3 text-sm"
                       >
-                        <XIcon className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div>
-                  <p className="text-muted-foreground text-sm">No words...</p>
-                  <p className="text-muted-foreground text-sm">
-                    If no words are provided, we’ll automatically select words
-                    from your practice list, tailored to the topic you’ve
-                    chosen.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="ghost" type="reset">
-                  Cancel
-                </Button>
-              </DialogClose>
-              <Button disabled={startTrainingSession.isSuccess}>
-                {(startTrainingSession.isPending ||
-                  startTrainingSession.isSuccess) && (
-                  <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+                        {word}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 rounded-full"
+                          onClick={() => handleRemoveWord(word)}
+                        >
+                          <XIcon className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-muted-foreground text-sm">No words...</p>
+                    <p className="text-muted-foreground text-sm">
+                      If no words are provided, we’ll automatically select words
+                      from your practice list, tailored to the topic you’ve
+                      chosen.
+                    </p>
+                  </div>
                 )}
-                Start Training
-              </Button>
-            </DialogFooter>
-          </Form>
-        </form>
-      </DialogContent>
-    </Dialog>
+              </div>
+
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="ghost" type="reset">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button disabled={startTrainingSession.isSuccess}>
+                  {(startTrainingSession.isPending ||
+                    startTrainingSession.isSuccess) && (
+                    <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Start Training
+                </Button>
+              </DialogFooter>
+            </Form>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AddWordsDialog
+        open={showAddWordsToPracticeListDialog}
+        onOpenChange={setShowAddWordsToPracticeListDialog}
+        action={{
+          onClick: (list) => {
+            const words = form.getValues("words");
+            form.setValue("words", [
+              ...new Set([...(words ?? []), ...list.map((word) => word.word)]),
+            ]);
+            setShowAddWordsToPracticeListDialog(false);
+          },
+          title: "Add Words",
+        }}
+      />
+    </>
   );
 }

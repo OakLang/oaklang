@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import { ChevronDownIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 
+import type { UserWordWithWord } from "@acme/api/validators";
 import { hasPowerUserAccess } from "@acme/core/helpers";
 
-import AddWordsToPracticeListDialog from "~/components/dialogs/add-words-to-practice-list-dialog";
+import AddWordsDialog from "~/components/dialogs/add-words-dialog";
 import StartTrainingDialog from "~/components/dialogs/start-training-dialog";
 import { Button } from "~/components/ui/button";
 import {
@@ -18,6 +19,7 @@ import {
 import { unimplementedToast } from "~/utils/helpers";
 
 export default function AddButton() {
+  const [wordsList, setWordsList] = useState<UserWordWithWord[]>([]);
   const [showTrainigSessionDialog, setShowTrainigSessionDialog] =
     useState(false);
   const [
@@ -59,12 +61,27 @@ export default function AddButton() {
 
       <StartTrainingDialog
         open={showTrainigSessionDialog}
-        onOpenChange={setShowTrainigSessionDialog}
+        onOpenChange={(open) => {
+          setShowTrainigSessionDialog(open);
+          if (!open) {
+            setWordsList([]);
+          }
+        }}
+        words={wordsList.map((word) => word.word)}
       />
 
-      <AddWordsToPracticeListDialog
+      <AddWordsDialog
         open={showAddWordsToPracticeListDialog}
         onOpenChange={setShowAddWordsToPracticeListDialog}
+        title="Add Words to Practice List"
+        action={{
+          onClick: (list) => {
+            setWordsList(list);
+            setShowAddWordsToPracticeListDialog(false);
+            setShowTrainigSessionDialog(true);
+          },
+          title: "Start Training",
+        }}
       />
     </>
   );
