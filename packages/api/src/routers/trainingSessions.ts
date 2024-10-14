@@ -1,14 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { and, count, desc, eq, sql } from "@acme/db";
+import { and, count, desc, eq } from "@acme/db";
 import {
   languagesTable,
   practiceLanguagesTable,
   trainingSessionsTable,
   trainingSessionWordsTable,
   userWordsTable,
-  wordsTable,
 } from "@acme/db/schema";
 import {
   createTrainingSessionInput,
@@ -16,7 +15,11 @@ import {
 } from "@acme/db/validators";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getTrainingSessionOrThrow } from "../utils";
+import {
+  getOrCreateWords,
+  getTrainingSessionOrThrow,
+  insertUserWords,
+} from "../utils";
 
 export const trainingSessionsRouter = createTRPCRouter({
   getTrainingSession: protectedProcedure
@@ -86,8 +89,8 @@ export const trainingSessionsRouter = createTRPCRouter({
     }),
   createTrainingSession: protectedProcedure
     .input(createTrainingSessionInput)
-    .mutation(async (opts) => {
-      const [language] = await opts.ctx.db
+    .mutation(async ({ ctx, input }) => {
+      const [language] = await ctx.db
         .select({
           code: practiceLanguagesTable.languageCode,
           name: languagesTable.name,
@@ -99,8 +102,8 @@ export const trainingSessionsRouter = createTRPCRouter({
         )
         .where(
           and(
-            eq(practiceLanguagesTable.languageCode, opts.input.languageCode),
-            eq(practiceLanguagesTable.userId, opts.ctx.session.user.id),
+            eq(practiceLanguagesTable.languageCode, input.languageCode),
+            eq(practiceLanguagesTable.userId, ctx.session.user.id),
           ),
         );
       if (!language) {
@@ -110,14 +113,14 @@ export const trainingSessionsRouter = createTRPCRouter({
         });
       }
 
-      const [trainingSession] = await opts.ctx.db
+      const [trainingSession] = await ctx.db
         .insert(trainingSessionsTable)
         .values({
           languageCode: language.code,
-          complexity: opts.input.complexity,
-          title: opts.input.title,
-          userId: opts.ctx.session.user.id,
-          topic: opts.input.topic,
+          complexity: input.complexity,
+          title: input.title,
+          userId: ctx.session.user.id,
+          topic: input.topic,
         })
         .returning();
 
@@ -128,43 +131,24 @@ export const trainingSessionsRouter = createTRPCRouter({
         });
       }
 
-      if (opts.input.words && opts.input.words.length > 0) {
-        const insertedWords = await opts.ctx.db
-          .insert(wordsTable)
-          .values(
-            opts.input.words.map((word) => ({
-              word,
-              languageCode: opts.input.languageCode,
-            })),
-          )
-          .onConflictDoUpdate({
-            target: [wordsTable.word, wordsTable.languageCode],
-            set: {
-              word: sql`${wordsTable.word}`,
-              languageCode: sql`${wordsTable.languageCode}`,
-            },
-          })
-          .returning({ id: wordsTable.id });
-
-        await opts.ctx.db
-          .insert(userWordsTable)
-          .values(
-            insertedWords.map((word) => ({
-              userId: opts.ctx.session.user.id,
-              wordId: word.id,
-            })),
-          )
-          .onConflictDoNothing();
-
-        await opts.ctx.db
-          .insert(trainingSessionWordsTable)
-          .values(
-            insertedWords.map((word) => ({
-              wordId: word.id,
-              trainingSessionId: trainingSession.id,
-            })),
-          )
-          .onConflictDoNothing();
+      if (input.words && input.words.length > 0) {
+        const words = await getOrCreateWords(
+          input.words,
+          input.languageCode,
+          ctx.db,
+        );
+        if (words.length > 0) {
+          await insertUserWords(words, ctx.session.user.id, ctx.db);
+          await ctx.db
+            .insert(trainingSessionWordsTable)
+            .values(
+              words.map((word) => ({
+                wordId: word.id,
+                trainingSessionId: trainingSession.id,
+              })),
+            )
+            .onConflictDoNothing();
+        }
       }
 
       return trainingSession;

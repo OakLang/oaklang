@@ -131,3 +131,42 @@ export const getLanguageOrThrow = async (languageCode: string, db: DB) => {
   }
   return language;
 };
+
+export const getOrCreateWords = async (
+  words: string[],
+  languageCode: string,
+  db: DB,
+) => {
+  return db
+    .insert(wordsTable)
+    .values(
+      words.map((word) => ({
+        word,
+        languageCode,
+      })),
+    )
+    .onConflictDoUpdate({
+      target: [wordsTable.word, wordsTable.languageCode],
+      set: {
+        word: sql`${wordsTable.word}`,
+        languageCode: sql`${wordsTable.languageCode}`,
+      },
+    })
+    .returning({ id: wordsTable.id });
+};
+
+export const insertUserWords = async (
+  words: { id: string }[],
+  userId: string,
+  db: DB,
+) => {
+  await db
+    .insert(userWordsTable)
+    .values(
+      words.map((word) => ({
+        userId,
+        wordId: word.id,
+      })),
+    )
+    .onConflictDoNothing();
+};
