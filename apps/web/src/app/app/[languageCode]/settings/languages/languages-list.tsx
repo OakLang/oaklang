@@ -24,9 +24,9 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { api } from "~/trpc/react";
 
 export default function LanguagesList({
-  practiceLanguage,
+  languageCode,
 }: {
-  practiceLanguage: string;
+  languageCode: string;
 }) {
   const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery();
   const utils = api.useUtils();
@@ -37,7 +37,7 @@ export default function LanguagesList({
       onSuccess: (data) => {
         void utils.languages.getPracticeLanguages.invalidate();
         toast(`Your ${data.language.name} data has been deleted.`);
-        if (practiceLanguage === data.language.code) {
+        if (languageCode === data.language.code) {
           const newLang = practiceLanguagesQuery.data?.find(
             (item) => item.code !== data.language.code,
           );

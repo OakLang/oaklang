@@ -1,11 +1,12 @@
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
+import type { LanguageCodeParams } from "~/types";
 import { api } from "~/trpc/react";
-import { usePracticeLanguageCode } from "./usePracticeLanguageCode";
 
 export const useMarkWordKnownMutation = () => {
   const utils = api.useUtils();
-  const practiceLanguageCode = usePracticeLanguageCode();
+  const { languageCode } = useParams<LanguageCodeParams>();
 
   return api.words.markWordKnown.useMutation({
     onMutate: ({ wordId, sessionId }) => {
@@ -29,7 +30,7 @@ export const useMarkWordKnownMutation = () => {
     },
     onSuccess: () => {
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: practiceLanguageCode,
+        languageCode,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
@@ -45,7 +46,7 @@ export const useMarkWordKnownMutation = () => {
 
 export const useMarkWordUnknownMutation = () => {
   const utils = api.useUtils();
-  const practiceLanguageCode = usePracticeLanguageCode();
+  const { languageCode } = useParams<LanguageCodeParams>();
 
   return api.words.markWordUnknown.useMutation({
     onMutate: ({ wordId }) => {
@@ -67,7 +68,7 @@ export const useMarkWordUnknownMutation = () => {
     },
     onSuccess: () => {
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: practiceLanguageCode,
+        languageCode,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },

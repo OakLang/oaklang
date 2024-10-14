@@ -11,42 +11,38 @@ import { useTranslations } from "next-intl";
 import type { SideBarMenuItem } from "~/components/SideBarMenu";
 import SideBarMenu from "~/components/SideBarMenu";
 
-export default function SideBar({
-  practiceLanguage,
-}: {
-  practiceLanguage: string;
-}) {
+export default function SideBar({ languageCode }: { languageCode: string }) {
   const t = useTranslations("Settings.SideBar");
   const menu: SideBarMenuItem[] = useMemo(
     () => [
       {
-        href: `/app/${practiceLanguage}/settings`,
+        href: `/app/${languageCode}/settings`,
         name: t("account"),
         icon: <UserIcon className="h-4 w-4" />,
         exact: true,
       },
       {
-        href: `/app/${practiceLanguage}/settings/profile`,
+        href: `/app/${languageCode}/settings/profile`,
         name: t("profile"),
         icon: <BookUserIcon className="h-4 w-4" />,
       },
       {
-        href: `/app/${practiceLanguage}/settings/preferences`,
+        href: `/app/${languageCode}/settings/preferences`,
         name: t("preferences"),
         icon: <SettingsIcon className="h-4 w-4" />,
       },
       {
-        href: `/app/${practiceLanguage}/settings/reader`,
+        href: `/app/${languageCode}/settings/reader`,
         name: t("reader"),
         icon: <BookOpenIcon className="h-4 w-4" />,
       },
       {
-        href: `/app/${practiceLanguage}/settings/languages`,
+        href: `/app/${languageCode}/settings/languages`,
         name: t("languages"),
         icon: <LanguagesIcon className="h-4 w-4" />,
       },
     ],
-    [practiceLanguage, t],
+    [languageCode, t],
   );
 
   return (

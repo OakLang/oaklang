@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   ArrowLeftIcon,
   BookAIcon,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
+import type { LanguageCodeParams } from "~/types";
 import AppSettings from "~/components/AppSettings";
 import SimpleInterlinearLineEditor from "~/components/SimpleInterlinearLineEditor";
 import { Button } from "~/components/ui/button";
@@ -41,14 +43,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
 
 export default function TopBar() {
   const trainingSessionId = useTrainingSessionId();
-  const practiceLanguage = usePracticeLanguageCode();
+  const { languageCode } = useParams<LanguageCodeParams>();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId },
   );
@@ -69,7 +70,7 @@ export default function TopBar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="mr-2" asChild>
-                <Link href={`/app/${practiceLanguage}`}>
+                <Link href={`/app/${languageCode}`}>
                   <ArrowLeftIcon className="h-5 w-5" />
                   <div className="sr-only">Back</div>
                 </Link>
@@ -147,7 +148,7 @@ export default function TopBar() {
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">Interlinear Lines</p>
                       <Link
-                        href={`/app/${practiceLanguage}/settings/reader#interlinear-lines`}
+                        href={`/app/${languageCode}/settings/reader#interlinear-lines`}
                         className="text-muted-foreground hover:text-foreground text-sm font-medium underline"
                       >
                         Edit

@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ArrowRight, ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ import type { Sentence } from "@acme/db/schema";
 import { InterlinearLineAction } from "@acme/core/constants";
 
 import type { RouterOutputs } from "~/trpc/react";
+import type { LanguageCodeParams } from "~/types";
 import {
   useMarkWordKnownMutation,
   useMarkWordUnknownMutation,
@@ -30,7 +32,6 @@ import {
 } from "~/hooks/mutations";
 import { useDoubleClick } from "~/hooks/useDoubleClick";
 import usePlayTextToSpeech from "~/hooks/usePlayTextToSpeech";
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
@@ -54,7 +55,7 @@ export default function InterlinearView({
   onNextSentence?: () => void;
   onPreviousSentence?: () => void;
 }) {
-  const practiceLanguage = usePracticeLanguageCode();
+  const { languageCode } = useParams<LanguageCodeParams>();
   const [showTranslation, setShowTranslation] = useState(false);
   const trainingSessionId = useTrainingSessionId();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
@@ -113,7 +114,7 @@ export default function InterlinearView({
         }),
       );
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: practiceLanguage,
+        languageCode,
       });
       void utils.languages.getPracticeLanguages.invalidate();
       onNextSentence?.();
@@ -126,7 +127,7 @@ export default function InterlinearView({
     utils.languages.getPracticeLanguages,
     utils.sentences.getSentenceWords,
     utils.words.getUserWord,
-    practiceLanguage,
+    languageCode,
     onNextSentence,
     generateSentenceWordsPromptTemplate,
     markWordKnownMut,

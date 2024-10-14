@@ -1,15 +1,15 @@
 import { useParams } from "next/navigation";
 import * as Tabs from "@radix-ui/react-tabs";
 
-import type { PracticeLanguageParams } from "~/types";
-import LanguagesPage from "~/app/app/[practiceLanguage]/settings/languages/page";
-import PreferencesPage from "~/app/app/[practiceLanguage]/settings/preferences/page";
-import ReaderPage from "~/app/app/[practiceLanguage]/settings/reader/page";
+import type { LanguageCodeParams } from "~/types";
+import LanguagesPage from "~/app/app/[languageCode]/settings/languages/page";
+import PreferencesPage from "~/app/app/[languageCode]/settings/preferences/page";
+import ReaderPage from "~/app/app/[languageCode]/settings/reader/page";
 import { cn } from "~/utils";
 import { buttonVariants } from "./ui/button";
 
 export default function AppSettings() {
-  const params = useParams<PracticeLanguageParams>();
+  const params = useParams<LanguageCodeParams>();
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">

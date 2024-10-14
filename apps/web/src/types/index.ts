@@ -1,7 +1,7 @@
-export interface PracticeLanguageParams extends Record<string, string> {
-  practiceLanguage: string;
+export interface LanguageCodeParams extends Record<string, string> {
+  languageCode: string;
 }
 
-export interface TrainingSessionParams extends PracticeLanguageParams {
+export interface TrainingSessionParams extends LanguageCodeParams {
   trainingSessionId: string;
 }

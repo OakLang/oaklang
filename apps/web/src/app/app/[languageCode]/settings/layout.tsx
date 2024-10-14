@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 
-import type { PracticeLanguageParams } from "~/types";
+import type { LanguageCodeParams } from "~/types";
 import SideBar from "./side-bar";
 
 export default function SettingsLayout({
   children,
-  params,
-}: Readonly<{ children: ReactNode; params: PracticeLanguageParams }>) {
+  params: { languageCode },
+}: Readonly<{ children: ReactNode; params: LanguageCodeParams }>) {
   return (
     <>
-      <SideBar practiceLanguage={params.practiceLanguage} />
+      <SideBar languageCode={languageCode} />
       <div className="ml-64">{children}</div>
     </>
   );

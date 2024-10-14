@@ -17,9 +17,9 @@ import {
 import { Skeleton } from "./ui/skeleton";
 
 export default function UserButton({
-  practiceLanguage,
+  languageCode,
 }: {
-  practiceLanguage?: string;
+  languageCode?: string;
 }) {
   const t = useTranslations("App");
   const { data, status } = useSession();
@@ -61,11 +61,11 @@ export default function UserButton({
             Dashboard
           </Link>
         </DropdownMenuItem>
-        {practiceLanguage && (
+        {languageCode && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href={`/app/${practiceLanguage}/settings`}>
+              <Link href={`/app/${languageCode}/settings`}>
                 <SettingsIcon className="mr-2 h-4 w-4" />
                 {t("settings")}
               </Link>

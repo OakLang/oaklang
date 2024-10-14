@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { useParams } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
 import _ from "lodash";
@@ -10,6 +11,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import type { RouterOutputs } from "~/trpc/react";
+import type { LanguageCodeParams } from "~/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,11 +32,10 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
 
 export const DownloadWords = () => {
-  const practiceLanguage = usePracticeLanguageCode();
+  const { languageCode } = useParams<LanguageCodeParams>();
   const utils = api.useUtils();
 
   const donwloadWordsAsCSV = useCallback(
@@ -85,23 +86,19 @@ export const DownloadWords = () => {
 
   const downloadAllPracticeWords = useCallback(async () => {
     const words = await utils.words.getAllPracticeWords.fetch(
-      {
-        languageCode: practiceLanguage,
-      },
+      { languageCode },
       { staleTime: 0 },
     );
     donwloadWordsAsCSV(words);
-  }, [donwloadWordsAsCSV, practiceLanguage, utils.words.getAllPracticeWords]);
+  }, [donwloadWordsAsCSV, languageCode, utils.words.getAllPracticeWords]);
 
   const downloadAllKnownWords = useCallback(async () => {
     const words = await utils.words.getAllKnownWords.fetch(
-      {
-        languageCode: practiceLanguage,
-      },
+      { languageCode },
       { staleTime: 0 },
     );
     donwloadWordsAsCSV(words);
-  }, [donwloadWordsAsCSV, practiceLanguage, utils.words.getAllKnownWords]);
+  }, [donwloadWordsAsCSV, languageCode, utils.words.getAllKnownWords]);
 
   return (
     <Card>

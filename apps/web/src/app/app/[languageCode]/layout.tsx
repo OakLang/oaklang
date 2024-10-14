@@ -4,7 +4,7 @@ import { notFound, redirect, RedirectType } from "next/navigation";
 
 import { CONTACT_EMAIL } from "@acme/core/constants";
 
-import type { PracticeLanguageParams } from "~/types";
+import type { LanguageCodeParams } from "~/types";
 import FullScreenMessage from "~/components/FullScreenMessage";
 import LogoutButton from "~/components/logout-button";
 import { Button } from "~/components/ui/button";
@@ -21,10 +21,10 @@ import AppBar from "./app-bar";
 
 export default async function MainAppLayout({
   children,
-  params,
+  params: { languageCode },
 }: Readonly<{
   children: ReactNode;
-  params: PracticeLanguageParams;
+  params: LanguageCodeParams;
 }>) {
   const nativeLanguage = await getUserNativeLanguage();
   if (!nativeLanguage) {
@@ -33,10 +33,10 @@ export default async function MainAppLayout({
 
   try {
     const practiceLanguage = await trpc.languages.getPracticeLanguage({
-      languageCode: params.practiceLanguage,
+      languageCode,
     });
     void trpc.languages.getPracticeLanguage.prefetch(
-      { languageCode: params.practiceLanguage },
+      { languageCode },
       {
         initialData: practiceLanguage,
       },
@@ -98,7 +98,7 @@ As we are currently offering limited access, we could not accommodate your reque
   return (
     <HydrateClient>
       <AppStoreProvider>
-        <AppBar practiceLanguage={params.practiceLanguage} />
+        <AppBar languageCode={languageCode} />
         {children}
       </AppStoreProvider>
     </HydrateClient>

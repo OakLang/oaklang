@@ -1,11 +1,12 @@
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
 import pluralize from "pluralize";
 
 import type { UserWordWithWord } from "@acme/api/validators";
 
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
+import type { LanguageCodeParams } from "~/types";
 import { api } from "~/trpc/react";
 import { Button } from "../ui/button";
 import {
@@ -131,7 +132,7 @@ function AddWordsFromList({
 }: {
   onWordsListGenerated: (list: UserWordWithWord[]) => void;
 }) {
-  const languageCode = usePracticeLanguageCode();
+  const { languageCode } = useParams<LanguageCodeParams>();
   const [text, setText] = useState("");
 
   const addWordsToPracticeListFromCommaSeparatedListMut =
@@ -197,7 +198,7 @@ function AddWordsFromPieceOfText({
 }: {
   onWordsListGenerated: (list: UserWordWithWord[]) => void;
 }) {
-  const languageCode = usePracticeLanguageCode();
+  const { languageCode } = useParams<LanguageCodeParams>();
   const [text, setText] = useState("");
 
   const addWordsToPracticeListFromPieceOfTextMut =

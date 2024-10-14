@@ -4,21 +4,17 @@ import PracticeLanguageSwitcher from "~/components/PracticeLanguageSwitcher";
 import { ThemeToggle } from "~/components/ThemeToggle";
 import UserButton from "~/components/UserButton";
 
-export default function AppBar({
-  practiceLanguage,
-}: {
-  practiceLanguage: string;
-}) {
+export default function AppBar({ languageCode }: { languageCode: string }) {
   return (
     <header className="bg-card text-card-foreground sticky top-0 z-40 border-b">
       <div className="flex h-16 items-center gap-2 px-4">
         <h1 className="text-lg font-semibold">
-          <Link href={`/app/${practiceLanguage}`}>Oaklang</Link>
+          <Link href={`/app/${languageCode}`}>Oaklang</Link>
         </h1>
         <div className="flex-1" />
-        <PracticeLanguageSwitcher practiceLanguageCode={practiceLanguage} />
+        <PracticeLanguageSwitcher practiceLanguageCode={languageCode} />
         <ThemeToggle />
-        <UserButton practiceLanguage={practiceLanguage} />
+        <UserButton languageCode={languageCode} />
       </div>
     </header>
   );

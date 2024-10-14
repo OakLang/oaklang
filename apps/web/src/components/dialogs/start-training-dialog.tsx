@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon, PaintbrushIcon, PlusIcon, XIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -9,6 +9,7 @@ import type { CreateTrainingSessionInput } from "@acme/db/validators";
 import { COMPLEXITY_LIST, TRAINING_SESSION_TOPICS } from "@acme/core/constants";
 import { createTrainingSessionInput } from "@acme/db/validators";
 
+import type { LanguageCodeParams } from "~/types";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -34,7 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
 import { Label } from "../ui/label";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
@@ -54,7 +54,7 @@ export default function StartTrainingDialog({
     showAddWordsToPracticeListDialog,
     setShowAddWordsToPracticeListDialog,
   ] = useState(false);
-  const practiceLanguage = usePracticeLanguageCode();
+  const { languageCode } = useParams<LanguageCodeParams>();
 
   const form = useForm<CreateTrainingSessionInput>({
     resolver: zodResolver(createTrainingSessionInput),
@@ -62,7 +62,7 @@ export default function StartTrainingDialog({
       title: "",
       topic: "",
       complexity: "A1",
-      languageCode: practiceLanguage,
+      languageCode,
       words: initWords ?? [],
     },
   });
@@ -107,12 +107,12 @@ export default function StartTrainingDialog({
     if (practiceLanguagesQuery.isSuccess) {
       form.setValue(
         "title",
-        `Learn ${practiceLanguagesQuery.data.find((lang) => lang.code === practiceLanguage)?.name}`,
+        `Learn ${practiceLanguagesQuery.data.find((lang) => lang.code === languageCode)?.name}`,
       );
     }
   }, [
     form,
-    practiceLanguage,
+    languageCode,
     practiceLanguagesQuery.data,
     practiceLanguagesQuery.isSuccess,
   ]);

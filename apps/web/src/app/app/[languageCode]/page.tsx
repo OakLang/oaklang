@@ -1,15 +1,15 @@
-import type { PracticeLanguageParams } from "~/types";
+import type { LanguageCodeParams } from "~/types";
 import { HydrateClient, trpc } from "~/trpc/server";
 import AddButton from "./add-button";
 import TrainingSessionList from "./training-session-list";
 
 export default function AppPage({
-  params,
+  params: { languageCode },
 }: Readonly<{
-  params: PracticeLanguageParams;
+  params: LanguageCodeParams;
 }>) {
   void trpc.trainingSessions.getTrainingSessions.prefetch({
-    languageCode: params.practiceLanguage,
+    languageCode,
   });
 
   return (
@@ -20,7 +20,7 @@ export default function AppPage({
             <AddButton />
           </div>
         </div>
-        <TrainingSessionList practiceLanguage={params.practiceLanguage} />
+        <TrainingSessionList practiceLanguage={languageCode} />
       </div>
     </HydrateClient>
   );

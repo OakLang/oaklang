@@ -1,11 +1,11 @@
-import type { PracticeLanguageParams } from "~/types";
+import type { LanguageCodeParams } from "~/types";
 import PageTitle from "~/components/PageTitle";
 import { Separator } from "~/components/ui/separator";
 import InterlinearLineSection from "./interlinear-lines-section";
 
 export default function ReaderPage(
   _: Readonly<{
-    params: PracticeLanguageParams;
+    params: LanguageCodeParams;
   }>,
 ) {
   return (

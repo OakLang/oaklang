@@ -2,6 +2,7 @@
 
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useCallback, useState } from "react";
+import { useParams } from "next/navigation";
 import { CheckIcon, MoreHorizontal, XIcon } from "lucide-react";
 import pluralize from "pluralize";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 import type { UserWordWithWord } from "@acme/api/validators";
 
 import type { RouterInputs } from "~/trpc/react";
+import type { LanguageCodeParams } from "~/types";
 import { DataTable } from "~/components/DataTable";
 import { DataTableColumnHeader } from "~/components/DataTableColumnHeader";
 import { Button } from "~/components/ui/button";
@@ -21,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { usePracticeLanguageCode } from "~/hooks/usePracticeLanguageCode";
 import { api } from "~/trpc/react";
 import { formatDate } from "~/utils";
 
@@ -48,15 +49,15 @@ const getBooleanColumnCell = (
 
 function WordActionButton({ word }: { word: UserWordWithWord }) {
   const utils = api.useUtils();
-  const practiceLanguageCode = usePracticeLanguageCode();
+  const { languageCode } = useParams<LanguageCodeParams>();
 
   const markKnownMut = api.words.markWordKnown.useMutation({
     onSuccess: () => {
       void utils.words.getAllWords.invalidate({
-        languageCode: practiceLanguageCode,
+        languageCode,
       });
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: practiceLanguageCode,
+        languageCode,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
@@ -66,10 +67,10 @@ function WordActionButton({ word }: { word: UserWordWithWord }) {
   const markUnknownMut = api.words.markWordUnknown.useMutation({
     onSuccess: () => {
       void utils.words.getAllWords.invalidate({
-        languageCode: practiceLanguageCode,
+        languageCode,
       });
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: practiceLanguageCode,
+        languageCode,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
@@ -79,10 +80,10 @@ function WordActionButton({ word }: { word: UserWordWithWord }) {
   const deleteUserWordMut = api.words.deleteUserWord.useMutation({
     onSuccess: () => {
       void utils.words.getAllWords.invalidate({
-        languageCode: practiceLanguageCode,
+        languageCode,
       });
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: practiceLanguageCode,
+        languageCode,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
@@ -277,16 +278,12 @@ const columns: ColumnDef<UserWordWithWord>[] = [
   },
 ];
 
-export default function WardsTable({
-  practiceLanguage,
-}: {
-  practiceLanguage: string;
-}) {
+export default function WardsTable({ languageCode }: { languageCode: string }) {
   const [filter, setFilter] =
     useState<RouterInputs["words"]["getAllWords"]["filter"]>("all");
 
   const allWords = api.words.getAllWords.useQuery({
-    languageCode: practiceLanguage,
+    languageCode,
     filter,
   });
 
@@ -304,14 +301,14 @@ export default function WardsTable({
       );
       void allWords.refetch();
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: practiceLanguage,
+        languageCode: languageCode,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     [
       allWords,
       markWordKnownMutation,
-      practiceLanguage,
+      languageCode,
       utils.languages.getPracticeLanguage,
       utils.languages.getPracticeLanguages,
     ],
@@ -324,14 +321,14 @@ export default function WardsTable({
       );
       void allWords.refetch();
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: practiceLanguage,
+        languageCode: languageCode,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     [
       allWords,
       deleteUserWordMut,
-      practiceLanguage,
+      languageCode,
       utils.languages.getPracticeLanguage,
       utils.languages.getPracticeLanguages,
     ],
