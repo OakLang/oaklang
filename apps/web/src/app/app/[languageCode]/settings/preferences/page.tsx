@@ -1,6 +1,5 @@
 import { useTranslations } from "next-intl";
 
-import type { LanguageCodeParams } from "~/types";
 import PageTitle from "~/components/PageTitle";
 import { Separator } from "~/components/ui/separator";
 import AudioSection from "./audio-section";
@@ -8,11 +7,7 @@ import GeneralSection from "./general-section";
 import PromptEditSection from "./prompt-edit-section";
 import SpacedRepetitionStagesSection from "./spaced-repetition-stages-section";
 
-export default function PreferencesPage(
-  _: Readonly<{
-    params: LanguageCodeParams;
-  }>,
-) {
+export default function PreferencesPage() {
   const t = useTranslations("PreferencesPage");
 
   return (

@@ -185,13 +185,4 @@ export const languagesRouter = createTRPCRouter({
 
       return practiceLanguage;
     }),
-  getLastPracticeLanguage: protectedProcedure.query(async ({ ctx }) => {
-    const [lang] = await ctx.db
-      .select()
-      .from(practiceLanguagesTable)
-      .where(eq(practiceLanguagesTable.userId, ctx.session.user.id))
-      .orderBy(desc(practiceLanguagesTable.lastPracticed))
-      .limit(1);
-    return lang ?? null;
-  }),
 });

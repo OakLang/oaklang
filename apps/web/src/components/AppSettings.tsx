@@ -1,7 +1,5 @@
-import { useParams } from "next/navigation";
 import * as Tabs from "@radix-ui/react-tabs";
 
-import type { LanguageCodeParams } from "~/types";
 import LanguagesPage from "~/app/app/[languageCode]/settings/languages/page";
 import PreferencesPage from "~/app/app/[languageCode]/settings/preferences/page";
 import ReaderPage from "~/app/app/[languageCode]/settings/reader/page";
@@ -9,8 +7,6 @@ import { cn } from "~/utils";
 import { buttonVariants } from "./ui/button";
 
 export default function AppSettings() {
-  const params = useParams<LanguageCodeParams>();
-
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
       <div className="flex h-16 flex-shrink-0 items-center border-b px-4">
@@ -50,13 +46,13 @@ export default function AppSettings() {
         </aside>
         <div className="flex-1 overflow-y-auto">
           <Tabs.Content value="preferences">
-            <PreferencesPage params={params} />
+            <PreferencesPage />
           </Tabs.Content>
           <Tabs.Content value="reader">
-            <ReaderPage params={params} />
+            <ReaderPage />
           </Tabs.Content>
           <Tabs.Content value="languages">
-            <LanguagesPage params={params} />
+            <LanguagesPage />
           </Tabs.Content>
         </div>
       </Tabs.Root>

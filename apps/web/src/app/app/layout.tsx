@@ -30,7 +30,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  void trpc.userSettings.getUserSettings.prefetch();
+  await trpc.userSettings.getUserSettings.prefetch();
 
   return <HydrateClient>{children}</HydrateClient>;
 }

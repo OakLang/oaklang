@@ -2,21 +2,17 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound, redirect, RedirectType } from "next/navigation";
 
+import { auth } from "@acme/auth";
 import { CONTACT_EMAIL } from "@acme/core/constants";
 
 import type { LanguageCodeParams } from "~/types";
 import FullScreenMessage from "~/components/FullScreenMessage";
 import LogoutButton from "~/components/logout-button";
 import { Button } from "~/components/ui/button";
-import UserNotFound from "~/components/user-not-found";
 import AppStoreProvider from "~/providers/app-store-provider";
 import { HydrateClient, trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
-import {
-  getAccessRequest,
-  getUser,
-  getUserNativeLanguage,
-} from "~/utils/queries";
+import { getAccessRequest, getUserNativeLanguage } from "~/utils/queries";
 import AppBar from "./app-bar";
 
 export default async function MainAppLayout({
@@ -26,31 +22,12 @@ export default async function MainAppLayout({
   children: ReactNode;
   params: LanguageCodeParams;
 }>) {
-  const nativeLanguage = await getUserNativeLanguage();
-  if (!nativeLanguage) {
-    redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
-  }
-
-  try {
-    const practiceLanguage = await trpc.languages.getPracticeLanguage({
-      languageCode,
-    });
-    void trpc.languages.getPracticeLanguage.prefetch(
-      { languageCode },
-      {
-        initialData: practiceLanguage,
-      },
-    );
-  } catch (error) {
+  const session = await auth();
+  if (!session) {
     notFound();
   }
 
-  const user = await getUser();
-  if (!user) {
-    return <UserNotFound />;
-  }
-
-  const accessRequest = await getAccessRequest(user.id);
+  const accessRequest = await getAccessRequest(session.user.id);
 
   if (!accessRequest) {
     return (
@@ -95,12 +72,29 @@ As we are currently offering limited access, we could not accommodate your reque
     );
   }
 
-  return (
-    <HydrateClient>
-      <AppStoreProvider>
-        <AppBar languageCode={languageCode} />
-        {children}
-      </AppStoreProvider>
-    </HydrateClient>
-  );
+  const nativeLanguage = await getUserNativeLanguage();
+  if (!nativeLanguage) {
+    redirect(OnboardingRoutes.nativeLanguage, RedirectType.replace);
+  }
+
+  try {
+    const practiceLanguage = await trpc.languages.getPracticeLanguage({
+      languageCode,
+    });
+    void trpc.languages.getPracticeLanguage.prefetch(
+      { languageCode },
+      { initialData: practiceLanguage },
+    );
+
+    return (
+      <HydrateClient>
+        <AppStoreProvider>
+          <AppBar languageCode={languageCode} />
+          {children}
+        </AppStoreProvider>
+      </HydrateClient>
+    );
+  } catch (error) {
+    notFound();
+  }
 }

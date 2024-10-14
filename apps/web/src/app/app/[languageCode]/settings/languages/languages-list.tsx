@@ -2,12 +2,13 @@
 
 import { Fragment } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { APP_NAME } from "@acme/core/constants";
 
+import type { LanguageCodeParams } from "~/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,11 +24,8 @@ import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
 import { api } from "~/trpc/react";
 
-export default function LanguagesList({
-  languageCode,
-}: {
-  languageCode: string;
-}) {
+export default function LanguagesList() {
+  const { languageCode } = useParams<LanguageCodeParams>();
   const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery();
   const utils = api.useUtils();
   const router = useRouter();

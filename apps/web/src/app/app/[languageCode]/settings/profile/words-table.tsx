@@ -278,7 +278,8 @@ const columns: ColumnDef<UserWordWithWord>[] = [
   },
 ];
 
-export default function WardsTable({ languageCode }: { languageCode: string }) {
+export default function WardsTable() {
+  const { languageCode } = useParams<LanguageCodeParams>();
   const [filter, setFilter] =
     useState<RouterInputs["words"]["getAllWords"]["filter"]>("all");
 

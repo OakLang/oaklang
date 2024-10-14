@@ -3,16 +3,15 @@ import { FileUserIcon, LayoutIcon, UsersIcon } from "lucide-react";
 
 import type { SideBarMenuItem } from "~/components/SideBarMenu";
 import SideBarMenu from "~/components/SideBarMenu";
-import { HydrateClient } from "~/trpc/server";
 
 export default function AdminLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <HydrateClient>
+    <>
       <SideBar />
       <div className="ml-64">{children}</div>
-    </HydrateClient>
+    </>
   );
 }
 

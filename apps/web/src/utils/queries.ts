@@ -2,10 +2,11 @@ import { cache } from "react";
 
 import type { Session } from "@acme/auth";
 import { auth } from "@acme/auth";
-import { eq } from "@acme/db";
+import { desc, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
   accessRequestsTable,
+  practiceLanguagesTable,
   userSettingsTable,
   usersTable,
 } from "@acme/db/schema";
@@ -46,4 +47,14 @@ export const getAccessRequest = cache(async (userId: string) => {
     .from(accessRequestsTable)
     .where(eq(accessRequestsTable.userId, userId));
   return accessRequest ?? null;
+});
+
+export const getLastPracticeLanguage = cache(async (userId: string) => {
+  const [lang] = await db
+    .select()
+    .from(practiceLanguagesTable)
+    .where(eq(practiceLanguagesTable.userId, userId))
+    .orderBy(desc(practiceLanguagesTable.lastPracticed))
+    .limit(1);
+  return lang ?? null;
 });
