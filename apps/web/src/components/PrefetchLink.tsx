@@ -41,6 +41,7 @@ const PrefetchLink = forwardRef<HTMLAnchorElement, PrefetchLinkProps>(
           onFocus?.(e);
           prefetch(props.href);
         }}
+        prefetch={false}
         ref={ref}
         {...props}
       />
