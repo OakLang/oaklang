@@ -1,10 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "~/utils";
+import PrefetchLink from "./PrefetchLink";
 import { Button } from "./ui/button";
 
 export interface SideBarMenuItem {
@@ -20,6 +20,7 @@ export interface SideBarMenuProps {
 
 export default function SideBarMenu({ data }: SideBarMenuProps) {
   const pathname = usePathname();
+
   return (
     <nav className="grid gap-1 p-4 pt-0">
       {data.map((item) => {
@@ -38,10 +39,10 @@ export default function SideBarMenu({ data }: SideBarMenuProps) {
             )}
             variant="ghost"
           >
-            <Link href={item.href}>
+            <PrefetchLink href={item.href}>
               <span className="-ml-1 mr-2">{item.icon}</span>
               {item.name}
-            </Link>
+            </PrefetchLink>
           </Button>
         );
       })}

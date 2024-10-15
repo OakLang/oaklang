@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { LayoutIcon, LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 
+import PrefetchLink from "./PrefetchLink";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -49,26 +49,26 @@ export default function UserButton({
         <DropdownMenuSeparator />
         {data.user.role === "admin" && (
           <DropdownMenuItem asChild>
-            <Link href="/admin">
+            <PrefetchLink href="/admin">
               <LayoutIcon className="mr-2 h-4 w-4" />
               Admin
-            </Link>
+            </PrefetchLink>
           </DropdownMenuItem>
         )}
         <DropdownMenuItem asChild>
-          <Link href="/app">
+          <PrefetchLink href="/app">
             <LayoutIcon className="mr-2 h-4 w-4" />
             Dashboard
-          </Link>
+          </PrefetchLink>
         </DropdownMenuItem>
         {languageCode && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href={`/app/${languageCode}/settings`}>
+              <PrefetchLink href={`/app/${languageCode}/settings`}>
                 <SettingsIcon className="mr-2 h-4 w-4" />
                 {t("settings")}
-              </Link>
+              </PrefetchLink>
             </DropdownMenuItem>
           </>
         )}
