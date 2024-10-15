@@ -5,7 +5,18 @@ export const usePersistState = <T = undefined>(
   key: string,
   initialState: T,
 ): [T, Dispatch<SetStateAction<T>>] => {
-  const [state, setState] = useState<T>(initialState);
+  const [state, setState] = useState<T>(() => {
+    if (typeof window !== "undefined") {
+      const stateStr = localStorage.getItem(key);
+      if (stateStr) {
+        return JSON.parse(stateStr) as unknown as T;
+      } else {
+        return initialState;
+      }
+    } else {
+      return initialState;
+    }
+  });
 
   const handleSetState: Dispatch<SetStateAction<T>> = useCallback(
     (value) => {

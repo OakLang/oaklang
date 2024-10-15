@@ -40,6 +40,8 @@ export const trainingSessionsRouter = createTRPCRouter({
     .input(
       z.object({
         languageCode: z.string(),
+        limit: z.number().optional().default(10),
+        cursor: z.number().optional().default(0),
       }),
     )
     .query(async ({ ctx: { db, session }, input }) => {
@@ -66,9 +68,11 @@ export const trainingSessionsRouter = createTRPCRouter({
             eq(trainingSessionsTable.languageCode, input.languageCode),
           ),
         )
-        .orderBy(desc(trainingSessionsTable.id));
+        .limit(input.limit)
+        .offset(input.cursor)
+        .orderBy(desc(trainingSessionsTable.createdAt));
 
-      return await Promise.all(
+      const list = await Promise.all(
         trainingSessionList.map(async (ts) => {
           const [newWords] = await db
             .select({ count: count() })
@@ -86,6 +90,12 @@ export const trainingSessionsRouter = createTRPCRouter({
           };
         }),
       );
+
+      return {
+        list,
+        nextCursor:
+          list.length === input.limit ? input.cursor + input.limit : null,
+      };
     }),
   createTrainingSession: protectedProcedure
     .input(createTrainingSessionInput)

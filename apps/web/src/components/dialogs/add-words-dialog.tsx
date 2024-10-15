@@ -1,5 +1,5 @@
 import type { FormEvent } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
 import pluralize from "pluralize";
@@ -37,15 +37,17 @@ export default function AddWordsDialog({
 }) {
   const [wordsList, setWordsList] = useState<UserWordWithWord[]>([]);
 
-  useEffect(() => {
-    if (open) {
-      setWordsList([]);
-    }
-  }, [open]);
-
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          onOpenChange(open);
+          if (!open) {
+            setWordsList([]);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>

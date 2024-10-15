@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
 import type { RouterInputs } from "~/trpc/react";
+import RenderQueryResult from "~/components/RenderQueryResult";
 import TablePagination from "~/components/TablePagination";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -108,52 +109,61 @@ export default function AccessRequestsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {accessRequestsQuery.isPending ? (
-              <TableRow>
-                <TableCell colSpan={8}>
-                  <p>Loading...</p>
-                </TableCell>
-              </TableRow>
-            ) : accessRequestsQuery.isError ? (
-              <TableRow>
-                <TableCell colSpan={8}>
-                  <p>{accessRequestsQuery.error.message}</p>
-                </TableCell>
-              </TableRow>
-            ) : accessRequestsQuery.data.list.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8}>
-                  <p>No result...</p>
-                </TableCell>
-              </TableRow>
-            ) : (
-              accessRequestsQuery.data.list.map((row) => (
-                <TableRow key={row.userId}>
-                  <TableCell>{row.userId}</TableCell>
-                  <TableCell>{row.user.name ?? "-"}</TableCell>
-                  <TableCell>{row.user.email}</TableCell>
-                  <TableCell>{formatDate(row.createdAt)}</TableCell>
-                  <TableCell className="uppercase">{row.status}</TableCell>
-                  <TableCell>{row.reviewedBy ?? "-"}</TableCell>
-                  <TableCell>
-                    {row.reviewedAt ? formatDate(row.reviewedAt) : "-"}
-                  </TableCell>
-                  <TableCell
-                    className="sticky right-0 z-10 py-0"
-                    style={{
-                      boxShadow: "1px 0 0 hsl(var(--border)) inset",
-                    }}
-                  >
-                    <Button variant="outline" asChild>
-                      <Link href={`/admin/access-requests/${row.userId}`}>
-                        Review
-                        <ArrowRightIcon className="-mr-1 ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
+            <RenderQueryResult
+              query={accessRequestsQuery}
+              renderLoading={() => (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <p>Loading...</p>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
+              )}
+              renderError={({ error }) => (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <p>{error.message}</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            >
+              {({ data }) => {
+                if (data.list.length === 0) {
+                  return (
+                    <TableRow>
+                      <TableCell colSpan={8}>
+                        <p>No result...</p>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+                return data.list.map((row) => (
+                  <TableRow key={row.userId}>
+                    <TableCell>{row.userId}</TableCell>
+                    <TableCell>{row.user.name ?? "-"}</TableCell>
+                    <TableCell>{row.user.email}</TableCell>
+                    <TableCell>{formatDate(row.createdAt)}</TableCell>
+                    <TableCell className="uppercase">{row.status}</TableCell>
+                    <TableCell>{row.reviewedBy ?? "-"}</TableCell>
+                    <TableCell>
+                      {row.reviewedAt ? formatDate(row.reviewedAt) : "-"}
+                    </TableCell>
+                    <TableCell
+                      className="sticky right-0 z-10 py-0"
+                      style={{
+                        boxShadow: "1px 0 0 hsl(var(--border)) inset",
+                      }}
+                    >
+                      <Button variant="outline" asChild>
+                        <Link href={`/admin/access-requests/${row.userId}`}>
+                          Review
+                          <ArrowRightIcon className="-mr-1 ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ));
+              }}
+            </RenderQueryResult>
           </TableBody>
         </Table>
       </div>

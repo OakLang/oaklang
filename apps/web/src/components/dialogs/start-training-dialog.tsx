@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2Icon, PaintbrushIcon, PlusIcon, XIcon } from "lucide-react";
+import {
+  ChevronDownIcon,
+  Loader2Icon,
+  PaintbrushIcon,
+  PlusIcon,
+  XIcon,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import type { ModuleData } from "@acme/core/validators";
 import type { CreateTrainingSessionInput } from "@acme/db/validators";
 import { COMPLEXITY_LIST, TRAINING_SESSION_TOPICS } from "@acme/core/constants";
 import { createTrainingSessionInput } from "@acme/db/validators";
@@ -36,6 +43,13 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { api } from "~/trpc/react";
+import CreateModuleForm from "../forms/create-module-form";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { Label } from "../ui/label";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Textarea } from "../ui/textarea";
@@ -54,7 +68,9 @@ export default function StartTrainingDialog({
     showAddWordsToPracticeListDialog,
     setShowAddWordsToPracticeListDialog,
   ] = useState(false);
+  const [showCreacteModuleDialog, setShowCreacteModuleDialog] = useState(false);
   const { languageCode } = useParams<LanguageCodeParams>();
+  const router = useRouter();
 
   const form = useForm<CreateTrainingSessionInput>({
     resolver: zodResolver(createTrainingSessionInput),
@@ -66,12 +82,12 @@ export default function StartTrainingDialog({
       words: initWords ?? [],
     },
   });
-
   const words = form.watch("words");
 
-  const router = useRouter();
   const utils = api.useUtils();
-  const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery();
+  const practiceLanguage = api.languages.getPracticeLanguage.useQuery({
+    languageCode,
+  });
 
   const startTrainingSession =
     api.trainingSessions.createTrainingSession.useMutation({
@@ -95,36 +111,50 @@ export default function StartTrainingDialog({
     [startTrainingSession],
   );
 
+  const handleCloseDialog = useCallback(() => {
+    setShowCreacteModuleDialog(false);
+    setShowAddWordsToPracticeListDialog(false);
+    form.reset();
+    startTrainingSession.reset();
+    onOpenChange(false);
+  }, [form, onOpenChange, startTrainingSession]);
+
   const handleRemoveWord = useCallback(
     (word: string) => {
       const words = form.getValues("words");
-      form.setValue("words", words?.filter((w) => w !== word) ?? []);
+      form.setValue("words", words?.filter((w) => w !== word) ?? [], {
+        shouldValidate: true,
+      });
     },
     [form],
   );
 
   useEffect(() => {
-    if (practiceLanguagesQuery.isSuccess) {
-      form.setValue(
-        "title",
-        `Learn ${practiceLanguagesQuery.data.find((lang) => lang.code === languageCode)?.name}`,
-      );
+    const tilte = form.getValues("title");
+    if (open && !tilte && practiceLanguage.data?.name) {
+      form.setValue("title", `Learn ${practiceLanguage.data.name}`, {
+        shouldValidate: true,
+      });
     }
-  }, [
-    form,
-    languageCode,
-    practiceLanguagesQuery.data,
-    practiceLanguagesQuery.isSuccess,
-  ]);
+  }, [form, open, practiceLanguage.data?.name]);
 
   useEffect(() => {
-    form.setValue("words", initWords ?? []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    const words = form.getValues("words");
+    if (open && (!words || words.length === 0) && initWords) {
+      form.setValue("words", initWords, { shouldValidate: true });
+    }
+  }, [form, initWords, open]);
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseDialog();
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Start a new Training Session</DialogTitle>
@@ -170,9 +200,12 @@ export default function StartTrainingDialog({
                             variant="outline"
                             size="sm"
                             key={topic.name}
-                            onClick={() =>
-                              form.setValue(field.name, topic.topic)
-                            }
+                            onClick={() => {
+                              form.setValue(field.name, topic.topic, {
+                                shouldValidate: true,
+                              });
+                              form.setFocus("topic");
+                            }}
                             type="button"
                             className="text-muted-foreground h-8 rounded-full px-3 py-0 text-sm"
                           >
@@ -198,6 +231,9 @@ export default function StartTrainingDialog({
                           form.setValue(
                             field.name,
                             value as CreateTrainingSessionInput["complexity"],
+                            {
+                              shouldValidate: true,
+                            },
                           )
                         }
                         {...field}
@@ -219,36 +255,6 @@ export default function StartTrainingDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="languageCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Language</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={(value) =>
-                          form.setValue(field.name, value)
-                        }
-                        {...field}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {practiceLanguagesQuery.data?.map((item) => (
-                            <SelectItem value={item.code} key={item.code}>
-                              {item.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <Label>Words</Label>
@@ -256,7 +262,9 @@ export default function StartTrainingDialog({
                     {words && words.length > 0 && (
                       <Button
                         type="button"
-                        onClick={() => form.setValue("words", [])}
+                        onClick={() => {
+                          form.setValue("words", [], { shouldValidate: true });
+                        }}
                         className="h-8 w-8"
                         variant="outline"
                         size="icon"
@@ -312,13 +320,48 @@ export default function StartTrainingDialog({
                     Cancel
                   </Button>
                 </DialogClose>
-                <Button disabled={startTrainingSession.isSuccess}>
-                  {(startTrainingSession.isPending ||
-                    startTrainingSession.isSuccess) && (
-                    <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Start Training
-                </Button>
+
+                <div className="flex space-x-px">
+                  <Button
+                    disabled={
+                      !form.formState.isValid ||
+                      startTrainingSession.isPending ||
+                      startTrainingSession.isSuccess
+                    }
+                    className="rounded-r-none"
+                  >
+                    {(startTrainingSession.isPending ||
+                      startTrainingSession.isSuccess) && (
+                      <Loader2Icon className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Start Training
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        size="icon"
+                        className="rounded-l-none"
+                        disabled={
+                          !form.formState.isValid ||
+                          startTrainingSession.isPending ||
+                          startTrainingSession.isSuccess
+                        }
+                      >
+                        <ChevronDownIcon className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setShowCreacteModuleDialog(true);
+                        }}
+                      >
+                        Save as Module
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </DialogFooter>
             </Form>
           </form>
@@ -339,6 +382,46 @@ export default function StartTrainingDialog({
           title: "Add Words",
         }}
       />
+
+      <Dialog
+        open={showCreacteModuleDialog}
+        onOpenChange={setShowCreacteModuleDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Module</DialogTitle>
+          </DialogHeader>
+          <CreateModuleForm
+            defaultName={form.getValues("title")}
+            data={
+              {
+                type: "exercise-1",
+                topic: form.getValues("topic"),
+                complexity: form.getValues("complexity"),
+                words: form.getValues("words"),
+              } satisfies ModuleData
+            }
+            onSuccess={() => {
+              setShowCreacteModuleDialog(false);
+              handleCloseDialog();
+            }}
+          >
+            {({ form, isLoading }) => (
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="ghost" type="reset">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button disabled={!form.formState.isValid || isLoading}>
+                  {isLoading && <Loader2Icon className="-ml-1 mr-2 h-4 w-4" />}
+                  Create Module
+                </Button>
+              </DialogFooter>
+            )}
+          </CreateModuleForm>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

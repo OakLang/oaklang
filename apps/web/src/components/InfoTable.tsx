@@ -11,7 +11,7 @@ export default function InfoTable({
       <tbody>
         {data.map((entry) => (
           <tr key={entry.label}>
-            <td className="w-[0%] whitespace-nowrap py-1 pr-4 font-medium">
+            <td className="w-[0%] whitespace-nowrap py-1 pr-4 align-top font-medium">
               {entry.label}
             </td>
             <td className="py-1">{entry.value}</td>

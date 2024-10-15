@@ -190,6 +190,13 @@
       "when": 1728903803624,
       "tag": "0026_nostalgic_cyclops",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1728991285726,
+      "tag": "0027_wakeful_sue_storm",
+      "breakpoints": true
     }
   ]
 }

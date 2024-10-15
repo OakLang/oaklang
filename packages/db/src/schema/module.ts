@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-import { COMPLEXITY_LIST } from "@acme/core/constants";
+import type { ModuleData } from "@acme/core/validators";
 
 import { createPrefixedId } from "../utils";
 import { usersTable } from "./auth";
@@ -22,13 +22,10 @@ export const modulesTable = pgTable("module", {
   userId: text("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  topic: text("topic"),
-  complexity: text("complexity", { enum: COMPLEXITY_LIST })
-    .notNull()
-    .default("A1"),
   languageCode: text("language_code")
     .notNull()
     .references(() => languagesTable.code, { onDelete: "cascade" }),
+  jsonData: jsonb("json_data").notNull().$type<ModuleData>(),
 });
 
 export type Module = typeof modulesTable.$inferSelect;

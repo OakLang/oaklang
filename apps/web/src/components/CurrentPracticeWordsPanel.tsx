@@ -1,27 +1,16 @@
-import { Loader2 } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { api } from "~/trpc/react";
 import { formatDate } from "~/utils";
 import ObjectDetailsList from "./ObjectDetailsList";
+import RenderQueryResult from "./RenderQueryResult";
 
 export default function CurrentPracticeWordsPanel() {
   const trainingSessionId = useTrainingSessionId();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId },
   );
-
-  if (trainingSessionQuery.isPending) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
-  }
-
-  if (trainingSessionQuery.isError) {
-    return <p>{trainingSessionQuery.error.message}</p>;
-  }
 
   return (
     <div className="space-y-8 py-4">
@@ -30,17 +19,28 @@ export default function CurrentPracticeWordsPanel() {
           <h2 className="font-semibold">Training Session Details</h2>
         </div>
 
-        <ObjectDetailsList
-          data={{
-            Id: trainingSessionQuery.data.id,
-            "User Id": trainingSessionQuery.data.userId,
-            "Created At": formatDate(trainingSessionQuery.data.createdAt),
-            Name: trainingSessionQuery.data.title,
-            Complexity: trainingSessionQuery.data.complexity,
-            "Language Code": trainingSessionQuery.data.languageCode,
-            Topic: trainingSessionQuery.data.topic,
-          }}
-        />
+        <RenderQueryResult
+          query={trainingSessionQuery}
+          renderLoading={() => (
+            <div className="flex items-center justify-center py-8">
+              <Loader2Icon className="animate-spin" />
+            </div>
+          )}
+        >
+          {({ data: trainingSession }) => (
+            <ObjectDetailsList
+              data={{
+                Id: trainingSession.id,
+                "User Id": trainingSession.userId,
+                "Created At": formatDate(trainingSession.createdAt),
+                Name: trainingSession.title,
+                Complexity: trainingSession.complexity,
+                "Language Code": trainingSession.languageCode,
+                Topic: trainingSession.topic,
+              }}
+            />
+          )}
+        </RenderQueryResult>
       </div>
     </div>
   );

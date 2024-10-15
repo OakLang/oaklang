@@ -4,6 +4,12 @@ export const AUTH_REQUEST_EMAIL = "auth_request@oaklang.com";
 export const CONTACT_EMAIL = "auth_request@oaklang.com";
 export const SUPPORT_EMAIL = "support@oaklang.com";
 
+export const Exercises = {
+  exercies1: "exercise-1",
+  exercies2: "exercise-2",
+  exercies3: "exercise-3",
+} as const;
+
 export const COMPLEXITY_LIST = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 export const INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS = [

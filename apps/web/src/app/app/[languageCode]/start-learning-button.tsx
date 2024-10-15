@@ -1,11 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ChevronDownIcon } from "lucide-react";
-import { useSession } from "next-auth/react";
 
 import type { UserWordWithWord } from "@acme/api/validators";
-import { hasPowerUserAccess } from "@acme/core/helpers";
 
 import AddWordsDialog from "~/components/dialogs/add-words-dialog";
 import StartTrainingDialog from "~/components/dialogs/start-training-dialog";
@@ -16,9 +14,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { unimplementedToast } from "~/utils/helpers";
 
-export default function AddButton() {
+export default function StartLearningButton() {
   const [wordsList, setWordsList] = useState<UserWordWithWord[]>([]);
   const [showTrainigSessionDialog, setShowTrainigSessionDialog] =
     useState(false);
@@ -26,12 +23,6 @@ export default function AddButton() {
     showAddWordsToPracticeListDialog,
     setShowAddWordsToPracticeListDialog,
   ] = useState(false);
-
-  const { data } = useSession();
-  const isPowerUser = useMemo(
-    () => hasPowerUserAccess(data?.user.role ?? ""),
-    [data?.user.role],
-  );
 
   return (
     <>
@@ -51,11 +42,6 @@ export default function AddButton() {
           >
             Add Words to Practice List
           </DropdownMenuItem>
-          {isPowerUser && (
-            <DropdownMenuItem onClick={unimplementedToast}>
-              Add Module
-            </DropdownMenuItem>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

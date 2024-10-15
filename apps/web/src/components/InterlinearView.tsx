@@ -37,6 +37,7 @@ import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
+import RenderQueryResult from "./RenderQueryResult";
 import { Button } from "./ui/button";
 import {
   ContextMenu,
@@ -242,36 +243,38 @@ const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uniqueWordIds]);
 
-  if (sentenceWordsQuery.isPending) {
-    return new Array(5).fill(0).map((_, i) => (
-      <div
-        className="mb-16 mr-4 inline-flex flex-col items-center gap-2"
-        key={i}
-      >
-        {userSettingsQuery.data?.interlinearLines.map((line) => (
-          <Skeleton
-            className="inline"
-            style={{
-              height: line.style.fontSize,
-              width:
-                (Math.random() * (40 - 10) + 40) * (line.style.fontSize / 16),
-            }}
-            key={line.id}
-          />
-        ))}
-      </div>
-    ));
-  }
-
-  if (sentenceWordsQuery.isError) {
-    return <p>{sentenceWordsQuery.error.message}</p>;
-  }
-
   return (
     <SentenceContext.Provider value={{ sentence }}>
-      {sentenceWordsQuery.data.map((word) => {
-        return <InterlinearLineColumn key={word.index} word={word} />;
-      })}
+      <RenderQueryResult
+        query={sentenceWordsQuery}
+        renderLoading={() => {
+          return new Array(5).fill(0).map((_, i) => (
+            <div
+              className="mb-16 mr-4 inline-flex flex-col items-center gap-2"
+              key={i}
+            >
+              {userSettingsQuery.data?.interlinearLines.map((line) => (
+                <Skeleton
+                  className="inline"
+                  style={{
+                    height: line.style.fontSize,
+                    width:
+                      (Math.random() * (40 - 10) + 40) *
+                      (line.style.fontSize / 16),
+                  }}
+                  key={line.id}
+                />
+              ))}
+            </div>
+          ));
+        }}
+      >
+        {({ data }) =>
+          data.map((word) => {
+            return <InterlinearLineColumn key={word.index} word={word} />;
+          })
+        }
+      </RenderQueryResult>
     </SentenceContext.Provider>
   );
 };

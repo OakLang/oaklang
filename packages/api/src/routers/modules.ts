@@ -1,12 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { COMPLEXITY_LIST } from "@acme/core/constants";
+import { moduleDataSchema } from "@acme/core/validators";
 import { and, eq } from "@acme/db";
-import { modulesTable, moduleWordsTable } from "@acme/db/schema";
+import { modulesTable } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getOrCreateWords, insertUserWords } from "../utils";
 
 export const modulesRouter = createTRPCRouter({
   getModules: protectedProcedure
@@ -65,11 +64,9 @@ export const modulesRouter = createTRPCRouter({
       z.object({
         name: z.string().min(1).max(100),
         description: z.string().max(300).nullish(),
-        topic: z.string(),
-        complexity: z.enum(COMPLEXITY_LIST),
         languageCode: z.string().min(1),
         collectionId: z.string().min(1),
-        words: z.array(z.string()).optional(),
+        data: moduleDataSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -81,27 +78,11 @@ export const modulesRouter = createTRPCRouter({
           userId: ctx.session.user.id,
           description: input.description,
           collectionId: input.collectionId,
-          complexity: input.complexity,
-          topic: input.topic,
+          jsonData: input.data,
         })
         .returning();
       if (!module) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      }
-      if (input.words && input.words.length > 0) {
-        const words = await getOrCreateWords(
-          input.words,
-          input.languageCode,
-          ctx.db,
-        );
-        if (words.length > 0) {
-          await insertUserWords(words, ctx.session.user.id, ctx.db);
-          await ctx.db
-            .insert(moduleWordsTable)
-            .values(
-              words.map((word) => ({ moduleId: module.id, wordId: word.id })),
-            );
-        }
       }
       return module;
     }),

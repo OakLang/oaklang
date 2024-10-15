@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { UserRole } from "@acme/db/schema";
 
 import InfoTable from "~/components/InfoTable";
+import RenderQueryResult from "~/components/RenderQueryResult";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,109 +68,103 @@ export default function UserDetails({ userId }: { userId: string }) {
     unblockUser.mutate({ userId });
   }, [unblockUser, userId]);
 
-  if (userQuery.isPending) {
-    return <p>Loading...</p>;
-  }
-
-  if (userQuery.isError) {
-    return <p>{userQuery.error.message}</p>;
-  }
-
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="mb-4 font-semibold">Image</p>
-        <div>
-          <Avatar className="h-24 w-24">
-            <AvatarFallback>
-              <UserIcon className="h-10 w-10" />
-            </AvatarFallback>
-            {userQuery.data.image ? (
-              <AvatarImage src={userQuery.data.image} />
-            ) : null}
-          </Avatar>
-        </div>
-      </div>
+    <RenderQueryResult query={userQuery}>
+      {({ data: user }) => (
+        <div className="space-y-8">
+          <div>
+            <p className="mb-4 font-semibold">Image</p>
+            <div>
+              <Avatar className="h-24 w-24">
+                <AvatarFallback>
+                  <UserIcon className="h-10 w-10" />
+                </AvatarFallback>
+                {user.image ? <AvatarImage src={user.image} /> : null}
+              </Avatar>
+            </div>
+          </div>
 
-      <div>
-        <p className="mb-4 font-semibold">User Info</p>
-        <InfoTable
-          data={Object.entries({
-            Id: userQuery.data.id,
-            "Joined At": formatDate(userQuery.data.createdAt),
-            Name: userQuery.data.name ?? "-",
-            Email: userQuery.data.email,
-            "Email Verified": userQuery.data.emailVerified
-              ? formatDate(userQuery.data.emailVerified)
-              : "-",
-            Role: userQuery.data.role,
-            Blocked: userQuery.data.isBlocked ? "Yes" : "No",
-          }).map((entry) => ({ label: entry[0], value: entry[1] }))}
-        />
-      </div>
+          <div>
+            <p className="mb-4 font-semibold">User Info</p>
+            <InfoTable
+              data={Object.entries({
+                Id: user.id,
+                "Joined At": formatDate(user.createdAt),
+                Name: user.name ?? "-",
+                Email: user.email,
+                "Email Verified": user.emailVerified
+                  ? formatDate(user.emailVerified)
+                  : "-",
+                Role: user.role,
+                Blocked: user.isBlocked ? "Yes" : "No",
+              }).map((entry) => ({ label: entry[0], value: entry[1] }))}
+            />
+          </div>
 
-      <div>
-        <p className="mb-4 font-semibold">Actions</p>
-        <div className="flex flex-wrap gap-2">
-          <Dialog
-            open={userRoleChangeDialogOpen}
-            onOpenChange={setUserRoleChangeDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button variant="outline">Change Role</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <ChangeRoleDialogContent
-                userId={userId}
-                role={userQuery.data.role}
-                onSuccess={() => {
-                  setUserRoleChangeDialogOpen(false);
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-          {userQuery.data.isBlocked ? (
-            <Button
-              variant="outline"
-              onClick={handleUnlockUser}
-              disabled={unblockUser.isPending}
-            >
-              Unblock User
-            </Button>
-          ) : (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" disabled={blockUser.isPending}>
-                  Block User
+          <div>
+            <p className="mb-4 font-semibold">Actions</p>
+            <div className="flex flex-wrap gap-2">
+              <Dialog
+                open={userRoleChangeDialogOpen}
+                onOpenChange={setUserRoleChangeDialogOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button variant="outline">Change Role</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <ChangeRoleDialogContent
+                    userId={userId}
+                    role={user.role}
+                    onSuccess={() => {
+                      setUserRoleChangeDialogOpen(false);
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+              {user.isBlocked ? (
+                <Button
+                  variant="outline"
+                  onClick={handleUnlockUser}
+                  disabled={unblockUser.isPending}
+                >
+                  Unblock User
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Block {userQuery.data.name ?? userQuery.data.email}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to block this user?
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction asChild>
-                    <Button
-                      variant="destructive"
-                      onClick={handleBlockUser}
-                      disabled={blockUser.isPending}
-                    >
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" disabled={blockUser.isPending}>
                       Block User
                     </Button>
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Block {user.name ?? user.email}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to block this user?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction asChild>
+                        <Button
+                          variant="destructive"
+                          onClick={handleBlockUser}
+                          disabled={blockUser.isPending}
+                        >
+                          Block User
+                        </Button>
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </RenderQueryResult>
   );
 }
 
