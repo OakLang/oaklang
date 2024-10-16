@@ -15,6 +15,7 @@ export const createTrainingSessionInput = createInsertSchema(
     complexity: true,
     languageCode: true,
     topic: true,
+    exercise: true,
   })
   .extend({
     words: z.array(z.string()).optional(),

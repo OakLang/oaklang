@@ -7,7 +7,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { COMPLEXITY_LIST } from "@acme/core/constants";
+import { COMPLEXITY_LIST, Exercises } from "@acme/core/constants";
 
 import { createPrefixedId } from "../utils";
 import { usersTable } from "./auth";
@@ -25,6 +25,8 @@ export const trainingSessionsTable = pgTable("training_session", {
     .references(() => usersTable.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   sentenceIndex: integer("sentence_index").notNull().default(0),
+  exercise: text("exercise").notNull().default(Exercises.exercies1),
+
   complexity: text("complexity", { enum: COMPLEXITY_LIST })
     .notNull()
     .default("A1"),

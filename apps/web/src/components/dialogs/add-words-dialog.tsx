@@ -88,7 +88,13 @@ export default function AddWordsDialog({
                 <DialogClose asChild>
                   <Button variant="secondary">Done</Button>
                 </DialogClose>
-                <Button onClick={() => action?.onClick?.(wordsList)}>
+                <Button
+                  onClick={() => {
+                    action?.onClick?.(wordsList);
+                    onOpenChange(false);
+                    setWordsList([]);
+                  }}
+                >
                   {action?.title ?? "Done"}
                 </Button>
               </DialogFooter>
