@@ -152,7 +152,7 @@ export const getOrCreateWords = async (
         languageCode: sql`${wordsTable.languageCode}`,
       },
     })
-    .returning({ id: wordsTable.id });
+    .returning();
 };
 
 export const insertUserWords = async (

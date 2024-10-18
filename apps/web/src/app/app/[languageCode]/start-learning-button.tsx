@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDownIcon } from "lucide-react";
 
-import type { UserWordWithWord } from "@acme/api/validators";
+import type { Word } from "@acme/db/schema";
 
 import AddWordsDialog from "~/components/dialogs/add-words-dialog";
 import StartTrainingDialog from "~/components/dialogs/start-training-dialog";
@@ -16,7 +16,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 
 export default function StartLearningButton() {
-  const [wordsList, setWordsList] = useState<UserWordWithWord[]>([]);
+  const [wordsList, setWordsList] = useState<Word[]>([]);
   const [showTrainigSessionDialog, setShowTrainigSessionDialog] =
     useState(false);
   const [

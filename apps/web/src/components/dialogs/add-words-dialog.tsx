@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
 import pluralize from "pluralize";
 
-import type { UserWordWithWord } from "@acme/api/validators";
+import type { Word } from "@acme/db/schema";
 
 import type { LanguageCodeParams } from "~/types";
 import { api } from "~/trpc/react";
@@ -30,12 +30,12 @@ export default function AddWordsDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   action?: {
-    onClick?: (wordList: UserWordWithWord[]) => void;
+    onClick?: (wordList: Word[]) => void;
     title?: string;
   };
   title?: string;
 }) {
-  const [wordsList, setWordsList] = useState<UserWordWithWord[]>([]);
+  const [wordsList, setWordsList] = useState<Word[]>([]);
 
   return (
     <>
@@ -59,7 +59,7 @@ export default function AddWordsDialog({
                   <div>
                     {wordsList.map((word) => (
                       <div
-                        key={word.wordId}
+                        key={word.id}
                         className="hover:bg-secondary/50 flex h-14 items-center justify-between border-b px-4 last:border-b-0"
                       >
                         <p>{word.word}</p>
@@ -69,7 +69,7 @@ export default function AddWordsDialog({
                           className="h-8 w-8"
                           onClick={() =>
                             setWordsList(
-                              wordsList.filter((w) => w.wordId !== word.wordId),
+                              wordsList.filter((w) => w.id !== word.id),
                             )
                           }
                         >
@@ -111,16 +111,14 @@ export default function AddWordsDialog({
 function AddWordsToListContent({
   onWordsListGenerated,
 }: {
-  onWordsListGenerated: (list: UserWordWithWord[]) => void;
+  onWordsListGenerated: (list: Word[]) => void;
 }) {
   return (
     <Tabs defaultValue="words-list">
       <TabsList>
         <TabsTrigger value="words-list">From Words List</TabsTrigger>
         <TabsTrigger value="piece-of-text">From Piece of Text</TabsTrigger>
-        <TabsTrigger value="csv-file" disabled>
-          From CSV File
-        </TabsTrigger>
+        <TabsTrigger value="csv-file">From CSV File</TabsTrigger>
       </TabsList>
       <TabsContent className="mt-4" value="words-list">
         <AddWordsFromList onWordsListGenerated={onWordsListGenerated} />
@@ -128,9 +126,9 @@ function AddWordsToListContent({
       <TabsContent className="mt-4" value="piece-of-text">
         <AddWordsFromPieceOfText onWordsListGenerated={onWordsListGenerated} />
       </TabsContent>
-      {/* <TabsContent className="mt-4" value="csv-file">
+      <TabsContent className="mt-4" value="csv-file">
         Coming soon...
-      </TabsContent> */}
+      </TabsContent>
     </Tabs>
   );
 }
@@ -138,11 +136,12 @@ function AddWordsToListContent({
 function AddWordsFromList({
   onWordsListGenerated,
 }: {
-  onWordsListGenerated: (list: UserWordWithWord[]) => void;
+  onWordsListGenerated: (list: Word[]) => void;
 }) {
   const { languageCode } = useParams<LanguageCodeParams>();
   const [text, setText] = useState("");
 
+  const utils = api.useUtils();
   const addWordsToPracticeListFromCommaSeparatedListMut =
     api.words.addWordsToPracticeListFromCommaSeparatedList.useMutation();
 
@@ -158,13 +157,15 @@ function AddWordsFromList({
           languageCode,
           text,
         });
+      void utils.words.getAllWords.invalidate({ languageCode });
       onWordsListGenerated(words);
     },
     [
-      languageCode,
-      onWordsListGenerated,
-      addWordsToPracticeListFromCommaSeparatedListMut,
       text,
+      addWordsToPracticeListFromCommaSeparatedListMut,
+      languageCode,
+      utils.words.getAllWords,
+      onWordsListGenerated,
     ],
   );
 
@@ -204,11 +205,12 @@ function AddWordsFromList({
 function AddWordsFromPieceOfText({
   onWordsListGenerated,
 }: {
-  onWordsListGenerated: (list: UserWordWithWord[]) => void;
+  onWordsListGenerated: (list: Word[]) => void;
 }) {
   const { languageCode } = useParams<LanguageCodeParams>();
   const [text, setText] = useState("");
 
+  const utils = api.useUtils();
   const addWordsToPracticeListFromPieceOfTextMut =
     api.words.addWordsToPracticeListFromPieceOfText.useMutation();
 
@@ -223,13 +225,16 @@ function AddWordsFromPieceOfText({
         languageCode,
         text,
       });
+      void utils.words.getAllWords.invalidate({ languageCode });
+
       onWordsListGenerated(words);
     },
     [
-      languageCode,
-      onWordsListGenerated,
-      addWordsToPracticeListFromPieceOfTextMut,
       text,
+      addWordsToPracticeListFromPieceOfTextMut,
+      languageCode,
+      utils.words.getAllWords,
+      onWordsListGenerated,
     ],
   );
 
