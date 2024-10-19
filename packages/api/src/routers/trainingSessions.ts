@@ -114,9 +114,9 @@ export const trainingSessionsRouter = createTRPCRouter({
       const [trainingSession] = await ctx.db
         .insert(trainingSessionsTable)
         .values({
-          languageCode: language.code,
           title: input.title,
           userId: ctx.session.user.id,
+          languageCode: language.code,
           exercise: input.exercise,
           data: input.data,
         })
