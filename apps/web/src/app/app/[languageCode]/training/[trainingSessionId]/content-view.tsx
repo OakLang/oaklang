@@ -30,7 +30,7 @@ import {
 import { usePersistState } from "~/hooks/useLocalStorageState";
 import useTextToSpeechPlayer from "~/hooks/useTextToSpeechPlayer";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
-import { useUpdateTrainingSessionMutation } from "~/hooks/useUpdateTrainingSessionMutation";
+import { useChangeSentenceIndex } from "~/hooks/useUpdateTrainingSessionMutation";
 import { useAppStore } from "~/providers/app-store-provider";
 import { api } from "~/trpc/react";
 
@@ -55,25 +55,14 @@ export default function ContentView() {
     { trainingSessionId },
     { enabled: trainingSessionQuery.isSuccess },
   );
-  const updateTrainingSessionMutation = useUpdateTrainingSessionMutation();
+  const updateTrainingSessionMutation = useChangeSentenceIndex();
 
   const generateSentencesMut = api.sentences.generateSentences.useMutation({
     onSuccess: (data, { trainingSessionId }) => {
       utils.sentences.getSentences.setData(
         { trainingSessionId },
-        (sentences) => [...(sentences ?? []), ...data.sentences],
+        (sentences) => [...(sentences ?? []), ...data],
       );
-      toast(`Generated ${data.sentences.length} new sentences`, {
-        action: (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.navigator.clipboard.writeText(data.prompt)}
-          >
-            Copy Prompt
-          </Button>
-        ),
-      });
     },
     onError: (error) => {
       toast("Failed to generate sentences", { description: error.message });
@@ -118,7 +107,7 @@ export default function ContentView() {
     const newSentenceIndex = trainingSessionQuery.data.sentenceIndex + 1;
     updateTrainingSessionMutation.mutate({
       trainingSessionId,
-      data: { sentenceIndex: newSentenceIndex },
+      sentenceIndex: newSentenceIndex,
     });
   }, [
     generateSentencesMut,
@@ -139,7 +128,7 @@ export default function ContentView() {
     const newSentenceIndex = trainingSessionQuery.data.sentenceIndex - 1;
     updateTrainingSessionMutation.mutate({
       trainingSessionId,
-      data: { sentenceIndex: newSentenceIndex },
+      sentenceIndex: newSentenceIndex,
     });
   }, [
     sentencesQuery.isSuccess,

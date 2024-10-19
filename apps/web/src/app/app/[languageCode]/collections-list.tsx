@@ -6,6 +6,7 @@ import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import type { Collection, Module } from "@acme/db/schema";
+import { Exercises } from "@acme/core/constants";
 
 import type { LanguageCodeParams } from "~/types";
 import AddCollectionDialog from "~/components/dialogs/add-collection-dialog";
@@ -187,13 +188,16 @@ const ModuleCard = ({ module }: { module: Module }) => {
     setIsLoading(true);
     try {
       switch (module.jsonData.type) {
-        case "exercise-1": {
+        case Exercises.exercies1: {
           const session = await createTrainingSession.mutateAsync({
             languageCode: module.languageCode,
             title: module.name,
-            complexity: module.jsonData.complexity ?? "A1",
-            topic: module.jsonData.topic ? module.jsonData.topic : undefined,
-            words: module.jsonData.words ? module.jsonData.words : undefined,
+            exercise: Exercises.exercies1,
+            data: {
+              complexity: module.jsonData.complexity ?? "A1",
+              topic: module.jsonData.topic ?? "",
+              words: module.jsonData.words ?? [],
+            },
           });
 
           void utils.trainingSessions.getTrainingSessions.invalidate({

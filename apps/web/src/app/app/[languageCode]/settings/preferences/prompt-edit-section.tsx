@@ -4,15 +4,15 @@ import { Label } from "@radix-ui/react-label";
 import { RefreshCcwIcon } from "lucide-react";
 import { useFormatter } from "next-intl";
 
-import { AVAILABLE_PROMPT_TEMPLATE_KEYS } from "@acme/core/constants";
+import {
+  AVAILABLE_PROMPT_TEMPLATE_KEYS,
+  DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE,
+  DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
+} from "@acme/core/constants";
 
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import { useAppStore } from "~/providers/app-store-provider";
-import {
-  DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE,
-  DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
-} from "~/store/app-store";
 
 export default function PromptEditSection() {
   const generateSentencesPromptTemplate = useAppStore(

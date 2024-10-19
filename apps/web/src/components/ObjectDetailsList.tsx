@@ -1,17 +1,31 @@
-export default function ObjectDetailsList({ data }: { data: object }) {
+export default function ObjectDetailsList({
+  data,
+}: {
+  data: Record<string, string | string[] | number>;
+}) {
   return (
-    <div className="grid">
-      {Object.entries(data).map((entry) => (
-        <div
-          key={entry[0]}
-          className="odd:bg-secondary/50 flex justify-between gap-2 px-4 py-2"
-        >
-          <p className="text-sm">{entry[0]}</p>
-          <p className="text-muted-foreground text-right text-sm">
-            {String(entry[1])}
-          </p>
-        </div>
-      ))}
-    </div>
+    <table>
+      <tbody>
+        {Object.entries(data).map((entry) => {
+          const key = entry[0];
+          const value = entry[1];
+
+          return (
+            <tr key={key} className="odd:bg-secondary/50">
+              <td className="whitespace-nowrap p-2 align-top text-sm capitalize">
+                {key}
+              </td>
+              <td className="text-muted-foreground p-2 align-top text-sm">
+                {(typeof value === "string"
+                  ? value
+                  : typeof value === "number"
+                    ? value.toLocaleString()
+                    : value.join(", ")) || "-"}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }

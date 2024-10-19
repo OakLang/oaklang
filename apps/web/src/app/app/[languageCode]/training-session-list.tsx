@@ -46,9 +46,6 @@ export default function TrainingSessionList() {
                   className="ring-offset-background focus-visible:ring-ring bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground flex flex-shrink-0 flex-col rounded-lg border p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 md:p-6"
                 >
                   <p className="font-medium">{item.title}</p>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    Topic: {item.topic ?? "No topic"}
-                  </p>
                   <p className="text-muted-foreground text-sm">
                     <span>
                       {t("started")}{" "}
@@ -58,11 +55,7 @@ export default function TrainingSessionList() {
                     </span>
                     {" • "}
                     <span>
-                      {t("language")}: {item.languageName}
-                    </span>
-                    {" • "}
-                    <span>
-                      {t("complexity")}: {item.complexity}
+                      {t("language")}: {item.language.name}
                     </span>
                     {" • "}
                     <span>New Words: {item.newWordsCount}</span>

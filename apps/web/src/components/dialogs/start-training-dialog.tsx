@@ -10,15 +10,21 @@ import {
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 
 import type { ModuleData } from "@acme/core/validators";
+import type {
+  CreateTrainingSessoin,
+  Exercise1FormData,
+  Exercise2FormData,
+  Exercise3FormData,
+} from "@acme/db/validators";
 import {
   COMPLEXITY_LIST,
   Exercises,
   EXERCISES,
   TRAINING_SESSION_TOPICS,
 } from "@acme/core/constants";
+import { createTrainingSessionSchema } from "@acme/db/validators";
 
 import type { LanguageCodeParams } from "~/types";
 import { Button } from "~/components/ui/button";
@@ -59,76 +65,6 @@ import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Textarea } from "../ui/textarea";
 import AddWordsDialog from "./add-words-dialog";
 
-const baseSchema = z.object({
-  title: z.string().min(1, "title required"),
-  languageCode: z.string().min(1, "languageCode required"),
-});
-
-const exercise1Schema = z.object({
-  exercise: z.literal(Exercises.exercies1),
-  data: z.object({
-    topic: z.string().min(1, "Topic is required").max(300),
-    complexity: z.enum(COMPLEXITY_LIST),
-    words: z.array(z.string()).optional(),
-  }),
-});
-
-type Exercise1FormData = z.infer<typeof exercise1Schema>;
-
-const exercise2Schema = z.object({
-  exercise: z.literal(Exercises.exercies2),
-  data: z.discriminatedUnion("learnFrom", [
-    z.object({
-      learnFrom: z.literal("list-of-words"),
-      words: z.array(z.string()).min(1, "Minimum 1 words required").max(50),
-    }),
-    z.object({
-      learnFrom: z.literal("number-of-words"),
-      numberOfWords: z
-        .number({ message: "Number of words required" })
-        .int()
-        .min(1)
-        .max(50),
-    }),
-    z.object({
-      learnFrom: z.literal("number-of-sentences"),
-      numberOfSentences: z
-        .number({ message: "Number of sentences required" })
-        .int()
-        .min(1)
-        .max(50),
-    }),
-  ]),
-});
-
-type Exercise2FormData = z.infer<typeof exercise2Schema>;
-
-const exercise3Schema = z.object({
-  exercise: z.literal(Exercises.exercies3),
-  data: z.discriminatedUnion("learnFrom", [
-    z.object({
-      learnFrom: z.literal("content"),
-      content: z.string().min(1).max(1000),
-    }),
-    z.object({
-      learnFrom: z.literal("ask-ai"),
-      topic: z.string().min(1).max(300),
-    }),
-  ]),
-});
-
-type Exercise3FormData = z.infer<typeof exercise3Schema>;
-
-const schema = z
-  .discriminatedUnion("exercise", [
-    exercise1Schema,
-    exercise2Schema,
-    exercise3Schema,
-  ])
-  .and(baseSchema);
-
-type FormData = z.infer<typeof schema>;
-
 export default function StartTrainingDialog({
   open,
   onOpenChange,
@@ -146,8 +82,8 @@ export default function StartTrainingDialog({
   const { languageCode } = useParams<LanguageCodeParams>();
   const router = useRouter();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
+  const form = useForm<CreateTrainingSessoin>({
+    resolver: zodResolver(createTrainingSessionSchema),
     defaultValues: {
       languageCode,
       exercise: Exercises.exercies1,
@@ -181,10 +117,12 @@ export default function StartTrainingDialog({
       },
     });
 
-  const onSubmit = useCallback((data: FormData) => {
-    // startTrainingSession.mutate(data);
-    console.log({ data });
-  }, []);
+  const onSubmit = useCallback(
+    (data: CreateTrainingSessoin) => {
+      startTrainingSession.mutate(data);
+    },
+    [startTrainingSession],
+  );
 
   const handleCloseDialog = useCallback(() => {
     setShowCreacteModuleDialog(false);
@@ -262,7 +200,7 @@ export default function StartTrainingDialog({
                           console.log(value);
                           form.setValue(
                             field.name,
-                            value as FormData["exercise"],
+                            value as CreateTrainingSessoin["exercise"],
                             { shouldValidate: true },
                           );
                         }}

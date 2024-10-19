@@ -6,16 +6,20 @@ import stringTemplate from "string-template";
 import { z } from "zod";
 
 import type { Language, TrainingSession, UserSettings } from "@acme/db/schema";
-import { and, desc, eq, isNull, lte, or, sql } from "@acme/db";
+import type { Exercise1FormData } from "@acme/db/validators";
 import {
-  sentencesTable,
-  trainingSessionWordsTable,
-  userWordsTable,
-  wordsTable,
-} from "@acme/db/schema";
+  DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
+  Exercises,
+} from "@acme/core/constants";
+import { and, asc, desc, eq, isNull, lte, not, or, sql } from "@acme/db";
+import { sentencesTable, userWordsTable, wordsTable } from "@acme/db/schema";
 
 import type { ProtectedCtx } from "../../utils";
-import { getOrCreateWord } from "../../utils";
+import {
+  getLanguageOrThrow,
+  getNativeLanguageOrThrow,
+  getOrCreateWord,
+} from "../../utils";
 
 const getMoreWordsPrompt = ({
   practiceLanguage,
@@ -88,27 +92,18 @@ export const buildSentenceWordsGPTSchema = ({
 
 export const getPracticeWordsList = async (
   {
-    trainingSession,
     wordCount,
     practiceLanguage,
     knownWords,
+    topic,
   }: {
-    trainingSession: TrainingSession;
     wordCount: number;
     practiceLanguage: Language;
     knownWords: string[];
+    topic?: string;
   },
   ctx: ProtectedCtx,
 ): Promise<string[]> => {
-  const trainingSessionWordsList = await ctx.db
-    .select({ word: wordsTable.word })
-    .from(trainingSessionWordsTable)
-    .innerJoin(wordsTable, eq(wordsTable.id, trainingSessionWordsTable.wordId))
-    .where(eq(trainingSessionWordsTable.trainingSessionId, trainingSession.id));
-  if (trainingSessionWordsList.length > 0) {
-    return trainingSessionWordsList.map((word) => word.word);
-  }
-
   const currentPracticeWordsList = await ctx.db
     .select({ word: wordsTable.word })
     .from(userWordsTable)
@@ -116,7 +111,7 @@ export const getPracticeWordsList = async (
     .where(
       and(
         eq(userWordsTable.userId, ctx.session.user.id),
-        eq(wordsTable.languageCode, trainingSession.languageCode),
+        eq(wordsTable.languageCode, practiceLanguage.code),
         isNull(userWordsTable.knownAt),
         or(
           isNull(userWordsTable.nextPracticeAt),
@@ -128,9 +123,9 @@ export const getPracticeWordsList = async (
 
   let practiceWordsList: string[] = [];
 
-  if (trainingSession.topic && currentPracticeWordsList.length > 0) {
+  if (topic && currentPracticeWordsList.length > 0) {
     const _prompt = pickReleventWordsForATopic({
-      topic: trainingSession.topic,
+      topic,
       wordCount: wordCount,
       words: currentPracticeWordsList.map((word) => word.word),
     });
@@ -153,7 +148,7 @@ export const getPracticeWordsList = async (
     const _prompt = getMoreWordsPrompt({
       wordCount: NEW_WORD_COUNT,
       practiceLanguage: practiceLanguage.name,
-      topic: trainingSession.topic?.trim(),
+      topic: topic?.trim(),
       currentWords: [...practiceWordsList, ...knownWords],
     });
 
@@ -167,7 +162,7 @@ export const getPracticeWordsList = async (
 
     const newWords = await Promise.all(
       _result.object.words.map((word) =>
-        getOrCreateWord(word, trainingSession.languageCode, ctx.db),
+        getOrCreateWord(word, practiceLanguage.code, ctx.db),
       ),
     );
 
@@ -189,8 +184,6 @@ export const getPracticeWordsList = async (
     ];
   }
 
-  console.log("Final Practice Words", practiceWordsList);
-
   return practiceWordsList;
 };
 
@@ -211,4 +204,125 @@ export const getSentenceOrThrow = async (
   }
 
   return sentence;
+};
+
+export const getSentencesForExercise1 = async (
+  trainingSession: TrainingSession,
+  ctx: ProtectedCtx,
+  promptTemplate = DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
+) => {
+  if (trainingSession.exercise !== Exercises.exercies1) {
+    return [];
+  }
+  const PRACTICE_WORDS_COUNT = 30;
+  const data = trainingSession.data as Exercise1FormData["data"];
+
+  const nativeLanguage = await getNativeLanguageOrThrow(ctx);
+  const practiceLanguage = await getLanguageOrThrow(
+    trainingSession.languageCode,
+    ctx.db,
+  );
+
+  const model = openai("gpt-4o", { user: ctx.session.user.id });
+
+  const knownWords = await ctx.db
+    .select({ word: wordsTable.word })
+    .from(userWordsTable)
+    .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
+    .where(
+      and(
+        eq(userWordsTable.userId, ctx.session.user.id),
+        eq(wordsTable.languageCode, practiceLanguage.code),
+        not(isNull(userWordsTable.knownAt)),
+      ),
+    )
+    .orderBy(desc(userWordsTable.knownAt))
+    .then((res) => res.map((item) => item.word));
+
+  const practiceWordsList =
+    data.words && data.words.length > 0
+      ? data.words
+      : await getPracticeWordsList(
+          {
+            wordCount: PRACTICE_WORDS_COUNT,
+            practiceLanguage,
+            knownWords,
+            topic: data.topic,
+          },
+          ctx,
+        );
+
+  const previouslyGeneratedSentences = await ctx.db
+    .select({
+      index: sentencesTable.index,
+      sentence: sentencesTable.sentence,
+    })
+    .from(sentencesTable)
+    .where(eq(sentencesTable.trainingSessionId, trainingSession.id))
+    .orderBy(asc(sentencesTable.index));
+
+  const TEMPLATE_OBJECT = {
+    SENTENCE_COUNT: 5,
+    PRACTICE_LANGUAGE: practiceLanguage.name,
+    NATIVE_LANGUAGE: nativeLanguage.name,
+    PRACTICE_WORDS: practiceWordsList.join(", "),
+    KNOWN_WORDS: knownWords.join(", "),
+    COMPLEXITY: data.complexity,
+    PREVIOUSLY_GENERATED_SENTENCES: previouslyGeneratedSentences
+      .map((sen) => `${sen.index}. ${sen.sentence}`)
+      .join("\n"),
+    TOPIC: data.topic.trim(),
+  };
+
+  const sentenceGeneratorPrompt = stringTemplate(
+    promptTemplate,
+    TEMPLATE_OBJECT,
+  );
+
+  const schema = z.object({
+    sentences: z.array(
+      z.object({
+        sentence: z
+          .string()
+          .describe(
+            stringTemplate(
+              "The full sentence in {PRACTICE_LANGUAGE} language.",
+              TEMPLATE_OBJECT,
+            ),
+          ),
+        translation: z
+          .string()
+          .describe(
+            stringTemplate(
+              "The full sentence translation in {NATIVE_LANGUAGE}",
+              TEMPLATE_OBJECT,
+            ),
+          ),
+      }),
+    ),
+  });
+
+  const result = await generateObject({
+    model,
+    prompt: sentenceGeneratorPrompt,
+    schema,
+  });
+
+  const validatedSentences = result.object.sentences;
+
+  const lastSentenceIndex = previouslyGeneratedSentences.at(-1)?.index ?? 0;
+
+  const newSentences = await ctx.db
+    .insert(sentencesTable)
+    .values(
+      validatedSentences.map((sentence, index) => ({
+        index: lastSentenceIndex + 1 + index,
+        sentence: sentence.sentence,
+        translation: sentence.translation,
+        trainingSessionId: trainingSession.id,
+      })),
+    )
+    .returning();
+
+  return newSentences.sort((a, b) => a.index - b.index);
 };

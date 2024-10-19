@@ -2,10 +2,10 @@ import { toast } from "sonner";
 
 import { api } from "~/trpc/react";
 
-export const useUpdateTrainingSessionMutation = () => {
+export const useChangeSentenceIndex = () => {
   const utils = api.useUtils();
 
-  return api.trainingSessions.updateTrainingSession.useMutation({
+  return api.trainingSessions.changeSentenceIndex.useMutation({
     onMutate: (vars) => {
       const oldData = utils.trainingSessions.getTrainingSession.getData({
         trainingSessionId: vars.trainingSessionId,

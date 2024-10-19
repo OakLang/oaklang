@@ -6,7 +6,7 @@
     ".": "./src/index.ts",
     "./openai": "./src/libs/openai.ts",
     "./env": "./src/env.ts",
-    "./validators": "./src/validators.ts"
+    "./validators": "./src/validators/index.ts"
   },
   "license": "MIT",
   "scripts": {

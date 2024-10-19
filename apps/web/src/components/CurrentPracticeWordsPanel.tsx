@@ -31,12 +31,11 @@ export default function CurrentPracticeWordsPanel() {
             <ObjectDetailsList
               data={{
                 Id: trainingSession.id,
-                "User Id": trainingSession.userId,
                 "Created At": formatDate(trainingSession.createdAt),
                 Name: trainingSession.title,
-                Complexity: trainingSession.complexity,
-                "Language Code": trainingSession.languageCode,
-                Topic: trainingSession.topic,
+                Language: trainingSession.language.name,
+                Exercise: trainingSession.exercise,
+                ...trainingSession.data,
               }}
             />
           )}

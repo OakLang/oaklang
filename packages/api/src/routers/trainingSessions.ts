@@ -6,20 +6,12 @@ import {
   languagesTable,
   practiceLanguagesTable,
   trainingSessionsTable,
-  trainingSessionWordsTable,
   userWordsTable,
 } from "@acme/db/schema";
-import {
-  createTrainingSessionInput,
-  updateTrainingSessionInput,
-} from "@acme/db/validators";
+import { createTrainingSessionSchema } from "@acme/db/validators";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import {
-  getOrCreateWords,
-  getTrainingSessionOrThrow,
-  insertUserWords,
-} from "../utils";
+import { getLanguageOrThrow, getTrainingSessionOrThrow } from "../utils";
 
 export const trainingSessionsRouter = createTRPCRouter({
   getTrainingSession: protectedProcedure
@@ -34,7 +26,11 @@ export const trainingSessionsRouter = createTRPCRouter({
         db,
         session,
       );
-      return trainingSession;
+      const language = await getLanguageOrThrow(
+        trainingSession.languageCode,
+        db,
+      );
+      return { ...trainingSession, language };
     }),
   getTrainingSessions: protectedProcedure
     .input(
@@ -46,17 +42,7 @@ export const trainingSessionsRouter = createTRPCRouter({
     )
     .query(async ({ ctx: { db, session }, input }) => {
       const trainingSessionList = await db
-        .select({
-          id: trainingSessionsTable.id,
-          createdAt: trainingSessionsTable.createdAt,
-          userId: trainingSessionsTable.userId,
-          title: trainingSessionsTable.title,
-          sentenceIndex: trainingSessionsTable.sentenceIndex,
-          complexity: trainingSessionsTable.complexity,
-          languageCode: trainingSessionsTable.languageCode,
-          languageName: languagesTable.name,
-          topic: trainingSessionsTable.topic,
-        })
+        .select()
         .from(trainingSessionsTable)
         .innerJoin(
           languagesTable,
@@ -73,22 +59,24 @@ export const trainingSessionsRouter = createTRPCRouter({
         .orderBy(desc(trainingSessionsTable.createdAt));
 
       const list = await Promise.all(
-        trainingSessionList.map(async (ts) => {
-          const [newWords] = await db
-            .select({ count: count() })
-            .from(userWordsTable)
-            .where(eq(userWordsTable.createdFromId, ts.id));
-          const [knownWords] = await db
-            .select({ count: count() })
-            .from(userWordsTable)
-            .where(eq(userWordsTable.knownFromId, ts.id));
+        trainingSessionList
+          .map((ts) => ({ ...ts.training_session, language: ts.language }))
+          .map(async (ts) => {
+            const [newWords] = await db
+              .select({ count: count() })
+              .from(userWordsTable)
+              .where(eq(userWordsTable.createdFromId, ts.id));
+            const [knownWords] = await db
+              .select({ count: count() })
+              .from(userWordsTable)
+              .where(eq(userWordsTable.knownFromId, ts.id));
 
-          return {
-            ...ts,
-            newWordsCount: newWords?.count ?? 0,
-            knownWordsCount: knownWords?.count ?? 0,
-          };
-        }),
+            return {
+              ...ts,
+              newWordsCount: newWords?.count ?? 0,
+              knownWordsCount: knownWords?.count ?? 0,
+            };
+          }),
       );
 
       return {
@@ -98,7 +86,7 @@ export const trainingSessionsRouter = createTRPCRouter({
       };
     }),
   createTrainingSession: protectedProcedure
-    .input(createTrainingSessionInput)
+    .input(createTrainingSessionSchema)
     .mutation(async ({ ctx, input }) => {
       const [language] = await ctx.db
         .select({
@@ -127,10 +115,10 @@ export const trainingSessionsRouter = createTRPCRouter({
         .insert(trainingSessionsTable)
         .values({
           languageCode: language.code,
-          complexity: input.complexity,
           title: input.title,
           userId: ctx.session.user.id,
-          topic: input.topic,
+          exercise: input.exercise,
+          data: input.data,
         })
         .returning();
 
@@ -141,37 +129,20 @@ export const trainingSessionsRouter = createTRPCRouter({
         });
       }
 
-      if (input.words && input.words.length > 0) {
-        const words = await getOrCreateWords(
-          input.words,
-          input.languageCode,
-          ctx.db,
-        );
-        if (words.length > 0) {
-          await insertUserWords(words, ctx.session.user.id, ctx.db);
-          await ctx.db
-            .insert(trainingSessionWordsTable)
-            .values(
-              words.map((word) => ({
-                wordId: word.id,
-                trainingSessionId: trainingSession.id,
-              })),
-            )
-            .onConflictDoNothing();
-        }
-      }
-
       return trainingSession;
     }),
-  updateTrainingSession: protectedProcedure
+  changeSentenceIndex: protectedProcedure
     .input(
       z.object({
         trainingSessionId: z.string(),
-        data: updateTrainingSessionInput,
+        sentenceIndex: z.number().min(0),
       }),
     )
     .mutation(
-      async ({ ctx: { db, session }, input: { data, trainingSessionId } }) => {
+      async ({
+        ctx: { db, session },
+        input: { sentenceIndex, trainingSessionId },
+      }) => {
         const trainingSession = await getTrainingSessionOrThrow(
           trainingSessionId,
           db,
@@ -179,7 +150,9 @@ export const trainingSessionsRouter = createTRPCRouter({
         );
         const [updatedTrainingSession] = await db
           .update(trainingSessionsTable)
-          .set(data)
+          .set({
+            sentenceIndex,
+          })
           .where(eq(trainingSessionsTable.id, trainingSession.id))
           .returning();
         if (!updatedTrainingSession) {

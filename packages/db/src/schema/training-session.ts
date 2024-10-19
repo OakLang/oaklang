@@ -1,14 +1,16 @@
 import { relations } from "drizzle-orm";
 import {
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { COMPLEXITY_LIST, Exercises } from "@acme/core/constants";
+import { Exercises } from "@acme/core/constants";
 
+import type { CreateTrainingSessoin, Exercise1FormData } from "../validators";
 import { createPrefixedId } from "../utils";
 import { usersTable } from "./auth";
 import { languagesTable } from "./language";
@@ -25,15 +27,18 @@ export const trainingSessionsTable = pgTable("training_session", {
     .references(() => usersTable.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   sentenceIndex: integer("sentence_index").notNull().default(0),
-  exercise: text("exercise").notNull().default(Exercises.exercies1),
-
-  complexity: text("complexity", { enum: COMPLEXITY_LIST })
-    .notNull()
-    .default("A1"),
   languageCode: text("language_code")
     .notNull()
     .references(() => languagesTable.code, { onDelete: "cascade" }),
-  topic: text("topic"),
+  exercise: text("exercise").notNull().default(Exercises.exercies1),
+  data: jsonb("data")
+    .notNull()
+    .$type<CreateTrainingSessoin["data"]>()
+    .default({
+      complexity: "A1",
+      topic: "",
+      words: [],
+    } satisfies Exercise1FormData["data"]),
 });
 
 export type TrainingSession = typeof trainingSessionsTable.$inferSelect;
