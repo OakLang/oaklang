@@ -2,7 +2,7 @@
 
 import CurrentPracticeWordsPanel from "~/components/CurrentPracticeWordsPanel";
 import WordInspectionPanel from "~/components/WordInspectionPanel";
-import { useAppStore } from "~/providers/app-store-provider";
+import { useAppStore } from "~/store/app-store";
 
 export default function RightBar() {
   const sidebarOpen = useAppStore((state) => state.inspectionPanelOpen);

@@ -1,88 +1,97 @@
-import { createStore } from "zustand/vanilla";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 import type { SentenceWord } from "@acme/db/schema";
 import {
-  DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE,
-  DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
+  DEFAULT_INTERLINEAR_LINES_PROMPT_TEMPLATE,
+  EXERCISE_1,
 } from "@acme/core/constants";
 
-interface AppState {
-  generateSentencesPromptTemplate: string;
-  generateSentenceWordsPromptTemplate: string;
+import { storage } from "~/lib/storage";
+
+export interface AppState {
+  exercise1PromptTemplate: string;
+  overrideExercise1PromptTemplate: boolean;
+  interlinearLinesPromptTemplate: string;
+  overrideGenerateSentenceWordsPromptTemplate: boolean;
   inspectedWord: SentenceWord | null;
   inspectionPanelOpen: boolean;
   fontSize: number;
+  collectionsCollapced: Record<string, boolean>;
+  playgroundPlaybackSpeed: number;
 }
 
-interface AppActions {
-  setGenerateSentencesPromptTemplate: (template: string) => void;
-  setGenerateSentenceWordsPromptTemplate: (template: string) => void;
+export interface AppActions {
+  setExercise1PromptTemplate: (template: string, override?: boolean) => void;
+  setInterlinearLinesPromptTemplate: (
+    template: string,
+    override?: boolean,
+  ) => void;
   setInspectedWord: (word: SentenceWord | null) => void;
   setInspectionPanelOpen: (sidebarOpen: boolean) => void;
   setFontSize: (fontSize: number) => void;
+  collapceCollection: (collectionId: string) => void;
+  expandCollection: (collectionId: string) => void;
+  setPlaygroundPlaybackSpeed: (speed: number) => void;
 }
 
 export type AppStore = AppState & AppActions;
 
-export const createAppStore = (initState: AppState) => {
-  return createStore<AppStore>()((set) => ({
-    ...initState,
-    setGenerateSentencesPromptTemplate: (generateSentencesPromptTemplate) => {
-      set({ generateSentencesPromptTemplate });
-      localStorage.setItem(
-        "GENERATE_SENTENCES_PROMPT_TEMPLATE",
-        generateSentencesPromptTemplate,
-      );
-    },
-    setGenerateSentenceWordsPromptTemplate: (
-      generateSentenceWordsPromptTemplate,
-    ) => {
-      set({ generateSentenceWordsPromptTemplate });
-      localStorage.setItem(
-        "GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE",
-        generateSentenceWordsPromptTemplate,
-      );
-    },
-    setFontSize: (fontSize) => {
-      set({ fontSize });
-      localStorage.setItem("font_size", String(fontSize));
-    },
-    setInspectedWord: (inspectedWord) => {
-      set({ inspectedWord });
-    },
-    setInspectionPanelOpen: (inspectionPanelOpen) => {
-      set({ inspectionPanelOpen });
-      localStorage.setItem(
-        "inspection_panel_open",
-        inspectionPanelOpen ? "true" : "false",
-      );
-    },
-  }));
-};
-
-export const initAppStore = (): AppState => {
-  if (typeof window === "undefined") {
-    return {
+export const useAppStore = create<AppStore>()(
+  persist(
+    (set) => ({
       fontSize: 16,
-      generateSentencesPromptTemplate: "",
-      generateSentenceWordsPromptTemplate: "",
+      exercise1PromptTemplate: EXERCISE_1.promptTemplate.trim(),
+      overrideExercise1PromptTemplate: false,
+      interlinearLinesPromptTemplate:
+        DEFAULT_INTERLINEAR_LINES_PROMPT_TEMPLATE.trim(),
+      overrideGenerateSentenceWordsPromptTemplate: false,
       inspectedWord: null,
       inspectionPanelOpen: false,
-    };
-  }
-
-  return {
-    generateSentencesPromptTemplate:
-      localStorage.getItem("GENERATE_SENTENCES_PROMPT_TEMPLATE") ??
-      DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
-    generateSentenceWordsPromptTemplate:
-      localStorage.getItem("GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE") ??
-      DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
-    inspectedWord: null,
-    inspectionPanelOpen:
-      localStorage.getItem("inspection_panel_open") === "true",
-    fontSize: localStorage.getItem("font_size")
-      ? Number(localStorage.getItem("font_size"))
-      : 16,
-  };
-};
+      collectionsCollapced: {},
+      playgroundPlaybackSpeed: 1,
+      setExercise1PromptTemplate: (exercise1PromptTemplate, override = true) =>
+        set({
+          exercise1PromptTemplate,
+          overrideExercise1PromptTemplate: override,
+        }),
+      setInterlinearLinesPromptTemplate: (
+        interlinearLinesPromptTemplate,
+        override = true,
+      ) =>
+        set({
+          interlinearLinesPromptTemplate,
+          overrideGenerateSentenceWordsPromptTemplate: override,
+        }),
+      setFontSize: (fontSize) => set({ fontSize }),
+      setInspectedWord: (inspectedWord) => set({ inspectedWord }),
+      setInspectionPanelOpen: (inspectionPanelOpen) =>
+        set({ inspectionPanelOpen }),
+      collapceCollection: (collectionId) => {
+        set((state) => {
+          const collectionsCollapced = { ...state.collectionsCollapced };
+          collectionsCollapced[collectionId] = true;
+          return { collectionsCollapced };
+        });
+      },
+      expandCollection: (collectionId) => {
+        set((state) => {
+          const collectionsCollapced = { ...state.collectionsCollapced };
+          collectionsCollapced[collectionId] = false;
+          return { collectionsCollapced };
+        });
+      },
+      setPlaygroundPlaybackSpeed: (playgroundPlaybackSpeed) =>
+        set({ playgroundPlaybackSpeed }),
+    }),
+    {
+      name: "oaklang-state",
+      storage,
+      version: 0,
+      migrate(persistedState, version) {
+        console.log(persistedState, version);
+        return persistedState;
+      },
+    },
+  ),
+);

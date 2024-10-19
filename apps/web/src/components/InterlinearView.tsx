@@ -33,7 +33,7 @@ import {
 import { useDoubleClick } from "~/hooks/useDoubleClick";
 import usePlayTextToSpeech from "~/hooks/usePlayTextToSpeech";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
-import { useAppStore } from "~/providers/app-store-provider";
+import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
@@ -64,8 +64,8 @@ export default function InterlinearView({
   );
 
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
-  const generateSentenceWordsPromptTemplate = useAppStore(
-    (state) => state.generateSentenceWordsPromptTemplate,
+  const interlinearLinesPromptTemplate = useAppStore(
+    (state) => state.interlinearLinesPromptTemplate,
   );
 
   const utils = api.useUtils();
@@ -101,7 +101,7 @@ export default function InterlinearView({
         sentences.map(async (sentence) => {
           const words = await utils.sentences.getSentenceWords.fetch({
             sentenceId: sentence.id,
-            promptTemplate: generateSentenceWordsPromptTemplate,
+            promptTemplate: interlinearLinesPromptTemplate,
           });
           await Promise.all(
             words.map(async (word) => {
@@ -130,7 +130,7 @@ export default function InterlinearView({
     utils.words.getUserWord,
     languageCode,
     onNextSentence,
-    generateSentenceWordsPromptTemplate,
+    interlinearLinesPromptTemplate,
     markWordKnownMut,
     trainingSessionId,
   ]);
@@ -205,13 +205,13 @@ export default function InterlinearView({
 const SentenceContext = createContext<{ sentence: Sentence } | null>(null);
 
 const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
-  const generateSentenceWordsPromptTemplate = useAppStore(
-    (state) => state.generateSentenceWordsPromptTemplate,
+  const interlinearLinesPromptTemplate = useAppStore(
+    (state) => state.interlinearLinesPromptTemplate,
   );
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const sentenceWordsQuery = api.sentences.getSentenceWords.useQuery({
     sentenceId: sentence.id,
-    promptTemplate: generateSentenceWordsPromptTemplate,
+    promptTemplate: interlinearLinesPromptTemplate,
   });
   const seenWordMutation = api.words.seenWord.useMutation({
     onError: (error) => {

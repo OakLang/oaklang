@@ -40,7 +40,7 @@ const ColorPicker = forwardRef<HTMLInputElement, ColorPickerProps>(
         onChange={onChange}
       >
         <div className="relative">
-          <ColorField>
+          <ColorField aria-label={props["aria-label"]}>
             <Input
               {...props}
               className={cn(

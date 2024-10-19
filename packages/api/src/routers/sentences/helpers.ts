@@ -7,10 +7,7 @@ import { z } from "zod";
 
 import type { Language, TrainingSession, UserSettings } from "@acme/db/schema";
 import type { Exercise1FormData } from "@acme/db/validators";
-import {
-  DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
-  Exercises,
-} from "@acme/core/constants";
+import { EXERCISE_1, Exercises } from "@acme/core/constants";
 import { and, asc, desc, eq, isNull, lte, not, or, sql } from "@acme/db";
 import { sentencesTable, userWordsTable, wordsTable } from "@acme/db/schema";
 
@@ -209,7 +206,7 @@ export const getSentenceOrThrow = async (
 export const getSentencesForExercise1 = async (
   trainingSession: TrainingSession,
   ctx: ProtectedCtx,
-  promptTemplate = DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE,
+  promptTemplate = EXERCISE_1.promptTemplate,
 ) => {
   if (trainingSession.exercise !== Exercises.exercies1) {
     return [];

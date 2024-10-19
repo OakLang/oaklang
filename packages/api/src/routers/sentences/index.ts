@@ -52,7 +52,7 @@ export const sentencesRouter = createTRPCRouter({
       z.object({
         trainingSessionId: z.string(),
         limit: z.number().min(1).max(10).default(5),
-        promptTemplate: z.string().optional(),
+        exercise1PromptTemplate: z.string().optional(),
       }),
     )
     .output(z.array(createSelectSchema(sentencesTable)))
@@ -63,19 +63,18 @@ export const sentencesRouter = createTRPCRouter({
         ctx.session,
       );
 
-      switch (trainingSession.exercise) {
-        case Exercises.exercies1:
-          return getSentencesForExercise1(
-            trainingSession,
-            ctx,
-            input.promptTemplate,
-          );
-        default:
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Unsupported exercise!",
-          });
+      if (trainingSession.exercise === Exercises.exercies1) {
+        return getSentencesForExercise1(
+          trainingSession,
+          ctx,
+          input.exercise1PromptTemplate,
+        );
       }
+
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Unsupported exercise!",
+      });
     }),
   getSentenceWords: protectedProcedure
     .input(z.object({ sentenceId: z.string(), promptTemplate: z.string() }))

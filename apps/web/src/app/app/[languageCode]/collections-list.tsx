@@ -13,7 +13,7 @@ import AddCollectionDialog from "~/components/dialogs/add-collection-dialog";
 import RenderInfiniteQueryResult from "~/components/RenderInfiniteQueryResult";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
-import { usePersistState } from "~/hooks/useLocalStorageState";
+import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 
 export default function CollectionsList() {
@@ -88,17 +88,24 @@ export default function CollectionsList() {
 }
 
 const CollectionItem = ({ collection }: { collection: Collection }) => {
-  const [isCollapced, setIsCollapced] = usePersistState(
-    `${collection.id}.collapsed`,
-    false,
+  const isCollapced = useAppStore(
+    (state) => state.collectionsCollapced[collection.id] ?? false,
   );
+  const collapceCollection = useAppStore((state) => state.collapceCollection);
+  const expandCollection = useAppStore((state) => state.expandCollection);
 
   return (
     <div className="space-y-2">
       <div>
         <Button
           variant="ghost"
-          onClick={() => setIsCollapced(!isCollapced)}
+          onClick={() => {
+            if (isCollapced) {
+              expandCollection(collection.id);
+            } else {
+              collapceCollection(collection.id);
+            }
+          }}
           className="h-8 px-3"
         >
           {isCollapced ? (

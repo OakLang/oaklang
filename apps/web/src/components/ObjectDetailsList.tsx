@@ -1,7 +1,7 @@
 export default function ObjectDetailsList({
   data,
 }: {
-  data: Record<string, string | string[] | number>;
+  data: Record<string, string | string[] | number | null>;
 }) {
   return (
     <table>
@@ -16,11 +16,13 @@ export default function ObjectDetailsList({
                 {key}
               </td>
               <td className="text-muted-foreground p-2 align-top text-sm">
-                {(typeof value === "string"
-                  ? value
-                  : typeof value === "number"
-                    ? value.toLocaleString()
-                    : value.join(", ")) || "-"}
+                {value
+                  ? (typeof value === "string"
+                      ? value
+                      : typeof value === "number"
+                        ? value.toLocaleString()
+                        : value.join(", ")) || "-"
+                  : "-"}
               </td>
             </tr>
           );

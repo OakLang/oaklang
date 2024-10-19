@@ -1,5 +1,5 @@
 import type { ChangeEvent } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useId, useMemo } from "react";
 import { useFormatter } from "next-intl";
 
 import type {
@@ -14,12 +14,14 @@ import {
   NON_EDITABLE_LINE_NAMES,
 } from "@acme/core/constants";
 
+import { useHasPowerUserAccess } from "~/hooks/useHasPowerUserAccess";
 import { api } from "~/trpc/react";
 import SimpleSelect from "./simple-select";
 import ColorPicker from "./ui/color-picker";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import NumberInput from "./ui/number-input";
+import { Switch } from "./ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { Textarea } from "./ui/textarea";
 
@@ -113,8 +115,10 @@ export const InterlinearLineEditForm = ({
   onChange,
 }: {
   item: InterlinearLine;
-  onChange: (line: InterlinearLine) => void;
+  onChange: (line: InterlinearLine, debounce?: boolean) => void;
 }) => {
+  const hasPowerUserAccess = useHasPowerUserAccess();
+
   const format = useFormatter();
 
   const disabled = useMemo(
@@ -124,17 +128,18 @@ export const InterlinearLineEditForm = ({
 
   const onChangeName = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      onChange({ ...item, name: e.currentTarget.value });
+      onChange({ ...item, name: e.currentTarget.value }, true);
     },
     [item, onChange],
   );
 
   const onChangeDescription = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
-      onChange({ ...item, description: e.currentTarget.value });
+      onChange({ ...item, description: e.currentTarget.value }, true);
     },
     [item, onChange],
   );
+
   const onChangeDisappearing = useCallback(
     (disappearing: Disappearing) => {
       onChange({ ...item, disappearing });
@@ -144,13 +149,16 @@ export const InterlinearLineEditForm = ({
 
   const onChangeStyle = useCallback(
     (style: Partial<NonNullable<InterlinearLine["style"]>>) => {
-      onChange({
-        ...item,
-        style: {
-          ...item.style,
-          ...style,
+      onChange(
+        {
+          ...item,
+          style: {
+            ...item.style,
+            ...style,
+          },
         },
-      });
+        true,
+      );
     },
     [item, onChange],
   );
@@ -158,39 +166,65 @@ export const InterlinearLineEditForm = ({
   return (
     <div className="grid gap-8 p-4">
       <div className="grid gap-4">
-        <fieldset className="col-span-full grid gap-2">
-          <Label htmlFor={`interlinear-line-name`}>Name</Label>
-          <Input
-            id={`interlinear-line-name`}
-            value={item.name}
-            disabled={disabled}
-            onChange={(e) => onChangeName(e)}
-          />
-        </fieldset>
+        {disabled ? null : !hasPowerUserAccess ? null : (
+          <>
+            <fieldset className="col-span-full grid gap-2">
+              <Label htmlFor="interlinear-line-name">Name</Label>
+              <Input
+                id="interlinear-line-name"
+                value={item.name}
+                onChange={(e) => onChangeName(e)}
+              />
+            </fieldset>
 
-        <fieldset className="col-span-full grid gap-2">
-          <Label htmlFor={`interlinear-line-gpt-prompt`}>Description</Label>
-          <Textarea
-            value={item.description}
-            rows={2}
-            className="min-h-0 resize-none"
-            onChange={(e) => onChangeDescription(e)}
+            <fieldset className="col-span-full grid gap-2">
+              <Label htmlFor={`interlinear-line-gpt-prompt`}>Description</Label>
+              <Textarea
+                id="interlinear-line-gpt-prompt"
+                value={item.description}
+                rows={3}
+                className="max-h-48 min-h-0"
+                onChange={(e) => onChangeDescription(e)}
+              />
+              <p className="text-muted-foreground text-sm">
+                Available keys{" "}
+                {format.list(
+                  INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS.map((key) => (
+                    <code key={key} className="font-semibold">
+                      {key}
+                    </code>
+                  )),
+                )}
+              </p>
+            </fieldset>
+          </>
+        )}
+
+        <fieldset className="col-span-full flex items-center justify-between">
+          <Label htmlFor="hide-line">Hide Line</Label>
+          <Switch
+            id="hide-line"
+            checked={item.hidden ?? false}
+            onCheckedChange={(value) => onChange({ ...item, hidden: value })}
           />
-          <p className="text-muted-foreground text-sm">
-            Available keys{" "}
-            {format.list(
-              INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS.map((key) => (
-                <code key={key} className="font-semibold">
-                  {key}
-                </code>
-              )),
-            )}
-          </p>
         </fieldset>
 
         <fieldset className="col-span-full flex items-center justify-between">
-          <Label htmlFor="enabled">Disappearing</Label>
-          <Tabs value={item.disappearing}>
+          <Label htmlFor="hide-line-in-inspection-panel">
+            Hide Line in Inspection Panel
+          </Label>
+          <Switch
+            id="hide-line-in-inspection-panel"
+            checked={item.hiddenInInspectionPanel ?? false}
+            onCheckedChange={(value) =>
+              onChange({ ...item, hiddenInInspectionPanel: value })
+            }
+          />
+        </fieldset>
+
+        <fieldset className="col-span-full flex items-center justify-between">
+          <Label htmlFor="disappearing">Disappearing</Label>
+          <Tabs value={item.disappearing} id="disappearing">
             <TabsList>
               {disappearingOptions.map((item) => (
                 <TabsTrigger
@@ -234,8 +268,9 @@ export const InterlinearLineEditForm = ({
         <p className="font-semibold">Styling</p>
         <div className="grid grid-cols-2 gap-4">
           <fieldset className="grid gap-2">
-            <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Family</Label>
+            <Label htmlFor="font-family">Font Family</Label>
             <SimpleSelect
+              id="font-family"
               options={FONT_FAMILIES.map((font) => ({ value: font }))}
               value={item.style.fontFamily}
               onValueChange={(fontFamily) => onChangeStyle({ fontFamily })}
@@ -243,8 +278,9 @@ export const InterlinearLineEditForm = ({
           </fieldset>
 
           <fieldset className="grid gap-2">
-            <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Weight</Label>
+            <Label htmlFor="font-weight">Font Weight</Label>
             <SimpleSelect
+              id="font-weight"
               options={fontWeightOptions}
               value={item.style.fontWeight}
               onValueChange={(fontWeight) => onChangeStyle({ fontWeight })}
@@ -252,8 +288,9 @@ export const InterlinearLineEditForm = ({
           </fieldset>
 
           <fieldset className="grid gap-2">
-            <Label htmlFor={`interlinear-line-gpt-prompt`}>Font Style</Label>
+            <Label htmlFor="font-style">Font Style</Label>
             <SimpleSelect
+              id="font-style"
               options={fontStyleOptions}
               value={item.style.fontStyle}
               onValueChange={(fontStyle) => onChangeStyle({ fontStyle })}
@@ -261,24 +298,26 @@ export const InterlinearLineEditForm = ({
           </fieldset>
 
           <fieldset className="grid gap-2">
-            <Label htmlFor={`interlinear-line-gpt-prompt`}>
-              Font Size (px)
-            </Label>
+            <Label htmlFor="font-size">Font Size (px)</Label>
             <NumberInput
+              id="font-size"
               value={item.style.fontSize}
               onChange={(fontSize) => onChangeStyle({ fontSize })}
               minValue={12}
               maxValue={48}
+              aria-label="Font Size"
             />
           </fieldset>
 
           <fieldset className="grid gap-2">
-            <Label htmlFor={`interlinear-line-gpt-prompt`}>Text Color</Label>
+            <Label htmlFor="text-color">Text Color</Label>
             <ColorPicker
+              id="text-color"
               className="min-h-0 resize-none"
               defaultValue={item.style.color ?? undefined}
               onChange={(color) => onChangeStyle({ color: color.toString() })}
               onRemoveColor={() => onChangeStyle({ color: null })}
+              aria-label="Text Color"
             />
           </fieldset>
         </div>
@@ -304,14 +343,17 @@ const ActionForm = ({
       actions.find((item) => item.value === action?.action)?.requireLineName,
     [action?.action, actions],
   );
+  const id = useId();
+  const id2 = useId();
 
   return (
     <div className="grid gap-2">
       <p className="text-sm font-medium">{label}</p>
       <div className="grid gap-4 rounded-md border p-4">
         <fieldset className="grid gap-2">
-          <Label htmlFor="action">Action</Label>
+          <Label htmlFor={id}>Action</Label>
           <SimpleSelect
+            id={id}
             value={action?.action ?? "null"}
             options={[
               {
@@ -329,8 +371,9 @@ const ActionForm = ({
         </fieldset>
         {action && requireLineName && (
           <fieldset className="grid gap-2">
-            <Label htmlFor="action">Line Name</Label>
+            <Label htmlFor={id2}>Line Name</Label>
             <SimpleSelect
+              id={id2}
               value={action.lineName ?? undefined}
               options={
                 userSettingsQuery.data?.interlinearLines.map((item) => ({

@@ -27,11 +27,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { usePersistState } from "~/hooks/useLocalStorageState";
 import useTextToSpeechPlayer from "~/hooks/useTextToSpeechPlayer";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useChangeSentenceIndex } from "~/hooks/useUpdateTrainingSessionMutation";
-import { useAppStore } from "~/providers/app-store-provider";
+import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 
 export default function ContentView() {
@@ -39,11 +38,11 @@ export default function ContentView() {
     useState(false);
   const trainingSessionId = useTrainingSessionId();
 
-  const generateSentencesPromptTemplate = useAppStore(
-    (state) => state.generateSentencesPromptTemplate,
+  const exercise1PromptTemplate = useAppStore(
+    (state) => state.exercise1PromptTemplate,
   );
-  const generateSentenceWordsPromptTemplate = useAppStore(
-    (state) => state.generateSentenceWordsPromptTemplate,
+  const interlinearLinesPromptTemplate = useAppStore(
+    (state) => state.interlinearLinesPromptTemplate,
   );
 
   const utils = api.useUtils();
@@ -97,7 +96,7 @@ export default function ContentView() {
     ) {
       generateSentencesMut.mutate({
         trainingSessionId,
-        promptTemplate: generateSentencesPromptTemplate,
+        exercise1PromptTemplate,
       });
     }
     if (trainingSessionQuery.data.sentenceIndex >= sentencesQuery.data.length) {
@@ -117,7 +116,7 @@ export default function ContentView() {
     trainingSessionQuery.data?.sentenceIndex,
     trainingSessionQuery.isSuccess,
     updateTrainingSessionMutation,
-    generateSentencesPromptTemplate,
+    exercise1PromptTemplate,
   ]);
 
   const handlePrevious = useCallback(() => {
@@ -148,7 +147,7 @@ export default function ContentView() {
       setInitialGenerateSentencesCalled(true);
       generateSentencesMut.mutate({
         trainingSessionId,
-        promptTemplate: generateSentencesPromptTemplate,
+        exercise1PromptTemplate,
       });
     }
   }, [
@@ -157,7 +156,7 @@ export default function ContentView() {
     sentencesQuery.data?.length,
     sentencesQuery.isSuccess,
     trainingSessionId,
-    generateSentencesPromptTemplate,
+    exercise1PromptTemplate,
   ]);
 
   useEffect(() => {
@@ -172,7 +171,7 @@ export default function ContentView() {
     if (nextSentence) {
       void utils.sentences.getSentenceWords.ensureData({
         sentenceId: nextSentence.id,
-        promptTemplate: generateSentenceWordsPromptTemplate,
+        promptTemplate: interlinearLinesPromptTemplate,
       });
     }
   }, [
@@ -181,7 +180,7 @@ export default function ContentView() {
     utils.sentences.getSentenceWords,
     utils.sentences.getSentences,
     sentencesQuery.data,
-    generateSentenceWordsPromptTemplate,
+    interlinearLinesPromptTemplate,
   ]);
 
   return (
@@ -280,12 +279,18 @@ const AudioPlayer = ({
   text: string;
   autoPlay?: boolean;
 }) => {
-  const [playbackRate, setPlaybackRate] = usePersistState(
-    "intelinear-line-playback-rate",
-    1,
+  const playgroundPlaybackSpeed = useAppStore(
+    (state) => state.playgroundPlaybackSpeed,
+  );
+  const setPlaygroundPlaybackSpeed = useAppStore(
+    (state) => state.setPlaygroundPlaybackSpeed,
   );
   const { audioRef, isFetching, isPlaying, pause, play } =
-    useTextToSpeechPlayer({ input: text, autoPlay, playbackRate });
+    useTextToSpeechPlayer({
+      input: text,
+      autoPlay,
+      playbackRate: playgroundPlaybackSpeed,
+    });
 
   return (
     <>
@@ -312,8 +317,8 @@ const AudioPlayer = ({
         )}
       </Button>
       <Select
-        value={String(playbackRate)}
-        onValueChange={(rate) => setPlaybackRate(parseFloat(rate))}
+        value={String(playgroundPlaybackSpeed)}
+        onValueChange={(rate) => setPlaygroundPlaybackSpeed(parseFloat(rate))}
       >
         <SelectTrigger className="w-fit gap-2 rounded-full">
           <SelectValue />

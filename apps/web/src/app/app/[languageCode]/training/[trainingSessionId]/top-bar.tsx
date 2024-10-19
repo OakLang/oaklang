@@ -44,7 +44,7 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
-import { useAppStore } from "~/providers/app-store-provider";
+import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 
 export default function TopBar() {
