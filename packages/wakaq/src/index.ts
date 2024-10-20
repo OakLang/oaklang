@@ -1,5 +1,5 @@
 import { Duration } from "ts-duration";
-import { CronTask, WakaQ, WakaQueue } from "wakaq";
+import { WakaQ, WakaQueue } from "wakaq";
 
 import { env } from "./env";
 
@@ -26,7 +26,6 @@ export const wakaq = new WakaQ({
 
   /* Redis normally doesn't use TLS, but some cloud providers need it.
    */
-  tls: env.NODE_ENV == "production" ? { cert: "", key: "" } : undefined,
 
   /* If the task soft timeouts, retry up to 3 times. Max retries comes first
         from the task decorator if set, next from the Queue's maxRetries,
@@ -40,19 +39,12 @@ export const wakaq = new WakaQ({
      */
   schedules: [
     // Runs myTask once every 5 minutes.
-    new CronTask("*/5 * * * *", "myTask"),
   ],
+
+  host: env.REDIS_HOST,
+  password: env.REDIS_PASSWORD,
+  port: env.REDIS_PORT ? Number(env.REDIS_PORT) : 6379,
+  tls: env.NODE_ENV == "production" ? { host: env.REDIS_HOST } : undefined,
+  username: env.REDIS_USERNAME,
+  waitTimeout: Duration.second(10),
 });
-
-export const sayHello = wakaq.task(
-  async (name) => {
-    await new Promise((resolve) =>
-      setTimeout(resolve, Duration.second(5).milliseconds),
-    );
-
-    console.log(`Hi ${String(name)}!`);
-  },
-  {
-    name: "sayHello",
-  },
-);

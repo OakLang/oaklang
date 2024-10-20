@@ -5,6 +5,10 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     OPENAI_API_KEY: z.string().min(1),
+    REDIS_HOST: z.string().optional(),
+    REDIS_USERNAME: z.string().optional(),
+    REDIS_PORT: z.string().optional(),
+    REDIS_PASSWORD: z.string().optional(),
   },
   shared: {
     NODE_ENV: z

@@ -16,17 +16,11 @@ export const useChangeSentenceIndex = () => {
           oldData
             ? {
                 ...oldData,
-                ...vars,
+                sentenceIndex: vars.sentenceIndex,
               }
             : undefined,
       );
       return { oldData };
-    },
-    onSuccess: (newData, vars) => {
-      utils.trainingSessions.getTrainingSession.setData(
-        { trainingSessionId: vars.trainingSessionId },
-        newData,
-      );
     },
     onError: (error, vars, ctx) => {
       toast("Failed to update training session", {
@@ -37,6 +31,10 @@ export const useChangeSentenceIndex = () => {
           { trainingSessionId: vars.trainingSessionId },
           ctx.oldData,
         );
+      } else {
+        void utils.trainingSessions.getTrainingSession.invalidate({
+          trainingSessionId: vars.trainingSessionId,
+        });
       }
     },
   });

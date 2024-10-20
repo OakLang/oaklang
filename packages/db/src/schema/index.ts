@@ -8,3 +8,4 @@ export * from "./user-word";
 export * from "./access-request";
 export * from "./collection";
 export * from "./module";
+export * from "./ai-usage";

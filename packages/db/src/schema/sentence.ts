@@ -26,6 +26,7 @@ export const sentencesTable = pgTable(
     sentence: text("sentence").notNull(),
     translation: text("translation").notNull(),
     index: integer("index").notNull(),
+    completedAt: timestamp("completed_at"),
   },
   (table) => ({
     uniqueIdx: unique().on(table.trainingSessionId, table.index),

@@ -63,7 +63,7 @@ export const sentencesRouter = createTRPCRouter({
         ctx.session,
       );
 
-      if (trainingSession.exercise === Exercises.exercies1) {
+      if (trainingSession.exercise === Exercises.exercise1) {
         return getSentencesForExercise1(
           trainingSession,
           ctx,
@@ -187,5 +187,25 @@ export const sentencesRouter = createTRPCRouter({
           userWord: item.userWord ?? null,
         }))
         .sort((a, b) => a.index - b.index);
+    }),
+  markSentenceComplete: protectedProcedure
+    .input(z.object({ sentenceId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const sentence = await getSentenceOrThrow(input.sentenceId, ctx);
+      if (sentence.completedAt) {
+        return sentence;
+      }
+
+      const [updatedSentence] = await ctx.db
+        .update(sentencesTable)
+        .set({
+          completedAt: new Date(),
+        })
+        .where(eq(sentencesTable.id, sentence.id))
+        .returning();
+      if (!updatedSentence) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+      return updatedSentence;
     }),
 });

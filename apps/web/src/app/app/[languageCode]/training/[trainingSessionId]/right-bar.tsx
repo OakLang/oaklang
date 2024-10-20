@@ -1,6 +1,6 @@
 "use client";
 
-import CurrentPracticeWordsPanel from "~/components/CurrentPracticeWordsPanel";
+import TrainingSessionDetailsSideBarWidget from "~/components/TrainingSessionDetailsSideBarWidget";
 import WordInspectionPanel from "~/components/WordInspectionPanel";
 import { useAppStore } from "~/store/app-store";
 
@@ -17,7 +17,7 @@ export default function RightBar() {
       {inspectedWord ? (
         <WordInspectionPanel word={inspectedWord} />
       ) : (
-        <CurrentPracticeWordsPanel />
+        <TrainingSessionDetailsSideBarWidget />
       )}
     </aside>
   );

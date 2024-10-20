@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -86,7 +86,7 @@ export default function StartTrainingDialog({
     resolver: zodResolver(createTrainingSessionSchema),
     defaultValues: {
       languageCode,
-      exercise: Exercises.exercies1,
+      exercise: Exercises.exercise1,
       data: {
         complexity: "A1",
         topic: "",
@@ -94,8 +94,6 @@ export default function StartTrainingDialog({
       },
     },
   });
-
-  const exercise = form.getValues("exercise");
 
   const utils = api.useUtils();
   const practiceLanguage = api.languages.getPracticeLanguage.useQuery({
@@ -117,6 +115,112 @@ export default function StartTrainingDialog({
       },
     });
 
+  const exercise = form.watch("exercise");
+  const learnFrom = form.watch("data.learnFrom");
+
+  const topicField = useMemo(
+    () => (
+      <FormField
+        control={form.control}
+        name="data.topic"
+        render={({ field }) => (
+          <FormItem className="grid w-full">
+            <FormLabel>Topic</FormLabel>
+            <FormControl>
+              <Textarea
+                placeholder="Type a topic or choose from the list to generate sentences (e.g., Travel, Cooking, Space Exploration...)"
+                {...field}
+                value={field.value}
+              />
+            </FormControl>
+            <FormMessage />
+            <ScrollArea className="max-w-full overflow-x-auto">
+              <div className="flex w-max gap-2 pb-2">
+                {TRAINING_SESSION_TOPICS.map((topic) => (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    key={topic.name}
+                    onClick={() => {
+                      form.setValue(field.name, topic.topic);
+                      form.setFocus("data.topic");
+                    }}
+                    type="button"
+                    className="text-muted-foreground h-8 rounded-full px-3 py-0 text-sm"
+                  >
+                    {topic.name}
+                  </Button>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </FormItem>
+        )}
+      />
+    ),
+    [form],
+  );
+
+  const complexityField = useMemo(
+    () => (
+      <FormField
+        control={form.control}
+        name="data.complexity"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Complexity</FormLabel>
+            <FormControl>
+              <Select
+                onValueChange={(value) =>
+                  form.setValue(
+                    field.name,
+                    value as Exercise1FormData["data"]["complexity"],
+                  )
+                }
+                {...field}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {COMPLEXITY_LIST.map((item) => (
+                    <SelectItem value={item} key={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    ),
+    [form],
+  );
+
+  const wordsField = useMemo(
+    () => (
+      <FormField
+        control={form.control}
+        name="data.words"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Words</FormLabel>
+            <FormControl>
+              <WordsList
+                value={field.value ?? []}
+                onChange={(words) => form.setValue(field.name, words)}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    ),
+    [form],
+  );
+
   const onSubmit = useCallback(
     (data: CreateTrainingSessoin) => {
       startTrainingSession.mutate(data);
@@ -135,18 +239,16 @@ export default function StartTrainingDialog({
   useEffect(() => {
     const tilte = form.getValues("title");
     if (open && !tilte && practiceLanguage.data?.name) {
-      form.setValue("title", `Learn ${practiceLanguage.data.name}`, {
-        shouldValidate: true,
-      });
+      form.setValue("title", `Learn ${practiceLanguage.data.name}`);
     }
   }, [form, open, practiceLanguage.data?.name]);
 
   useEffect(() => {
     const exercise = form.getValues("exercise");
-    if (exercise === Exercises.exercies1) {
+    if (exercise === Exercises.exercise1) {
       const words = form.getValues("data.words");
       if (open && (!words || words.length === 0) && initWords) {
-        form.setValue("data.words", initWords, { shouldValidate: true });
+        form.setValue("data.words", initWords);
       }
     }
   }, [form, initWords, open]);
@@ -201,7 +303,6 @@ export default function StartTrainingDialog({
                           form.setValue(
                             field.name,
                             value as CreateTrainingSessoin["exercise"],
-                            { shouldValidate: true },
                           );
                         }}
                       >
@@ -222,108 +323,15 @@ export default function StartTrainingDialog({
                 )}
               />
 
-              {exercise === Exercises.exercies1 && (
+              {exercise === Exercises.exercise1 && (
                 <>
-                  <FormField
-                    control={form.control}
-                    name="data.topic"
-                    render={({ field }) => (
-                      <FormItem className="grid w-full">
-                        <FormLabel>Topic</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Type a topic or choose from the list to generate sentences (e.g., Travel, Cooking, Space Exploration...)"
-                            {...field}
-                            value={field.value}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                        <ScrollArea className="max-w-full overflow-x-auto">
-                          <div className="flex w-max gap-2 pb-2">
-                            {TRAINING_SESSION_TOPICS.map((topic) => (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                key={topic.name}
-                                onClick={() => {
-                                  form.setValue(field.name, topic.topic, {
-                                    shouldValidate: true,
-                                  });
-                                  form.setFocus("data.topic");
-                                }}
-                                type="button"
-                                className="text-muted-foreground h-8 rounded-full px-3 py-0 text-sm"
-                              >
-                                {topic.name}
-                              </Button>
-                            ))}
-                          </div>
-                          <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="data.complexity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Complexity</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={(value) =>
-                              form.setValue(
-                                field.name,
-                                value as Exercise1FormData["data"]["complexity"],
-                                {
-                                  shouldValidate: true,
-                                },
-                              )
-                            }
-                            {...field}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {COMPLEXITY_LIST.map((item) => (
-                                <SelectItem value={item} key={item}>
-                                  {item}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="data.words"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Words</FormLabel>
-                        <FormControl>
-                          <WordsList
-                            value={field.value ?? []}
-                            onChange={(words) =>
-                              form.setValue(field.name, words, {
-                                shouldValidate: true,
-                              })
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {topicField}
+                  {complexityField}
+                  {wordsField}
                 </>
               )}
 
-              {exercise === Exercises.exercies2 && (
+              {exercise === Exercises.exercise2 && (
                 <>
                   <FormField
                     control={form.control}
@@ -337,9 +345,6 @@ export default function StartTrainingDialog({
                               form.setValue(
                                 field.name,
                                 value as Exercise2FormData["data"]["learnFrom"],
-                                {
-                                  shouldValidate: true,
-                                },
                               )
                             }
                             {...field}
@@ -365,52 +370,74 @@ export default function StartTrainingDialog({
                     )}
                   />
 
-                  {form.getValues("data.learnFrom") === "list-of-words" && (
-                    <FormField
-                      control={form.control}
-                      name="data.words"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Words</FormLabel>
-                          <FormControl>
-                            <WordsList
-                              value={field.value ?? []}
-                              onChange={(words) =>
-                                form.setValue(field.name, words, {
-                                  shouldValidate: true,
-                                })
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  {learnFrom === "list-of-words" && (
+                    <>
+                      {wordsField}
+
+                      <FormField
+                        control={form.control}
+                        name="data.eachWordPracticeCount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Each Word Practice Count</FormLabel>
+                            <FormControl>
+                              <NumberInput
+                                {...field}
+                                onChange={(value) =>
+                                  form.setValue(field.name, value)
+                                }
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
                   )}
 
-                  {form.getValues("data.learnFrom") === "number-of-words" && (
-                    <FormField
-                      control={form.control}
-                      name="data.numberOfWords"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Number Of Words</FormLabel>
-                          <FormControl>
-                            <NumberInput
-                              {...field}
-                              onChange={(value) =>
-                                form.setValue(field.name, value)
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  {learnFrom === "number-of-words" && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="data.numberOfWords"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Number Of Words</FormLabel>
+                            <FormControl>
+                              <NumberInput
+                                {...field}
+                                onChange={(value) =>
+                                  form.setValue(field.name, value)
+                                }
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="data.eachWordPracticeCount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Each Word Practice Count</FormLabel>
+                            <FormControl>
+                              <NumberInput
+                                {...field}
+                                onChange={(value) =>
+                                  form.setValue(field.name, value)
+                                }
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
                   )}
 
-                  {form.getValues("data.learnFrom") ===
-                    "number-of-sentences" && (
+                  {learnFrom === "number-of-sentences" && (
                     <FormField
                       control={form.control}
                       name="data.numberOfSentences"
@@ -430,10 +457,13 @@ export default function StartTrainingDialog({
                       )}
                     />
                   )}
+
+                  {topicField}
+                  {complexityField}
                 </>
               )}
 
-              {exercise === Exercises.exercies3 && (
+              {exercise === Exercises.exercise3 && (
                 <>
                   <FormField
                     control={form.control}
@@ -447,9 +477,6 @@ export default function StartTrainingDialog({
                               form.setValue(
                                 field.name,
                                 value as Exercise3FormData["data"]["learnFrom"],
-                                {
-                                  shouldValidate: true,
-                                },
                               )
                             }
                             {...field}
@@ -468,7 +495,7 @@ export default function StartTrainingDialog({
                     )}
                   />
 
-                  {form.getValues("data.learnFrom") === "content" && (
+                  {learnFrom === "content" && (
                     <FormField
                       control={form.control}
                       name="data.content"
@@ -488,50 +515,9 @@ export default function StartTrainingDialog({
                     />
                   )}
 
-                  {form.getValues("data.learnFrom") === "ask-ai" && (
-                    <FormField
-                      control={form.control}
-                      name="data.topic"
-                      render={({ field }) => (
-                        <FormItem className="grid w-full">
-                          <FormLabel>Topic</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Type a topic or choose from the list to generate sentences (e.g., Travel, Cooking, Space Exploration...)"
-                              {...field}
-                              value={field.value}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                          <ScrollArea className="max-w-full overflow-x-auto">
-                            <div className="flex w-max gap-2 pb-2">
-                              {TRAINING_SESSION_TOPICS.map((topic) => (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  key={topic.name}
-                                  onClick={() => {
-                                    form.setValue(field.name, topic.topic, {
-                                      shouldValidate: true,
-                                    });
-                                    form.setFocus("data.topic");
-                                  }}
-                                  type="button"
-                                  className="text-muted-foreground h-8 rounded-full px-3 py-0 text-sm"
-                                >
-                                  {topic.name}
-                                </Button>
-                              ))}
-                            </div>
-                            <ScrollBar orientation="horizontal" />
-                          </ScrollArea>
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                  {learnFrom === "ask-ai" && topicField}
 
-                  {form.getValues("data.learnFrom") ===
-                    "number-of-sentences" && (
+                  {learnFrom === "number-of-sentences" && (
                     <FormField
                       control={form.control}
                       name="data.numberOfSentences"

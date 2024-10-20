@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   integer,
   jsonb,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
@@ -17,6 +18,14 @@ import { languagesTable } from "./language";
 import { sentencesTable } from "./sentence";
 import { wordsTable } from "./word";
 
+export const trainingSessionStatus = pgEnum("training_session_status", [
+  "idle",
+  "pending",
+  "success",
+  "error",
+  "canceled",
+]);
+
 export const trainingSessionsTable = pgTable("training_session", {
   id: text("id")
     .primaryKey()
@@ -30,7 +39,7 @@ export const trainingSessionsTable = pgTable("training_session", {
   languageCode: text("language_code")
     .notNull()
     .references(() => languagesTable.code, { onDelete: "cascade" }),
-  exercise: text("exercise").notNull().default(Exercises.exercies1),
+  exercise: text("exercise").notNull().default(Exercises.exercise1),
   data: jsonb("data")
     .notNull()
     .$type<CreateTrainingSessoin["data"]>()
@@ -39,6 +48,7 @@ export const trainingSessionsTable = pgTable("training_session", {
       topic: "",
       words: [],
     } satisfies Exercise1FormData["data"]),
+  status: trainingSessionStatus("status").notNull().default("idle"),
 });
 
 export type TrainingSession = typeof trainingSessionsTable.$inferSelect;

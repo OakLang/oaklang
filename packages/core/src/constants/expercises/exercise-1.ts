@@ -1,19 +1,7 @@
-export const Exercises = {
-  exercies1: "exercise-1",
-  exercies2: "exercise-2",
-  exercies3: "exercise-3",
-} as const;
+import type { Exercise } from "./exercise";
+import { Exercises } from "./exercise";
 
-const _exercise_ids = Object.values(Exercises);
-
-export interface Exercise {
-  id: (typeof _exercise_ids)[number];
-  name: string;
-  description?: string | null;
-  [x: string]: unknown;
-}
-
-const exercise1PromptTemplate = `
+const EXERCISE_1_PROMPT_TEMPLATE = `
 You are an expert {PRACTICE_LANGUAGE} tutor specializing in creating effective practice exercises for students. Your task is to generate a set of sentences that help a student practice new vocabulary at their current proficiency level. Each sentence should:
 
 	•	Be grammatically correct and contextually natural.
@@ -34,7 +22,7 @@ TOPIC: {TOPIC}
 
 PREVIOUSLY GENERATED SENTENCES: 
 {PREVIOUSLY_GENERATED_SENTENCES}
-`;
+`.trim();
 
 export const EXERCISE_1_PROMPT_TEMPLATE_KEYS = [
   "{PRACTICE_LANGUAGE}",
@@ -48,19 +36,8 @@ export const EXERCISE_1_PROMPT_TEMPLATE_KEYS = [
 ];
 
 export const EXERCISE_1 = {
-  id: Exercises.exercies1,
+  id: Exercises.exercise1,
   name: "Infinite Sentence Practice",
-  promptTemplate: exercise1PromptTemplate.trim(),
+  description: "",
+  promptTemplate: EXERCISE_1_PROMPT_TEMPLATE,
 } satisfies Exercise;
-
-export const EXERCISE_2 = {
-  id: Exercises.exercies2,
-  name: "Session Sentence Practice",
-} satisfies Exercise;
-
-export const EXERCISE_3 = {
-  id: Exercises.exercies3,
-  name: "Content Practice",
-} satisfies Exercise;
-
-export const EXERCISES = [EXERCISE_1, EXERCISE_2, EXERCISE_3];

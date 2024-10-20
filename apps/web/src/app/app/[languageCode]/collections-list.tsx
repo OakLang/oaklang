@@ -262,11 +262,11 @@ const ModuleCard = ({ module }: { module: Module }) => {
     setIsLoading(true);
     try {
       switch (module.jsonData.type) {
-        case Exercises.exercies1: {
+        case Exercises.exercise1: {
           const session = await createTrainingSession.mutateAsync({
             languageCode: module.languageCode,
             title: module.name,
-            exercise: Exercises.exercies1,
+            exercise: Exercises.exercise1,
             data: {
               complexity: module.jsonData.complexity ?? "A1",
               topic: module.jsonData.topic ?? "",

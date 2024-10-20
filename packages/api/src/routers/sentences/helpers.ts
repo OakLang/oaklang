@@ -208,7 +208,7 @@ export const getSentencesForExercise1 = async (
   ctx: ProtectedCtx,
   promptTemplate = EXERCISE_1.promptTemplate,
 ) => {
-  if (trainingSession.exercise !== Exercises.exercies1) {
+  if (trainingSession.exercise !== Exercises.exercise1) {
     return [];
   }
   const PRACTICE_WORDS_COUNT = 30;

@@ -1,8 +1,8 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import {
   ArrowLeftIcon,
   BookAIcon,
@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
-import type { LanguageCodeParams } from "~/types";
+import type { TrainingSession } from "@acme/db/schema";
+
 import AppSettings from "~/components/AppSettings";
 import SimpleInterlinearLineEditor from "~/components/SimpleInterlinearLineEditor";
 import { Button } from "~/components/ui/button";
@@ -43,16 +44,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useAppStore } from "~/store/app-store";
-import { api } from "~/trpc/react";
 
-export default function TopBar() {
-  const trainingSessionId = useTrainingSessionId();
-  const { languageCode } = useParams<LanguageCodeParams>();
-  const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
-    { trainingSessionId },
-  );
+export default function ToolBar({
+  trainingSession,
+  children,
+}: {
+  trainingSession: TrainingSession;
+  children?: ReactNode;
+}) {
   const [settingsSheetOpen, setSettingsSheetOpen] = useState(false);
 
   const inspectionPanelOpen = useAppStore((state) => state.inspectionPanelOpen);
@@ -65,12 +65,12 @@ export default function TopBar() {
 
   return (
     <>
-      <header className="flex flex-shrink-0 items-center p-2">
+      <header className="flex items-center gap-4 p-2">
         <div className="flex flex-1 items-center">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="mr-2" asChild>
-                <Link href={`/app/${languageCode}`}>
+                <Link href={`/app/${trainingSession.languageCode}`}>
                   <ArrowLeftIcon className="h-5 w-5" />
                   <div className="sr-only">Back</div>
                 </Link>
@@ -79,17 +79,19 @@ export default function TopBar() {
             <TooltipContent side="bottom">Back</TooltipContent>
           </Tooltip>
 
-          <h1 className="text-lg font-medium">
-            {trainingSessionQuery.data?.title}
+          <h1 className="flex-1 truncate text-lg font-medium max-md:hidden">
+            {trainingSession.title}
           </h1>
         </div>
+
+        {children}
 
         <div className="flex flex-1 items-center justify-end gap-2">
           <Tooltip>
             <Popover>
               <PopoverTrigger asChild>
                 <TooltipTrigger asChild>
-                  <Button size="icon" variant="ghost">
+                  <Button size="icon" variant="ghost" className="max-md:hidden">
                     <BookAIcon className="h-5 w-5" />
                     <div className="sr-only">Reader Settings</div>
                   </Button>
@@ -148,7 +150,7 @@ export default function TopBar() {
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">Interlinear Lines</p>
                       <Link
-                        href={`/app/${languageCode}/settings/reader#interlinear-lines`}
+                        href={`/app/${trainingSession.languageCode}/settings/reader#interlinear-lines`}
                         className="text-muted-foreground hover:text-foreground text-sm font-medium underline"
                       >
                         Edit
@@ -190,6 +192,7 @@ export default function TopBar() {
                 size="icon"
                 variant="ghost"
                 onClick={() => setInspectionPanelOpen(!inspectionPanelOpen)}
+                className="max-md:hidden"
               >
                 {inspectionPanelOpen ? (
                   <SidebarCloseIcon className="h-5 w-5 rotate-180" />

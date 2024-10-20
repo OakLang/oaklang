@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { Exercises } from "@acme/core/constants";
 import { and, count, desc, eq } from "@acme/db";
 import {
   languagesTable,
@@ -9,6 +10,7 @@ import {
   userWordsTable,
 } from "@acme/db/schema";
 import { createTrainingSessionSchema } from "@acme/db/validators";
+import { generateSentencesForExercise2 } from "@acme/wakaq/tasks/generate-sentences";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getLanguageOrThrow, getTrainingSessionOrThrow } from "../utils";
@@ -129,6 +131,14 @@ export const trainingSessionsRouter = createTRPCRouter({
         });
       }
 
+      switch (trainingSession.exercise) {
+        case Exercises.exercise2:
+          await generateSentencesForExercise2.enqueue({
+            trainingSessionId: trainingSession.id,
+          });
+          break;
+      }
+
       return trainingSession;
     }),
   changeSentenceIndex: protectedProcedure
@@ -148,6 +158,11 @@ export const trainingSessionsRouter = createTRPCRouter({
           db,
           session,
         );
+
+        if (trainingSession.status !== "success") {
+          return trainingSession;
+        }
+
         const [updatedTrainingSession] = await db
           .update(trainingSessionsTable)
           .set({
@@ -155,9 +170,11 @@ export const trainingSessionsRouter = createTRPCRouter({
           })
           .where(eq(trainingSessionsTable.id, trainingSession.id))
           .returning();
+
         if (!updatedTrainingSession) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         }
+
         return updatedTrainingSession;
       },
     ),

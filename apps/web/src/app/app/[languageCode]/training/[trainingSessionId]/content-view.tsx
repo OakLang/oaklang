@@ -1,60 +1,56 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useIsFetching } from "@tanstack/react-query";
-import { getQueryKey } from "@trpc/react-query";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  Loader2Icon,
-  PauseIcon,
-  PlayIcon,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { ChevronLeftIcon, Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 
-import InterlinearView from "~/components/InterlinearView";
+import type { TrainingSession } from "@acme/db/schema";
+import { Exercises } from "@acme/core/constants";
+
+import type { TrainingSessionParams } from "~/types";
+import { SentenceView } from "~/components/SentenceView";
+import ToolBar from "~/components/ToolBar";
 import { Button } from "~/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { Skeleton } from "~/components/ui/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "~/components/ui/tooltip";
-import useTextToSpeechPlayer from "~/hooks/useTextToSpeechPlayer";
-import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
-import { useChangeSentenceIndex } from "~/hooks/useUpdateTrainingSessionMutation";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 
 export default function ContentView() {
+  const [showComplitionPage, setShowComplitionPage] = useState(false);
   const [initialGenerateSentencesCalled, setInitialGenerateSentencesCalled] =
     useState(false);
-  const trainingSessionId = useTrainingSessionId();
+  const { trainingSessionId } = useParams<TrainingSessionParams>();
 
   const exercise1PromptTemplate = useAppStore(
     (state) => state.exercise1PromptTemplate,
   );
-  const interlinearLinesPromptTemplate = useAppStore(
-    (state) => state.interlinearLinesPromptTemplate,
-  );
 
   const utils = api.useUtils();
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId },
+    {
+      refetchInterval: (query) => {
+        const status = query.state.data?.status;
+        if (status === "idle" || status === "pending") {
+          return 1000;
+        }
+        return false;
+      },
+    },
   );
   const sentencesQuery = api.sentences.getSentences.useQuery(
     { trainingSessionId },
-    { enabled: trainingSessionQuery.isSuccess },
+    {
+      refetchInterval: (query) => {
+        const status = trainingSessionQuery.data?.status;
+        const sentences = query.state.data;
+        if (status === "success" && (!sentences || sentences.length === 0)) {
+          return 500;
+        }
+        return false;
+      },
+    },
   );
-  const updateTrainingSessionMutation = useChangeSentenceIndex();
 
   const generateSentencesMut = api.sentences.generateSentences.useMutation({
     onSuccess: (data, { trainingSessionId }) => {
@@ -68,79 +64,17 @@ export default function ContentView() {
     },
   });
 
-  const currentSentence = useMemo(() => {
-    if (trainingSessionQuery.isSuccess && sentencesQuery.isSuccess) {
-      return sentencesQuery.data[trainingSessionQuery.data.sentenceIndex];
-    }
-  }, [
-    sentencesQuery.data,
-    sentencesQuery.isSuccess,
-    trainingSessionQuery.data?.sentenceIndex,
-    trainingSessionQuery.isSuccess,
-  ]);
-  const isFetchingCurrentSentenceWords = useIsFetching({
-    queryKey: getQueryKey(
-      api.sentences.getSentenceWords,
-      { sentenceId: currentSentence?.id },
-      "query",
-    ),
-  });
-
-  const handleNext = useCallback(() => {
-    if (!sentencesQuery.isSuccess || !trainingSessionQuery.isSuccess) {
-      return;
-    }
-    if (
-      !generateSentencesMut.isPending &&
-      trainingSessionQuery.data.sentenceIndex >= sentencesQuery.data.length - 3
-    ) {
-      generateSentencesMut.mutate({
-        trainingSessionId,
-        exercise1PromptTemplate,
-      });
-    }
-    if (trainingSessionQuery.data.sentenceIndex >= sentencesQuery.data.length) {
-      console.log("Can not go next");
-      return;
-    }
-    const newSentenceIndex = trainingSessionQuery.data.sentenceIndex + 1;
-    updateTrainingSessionMutation.mutate({
-      trainingSessionId,
-      sentenceIndex: newSentenceIndex,
-    });
-  }, [
-    generateSentencesMut,
-    sentencesQuery.data?.length,
-    sentencesQuery.isSuccess,
-    trainingSessionId,
-    trainingSessionQuery.data?.sentenceIndex,
-    trainingSessionQuery.isSuccess,
-    updateTrainingSessionMutation,
-    exercise1PromptTemplate,
-  ]);
-
-  const handlePrevious = useCallback(() => {
-    if (!sentencesQuery.isSuccess || !trainingSessionQuery.isSuccess) return;
-    if (trainingSessionQuery.data.sentenceIndex <= 0) {
-      return;
-    }
-    const newSentenceIndex = trainingSessionQuery.data.sentenceIndex - 1;
-    updateTrainingSessionMutation.mutate({
-      trainingSessionId,
-      sentenceIndex: newSentenceIndex,
-    });
-  }, [
-    sentencesQuery.isSuccess,
-    trainingSessionId,
-    trainingSessionQuery.data?.sentenceIndex,
-    trainingSessionQuery.isSuccess,
-    updateTrainingSessionMutation,
-  ]);
-
   useEffect(() => {
     if (
+      !trainingSessionQuery.isSuccess ||
+      !sentencesQuery.isSuccess ||
+      trainingSessionQuery.data.exercise !== Exercises.exercise1
+    ) {
+      return;
+    }
+
+    if (
       !initialGenerateSentencesCalled &&
-      sentencesQuery.isSuccess &&
       sentencesQuery.data.length === 0 &&
       !generateSentencesMut.isPending
     ) {
@@ -157,180 +91,143 @@ export default function ContentView() {
     sentencesQuery.isSuccess,
     trainingSessionId,
     exercise1PromptTemplate,
+    trainingSessionQuery.isSuccess,
+    trainingSessionQuery.data?.exercise,
   ]);
 
-  useEffect(() => {
-    const index = trainingSessionQuery.data?.sentenceIndex;
-    if (!index) {
-      return;
-    }
+  if (trainingSessionQuery.isError) {
+    return <p>{trainingSessionQuery.error.message}</p>;
+  }
 
-    const nextSentence = sentencesQuery.data?.find(
-      (sent) => sent.index === index + 2,
-    );
-    if (nextSentence) {
-      void utils.sentences.getSentenceWords.ensureData({
-        sentenceId: nextSentence.id,
-        promptTemplate: interlinearLinesPromptTemplate,
-      });
-    }
-  }, [
-    trainingSessionId,
-    trainingSessionQuery.data?.sentenceIndex,
-    utils.sentences.getSentenceWords,
-    utils.sentences.getSentences,
-    sentencesQuery.data,
-    interlinearLinesPromptTemplate,
-  ]);
-
-  return (
-    <div className="flex flex-1 flex-col overflow-y-auto">
-      <div className="flex flex-1 gap-4 py-8 md:py-16">
-        <div className="md:pl-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                className="text-muted-foreground h-full w-12"
-                size="icon"
-                disabled={
-                  sentencesQuery.isSuccess &&
-                  trainingSessionQuery.isSuccess &&
-                  trainingSessionQuery.data.sentenceIndex <= 0
-                }
-                onClick={handlePrevious}
-              >
-                <ChevronLeftIcon className="h-8 w-8" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Previous Sentence</TooltipContent>
-          </Tooltip>
-        </div>
-
-        <div className="flex flex-1 flex-col">
-          <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
-            {currentSentence ? (
-              <>
-                {isFetchingCurrentSentenceWords === 0 ? (
-                  <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
-                    <AudioPlayer
-                      text={currentSentence.sentence}
-                      autoPlay={userSettingsQuery.data?.autoPlayAudio === true}
-                    />
-                  </div>
-                ) : (
-                  <div className="mb-4 flex items-center justify-center gap-2 md:mb-8">
-                    <Skeleton className="h-14 w-14 rounded-full" />
-                    <Skeleton className="h-8 w-14 rounded-full" />
-                  </div>
-                )}
-
-                <InterlinearView
-                  sentences={[currentSentence]}
-                  onNextSentence={handleNext}
-                  onPreviousSentence={handlePrevious}
-                />
-              </>
-            ) : (
-              <div className="flex flex-1 items-center justify-center">
-                <div className="flex flex-col items-center justify-center gap-4">
-                  <Loader2Icon className="h-6 w-6 animate-spin" />
-                  <p className="text-muted-foreground text-center">
-                    {generateSentencesMut.isPending
-                      ? "Generating Sentences..."
-                      : "Loading..."}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="md:pr-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                className="text-muted-foreground h-full w-12"
-                size="icon"
-                disabled={
-                  sentencesQuery.isSuccess &&
-                  trainingSessionQuery.isSuccess &&
-                  trainingSessionQuery.data.sentenceIndex >=
-                    sentencesQuery.data.length
-                }
-                onClick={handleNext}
-              >
-                <ChevronRightIcon className="h-8 w-8" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">Next Sentence</TooltipContent>
-          </Tooltip>
+  if (
+    trainingSessionQuery.isPending ||
+    trainingSessionQuery.data.status === "idle"
+  ) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Loader2Icon className="h-6 w-6 animate-spin" />
+          <p className="text-muted-foreground text-center">Loading...</p>
         </div>
       </div>
-    </div>
+    );
+  }
+
+  if (trainingSessionQuery.data.status === "pending") {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Loader2Icon className="h-6 w-6 animate-spin" />
+          <p className="text-muted-foreground text-center">
+            Generating Sentences...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (trainingSessionQuery.data.status === "canceled") {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <p className="text-muted-foreground text-center">
+            Generation Canceled
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (trainingSessionQuery.data.status === "error") {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <p className="text-muted-foreground text-center">
+            Error while generating Sentences
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (sentencesQuery.isPending) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Loader2Icon className="h-6 w-6 animate-spin" />
+          <p className="text-muted-foreground text-center">
+            Loading Sentences...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (sentencesQuery.isError) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <p className="text-muted-foreground text-center">
+            Setences Error: {sentencesQuery.error.message}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showComplitionPage) {
+    return (
+      <SessionComplete
+        onBack={() => setShowComplitionPage(false)}
+        trainingSession={trainingSessionQuery.data}
+      />
+    );
+  }
+
+  return (
+    <SentenceView
+      trainingSession={trainingSessionQuery.data}
+      sentences={sentencesQuery.data}
+      onComplete={() => setShowComplitionPage(true)}
+    />
   );
 }
 
-const AudioPlayer = ({
-  text,
-  autoPlay,
+const SessionComplete = ({
+  onBack,
+  trainingSession,
 }: {
-  text: string;
-  autoPlay?: boolean;
+  trainingSession: TrainingSession;
+  onBack: () => void;
 }) => {
-  const playgroundPlaybackSpeed = useAppStore(
-    (state) => state.playgroundPlaybackSpeed,
-  );
-  const setPlaygroundPlaybackSpeed = useAppStore(
-    (state) => state.setPlaygroundPlaybackSpeed,
-  );
-  const { audioRef, isFetching, isPlaying, pause, play } =
-    useTextToSpeechPlayer({
-      input: text,
-      autoPlay,
-      playbackRate: playgroundPlaybackSpeed,
-    });
-
   return (
     <>
-      <audio ref={audioRef} />
-      <Button
-        className="h-14 w-14 rounded-full"
-        size="icon"
-        variant="outline"
-        onClick={() => {
-          if (isPlaying) {
-            pause();
-          } else {
-            void play();
-          }
-        }}
-        disabled={isFetching}
-      >
-        {isFetching ? (
-          <Loader2Icon className="h-6 w-6 animate-spin" />
-        ) : isPlaying ? (
-          <PauseIcon className="h-6 w-6" />
-        ) : (
-          <PlayIcon className="h-6 w-6" />
-        )}
-      </Button>
-      <Select
-        value={String(playgroundPlaybackSpeed)}
-        onValueChange={(rate) => setPlaygroundPlaybackSpeed(parseFloat(rate))}
-      >
-        <SelectTrigger className="w-fit gap-2 rounded-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
-            <SelectItem key={String(rate)} value={String(rate)}>
-              {rate}x
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <ToolBar trainingSession={trainingSession} />
+
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        <div className="flex flex-1 gap-4 py-8 md:py-16">
+          <div className="md:pl-2">
+            <Button
+              variant="ghost"
+              className="text-muted-foreground h-full w-12"
+              size="icon"
+              onClick={onBack}
+            >
+              <ChevronLeftIcon className="h-8 w-8" />
+            </Button>
+          </div>
+
+          <div className="flex flex-1 flex-col">
+            <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
+              <p className="text-2xl font-semibold">YAY! Session complete!</p>
+            </div>
+          </div>
+
+          <div className="md:pr-2">
+            <div className="h-full w-12"></div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

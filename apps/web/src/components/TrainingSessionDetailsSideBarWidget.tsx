@@ -1,13 +1,14 @@
+import { useParams } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
-import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
+import type { TrainingSessionParams } from "~/types";
 import { api } from "~/trpc/react";
 import { formatDate } from "~/utils";
 import ObjectDetailsList from "./ObjectDetailsList";
 import RenderQueryResult from "./RenderQueryResult";
 
-export default function CurrentPracticeWordsPanel() {
-  const trainingSessionId = useTrainingSessionId();
+export default function TrainingSessionDetailsSideBarWidget() {
+  const { trainingSessionId } = useParams<TrainingSessionParams>();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId },
   );
