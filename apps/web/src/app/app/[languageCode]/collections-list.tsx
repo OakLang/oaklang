@@ -36,7 +36,7 @@ export default function CollectionsList() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <p className="text-lg font-semibold">Collections</p>
         <Button

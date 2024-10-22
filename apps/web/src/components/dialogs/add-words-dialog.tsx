@@ -72,6 +72,7 @@ export default function AddWordsDialog({
                               wordsList.filter((w) => w.id !== word.id),
                             )
                           }
+                          type="button"
                         >
                           <XIcon className="h-4 w-4" />
                         </Button>
@@ -86,7 +87,9 @@ export default function AddWordsDialog({
               </div>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant="secondary">Done</Button>
+                  <Button variant="secondary" type="button">
+                    Done
+                  </Button>
                 </DialogClose>
                 <Button
                   onClick={() => {
@@ -94,6 +97,7 @@ export default function AddWordsDialog({
                     onOpenChange(false);
                     setWordsList([]);
                   }}
+                  type="button"
                 >
                   {action?.title ?? "Done"}
                 </Button>
@@ -145,32 +149,28 @@ function AddWordsFromList({
   const addWordsToPracticeListFromCommaSeparatedListMut =
     api.words.addWordsToPracticeListFromCommaSeparatedList.useMutation();
 
-  const handelSubmit = useCallback(
-    async (event: FormEvent) => {
-      event.preventDefault();
-      if (!text) {
-        return;
-      }
+  const handelSubmit = useCallback(async () => {
+    if (!text) {
+      return;
+    }
 
-      const words =
-        await addWordsToPracticeListFromCommaSeparatedListMut.mutateAsync({
-          languageCode,
-          text,
-        });
-      void utils.words.getAllWords.invalidate({ languageCode });
-      onWordsListGenerated(words);
-    },
-    [
-      text,
-      addWordsToPracticeListFromCommaSeparatedListMut,
-      languageCode,
-      utils.words.getAllWords,
-      onWordsListGenerated,
-    ],
-  );
+    const words =
+      await addWordsToPracticeListFromCommaSeparatedListMut.mutateAsync({
+        languageCode,
+        text,
+      });
+    void utils.words.getAllWords.invalidate({ languageCode });
+    onWordsListGenerated(words);
+  }, [
+    text,
+    addWordsToPracticeListFromCommaSeparatedListMut,
+    languageCode,
+    utils.words.getAllWords,
+    onWordsListGenerated,
+  ]);
 
   return (
-    <form className="space-y-4" onSubmit={handelSubmit}>
+    <div className="space-y-4">
       <fieldset>
         <Textarea
           placeholder="Enter a list of words, separated by commas. Example: egg, dog, food, drink, etc."
@@ -190,6 +190,8 @@ function AddWordsFromList({
             addWordsToPracticeListFromCommaSeparatedListMut.isSuccess ||
             !text
           }
+          type="button"
+          onClick={handelSubmit}
         >
           {(addWordsToPracticeListFromCommaSeparatedListMut.isPending ||
             addWordsToPracticeListFromCommaSeparatedListMut.isSuccess) && (
@@ -198,7 +200,7 @@ function AddWordsFromList({
           Continue
         </Button>
       </DialogFooter>
-    </form>
+    </div>
   );
 }
 
@@ -214,32 +216,28 @@ function AddWordsFromPieceOfText({
   const addWordsToPracticeListFromPieceOfTextMut =
     api.words.addWordsToPracticeListFromPieceOfText.useMutation();
 
-  const handelSubmit = useCallback(
-    async (event: FormEvent) => {
-      event.preventDefault();
-      if (!text) {
-        return;
-      }
+  const handelSubmit = useCallback(async () => {
+    if (!text) {
+      return;
+    }
 
-      const words = await addWordsToPracticeListFromPieceOfTextMut.mutateAsync({
-        languageCode,
-        text,
-      });
-      void utils.words.getAllWords.invalidate({ languageCode });
-
-      onWordsListGenerated(words);
-    },
-    [
-      text,
-      addWordsToPracticeListFromPieceOfTextMut,
+    const words = await addWordsToPracticeListFromPieceOfTextMut.mutateAsync({
       languageCode,
-      utils.words.getAllWords,
-      onWordsListGenerated,
-    ],
-  );
+      text,
+    });
+    void utils.words.getAllWords.invalidate({ languageCode });
+
+    onWordsListGenerated(words);
+  }, [
+    text,
+    addWordsToPracticeListFromPieceOfTextMut,
+    languageCode,
+    utils.words.getAllWords,
+    onWordsListGenerated,
+  ]);
 
   return (
-    <form className="space-y-4" onSubmit={handelSubmit}>
+    <form className="space-y-4">
       <fieldset>
         <Textarea
           placeholder="Enter a piece of text, and our AI will automatically extract individual words from it."
@@ -260,6 +258,8 @@ function AddWordsFromPieceOfText({
             addWordsToPracticeListFromPieceOfTextMut.isSuccess ||
             !text
           }
+          type="button"
+          onClick={handelSubmit}
         >
           {(addWordsToPracticeListFromPieceOfTextMut.isPending ||
             addWordsToPracticeListFromPieceOfTextMut.isSuccess) && (

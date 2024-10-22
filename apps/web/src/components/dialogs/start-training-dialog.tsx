@@ -1,13 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  ChevronDownIcon,
-  Loader2Icon,
-  PlusIcon,
-  TrashIcon,
-  XIcon,
-} from "lucide-react";
+import { Loader2Icon, PlusIcon, TrashIcon, XIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -32,6 +26,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -54,12 +49,6 @@ import {
 } from "~/components/ui/select";
 import { api } from "~/trpc/react";
 import CreateModuleForm from "../forms/create-module-form";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 import NumberInput from "../ui/number-input";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Textarea } from "../ui/textarea";
@@ -86,11 +75,12 @@ export default function StartTrainingDialog({
     resolver: zodResolver(createTrainingSessionSchema),
     defaultValues: {
       languageCode,
-      exercise: Exercises.exercise1,
       data: {
         complexity: "A1",
-        topic: "",
         words: [],
+        numberOfSentences: 5,
+        numberOfWords: 10,
+        eachWordPracticeCount: 2,
       },
     },
   });
@@ -118,14 +108,14 @@ export default function StartTrainingDialog({
   const exercise = form.watch("exercise");
   const learnFrom = form.watch("data.learnFrom");
 
-  const topicField = useMemo(
-    () => (
+  const topicField = useCallback(
+    (required?: boolean) => (
       <FormField
         control={form.control}
         name="data.topic"
         render={({ field }) => (
           <FormItem className="grid w-full">
-            <FormLabel>Topic</FormLabel>
+            <FormLabel>Topic{required && <RequiredBadge />}</FormLabel>
             <FormControl>
               <Textarea
                 placeholder="Type a topic or choose from the list to generate sentences (e.g., Travel, Cooking, Space Exploration...)"
@@ -161,14 +151,17 @@ export default function StartTrainingDialog({
     [form],
   );
 
-  const complexityField = useMemo(
-    () => (
+  const complexityField = useCallback(
+    (required?: boolean) => (
       <FormField
         control={form.control}
         name="data.complexity"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Complexity</FormLabel>
+            <FormLabel>
+              Complexity
+              {required && <RequiredBadge />}
+            </FormLabel>
             <FormControl>
               <Select
                 onValueChange={(value) =>
@@ -199,14 +192,17 @@ export default function StartTrainingDialog({
     [form],
   );
 
-  const wordsField = useMemo(
-    () => (
+  const wordsField = useCallback(
+    (required?: boolean) => (
       <FormField
         control={form.control}
         name="data.words"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Words</FormLabel>
+            <FormLabel>
+              Words
+              {required && <RequiredBadge />}
+            </FormLabel>
             <FormControl>
               <WordsList
                 value={field.value ?? []}
@@ -266,6 +262,11 @@ export default function StartTrainingDialog({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Start a new Training Session</DialogTitle>
+            <DialogDescription>
+              Select your preferred exercise type and complete the form to
+              create a personalized training session tailored to your learning
+              goals.
+            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form
@@ -280,7 +281,10 @@ export default function StartTrainingDialog({
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>
+                      Title
+                      <RequiredBadge />
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Learning German" {...field} />
                     </FormControl>
@@ -294,16 +298,19 @@ export default function StartTrainingDialog({
                 name="exercise"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Exercise</FormLabel>
+                    <FormLabel>
+                      Exercise
+                      <RequiredBadge />
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value}
                         onValueChange={(value) => {
-                          console.log(value);
                           form.setValue(
                             field.name,
                             value as CreateTrainingSessoin["exercise"],
                           );
+                          form.clearErrors();
                         }}
                       >
                         <SelectTrigger>
@@ -325,9 +332,9 @@ export default function StartTrainingDialog({
 
               {exercise === Exercises.exercise1 && (
                 <>
-                  {topicField}
-                  {complexityField}
-                  {wordsField}
+                  {topicField(true)}
+                  {complexityField(true)}
+                  {wordsField()}
                 </>
               )}
 
@@ -338,15 +345,19 @@ export default function StartTrainingDialog({
                     name="data.learnFrom"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Learn From</FormLabel>
+                        <FormLabel>
+                          Learn From
+                          <RequiredBadge />
+                        </FormLabel>
                         <FormControl>
                           <Select
-                            onValueChange={(value) =>
+                            onValueChange={(value) => {
                               form.setValue(
                                 field.name,
                                 value as Exercise2FormData["data"]["learnFrom"],
-                              )
-                            }
+                              );
+                              form.clearErrors();
+                            }}
                             {...field}
                           >
                             <SelectTrigger>
@@ -372,17 +383,21 @@ export default function StartTrainingDialog({
 
                   {learnFrom === "list-of-words" && (
                     <>
-                      {wordsField}
+                      {wordsField(true)}
 
                       <FormField
                         control={form.control}
                         name="data.eachWordPracticeCount"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Each Word Practice Count</FormLabel>
+                            <FormLabel>
+                              Each Word Practice Count
+                              <RequiredBadge />
+                            </FormLabel>
                             <FormControl>
                               <NumberInput
                                 {...field}
+                                aria-label={field.name}
                                 onChange={(value) =>
                                   form.setValue(field.name, value)
                                 }
@@ -392,6 +407,7 @@ export default function StartTrainingDialog({
                           </FormItem>
                         )}
                       />
+                      {complexityField(true)}
                     </>
                   )}
 
@@ -402,10 +418,14 @@ export default function StartTrainingDialog({
                         name="data.numberOfWords"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Number Of Words</FormLabel>
+                            <FormLabel>
+                              Number Of Words
+                              <RequiredBadge />
+                            </FormLabel>
                             <FormControl>
                               <NumberInput
                                 {...field}
+                                aria-label={field.name}
                                 onChange={(value) =>
                                   form.setValue(field.name, value)
                                 }
@@ -421,10 +441,14 @@ export default function StartTrainingDialog({
                         name="data.eachWordPracticeCount"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Each Word Practice Count</FormLabel>
+                            <FormLabel>
+                              Each Word Practice Count
+                              <RequiredBadge />
+                            </FormLabel>
                             <FormControl>
                               <NumberInput
                                 {...field}
+                                aria-label={field.name}
                                 onChange={(value) =>
                                   form.setValue(field.name, value)
                                 }
@@ -434,32 +458,39 @@ export default function StartTrainingDialog({
                           </FormItem>
                         )}
                       />
+                      {topicField(true)}
+                      {complexityField(true)}
                     </>
                   )}
 
                   {learnFrom === "number-of-sentences" && (
-                    <FormField
-                      control={form.control}
-                      name="data.numberOfSentences"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Number Of Sentences</FormLabel>
-                          <FormControl>
-                            <NumberInput
-                              {...field}
-                              onChange={(value) =>
-                                form.setValue(field.name, value)
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="data.numberOfSentences"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Number Of Sentences
+                              <RequiredBadge />
+                            </FormLabel>
+                            <FormControl>
+                              <NumberInput
+                                {...field}
+                                aria-label={field.name}
+                                onChange={(value) =>
+                                  form.setValue(field.name, value)
+                                }
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {topicField(true)}
+                      {complexityField(true)}
+                    </>
                   )}
-
-                  {topicField}
-                  {complexityField}
                 </>
               )}
 
@@ -470,15 +501,19 @@ export default function StartTrainingDialog({
                     name="data.learnFrom"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Learn From</FormLabel>
+                        <FormLabel>
+                          Learn From
+                          <RequiredBadge />
+                        </FormLabel>
                         <FormControl>
                           <Select
-                            onValueChange={(value) =>
+                            onValueChange={(value) => {
                               form.setValue(
                                 field.name,
                                 value as Exercise3FormData["data"]["learnFrom"],
-                              )
-                            }
+                              );
+                              form.clearErrors();
+                            }}
                             {...field}
                           >
                             <SelectTrigger>
@@ -501,7 +536,7 @@ export default function StartTrainingDialog({
                       name="data.content"
                       render={({ field }) => (
                         <FormItem className="grid w-full">
-                          <FormLabel>Topic</FormLabel>
+                          <FormLabel>Content</FormLabel>
                           <FormControl>
                             <Textarea
                               placeholder="Type a paragraph..."
@@ -515,7 +550,12 @@ export default function StartTrainingDialog({
                     />
                   )}
 
-                  {learnFrom === "ask-ai" && topicField}
+                  {learnFrom === "ask-ai" && (
+                    <>
+                      {topicField(true)}
+                      {complexityField(true)}
+                    </>
+                  )}
 
                   {learnFrom === "number-of-sentences" && (
                     <FormField
@@ -527,6 +567,7 @@ export default function StartTrainingDialog({
                           <FormControl>
                             <NumberInput
                               {...field}
+                              aria-label={field.name}
                               onChange={(value) =>
                                 form.setValue(field.name, value)
                               }
@@ -553,7 +594,7 @@ export default function StartTrainingDialog({
                       startTrainingSession.isPending ||
                       startTrainingSession.isSuccess
                     }
-                    className="rounded-r-none"
+                    // className="rounded-r-none"
                   >
                     {(startTrainingSession.isPending ||
                       startTrainingSession.isSuccess) && (
@@ -561,7 +602,7 @@ export default function StartTrainingDialog({
                     )}
                     Start Training
                   </Button>
-                  <DropdownMenu>
+                  {/* <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         type="button"
@@ -584,7 +625,7 @@ export default function StartTrainingDialog({
                         Save as Module
                       </DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>
+                  </DropdownMenu> */}
                 </div>
               </DialogFooter>
             </form>
@@ -676,6 +717,7 @@ const WordsList = ({
             onClick={() => {
               onChange(value.filter((w) => w !== word));
             }}
+            type="button"
           >
             <XIcon className="h-3 w-3" />
           </Button>
@@ -686,6 +728,7 @@ const WordsList = ({
         onClick={() => setShowAddWordsToPracticeListDialog(true)}
         variant="outline"
         className="text-muted-foreground h-8 rounded-full px-3"
+        type="button"
       >
         <PlusIcon className="-ml-1 mr-1.5 h-4 w-4" />
         Add Words
@@ -698,6 +741,7 @@ const WordsList = ({
           }}
           variant="outline"
           className="text-muted-foreground h-8 rounded-full px-3"
+          type="button"
         >
           <TrashIcon className="-ml-1 mr-1.5 h-4 w-4" />
           Clear All
@@ -720,3 +764,7 @@ const WordsList = ({
     </div>
   );
 };
+
+function RequiredBadge() {
+  return <span className="text-destructive">*</span>;
+}

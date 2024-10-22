@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { useCallback, useEffect, useMemo } from "react";
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Loader2Icon,
+} from "lucide-react";
 
 import type { Sentence, TrainingSession } from "@acme/db/schema";
-import { FINITE_EXERCISES } from "@acme/core/constants";
+import { INFINITE_EXERCISES } from "@acme/core/constants";
 
 import AudioPlayButton from "~/app/app/[languageCode]/training/[trainingSessionId]/audio-play-button";
 import { useChangeSentenceIndex } from "~/hooks/useUpdateTrainingSessionMutation";
@@ -39,17 +44,34 @@ export function SentenceView({
   const interlinearLinesPromptTemplate = useAppStore(
     (state) => state.interlinearLinesPromptTemplate,
   );
-  const [fetchingNextSentence, setFetchingNextSentence] = useState(false);
-  const [fetchingPreviousSentence, setFetchingPreviousSentence] =
-    useState(false);
   const changeSentenceIndex = useChangeSentenceIndex();
 
-  const completedAllSentences = useMemo(() => {
-    return FINITE_EXERCISES.includes(trainingSession.exercise) && !nextSentence;
-  }, [nextSentence, trainingSession.exercise]);
+  const isInfiniteExercise = INFINITE_EXERCISES.includes(
+    trainingSession.exercise,
+  );
+
+  const shouldCompleteSession = useMemo(() => {
+    return !isInfiniteExercise && !nextSentence;
+  }, [isInfiniteExercise, nextSentence]);
+
+  const generateNextSetOfSentencesMut =
+    api.trainingSessions.generateNextSetOfSentences.useMutation({
+      onMutate: () => {
+        utils.trainingSessions.getTrainingSession.setData(
+          { trainingSessionId: trainingSession.id },
+          (oldData) =>
+            oldData ? { ...oldData, status: "pending" } : undefined,
+        );
+      },
+      onSuccess: () => {
+        void utils.trainingSessions.getTrainingSession.invalidate({
+          trainingSessionId: trainingSession.id,
+        });
+      },
+    });
 
   const handleNext = useCallback(() => {
-    if (completedAllSentences) {
+    if (shouldCompleteSession) {
       onComplete();
       return;
     }
@@ -58,11 +80,35 @@ export function SentenceView({
       return;
     }
 
+    const sentencesLeft = sentences.length - (nextSentence.index + 1);
+
+    if (
+      isInfiniteExercise &&
+      sentencesLeft <= 3 &&
+      trainingSession.status !== "pending"
+    ) {
+      console.log("Generate More Sentences....");
+      // Trigger new sentence generation task
+      generateNextSetOfSentencesMut.mutate({
+        trainingSessionId: trainingSession.id,
+      });
+    }
+
     changeSentenceIndex.mutate({
       trainingSessionId: nextSentence.trainingSessionId,
       sentenceIndex: nextSentence.index,
     });
-  }, [changeSentenceIndex, completedAllSentences, nextSentence, onComplete]);
+  }, [
+    shouldCompleteSession,
+    nextSentence,
+    sentences.length,
+    trainingSession.status,
+    trainingSession.id,
+    isInfiniteExercise,
+    changeSentenceIndex,
+    onComplete,
+    generateNextSetOfSentencesMut,
+  ]);
 
   const handlePrevious = useCallback(() => {
     if (!previousSentence) {
@@ -76,20 +122,10 @@ export function SentenceView({
 
   useEffect(() => {
     if (nextSentence?.id) {
-      const fetchSentence = async () => {
-        try {
-          setFetchingNextSentence(true);
-          await utils.sentences.getSentenceWords.ensureData({
-            promptTemplate: interlinearLinesPromptTemplate,
-            sentenceId: nextSentence.id,
-          });
-        } catch (error) {
-          /* empty */
-        } finally {
-          setFetchingNextSentence(false);
-        }
-      };
-      void fetchSentence();
+      void utils.sentences.getSentenceWords.ensureData({
+        promptTemplate: interlinearLinesPromptTemplate,
+        sentenceId: nextSentence.id,
+      });
     }
   }, [
     interlinearLinesPromptTemplate,
@@ -99,38 +135,16 @@ export function SentenceView({
 
   useEffect(() => {
     if (previousSentence?.id) {
-      const fetchSentence = async () => {
-        try {
-          setFetchingPreviousSentence(true);
-          await utils.sentences.getSentenceWords.ensureData({
-            promptTemplate: interlinearLinesPromptTemplate,
-            sentenceId: previousSentence.id,
-          });
-        } catch (error) {
-          /* empty */
-        } finally {
-          setFetchingPreviousSentence(false);
-        }
-      };
-      void fetchSentence();
+      void utils.sentences.getSentenceWords.ensureData({
+        promptTemplate: interlinearLinesPromptTemplate,
+        sentenceId: previousSentence.id,
+      });
     }
   }, [
     interlinearLinesPromptTemplate,
     previousSentence?.id,
     utils.sentences.getSentenceWords,
   ]);
-
-  if (!sentence) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <p className="text-muted-foreground text-center">
-            Sentence not found!
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -163,7 +177,6 @@ export function SentenceView({
                     className="text-muted-foreground h-full w-12"
                     size="icon"
                     onClick={handlePrevious}
-                    disabled={fetchingPreviousSentence}
                   >
                     <ChevronLeftIcon className="h-8 w-8" />
                   </Button>
@@ -178,19 +191,40 @@ export function SentenceView({
           <div className="flex flex-1 flex-col">
             <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
               <div className="flex flex-1 flex-col">
-                <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
-                  <div className="mb-8 flex items-center justify-center gap-2 md:mb-8">
-                    <AudioPlayButton
-                      text={sentence.sentence}
-                      autoPlay={userSettingsQuery.data?.autoPlayAudio === true}
+                {sentence ? (
+                  <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
+                    <div className="mb-8 flex items-center justify-center gap-2 md:mb-8">
+                      <AudioPlayButton
+                        text={sentence.sentence}
+                        autoPlay={
+                          userSettingsQuery.data?.autoPlayAudio === true
+                        }
+                      />
+                    </div>
+                    <InterlinearView
+                      sentences={[sentence]}
+                      onPreviousSentence={handlePrevious}
+                      onNextSentence={handleNext}
                     />
                   </div>
-                  <InterlinearView
-                    sentences={[sentence]}
-                    onPreviousSentence={handlePrevious}
-                    onNextSentence={handleNext}
-                  />
-                </div>
+                ) : trainingSession.status === "pending" ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <Loader2Icon className="h-6 w-6 animate-spin" />
+                      <p className="text-muted-foreground text-center">
+                        Generating Sentences...
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-1 items-center justify-center">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <p className="text-muted-foreground text-center">
+                        Sentence not found!
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -204,14 +238,14 @@ export function SentenceView({
                     className="text-muted-foreground h-full w-12"
                     size="icon"
                     onClick={handleNext}
-                    disabled={fetchingNextSentence}
+                    disabled={!sentence?.completedAt}
                   >
                     <ChevronRightIcon className="h-8 w-8" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">Next Sentence</TooltipContent>
               </Tooltip>
-            ) : completedAllSentences ? (
+            ) : shouldCompleteSession ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

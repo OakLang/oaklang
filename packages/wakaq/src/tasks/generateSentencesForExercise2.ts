@@ -11,31 +11,12 @@ import {
   languagesTable,
   sentencesTable,
   trainingSessionsTable,
-  userSettingsTable,
   usersTable,
 } from "@acme/db/schema";
 import { exercise2Data } from "@acme/db/validators";
 
 import { wakaq } from "..";
-
-async function getNativeLanguage(userId: string): Promise<string> {
-  const userSettingsResult = await db
-    .select({
-      nativeLanguage: languagesTable.name,
-    })
-    .from(userSettingsTable)
-    .leftJoin(
-      languagesTable,
-      eq(languagesTable.code, userSettingsTable.nativeLanguage),
-    )
-    .where(eq(userSettingsTable.userId, userId));
-
-  const nativeLanguage = userSettingsResult[0]?.nativeLanguage;
-  if (!nativeLanguage) {
-    throw new Error("nativeLanguage not found in userSettings");
-  }
-  return nativeLanguage;
-}
+import { getNativeLanguage } from "../helpers";
 
 async function generateSentences(
   prompt: string,
@@ -43,6 +24,7 @@ async function generateSentences(
   nativeLanguage: string,
   userId: string,
   userEmail: string,
+  trainingSessionId: string,
 ): Promise<{ sentence: string; translation: string }[]> {
   const schema = z.object({
     sentences: z.array(
@@ -60,7 +42,7 @@ async function generateSentences(
   });
 
   const result = await generateObject({
-    model: openai("gpt-4o"),
+    model: openai("gpt-4o", { user: userId }),
     schema,
     prompt,
   });
@@ -75,15 +57,8 @@ async function generateSentences(
     userId,
     userEmail,
     metadata: {
-      functionName: "generateSentences",
-      functionArgs: {
-        prompt,
-        practiceLanguage,
-        nativeLanguage,
-        userId,
-        userEmail,
-      },
-      functionReturn: result.object.sentences,
+      trainingSessionId,
+      sentences: result.object.sentences,
       zodSchema: schema,
     },
   });
@@ -110,7 +85,7 @@ export const generateSentencesForExercise2 = wakaq.task(
         data: trainingSessionsTable.data,
         status: trainingSessionsTable.status,
         languageCode: languagesTable.code,
-        language: languagesTable.name,
+        language: languagesTable,
         userId: usersTable.id,
         userEmail: usersTable.email,
       })
@@ -137,12 +112,6 @@ export const generateSentencesForExercise2 = wakaq.task(
       throw new Error("Already success!");
     }
 
-    const practiceLanguage = trainingSession.language;
-    const data = await exercise2Data.parseAsync(trainingSession.data);
-    const nativeLanguage = await getNativeLanguage(trainingSession.userId);
-
-    let generatedSentences: { sentence: string; translation: string }[] = [];
-
     await db
       .update(trainingSessionsTable)
       .set({
@@ -151,6 +120,12 @@ export const generateSentencesForExercise2 = wakaq.task(
       .where(eq(trainingSessionsTable.id, trainingSession.id));
 
     try {
+      const practiceLanguage = trainingSession.language;
+      const data = await exercise2Data.parseAsync(trainingSession.data);
+      const nativeLanguage = await getNativeLanguage(trainingSession.userId);
+
+      let generatedSentences: { sentence: string; translation: string }[] = [];
+
       switch (data.learnFrom) {
         case "list-of-words": {
           const prompt = stringTemplate(
@@ -165,10 +140,11 @@ export const generateSentencesForExercise2 = wakaq.task(
           );
           generatedSentences = await generateSentences(
             prompt,
-            nativeLanguage,
-            practiceLanguage,
+            nativeLanguage.name,
+            practiceLanguage.name,
             trainingSession.userId,
             trainingSession.userEmail,
+            trainingSession.id,
           );
           break;
         }
@@ -186,10 +162,11 @@ export const generateSentencesForExercise2 = wakaq.task(
           );
           generatedSentences = await generateSentences(
             prompt,
-            nativeLanguage,
-            practiceLanguage,
+            nativeLanguage.name,
+            practiceLanguage.name,
             trainingSession.userId,
             trainingSession.userEmail,
+            trainingSession.id,
           );
           break;
         }
@@ -206,10 +183,11 @@ export const generateSentencesForExercise2 = wakaq.task(
           );
           generatedSentences = await generateSentences(
             prompt,
-            nativeLanguage,
-            practiceLanguage,
+            nativeLanguage.name,
+            practiceLanguage.name,
             trainingSession.userId,
             trainingSession.userEmail,
+            trainingSession.id,
           );
           break;
         }

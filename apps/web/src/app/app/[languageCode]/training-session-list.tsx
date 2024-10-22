@@ -18,6 +18,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { Skeleton } from "~/components/ui/skeleton";
 import { api } from "~/trpc/react";
+import StartLearningButton from "./start-learning-button";
 
 export default function TrainingSessionList() {
   const { languageCode } = useParams<LanguageCodeParams>();
@@ -45,9 +46,10 @@ export default function TrainingSessionList() {
     });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
         <p className="text-lg font-semibold">Training Sessions</p>
+        <StartLearningButton />
       </div>
 
       <RenderInfiniteQueryResult

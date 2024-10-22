@@ -10,6 +10,8 @@ export * from "./exercise-3";
 
 export const EXERCISES = [EXERCISE_1, EXERCISE_2, EXERCISE_3];
 
+export const INFINITE_EXERCISES: string[] = [Exercises.exercise1];
+
 export const FINITE_EXERCISES: string[] = [
   Exercises.exercise2,
   Exercises.exercise3,

@@ -34,9 +34,9 @@ export const exercise2Data = z.discriminatedUnion("learnFrom", [
       .int()
       .min(1)
       .max(50),
+    eachWordPracticeCount: z.number().min(1).max(10),
     topic: z.string().min(1, "Topic is required").max(300),
     complexity: z.enum(COMPLEXITY_LIST),
-    eachWordPracticeCount: z.number().min(1).max(10),
   }),
   z.object({
     learnFrom: z.literal("number-of-sentences"),
@@ -45,8 +45,8 @@ export const exercise2Data = z.discriminatedUnion("learnFrom", [
       .int()
       .min(1)
       .max(50),
-    complexity: z.enum(COMPLEXITY_LIST),
     topic: z.string().min(1, "Topic is required").max(300),
+    complexity: z.enum(COMPLEXITY_LIST),
   }),
 ]);
 
@@ -65,6 +65,7 @@ export const exercise3Data = z.discriminatedUnion("learnFrom", [
   z.object({
     learnFrom: z.literal("ask-ai"),
     topic: z.string().min(1).max(300),
+    complexity: z.enum(COMPLEXITY_LIST),
   }),
 ]);
 

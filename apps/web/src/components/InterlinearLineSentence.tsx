@@ -1,7 +1,8 @@
-import { createContext, useCallback } from "react";
+import { createContext, memo, useCallback } from "react";
 
 import type { Sentence } from "@acme/db/schema";
 
+import type { RouterOutputs } from "~/trpc/react";
 import { useIntersectionObserver } from "~/hooks/useIntersectionObserver";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
@@ -21,12 +22,32 @@ export default function InterlinearLineSentence({
   const interlinearLinesPromptTemplate = useAppStore(
     (state) => state.interlinearLinesPromptTemplate,
   );
-  const utils = api.useUtils();
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const sentenceWordsQuery = api.sentences.getSentenceWords.useQuery({
     sentenceId: sentence.id,
     promptTemplate: interlinearLinesPromptTemplate,
   });
+  return (
+    <SentenceContext.Provider value={{ sentence }}>
+      <RenderQueryResult
+        query={sentenceWordsQuery}
+        renderLoading={() => <SentenceLoader />}
+      >
+        {({ data }) => (
+          <RenderSentence sentenceWords={data} sentence={sentence} />
+        )}
+      </RenderQueryResult>
+    </SentenceContext.Provider>
+  );
+}
+
+function RenderSentence({
+  sentenceWords,
+  sentence,
+}: {
+  sentenceWords: RouterOutputs["sentences"]["getSentenceWords"];
+  sentence: Sentence;
+}) {
+  const utils = api.useUtils();
 
   const markSentencesCompletedMut =
     api.sentences.markSentenceComplete.useMutation({
@@ -55,39 +76,30 @@ export default function InterlinearLineSentence({
   });
 
   return (
-    <SentenceContext.Provider value={{ sentence }}>
-      <RenderQueryResult
-        query={sentenceWordsQuery}
-        renderLoading={() => {
-          return new Array(5).fill(0).map((_, i) => (
-            <div
-              className="mb-16 mr-4 inline-flex flex-col items-center gap-2"
-              key={i}
-            >
-              {userSettingsQuery.data?.interlinearLines.map((line) => (
-                <Skeleton
-                  className="inline"
-                  style={{
-                    height: line.style.fontSize,
-                    width:
-                      (Math.random() * (40 - 10) + 40) *
-                      (line.style.fontSize / 16),
-                  }}
-                  key={line.id}
-                />
-              ))}
-            </div>
-          ));
-        }}
-      >
-        {({ data }) => (
-          <div ref={ref}>
-            {data.map((word) => (
-              <InterlinearLineWordColumn key={word.index} word={word} />
-            ))}
-          </div>
-        )}
-      </RenderQueryResult>
-    </SentenceContext.Provider>
+    <div ref={ref}>
+      {sentenceWords.map((word) => (
+        <InterlinearLineWordColumn key={word.index} word={word} />
+      ))}
+    </div>
   );
 }
+
+const SentenceLoader = memo(() => {
+  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+
+  return Array.from({ length: 5 }).map((_, i) => (
+    <div className="mb-16 mr-4 inline-flex flex-col items-center gap-2" key={i}>
+      {userSettingsQuery.data?.interlinearLines.map((line) => (
+        <Skeleton
+          className="inline"
+          style={{
+            height: line.style.fontSize,
+            width:
+              (Math.random() * (40 - 10) + 40) * (line.style.fontSize / 16),
+          }}
+          key={line.id}
+        />
+      ))}
+    </div>
+  ));
+});

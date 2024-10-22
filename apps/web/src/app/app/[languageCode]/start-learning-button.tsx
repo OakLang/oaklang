@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PlusIcon } from "lucide-react";
 
 import type { Word } from "@acme/db/schema";
 
@@ -15,6 +16,7 @@ export default function StartLearningButton() {
   return (
     <>
       <Button onClick={() => setShowTrainigSessionDialog(true)}>
+        <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
         Start Learning
       </Button>
 

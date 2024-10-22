@@ -10,7 +10,8 @@ import {
   userWordsTable,
 } from "@acme/db/schema";
 import { createTrainingSessionSchema } from "@acme/db/validators";
-import { generateSentencesForExercise2 } from "@acme/wakaq/tasks/generate-sentences";
+import { generateSentencesForExercise1 } from "@acme/wakaq/tasks/generateSentencesForExercise1";
+import { generateSentencesForExercise2 } from "@acme/wakaq/tasks/generateSentencesForExercise2";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getLanguageOrThrow, getTrainingSessionOrThrow } from "../utils";
@@ -132,6 +133,11 @@ export const trainingSessionsRouter = createTRPCRouter({
       }
 
       switch (trainingSession.exercise) {
+        case Exercises.exercise1:
+          await generateSentencesForExercise1.enqueue({
+            trainingSessionId: trainingSession.id,
+          });
+          break;
         case Exercises.exercise2:
           await generateSentencesForExercise2.enqueue({
             trainingSessionId: trainingSession.id,
@@ -201,4 +207,23 @@ export const trainingSessionsRouter = createTRPCRouter({
         return deletedTrainingSession;
       },
     ),
+  generateNextSetOfSentences: protectedProcedure
+    .input(
+      z.object({
+        trainingSessionId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const trainingSession = await getTrainingSessionOrThrow(
+        input.trainingSessionId,
+        ctx.db,
+        ctx.session,
+      );
+
+      if (trainingSession.exercise === Exercises.exercise1) {
+        await generateSentencesForExercise1.enqueue({
+          trainingSessionId: trainingSession.id,
+        });
+      }
+    }),
 });
