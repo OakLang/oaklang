@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   integer,
   jsonb,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
@@ -12,6 +13,11 @@ import {
 import { createPrefixedId } from "../utils";
 import { trainingSessionsTable } from "./training-session";
 import { wordsTable } from "./word";
+
+export const sentenceInterlinearLineGenerationStatus = pgEnum(
+  "sentence_interlinear_line_generation_status",
+  ["idle", "pending", "success", "failed", "canceled"],
+);
 
 export const sentencesTable = pgTable(
   "sentence",
@@ -26,6 +32,11 @@ export const sentencesTable = pgTable(
     sentence: text("sentence").notNull(),
     translation: text("translation").notNull(),
     index: integer("index").notNull(),
+    interlinearLineGenerationStatus: sentenceInterlinearLineGenerationStatus(
+      "interlinear_line_generation_status",
+    )
+      .notNull()
+      .default("idle"),
     completedAt: timestamp("completed_at"),
   },
   (table) => ({

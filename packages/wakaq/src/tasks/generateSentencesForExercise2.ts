@@ -17,6 +17,7 @@ import { exercise2Data } from "@acme/db/validators";
 
 import { wakaq } from "..";
 import { getNativeLanguage } from "../helpers";
+import { generateInterlinearLineForSentence } from "./generateInterlinearLinesForSentence";
 
 async function generateSentences(
   prompt: string,
@@ -206,7 +207,17 @@ export const generateSentencesForExercise2 = wakaq.task(
       );
 
       if (values.length > 0) {
-        await db.insert(sentencesTable).values(values);
+        const sentences = await db
+          .insert(sentencesTable)
+          .values(values)
+          .returning({ id: sentencesTable.id });
+        await Promise.all(
+          sentences.map((sentence) =>
+            generateInterlinearLineForSentence.enqueue({
+              sentenceId: sentence.id,
+            }),
+          ),
+        );
       }
 
       await db

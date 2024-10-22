@@ -24,6 +24,7 @@ import {
   getOrCreateWords,
   insertUserWords,
 } from "../helpers";
+import { generateInterlinearLineForSentence } from "./generateInterlinearLinesForSentence";
 
 const getMoreWordsPrompt = ({
   practiceLanguage,
@@ -322,7 +323,15 @@ export const generateSentencesForExercise1 = wakaq.task(
       );
 
       if (values.length > 0) {
-        await db.insert(sentencesTable).values(values);
+        const sentences = await db
+          .insert(sentencesTable)
+          .values(values)
+          .returning({ id: sentencesTable.id });
+        for (const sentence of sentences) {
+          await generateInterlinearLineForSentence.enqueue({
+            sentenceId: sentence.id,
+          });
+        }
       }
 
       await db

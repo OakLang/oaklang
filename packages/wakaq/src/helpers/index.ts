@@ -1,5 +1,5 @@
 import type { Language } from "@acme/db/schema";
-import { eq, sql } from "@acme/db";
+import { and, eq, inArray, sql } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
   languagesTable,
@@ -27,26 +27,52 @@ export async function getNativeLanguage(userId: string): Promise<Language> {
   return nativeLanguage;
 }
 
+export async function getInterlinearLines(userId: string) {
+  const [userSettings] = await db
+    .select({
+      interlinearLines: userSettingsTable.interlinearLines,
+    })
+    .from(userSettingsTable)
+    .leftJoin(
+      languagesTable,
+      eq(languagesTable.code, userSettingsTable.nativeLanguage),
+    )
+    .where(eq(userSettingsTable.userId, userId));
+
+  if (!userSettings) {
+    throw new Error("userSettings not found!");
+  }
+  return userSettings.interlinearLines;
+}
+
 export const getOrCreateWords = async (
   words: string[],
   languageCode: string,
 ) => {
-  return db
-    .insert(wordsTable)
-    .values(
-      words.map((word) => ({
-        word,
-        languageCode,
-      })),
-    )
-    .onConflictDoUpdate({
-      target: [wordsTable.word, wordsTable.languageCode],
-      set: {
-        word: sql`${wordsTable.word}`,
-        languageCode: sql`${wordsTable.languageCode}`,
-      },
-    })
-    .returning();
+  const existingWords = await db
+    .select()
+    .from(wordsTable)
+    .where(
+      and(
+        eq(wordsTable.languageCode, languageCode),
+        inArray(wordsTable.word, words),
+      ),
+    );
+  const values = words
+    .filter((word) => !existingWords.find((item) => item.word === word))
+    .map(
+      (word) =>
+        ({
+          languageCode,
+          word,
+        }) satisfies typeof wordsTable.$inferInsert,
+    );
+
+  if (values.length > 0) {
+    const newWords = await db.insert(wordsTable).values(values).returning();
+    return [...existingWords, ...newWords];
+  }
+  return existingWords;
 };
 
 export const insertUserWords = async (

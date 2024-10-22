@@ -35,7 +35,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 export default function InterlinearLineWordColumn({
   word,
 }: {
-  word: RouterOutputs["sentences"]["getSentenceWords"][number];
+  word: RouterOutputs["sentences"]["getSentence"]["words"][number];
 }) {
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
   const { trainingSessionId } = useParams<TrainingSessionParams>();
@@ -48,10 +48,10 @@ export default function InterlinearLineWordColumn({
   const onIntersect = useCallback(() => {
     seenWordMutation.mutate({
       sessionId: trainingSessionId,
-      wordId: word.wordId,
+      wordId: word.id,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trainingSessionId, word.wordId]);
+  }, [trainingSessionId, word.id]);
 
   const ref = useIntersectionObserver({
     onIntersect,
@@ -82,7 +82,7 @@ const InterlinearLineWordColumnCell = ({
   word,
 }: {
   line: InterlinearLine;
-  word: RouterOutputs["sentences"]["getSentenceWords"][number];
+  word: RouterOutputs["sentences"]["getSentence"]["words"][number];
 }) => {
   const { trainingSessionId } = useParams<TrainingSessionParams>();
   const sentenceCtx = useContext(SentenceContext);
@@ -90,21 +90,10 @@ const InterlinearLineWordColumnCell = ({
     throw new Error("SentenceProvider not found in the tree");
   }
   const isPrimaryLine = useMemo(() => line.name === "text", [line.name]);
-  const userWordQuery = api.words.getUserWord.useQuery(
-    { wordId: word.wordId },
-    {
-      initialData: word.userWord
-        ? {
-            ...word.userWord,
-            word: word.word,
-          }
-        : undefined,
-    },
-  );
 
   const lineHidden = useMemo(
-    () => userWordQuery.data?.hideLines && line.disappearing === "default",
-    [line.disappearing, userWordQuery.data?.hideLines],
+    () => word.hideLines && line.disappearing === "default",
+    [line.disappearing, word.hideLines],
   );
 
   const setInspectionPanelOpen = useAppStore(
@@ -123,28 +112,33 @@ const InterlinearLineWordColumnCell = ({
   const updateUserWord = useUpdateUserWordMutation();
 
   const hideLinesAction = useCallback(() => {
-    updateUserWord.mutate({ wordId: word.wordId, hideLines: true });
-  }, [updateUserWord, word.wordId]);
+    updateUserWord.mutate({ wordId: word.id, hideLines: true });
+  }, [updateUserWord, word.id]);
 
   const showLinesAction = useCallback(() => {
-    updateUserWord.mutate({ wordId: word.wordId, hideLines: false });
-  }, [updateUserWord, word.wordId]);
+    updateUserWord.mutate({ wordId: word.id, hideLines: false });
+  }, [updateUserWord, word.id]);
 
   const inspectWordAction = useCallback(() => {
-    setInspectedWord(word);
+    setInspectedWord({
+      index: word.index,
+      interlinearLines: word.interlinearLines,
+      sentenceId: word.sentenceId,
+      wordId: word.id,
+    });
     setInspectionPanelOpen(true);
   }, [setInspectedWord, setInspectionPanelOpen, word]);
 
   const markWordKnownAction = useCallback(() => {
     markWordKnownMut.mutate({
-      wordId: word.wordId,
+      wordId: word.id,
       sessionId: trainingSessionId,
     });
-  }, [markWordKnownMut, trainingSessionId, word.wordId]);
+  }, [markWordKnownMut, trainingSessionId, word.id]);
 
   const markWordUnknownAction = useCallback(() => {
-    markWordUnknownMut.mutate({ wordId: word.wordId });
-  }, [markWordUnknownMut, word.wordId]);
+    markWordUnknownMut.mutate({ wordId: word.id });
+  }, [markWordUnknownMut, word.id]);
 
   const readoutFullSentence = useCallback(async () => {
     await play(sentenceCtx.sentence.sentence);
@@ -163,7 +157,7 @@ const InterlinearLineWordColumnCell = ({
           markWordUnknownAction();
           break;
         case InterlinearLineAction.toggleMarkWordKnownOrUnknown: {
-          if (userWordQuery.data?.knownAt) {
+          if (word.knownAt) {
             markWordUnknownAction();
           } else {
             markWordKnownAction();
@@ -177,7 +171,7 @@ const InterlinearLineWordColumnCell = ({
           showLinesAction();
           break;
         case InterlinearLineAction.toggleHideOrShowLines: {
-          if (userWordQuery.data?.hideLines) {
+          if (word.hideLines) {
             showLinesAction();
           } else {
             hideLinesAction();
@@ -213,9 +207,9 @@ const InterlinearLineWordColumnCell = ({
       play,
       readoutFullSentence,
       showLinesAction,
-      userWordQuery.data?.hideLines,
-      userWordQuery.data?.knownAt,
+      word.hideLines,
       word.interlinearLines,
+      word.knownAt,
     ],
   );
 
@@ -271,10 +265,10 @@ const InterlinearLineWordColumnCell = ({
                   "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center ring-1 ring-transparent transition-colors duration-200",
                   isPrimaryLine
                     ? {
-                        "bg-yellow-400/20": !!userWordQuery.data?.knownAt,
+                        "bg-yellow-400/20": !!word.knownAt,
                         "ring-yellow-400 hover:ring-yellow-400":
                           inspectedWord &&
-                          inspectedWord.wordId === word.wordId &&
+                          inspectedWord.wordId === word.id &&
                           inspectedWord.index === word.index,
                       }
                     : {},
@@ -305,11 +299,11 @@ const InterlinearLineWordColumnCell = ({
             <ContextMenuContent>
               <ContextMenuItem
                 onClick={inspectWordAction}
-                disabled={inspectedWord?.wordId === word.wordId}
+                disabled={inspectedWord?.wordId === word.id}
               >
                 Inspect Word
               </ContextMenuItem>
-              {userWordQuery.data?.knownAt ? (
+              {word.knownAt ? (
                 <ContextMenuItem onClick={markWordUnknownAction}>
                   Mark Word Unknown
                 </ContextMenuItem>
@@ -318,7 +312,7 @@ const InterlinearLineWordColumnCell = ({
                   Mark Word Known
                 </ContextMenuItem>
               )}
-              {userWordQuery.data?.hideLines ? (
+              {word.hideLines ? (
                 <ContextMenuItem onClick={showLinesAction}>
                   Show Lines
                 </ContextMenuItem>

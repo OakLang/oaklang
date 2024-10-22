@@ -239,6 +239,13 @@
       "when": 1729454993937,
       "tag": "0033_lean_makkari",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1729584055950,
+      "tag": "0034_sticky_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }

@@ -4,13 +4,11 @@ import type { MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowRight, ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 
 import type { Sentence } from "@acme/db/schema";
 
 import type { TrainingSessionParams } from "~/types";
-import { useMarkWordKnownMutation } from "~/hooks/mutations";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
@@ -20,27 +18,20 @@ import { Button } from "./ui/button";
 
 export default function InterlinearView({
   sentences,
-  onNextSentence,
 }: {
   sentences: Sentence[];
   onNextSentence?: () => void;
   onPreviousSentence?: () => void;
 }) {
-  const { languageCode, trainingSessionId } =
-    useParams<TrainingSessionParams>();
+  const { trainingSessionId } = useParams<TrainingSessionParams>();
   const [showTranslation, setShowTranslation] = useState(false);
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId },
   );
 
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
-  const interlinearLinesPromptTemplate = useAppStore(
-    (state) => state.interlinearLinesPromptTemplate,
-  );
 
-  const utils = api.useUtils();
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const markWordKnownMut = useMarkWordKnownMutation();
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -65,45 +56,45 @@ export default function InterlinearView({
     setShowTranslation(true);
   }, [showTranslation]);
 
-  const handleMarkAllWordsKnownAndNext = useCallback(async () => {
-    try {
-      await Promise.all(
-        sentences.map(async (sentence) => {
-          const words = await utils.sentences.getSentenceWords.fetch({
-            sentenceId: sentence.id,
-            promptTemplate: interlinearLinesPromptTemplate,
-          });
-          await Promise.all(
-            words.map(async (word) => {
-              await markWordKnownMut.mutateAsync({
-                wordId: word.wordId,
-                sessionId: trainingSessionId,
-              });
-              void utils.words.getUserWord.invalidate({ wordId: word.wordId });
-            }),
-          );
-        }),
-      );
-      void utils.languages.getPracticeLanguage.invalidate({
-        languageCode,
-      });
-      void utils.languages.getPracticeLanguages.invalidate();
-      onNextSentence?.();
-    } catch (error) {
-      toast((error as Error).message);
-    }
-  }, [
-    sentences,
-    utils.languages.getPracticeLanguage,
-    utils.languages.getPracticeLanguages,
-    utils.sentences.getSentenceWords,
-    utils.words.getUserWord,
-    languageCode,
-    onNextSentence,
-    interlinearLinesPromptTemplate,
-    markWordKnownMut,
-    trainingSessionId,
-  ]);
+  // const handleMarkAllWordsKnownAndNext = useCallback(async () => {
+  //   try {
+  //     await Promise.all(
+  //       sentences.map(async (sentence) => {
+  //         const words = await utils.sentences.getSentenceWords.fetch({
+  //           sentenceId: sentence.id,
+  //           promptTemplate: interlinearLinesPromptTemplate,
+  //         });
+  //         await Promise.all(
+  //           words.map(async (word) => {
+  //             await markWordKnownMut.mutateAsync({
+  //               wordId: word.wordId,
+  //               sessionId: trainingSessionId,
+  //             });
+  //             void utils.words.getUserWord.invalidate({ wordId: word.wordId });
+  //           }),
+  //         );
+  //       }),
+  //     );
+  //     void utils.languages.getPracticeLanguage.invalidate({
+  //       languageCode,
+  //     });
+  //     void utils.languages.getPracticeLanguages.invalidate();
+  //     onNextSentence?.();
+  //   } catch (error) {
+  //     toast((error as Error).message);
+  //   }
+  // }, [
+  //   sentences,
+  //   utils.languages.getPracticeLanguage,
+  //   utils.languages.getPracticeLanguages,
+  //   utils.sentences.getSentenceWords,
+  //   utils.words.getUserWord,
+  //   languageCode,
+  //   onNextSentence,
+  //   interlinearLinesPromptTemplate,
+  //   markWordKnownMut,
+  //   trainingSessionId,
+  // ]);
 
   useEffect(() => {
     setShowTranslation(false);
@@ -134,15 +125,15 @@ export default function InterlinearView({
               )}
             />
           </Button>
-          <Button
+          {/* <Button
             variant="outline"
             className="text-muted-foreground pointer-events-auto"
-            onClick={handleMarkAllWordsKnownAndNext}
-            disabled={markWordKnownMut.isPending}
+            // onClick={handleMarkAllWordsKnownAndNext}
+            disabled
           >
             Mark all Words Known and Next
             <ArrowRight className="-mr-1 ml-2 h-4 w-4" />
-          </Button>
+          </Button> */}
         </div>
         {showTranslation && (
           <div className="text-muted-foreground bg-muted/50 pointer-events-auto mt-2 flex gap-4 overflow-hidden rounded-lg p-2">

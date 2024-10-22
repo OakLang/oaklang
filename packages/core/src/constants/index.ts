@@ -125,5 +125,4 @@ export const INTERLINEAR_LINES_PROMPT_TEMPLATE_KEYS = [
 
 export * from "./interlinear-lines";
 export * from "./spaced-repetition-stages";
-export * from "./prompt-modes";
 export * from "./expercises";

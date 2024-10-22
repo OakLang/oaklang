@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useIsMutating } from "@tanstack/react-query";
+import { getMutationKey } from "@trpc/react-query";
 import { ChevronLeftIcon, Loader2Icon } from "lucide-react";
 
 import type { TrainingSession } from "@acme/db/schema";
@@ -17,20 +19,13 @@ export default function ContentView() {
   const { trainingSessionId } = useParams<TrainingSessionParams>();
 
   const utils = api.useUtils();
+
+  const isChangingIndex = useIsMutating({
+    mutationKey: getMutationKey(api.trainingSessions.changeSentenceIndex),
+  });
+
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId },
-    {
-      refetchInterval: (query) => {
-        const status = query.state.data?.status;
-        if (status === "idle" || status === "pending") {
-          return 1000;
-        }
-        if (status === "success") {
-          return 10000;
-        }
-        return false;
-      },
-    },
   );
   const sentencesQuery = api.sentences.getSentences.useQuery({
     trainingSessionId,
@@ -46,14 +41,42 @@ export default function ContentView() {
     utils.sentences.getSentences,
   ]);
 
+  useEffect(() => {
+    if (isChangingIndex > 0) {
+      return;
+    }
+
+    let timeout: NodeJS.Timeout | null = null;
+    if (
+      trainingSessionQuery.isSuccess &&
+      (trainingSessionQuery.data.status === "idle" ||
+        trainingSessionQuery.data.status === "pending")
+    ) {
+      timeout = setInterval(() => {
+        void utils.trainingSessions.getTrainingSession.invalidate({
+          trainingSessionId,
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [
+    trainingSessionId,
+    trainingSessionQuery.data?.status,
+    trainingSessionQuery.isSuccess,
+    utils.trainingSessions.getTrainingSession,
+    isChangingIndex,
+  ]);
+
   if (trainingSessionQuery.isError) {
     return <p>{trainingSessionQuery.error.message}</p>;
   }
 
-  if (
-    trainingSessionQuery.isPending ||
-    trainingSessionQuery.data.status === "idle"
-  ) {
+  if (trainingSessionQuery.isPending) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="flex flex-col items-center justify-center gap-4">

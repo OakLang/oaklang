@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   Loader2Icon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import type { Sentence, TrainingSession } from "@acme/db/schema";
 import { INFINITE_EXERCISES } from "@acme/core/constants";
 
 import AudioPlayButton from "~/app/app/[languageCode]/training/[trainingSessionId]/audio-play-button";
 import { useChangeSentenceIndex } from "~/hooks/useUpdateTrainingSessionMutation";
-import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import InterlinearView from "./InterlinearView";
 import ToolBar from "./ToolBar";
@@ -30,20 +30,11 @@ export function SentenceView({
 }) {
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
 
-  const sentence = sentences.find(
-    (sentence) => sentence.index === trainingSession.sentenceIndex,
-  );
-  const previousSentence = sentences.find(
-    (sentence) => sentence.index === trainingSession.sentenceIndex - 1,
-  );
-  const nextSentence = sentences.find(
-    (sentence) => sentence.index === trainingSession.sentenceIndex + 1,
-  );
+  const sentence = sentences[trainingSession.sentenceIndex];
+  const previousSentence = sentences[trainingSession.sentenceIndex - 1];
+  const nextSentence = sentences[trainingSession.sentenceIndex + 1];
 
   const utils = api.useUtils();
-  const interlinearLinesPromptTemplate = useAppStore(
-    (state) => state.interlinearLinesPromptTemplate,
-  );
   const changeSentenceIndex = useChangeSentenceIndex();
 
   const isInfiniteExercise = INFINITE_EXERCISES.includes(
@@ -51,22 +42,28 @@ export function SentenceView({
   );
 
   const shouldCompleteSession = useMemo(() => {
-    return !isInfiniteExercise && !nextSentence;
-  }, [isInfiniteExercise, nextSentence]);
+    return (
+      trainingSession.status === "success" &&
+      !isInfiniteExercise &&
+      !nextSentence
+    );
+  }, [isInfiniteExercise, nextSentence, trainingSession.status]);
 
   const generateNextSetOfSentencesMut =
     api.trainingSessions.generateNextSetOfSentences.useMutation({
       onMutate: () => {
         utils.trainingSessions.getTrainingSession.setData(
           { trainingSessionId: trainingSession.id },
-          (oldData) =>
-            oldData ? { ...oldData, status: "pending" } : undefined,
+          (oldData) => (oldData ? { ...oldData, status: "idle" } : undefined),
         );
       },
       onSuccess: () => {
         void utils.trainingSessions.getTrainingSession.invalidate({
           trainingSessionId: trainingSession.id,
         });
+      },
+      onError: (error) => {
+        toast(error.message);
       },
     });
 
@@ -79,25 +76,28 @@ export function SentenceView({
     if (!nextSentence) {
       return;
     }
-
     const sentencesLeft = sentences.length - (nextSentence.index + 1);
 
-    if (
-      isInfiniteExercise &&
-      sentencesLeft <= 3 &&
-      trainingSession.status !== "pending"
-    ) {
-      console.log("Generate More Sentences....");
-      // Trigger new sentence generation task
-      generateNextSetOfSentencesMut.mutate({
-        trainingSessionId: trainingSession.id,
-      });
-    }
-
-    changeSentenceIndex.mutate({
-      trainingSessionId: nextSentence.trainingSessionId,
-      sentenceIndex: nextSentence.index,
-    });
+    changeSentenceIndex.mutate(
+      {
+        trainingSessionId: nextSentence.trainingSessionId,
+        sentenceIndex: nextSentence.index,
+      },
+      {
+        onSuccess: () => {
+          if (
+            isInfiniteExercise &&
+            sentencesLeft <= 3 &&
+            trainingSession.status !== "pending" &&
+            trainingSession.status !== "idle"
+          ) {
+            generateNextSetOfSentencesMut.mutate({
+              trainingSessionId: trainingSession.id,
+            });
+          }
+        },
+      },
+    );
   }, [
     shouldCompleteSession,
     nextSentence,
@@ -120,32 +120,6 @@ export function SentenceView({
     });
   }, [changeSentenceIndex, previousSentence]);
 
-  useEffect(() => {
-    if (nextSentence?.id) {
-      void utils.sentences.getSentenceWords.ensureData({
-        promptTemplate: interlinearLinesPromptTemplate,
-        sentenceId: nextSentence.id,
-      });
-    }
-  }, [
-    interlinearLinesPromptTemplate,
-    nextSentence?.id,
-    utils.sentences.getSentenceWords,
-  ]);
-
-  useEffect(() => {
-    if (previousSentence?.id) {
-      void utils.sentences.getSentenceWords.ensureData({
-        promptTemplate: interlinearLinesPromptTemplate,
-        sentenceId: previousSentence.id,
-      });
-    }
-  }, [
-    interlinearLinesPromptTemplate,
-    previousSentence?.id,
-    utils.sentences.getSentenceWords,
-  ]);
-
   return (
     <>
       <ToolBar trainingSession={trainingSession}>
@@ -158,10 +132,7 @@ export function SentenceView({
             });
           }}
           className="w-full max-w-lg"
-          pages={sentences.map((item) => ({
-            index: item.index,
-            completed: !!item.completedAt,
-          }))}
+          sentences={sentences}
           tooltipText={`${trainingSession.sentenceIndex + 1}/${sentences.length}`}
         />
       </ToolBar>
@@ -207,7 +178,8 @@ export function SentenceView({
                       onNextSentence={handleNext}
                     />
                   </div>
-                ) : trainingSession.status === "pending" ? (
+                ) : trainingSession.status === "idle" ||
+                  trainingSession.status === "pending" ? (
                   <div className="flex flex-1 items-center justify-center">
                     <div className="flex flex-col items-center justify-center gap-4">
                       <Loader2Icon className="h-6 w-6 animate-spin" />

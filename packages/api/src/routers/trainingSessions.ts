@@ -165,10 +165,6 @@ export const trainingSessionsRouter = createTRPCRouter({
           session,
         );
 
-        if (trainingSession.status !== "success") {
-          return trainingSession;
-        }
-
         const [updatedTrainingSession] = await db
           .update(trainingSessionsTable)
           .set({
@@ -221,6 +217,12 @@ export const trainingSessionsRouter = createTRPCRouter({
       );
 
       if (trainingSession.exercise === Exercises.exercise1) {
+        await ctx.db
+          .update(trainingSessionsTable)
+          .set({
+            status: "idle",
+          })
+          .where(eq(trainingSessionsTable.id, trainingSession.id));
         await generateSentencesForExercise1.enqueue({
           trainingSessionId: trainingSession.id,
         });

@@ -4,48 +4,107 @@ import type { Sentence } from "@acme/db/schema";
 
 import type { RouterOutputs } from "~/trpc/react";
 import { useIntersectionObserver } from "~/hooks/useIntersectionObserver";
-import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import InterlinearLineWordColumn from "./InterlinearLineWordColumn";
-import RenderQueryResult from "./RenderQueryResult";
+import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 
-export const SentenceContext = createContext<{ sentence: Sentence } | null>(
-  null,
-);
+export const SentenceContext = createContext<{
+  sentence: RouterOutputs["sentences"]["getSentence"];
+} | null>(null);
 
 export default function InterlinearLineSentence({
   sentence,
 }: {
   sentence: Sentence;
 }) {
-  const interlinearLinesPromptTemplate = useAppStore(
-    (state) => state.interlinearLinesPromptTemplate,
+  const utils = api.useUtils();
+  const sentenceQuery = api.sentences.getSentence.useQuery(
+    { sentenceId: sentence.id },
+    {
+      refetchInterval: (query) => {
+        const status = query.state.data?.interlinearLineGenerationStatus;
+        if (status === "idle" || status === "pending") {
+          return 1000;
+        }
+        return false;
+      },
+    },
   );
-  const sentenceWordsQuery = api.sentences.getSentenceWords.useQuery({
-    sentenceId: sentence.id,
-    promptTemplate: interlinearLinesPromptTemplate,
-  });
+  const regenerateSentenceInterlinearLines =
+    api.sentences.regenerateSentenceInterlinearLines.useMutation({
+      onSuccess: (_, vars) => {
+        void utils.sentences.getSentence.invalidate({
+          sentenceId: vars.sentenceId,
+        });
+      },
+    });
+
+  if (sentenceQuery.isError) {
+    return <p>{sentenceQuery.error.message}</p>;
+  }
+
+  if (
+    sentenceQuery.isPending ||
+    sentenceQuery.data.interlinearLineGenerationStatus === "idle" ||
+    sentenceQuery.data.interlinearLineGenerationStatus === "pending"
+  ) {
+    return <SentenceLoader />;
+  }
+
+  if (sentenceQuery.data.interlinearLineGenerationStatus === "canceled") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-8">
+        <p className="text-muted-foreground text-center">
+          Interlinear Lines generation canceled
+        </p>
+        <Button
+          onClick={() =>
+            regenerateSentenceInterlinearLines.mutate({
+              sentenceId: sentenceQuery.data.id,
+            })
+          }
+          disabled={regenerateSentenceInterlinearLines.isPending}
+          className="pointer-events-auto"
+        >
+          Regenerate
+        </Button>
+      </div>
+    );
+  }
+
+  if (sentenceQuery.data.interlinearLineGenerationStatus === "failed") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-8">
+        <p className="text-muted-foreground text-center">
+          Interlinear Lines generation failed
+        </p>
+        <Button
+          onClick={() =>
+            regenerateSentenceInterlinearLines.mutate({
+              sentenceId: sentenceQuery.data.id,
+            })
+          }
+          disabled={regenerateSentenceInterlinearLines.isPending}
+          className="pointer-events-auto"
+        >
+          Regenerate
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <SentenceContext.Provider value={{ sentence }}>
-      <RenderQueryResult
-        query={sentenceWordsQuery}
-        renderLoading={() => <SentenceLoader />}
-      >
-        {({ data }) => (
-          <RenderSentence sentenceWords={data} sentence={sentence} />
-        )}
-      </RenderQueryResult>
+    <SentenceContext.Provider value={{ sentence: sentenceQuery.data }}>
+      <RenderSentence sentence={sentenceQuery.data} />
     </SentenceContext.Provider>
   );
 }
 
 function RenderSentence({
-  sentenceWords,
   sentence,
 }: {
-  sentenceWords: RouterOutputs["sentences"]["getSentenceWords"];
-  sentence: Sentence;
+  sentence: RouterOutputs["sentences"]["getSentence"];
 }) {
   const utils = api.useUtils();
 
@@ -77,8 +136,11 @@ function RenderSentence({
 
   return (
     <div ref={ref}>
-      {sentenceWords.map((word) => (
-        <InterlinearLineWordColumn key={word.index} word={word} />
+      {sentence.words.map((word) => (
+        <InterlinearLineWordColumn
+          key={`${word.id}-${word.index}`}
+          word={word}
+        />
       ))}
     </div>
   );
