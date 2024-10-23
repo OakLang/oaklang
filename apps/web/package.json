@@ -9,7 +9,7 @@
     "dev": "pnpm with-env next dev --turbopack",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint .",
-    "start": "pnpm with-env next start",
+    "start": "ls .next && pnpm with-env next start",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env -c --"
   },
