@@ -9,7 +9,6 @@ import type { LanguageCodeParams } from "~/types";
 import FullScreenMessage from "~/components/FullScreenMessage";
 import LogoutButton from "~/components/logout-button";
 import { Button } from "~/components/ui/button";
-import AppStoreProvider from "~/providers/app-store-provider";
 import { HydrateClient, trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
 import { getAccessRequest, getUserNativeLanguage } from "~/utils/queries";
@@ -88,10 +87,8 @@ As we are currently offering limited access, we could not accommodate your reque
 
     return (
       <HydrateClient>
-        <AppStoreProvider>
-          <AppBar languageCode={languageCode} />
-          {children}
-        </AppStoreProvider>
+        <AppBar languageCode={languageCode} />
+        {children}
       </HydrateClient>
     );
   } catch (error) {

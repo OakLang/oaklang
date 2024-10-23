@@ -54,11 +54,15 @@ export default function InterlinearLineSection() {
   );
 
   const handleChange = useCallback(
-    (value: InterlinearLine[]) => {
+    (value: InterlinearLine[], debounce?: boolean) => {
       setInterlinearLines(value);
-      debouncedChange(value);
+      if (debounce) {
+        debouncedChange(value);
+      } else {
+        updateUserSettingsMutation.mutate({ interlinearLines: value });
+      }
     },
-    [debouncedChange],
+    [debouncedChange, updateUserSettingsMutation],
   );
 
   const handleAddNewLine = useCallback(() => {

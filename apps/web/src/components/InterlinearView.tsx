@@ -1,76 +1,37 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import type { z } from "zod";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowRight, ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
-import { toast } from "sonner";
+import { ChevronDownIcon, ExternalLinkIcon } from "lucide-react";
 
-import type {
-  InterlinearLine,
-  interlinearLineActionSchema,
-} from "@acme/core/validators";
 import type { Sentence } from "@acme/db/schema";
-import { InterlinearLineAction } from "@acme/core/constants";
 
-import type { RouterOutputs } from "~/trpc/react";
-import type { LanguageCodeParams } from "~/types";
-import {
-  useMarkWordKnownMutation,
-  useMarkWordUnknownMutation,
-  useUpdateUserWordMutation,
-} from "~/hooks/mutations";
-import { useDoubleClick } from "~/hooks/useDoubleClick";
-import usePlayTextToSpeech from "~/hooks/usePlayTextToSpeech";
-import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
-import { useAppStore } from "~/providers/app-store-provider";
+import type { TrainingSessionParams } from "~/types";
+import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
-import { cn, getCSSStyleForInterlinearLine } from "~/utils";
+import { cn } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
-import RenderQueryResult from "./RenderQueryResult";
+import InterlinearLineSentence from "./InterlinearLineSentence";
 import { Button } from "./ui/button";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "./ui/context-menu";
-import { Skeleton } from "./ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function InterlinearView({
   sentences,
-  onNextSentence,
 }: {
   sentences: Sentence[];
   onNextSentence?: () => void;
   onPreviousSentence?: () => void;
 }) {
-  const { languageCode } = useParams<LanguageCodeParams>();
+  const { trainingSessionId } = useParams<TrainingSessionParams>();
   const [showTranslation, setShowTranslation] = useState(false);
-  const trainingSessionId = useTrainingSessionId();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId },
   );
 
   const setInspectedWord = useAppStore((state) => state.setInspectedWord);
-  const generateSentenceWordsPromptTemplate = useAppStore(
-    (state) => state.generateSentenceWordsPromptTemplate,
-  );
 
-  const utils = api.useUtils();
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const markWordKnownMut = useMarkWordKnownMutation();
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -95,45 +56,45 @@ export default function InterlinearView({
     setShowTranslation(true);
   }, [showTranslation]);
 
-  const handleMarkAllWordsKnownAndNext = useCallback(async () => {
-    try {
-      await Promise.all(
-        sentences.map(async (sentence) => {
-          const words = await utils.sentences.getSentenceWords.fetch({
-            sentenceId: sentence.id,
-            promptTemplate: generateSentenceWordsPromptTemplate,
-          });
-          await Promise.all(
-            words.map(async (word) => {
-              await markWordKnownMut.mutateAsync({
-                wordId: word.wordId,
-                sessionId: trainingSessionId,
-              });
-              void utils.words.getUserWord.invalidate({ wordId: word.wordId });
-            }),
-          );
-        }),
-      );
-      void utils.languages.getPracticeLanguage.invalidate({
-        languageCode,
-      });
-      void utils.languages.getPracticeLanguages.invalidate();
-      onNextSentence?.();
-    } catch (error) {
-      toast((error as Error).message);
-    }
-  }, [
-    sentences,
-    utils.languages.getPracticeLanguage,
-    utils.languages.getPracticeLanguages,
-    utils.sentences.getSentenceWords,
-    utils.words.getUserWord,
-    languageCode,
-    onNextSentence,
-    generateSentenceWordsPromptTemplate,
-    markWordKnownMut,
-    trainingSessionId,
-  ]);
+  // const handleMarkAllWordsKnownAndNext = useCallback(async () => {
+  //   try {
+  //     await Promise.all(
+  //       sentences.map(async (sentence) => {
+  //         const words = await utils.sentences.getSentenceWords.fetch({
+  //           sentenceId: sentence.id,
+  //           promptTemplate: interlinearLinesPromptTemplate,
+  //         });
+  //         await Promise.all(
+  //           words.map(async (word) => {
+  //             await markWordKnownMut.mutateAsync({
+  //               wordId: word.wordId,
+  //               sessionId: trainingSessionId,
+  //             });
+  //             void utils.words.getUserWord.invalidate({ wordId: word.wordId });
+  //           }),
+  //         );
+  //       }),
+  //     );
+  //     void utils.languages.getPracticeLanguage.invalidate({
+  //       languageCode,
+  //     });
+  //     void utils.languages.getPracticeLanguages.invalidate();
+  //     onNextSentence?.();
+  //   } catch (error) {
+  //     toast((error as Error).message);
+  //   }
+  // }, [
+  //   sentences,
+  //   utils.languages.getPracticeLanguage,
+  //   utils.languages.getPracticeLanguages,
+  //   utils.sentences.getSentenceWords,
+  //   utils.words.getUserWord,
+  //   languageCode,
+  //   onNextSentence,
+  //   interlinearLinesPromptTemplate,
+  //   markWordKnownMut,
+  //   trainingSessionId,
+  // ]);
 
   useEffect(() => {
     setShowTranslation(false);
@@ -143,7 +104,7 @@ export default function InterlinearView({
     <div ref={ref} onClick={onBodyClick} className="flex-1">
       <div className="pointer-events-none">
         {sentences.map((sentence) => (
-          <SentenceItem key={sentence.id} sentence={sentence} />
+          <InterlinearLineSentence key={sentence.id} sentence={sentence} />
         ))}
       </div>
 
@@ -164,15 +125,15 @@ export default function InterlinearView({
               )}
             />
           </Button>
-          <Button
+          {/* <Button
             variant="outline"
             className="text-muted-foreground pointer-events-auto"
-            onClick={handleMarkAllWordsKnownAndNext}
-            disabled={markWordKnownMut.isPending}
+            // onClick={handleMarkAllWordsKnownAndNext}
+            disabled
           >
             Mark all Words Known and Next
             <ArrowRight className="-mr-1 ml-2 h-4 w-4" />
-          </Button>
+          </Button> */}
         </div>
         {showTranslation && (
           <div className="text-muted-foreground bg-muted/50 pointer-events-auto mt-2 flex gap-4 overflow-hidden rounded-lg p-2">
@@ -201,356 +162,3 @@ export default function InterlinearView({
     </div>
   );
 }
-
-const SentenceContext = createContext<{ sentence: Sentence } | null>(null);
-
-const SentenceItem = ({ sentence }: { sentence: Sentence }) => {
-  const generateSentenceWordsPromptTemplate = useAppStore(
-    (state) => state.generateSentenceWordsPromptTemplate,
-  );
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const sentenceWordsQuery = api.sentences.getSentenceWords.useQuery({
-    sentenceId: sentence.id,
-    promptTemplate: generateSentenceWordsPromptTemplate,
-  });
-  const seenWordMutation = api.words.seenWord.useMutation({
-    onError: (error) => {
-      toast(error.message);
-    },
-  });
-
-  const uniqueWordIds = useMemo(() => {
-    const wordIds = sentenceWordsQuery.data?.map((word) => word.wordId) ?? [];
-    return wordIds.filter(
-      (id, i) => wordIds.findIndex((wid) => wid === id) === i,
-    );
-  }, [sentenceWordsQuery.data]);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      void Promise.all(
-        uniqueWordIds.map((wordId) =>
-          seenWordMutation.mutate({
-            wordId,
-            sessionId: sentence.trainingSessionId,
-          }),
-        ),
-      );
-    }, 500);
-    return () => {
-      clearTimeout(timeout);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uniqueWordIds]);
-
-  return (
-    <SentenceContext.Provider value={{ sentence }}>
-      <RenderQueryResult
-        query={sentenceWordsQuery}
-        renderLoading={() => {
-          return new Array(5).fill(0).map((_, i) => (
-            <div
-              className="mb-16 mr-4 inline-flex flex-col items-center gap-2"
-              key={i}
-            >
-              {userSettingsQuery.data?.interlinearLines.map((line) => (
-                <Skeleton
-                  className="inline"
-                  style={{
-                    height: line.style.fontSize,
-                    width:
-                      (Math.random() * (40 - 10) + 40) *
-                      (line.style.fontSize / 16),
-                  }}
-                  key={line.id}
-                />
-              ))}
-            </div>
-          ));
-        }}
-      >
-        {({ data }) =>
-          data.map((word) => {
-            return <InterlinearLineColumn key={word.index} word={word} />;
-          })
-        }
-      </RenderQueryResult>
-    </SentenceContext.Provider>
-  );
-};
-
-function InterlinearLineColumn({
-  word,
-}: {
-  word: RouterOutputs["sentences"]["getSentenceWords"][number];
-}) {
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-
-  return (
-    <div className="mb-16 mr-4 inline-flex flex-col items-center gap-2">
-      {userSettingsQuery.data?.interlinearLines
-        .filter((line) => !line.hidden)
-        .map((line) => {
-          return <InterlinearLineRow key={line.id} line={line} word={word} />;
-        })}
-    </div>
-  );
-}
-
-const InterlinearLineRow = ({
-  line,
-  word,
-}: {
-  line: InterlinearLine;
-  word: RouterOutputs["sentences"]["getSentenceWords"][number];
-}) => {
-  const sentenceCtx = useContext(SentenceContext);
-  if (!sentenceCtx) {
-    throw new Error("SentenceProvider not found in the tree");
-  }
-  const isPrimaryLine = useMemo(() => line.name === "text", [line.name]);
-  const userWordQuery = api.words.getUserWord.useQuery(
-    { wordId: word.wordId },
-    {
-      initialData: word.userWord
-        ? {
-            ...word.userWord,
-            word: word.word,
-          }
-        : undefined,
-    },
-  );
-
-  const lineHidden = useMemo(
-    () => userWordQuery.data?.hideLines && line.disappearing === "default",
-    [line.disappearing, userWordQuery.data?.hideLines],
-  );
-
-  const setInspectionPanelOpen = useAppStore(
-    (state) => state.setInspectionPanelOpen,
-  );
-  const fontSize = useAppStore((state) => state.fontSize);
-  const inspectedWord = useAppStore((state) => state.inspectedWord);
-  const setInspectedWord = useAppStore((state) => state.setInspectedWord);
-  const trainingSessionId = useTrainingSessionId();
-  const [showLinePopover, setShowLinePopover] = useState(false);
-  const [popoverLineName, setPopoverLineName] = useState<
-    string | null | undefined
-  >();
-  const { audioRef, play, isFetching: isFetchingAudio } = usePlayTextToSpeech();
-  const markWordKnownMut = useMarkWordKnownMutation();
-  const markWordUnknownMut = useMarkWordUnknownMutation();
-  const updateUserWord = useUpdateUserWordMutation();
-
-  const hideLinesAction = useCallback(() => {
-    updateUserWord.mutate({ wordId: word.wordId, hideLines: true });
-  }, [updateUserWord, word.wordId]);
-
-  const showLinesAction = useCallback(() => {
-    updateUserWord.mutate({ wordId: word.wordId, hideLines: false });
-  }, [updateUserWord, word.wordId]);
-
-  const inspectWordAction = useCallback(() => {
-    setInspectedWord(word);
-    setInspectionPanelOpen(true);
-  }, [setInspectedWord, setInspectionPanelOpen, word]);
-
-  const markWordKnownAction = useCallback(() => {
-    markWordKnownMut.mutate({
-      wordId: word.wordId,
-      sessionId: trainingSessionId,
-    });
-  }, [markWordKnownMut, trainingSessionId, word.wordId]);
-
-  const markWordUnknownAction = useCallback(() => {
-    markWordUnknownMut.mutate({ wordId: word.wordId });
-  }, [markWordUnknownMut, word.wordId]);
-
-  const readoutFullSentence = useCallback(async () => {
-    await play(sentenceCtx.sentence.sentence);
-  }, [play, sentenceCtx.sentence.sentence]);
-
-  const handleAction = useCallback(
-    (action: z.infer<typeof interlinearLineActionSchema>) => {
-      switch (action.action) {
-        case InterlinearLineAction.inspectWord:
-          inspectWordAction();
-          break;
-        case InterlinearLineAction.markWordKnown:
-          markWordKnownAction();
-          break;
-        case InterlinearLineAction.markWordUnknown:
-          markWordUnknownAction();
-          break;
-        case InterlinearLineAction.toggleMarkWordKnownOrUnknown: {
-          if (userWordQuery.data?.knownAt) {
-            markWordUnknownAction();
-          } else {
-            markWordKnownAction();
-          }
-          break;
-        }
-        case InterlinearLineAction.hideLines:
-          hideLinesAction();
-          break;
-        case InterlinearLineAction.showLines:
-          showLinesAction();
-          break;
-        case InterlinearLineAction.toggleHideOrShowLines: {
-          if (userWordQuery.data?.hideLines) {
-            showLinesAction();
-          } else {
-            hideLinesAction();
-          }
-          break;
-        }
-        case InterlinearLineAction.readoutFullSentence: {
-          void readoutFullSentence();
-          break;
-        }
-        case InterlinearLineAction.readoutLine: {
-          const text =
-            action.lineName && word.interlinearLines[action.lineName];
-          if (text) {
-            void play(text);
-          }
-          break;
-        }
-        case InterlinearLineAction.showLineInTooltip: {
-          setPopoverLineName(action.lineName);
-          setShowLinePopover(true);
-          break;
-        }
-        default:
-          break;
-      }
-    },
-    [
-      hideLinesAction,
-      inspectWordAction,
-      markWordKnownAction,
-      markWordUnknownAction,
-      play,
-      readoutFullSentence,
-      showLinesAction,
-      userWordQuery.data?.hideLines,
-      userWordQuery.data?.knownAt,
-      word.interlinearLines,
-    ],
-  );
-
-  const doubleClickProps = useDoubleClick({
-    onClick: () => {
-      if (line.onClick) {
-        handleAction(line.onClick);
-      }
-    },
-    onDoubleClick: () => {
-      if (line.onDoubleClick) {
-        handleAction(line.onDoubleClick);
-      }
-    },
-  });
-
-  const onMouseEnter = useCallback(
-    (e: MouseEvent) => {
-      if (line.onHover) {
-        e.preventDefault();
-        handleAction(line.onHover);
-      }
-    },
-    [handleAction, line.onHover],
-  );
-
-  const onMouseLeave = useCallback((e: MouseEvent) => {
-    e.preventDefault();
-    setShowLinePopover(false);
-  }, []);
-
-  useEffect(() => {
-    if (isFetchingAudio) {
-      toast("Loading audio...", {
-        id: "loading-audio-toast",
-        dismissible: false,
-      });
-    } else {
-      toast.dismiss("loading-audio-toast");
-    }
-  }, [isFetchingAudio]);
-
-  return (
-    <>
-      <audio ref={audioRef} />
-      <ContextMenu>
-        <Tooltip open={showLinePopover}>
-          <TooltipTrigger asChild>
-            <ContextMenuTrigger asChild>
-              <button
-                {...doubleClickProps}
-                className={cn(
-                  "hover:ring-primary/50 pointer-events-auto clear-both cursor-pointer whitespace-nowrap rounded-md px-[4px] py-[2px] text-center ring-1 ring-transparent transition-colors duration-200",
-                  isPrimaryLine
-                    ? {
-                        "bg-yellow-400/20": !!userWordQuery.data?.knownAt,
-                        "ring-yellow-400 hover:ring-yellow-400":
-                          inspectedWord &&
-                          inspectedWord.wordId === word.wordId &&
-                          inspectedWord.index === word.index,
-                      }
-                    : {},
-                )}
-                style={{
-                  ...getCSSStyleForInterlinearLine(line),
-                  fontSize: line.style.fontSize * (fontSize / 16),
-                }}
-                onMouseEnter={onMouseEnter}
-                onMouseLeave={onMouseLeave}
-              >
-                <p
-                  className={cn({
-                    "pointer-events-none select-none opacity-50 blur-sm":
-                      lineHidden,
-                  })}
-                >
-                  {word.interlinearLines[line.name] ?? "-"}
-                </p>
-              </button>
-            </ContextMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent align="center" side="bottom">
-            {(popoverLineName && word.interlinearLines[popoverLineName]) ??
-              "Line not found!"}
-          </TooltipContent>
-          {isPrimaryLine && (
-            <ContextMenuContent>
-              <ContextMenuItem
-                onClick={inspectWordAction}
-                disabled={inspectedWord?.wordId === word.wordId}
-              >
-                Inspect Word
-              </ContextMenuItem>
-              {userWordQuery.data?.knownAt ? (
-                <ContextMenuItem onClick={markWordUnknownAction}>
-                  Mark Word Unknown
-                </ContextMenuItem>
-              ) : (
-                <ContextMenuItem onClick={markWordKnownAction}>
-                  Mark Word Known
-                </ContextMenuItem>
-              )}
-              {userWordQuery.data?.hideLines ? (
-                <ContextMenuItem onClick={showLinesAction}>
-                  Show Lines
-                </ContextMenuItem>
-              ) : (
-                <ContextMenuItem onClick={hideLinesAction}>
-                  Hide Lines
-                </ContextMenuItem>
-              )}
-            </ContextMenuContent>
-          )}
-        </Tooltip>
-      </ContextMenu>
-    </>
-  );
-};

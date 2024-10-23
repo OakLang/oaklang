@@ -81,4 +81,36 @@ export const collectionsRouter = createTRPCRouter({
       }
       return collection;
     }),
+  deleteCollection: protectedProcedure
+    .input(
+      z.object({
+        collectionId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [collection] = await ctx.db
+        .select()
+        .from(collectionsTable)
+        .where(
+          and(
+            eq(collectionsTable.id, input.collectionId),
+            eq(collectionsTable.userId, ctx.session.user.id),
+          ),
+        );
+      if (!collection) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Collection not found!",
+        });
+      }
+
+      const [deletedCollection] = await ctx.db
+        .delete(collectionsTable)
+        .where(eq(collectionsTable.id, collection.id))
+        .returning();
+      if (!deletedCollection) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+      return deletedCollection;
+    }),
 });

@@ -2,17 +2,29 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronDownIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  MoreHorizontal,
+  PlusIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import type { Collection, Module } from "@acme/db/schema";
+import { Exercises } from "@acme/core/constants";
 
 import type { LanguageCodeParams } from "~/types";
 import AddCollectionDialog from "~/components/dialogs/add-collection-dialog";
 import RenderInfiniteQueryResult from "~/components/RenderInfiniteQueryResult";
 import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { Skeleton } from "~/components/ui/skeleton";
-import { usePersistState } from "~/hooks/useLocalStorageState";
+import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 
 export default function CollectionsList() {
@@ -24,7 +36,7 @@ export default function CollectionsList() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <p className="text-lg font-semibold">Collections</p>
         <Button
@@ -67,15 +79,25 @@ export default function CollectionsList() {
           </div>
         )}
       >
-        {({ data: { pages } }) => (
-          <div className="space-y-6">
-            {pages.map((page) =>
-              page.list.map((collection) => (
-                <CollectionItem collection={collection} key={collection.id} />
-              )),
-            )}
-          </div>
-        )}
+        {({ data: { pages } }) => {
+          if ((pages[0]?.list.length ?? 0) === 0) {
+            return (
+              <p className="text-muted-foreground text-sm">
+                You haven't created any collection yet!
+              </p>
+            );
+          }
+
+          return (
+            <div className="space-y-6">
+              {pages.map((page) =>
+                page.list.map((collection) => (
+                  <CollectionItem collection={collection} key={collection.id} />
+                )),
+              )}
+            </div>
+          );
+        }}
       </RenderInfiniteQueryResult>
 
       <AddCollectionDialog
@@ -87,17 +109,38 @@ export default function CollectionsList() {
 }
 
 const CollectionItem = ({ collection }: { collection: Collection }) => {
-  const [isCollapced, setIsCollapced] = usePersistState(
-    `${collection.id}.collapsed`,
-    false,
+  const isCollapced = useAppStore(
+    (state) => state.collectionsCollapced[collection.id] ?? false,
   );
+  const collapceCollection = useAppStore((state) => state.collapceCollection);
+  const expandCollection = useAppStore((state) => state.expandCollection);
+  const utils = api.useUtils();
+  const deleteCollectionMut = api.collections.deleteCollection.useMutation({
+    onSuccess: () => {
+      void utils.collections.getCollections.invalidate({
+        languageCode: collection.languageCode,
+      });
+      toast("Collection deleted");
+    },
+    onError: (error) => {
+      toast("Failed to delete collection!", {
+        description: error.message,
+      });
+    },
+  });
 
   return (
     <div className="space-y-2">
-      <div>
+      <div className="flex items-center">
         <Button
           variant="ghost"
-          onClick={() => setIsCollapced(!isCollapced)}
+          onClick={() => {
+            if (isCollapced) {
+              expandCollection(collection.id);
+            } else {
+              collapceCollection(collection.id);
+            }
+          }}
           className="h-8 px-3"
         >
           {isCollapced ? (
@@ -107,6 +150,26 @@ const CollectionItem = ({ collection }: { collection: Collection }) => {
           )}
           {collection.name}
         </Button>
+        <div className="flex-1"></div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" variant="outline" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="bottom">
+            <DropdownMenuItem
+              onClick={() => {
+                deleteCollectionMut.mutate({
+                  collectionId: collection.id,
+                });
+              }}
+            >
+              Delete Collection
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       {!isCollapced && <ModulesRow collectionId={collection.id} />}
     </div>
@@ -118,7 +181,6 @@ const ModulesRow = ({ collectionId }: { collectionId: string }) => {
     { collectionId, limit: 6 },
     { getNextPageParam: (lastPage) => lastPage.nextCursor },
   );
-
   return (
     <RenderInfiniteQueryResult
       query={modulesQuery}
@@ -180,6 +242,19 @@ const ModuleCard = ({ module }: { module: Module }) => {
   const utils = api.useUtils();
   const createTrainingSession =
     api.trainingSessions.createTrainingSession.useMutation();
+  const deleteModuleMut = api.modules.deleteModule.useMutation({
+    onSuccess: () => {
+      void utils.modules.getModules.invalidate({
+        collectionId: module.collectionId,
+      });
+      toast("Module deleted");
+    },
+    onError: (error) => {
+      toast("Failed to delete module!", {
+        description: error.message,
+      });
+    },
+  });
 
   const router = useRouter();
 
@@ -187,13 +262,16 @@ const ModuleCard = ({ module }: { module: Module }) => {
     setIsLoading(true);
     try {
       switch (module.jsonData.type) {
-        case "exercise-1": {
+        case Exercises.exercise1: {
           const session = await createTrainingSession.mutateAsync({
             languageCode: module.languageCode,
             title: module.name,
-            complexity: module.jsonData.complexity ?? "A1",
-            topic: module.jsonData.topic ? module.jsonData.topic : undefined,
-            words: module.jsonData.words ? module.jsonData.words : undefined,
+            exercise: Exercises.exercise1,
+            data: {
+              complexity: module.jsonData.complexity ?? "A1",
+              topic: module.jsonData.topic ?? "",
+              words: module.jsonData.words ?? [],
+            },
           });
 
           void utils.trainingSessions.getTrainingSessions.invalidate({
@@ -219,18 +297,43 @@ const ModuleCard = ({ module }: { module: Module }) => {
   ]);
 
   return (
-    <button
-      className="ring-offset-background focus-visible:ring-ring bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground flex flex-shrink-0 flex-col rounded-lg border p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 md:p-6"
-      onClick={handleModuleClick}
-      disabled={isLoading}
-    >
-      <p className="font-semibold">{module.name}</p>
-      {!!module.description && (
-        <p className="text-muted-foreground line-clamp-2 text-sm">
-          {module.description}
-        </p>
-      )}
-      <div className="mt-2">{renderDetails}</div>
-    </button>
+    <div className="relative">
+      <button
+        className="ring-offset-background focus-visible:ring-ring bg-card text-card-foreground hover:bg-accent/50 hover:text-accent-foreground flex w-full flex-shrink-0 flex-col rounded-lg border p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 md:p-6"
+        onClick={handleModuleClick}
+        disabled={isLoading}
+      >
+        <p className="font-semibold">{module.name}</p>
+        {!!module.description && (
+          <p className="text-muted-foreground line-clamp-2 text-sm">
+            {module.description}
+          </p>
+        )}
+        <div className="mt-2">{renderDetails}</div>
+      </button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            className="absolute right-2 top-2 h-8 w-8"
+            size="icon"
+            variant="ghost"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" side="bottom">
+          <DropdownMenuItem
+            onClick={() => {
+              deleteModuleMut.mutate({
+                moduleId: module.id,
+              });
+            }}
+          >
+            Delete Module
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };

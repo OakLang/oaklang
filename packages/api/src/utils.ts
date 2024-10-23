@@ -3,9 +3,10 @@ import { TRPCError } from "@trpc/server";
 import type { Session } from "@acme/auth";
 import type { DB } from "@acme/db/client";
 import type { Language, UserSettings, Word } from "@acme/db/schema";
-import { and, count, eq, isNull, not, sql } from "@acme/db";
+import { and, count, eq, inArray, isNull, not, sql } from "@acme/db";
 import {
   languagesTable,
+  sentencesTable,
   trainingSessionsTable,
   userSettingsTable,
   userWordsTable,
@@ -74,31 +75,6 @@ export const getNativeLanguageOrThrow = async (
   return getLanguageOrThrow(settings.nativeLanguage, ctx.db);
 };
 
-export const getOrCreateWord = async (
-  word: string,
-  langaugeCode: string,
-  db: DB,
-): Promise<Word> => {
-  const [newWord] = await db
-    .insert(wordsTable)
-    .values({
-      word: word.trim().toLowerCase(),
-      languageCode: langaugeCode,
-    })
-    .onConflictDoUpdate({
-      target: [wordsTable.word, wordsTable.languageCode],
-      set: {
-        word: sql`${wordsTable.word}`,
-        languageCode: sql`${wordsTable.languageCode}`,
-      },
-    })
-    .returning();
-  if (!newWord) {
-    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-  }
-  return newWord;
-};
-
 export const getKnownWordsCountForLanguage = async (
   languageCode: string,
   session: Session,
@@ -132,27 +108,54 @@ export const getLanguageOrThrow = async (languageCode: string, db: DB) => {
   return language;
 };
 
+export const getSentenceOrThrow = async (
+  sentenceId: string,
+  ctx: ProtectedCtx,
+) => {
+  const [sentence] = await ctx.db
+    .select()
+    .from(sentencesTable)
+    .where(eq(sentencesTable.id, sentenceId));
+
+  if (!sentence) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Sentence not found!",
+    });
+  }
+
+  return sentence;
+};
+
 export const getOrCreateWords = async (
   words: string[],
   languageCode: string,
   db: DB,
 ) => {
-  return db
-    .insert(wordsTable)
-    .values(
-      words.map((word) => ({
-        word,
-        languageCode,
-      })),
-    )
-    .onConflictDoUpdate({
-      target: [wordsTable.word, wordsTable.languageCode],
-      set: {
-        word: sql`${wordsTable.word}`,
-        languageCode: sql`${wordsTable.languageCode}`,
-      },
-    })
-    .returning({ id: wordsTable.id });
+  const existingWords = await db
+    .select()
+    .from(wordsTable)
+    .where(
+      and(
+        eq(wordsTable.languageCode, languageCode),
+        inArray(wordsTable.word, words),
+      ),
+    );
+  const values = words
+    .filter((word) => !existingWords.find((item) => item.word === word))
+    .map(
+      (word) =>
+        ({
+          languageCode,
+          word,
+        }) satisfies typeof wordsTable.$inferInsert,
+    );
+
+  if (values.length > 0) {
+    const newWords = await db.insert(wordsTable).values(values).returning();
+    return [...existingWords, ...newWords];
+  }
+  return existingWords;
 };
 
 export const insertUserWords = async (

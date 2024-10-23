@@ -86,4 +86,35 @@ export const modulesRouter = createTRPCRouter({
       }
       return module;
     }),
+  deleteModule: protectedProcedure
+    .input(
+      z.object({
+        moduleId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [module] = await ctx.db
+        .select()
+        .from(modulesTable)
+        .where(
+          and(
+            eq(modulesTable.id, input.moduleId),
+            eq(modulesTable.userId, ctx.session.user.id),
+          ),
+        );
+      if (!module) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Module not found!",
+        });
+      }
+      const [deletedModule] = await ctx.db
+        .delete(modulesTable)
+        .where(eq(modulesTable.id, module.id))
+        .returning();
+      if (!deletedModule) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+      return deletedModule;
+    }),
 });

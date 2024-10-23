@@ -13,6 +13,7 @@ import { useTheme } from "next-themes";
 import type { InterlinearLine } from "@acme/core/validators";
 import { NON_EDITABLE_LINE_NAMES } from "@acme/core/constants";
 
+import { useHasPowerUserAccess } from "~/hooks/useHasPowerUserAccess";
 import { useRaisedShadow } from "~/hooks/useRaisedShadow";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
 import { ReorderIcon } from "./icons/drag-icon";
@@ -25,7 +26,7 @@ export default function InterlinearLinesEditor({
   interlinearLines,
 }: {
   interlinearLines: InterlinearLine[];
-  onChange: (value: InterlinearLine[]) => void;
+  onChange: (value: InterlinearLine[], debounce?: boolean) => void;
 }) {
   return (
     <Reorder.Group
@@ -40,9 +41,10 @@ export default function InterlinearLinesEditor({
           onDelete={() =>
             onChange(interlinearLines.filter((_, index) => i !== index))
           }
-          onChange={(newLine) =>
+          onChange={(newLine, debounce) =>
             onChange(
               interlinearLines.map((line, idx) => (idx === i ? newLine : line)),
+              debounce,
             )
           }
           key={item.id}
@@ -60,10 +62,12 @@ const InterlinearLineRow = ({
   index,
 }: {
   item: InterlinearLine;
-  onChange: (line: InterlinearLine) => void;
+  onChange: (line: InterlinearLine, debounce?: boolean) => void;
   onDelete: () => void;
   index: number;
 }) => {
+  const hasPowerUserAccess = useHasPowerUserAccess();
+
   const [isEditing, setIsEditing] = useState(false);
   const controls = useDragControls();
   const y = useMotionValue(0);
@@ -149,21 +153,23 @@ const InterlinearLineRow = ({
             </TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-8 w-8"
-                disabled={disabled}
-                onClick={onDelete}
-              >
-                <TrashIcon className="h-4 w-4" />
-                <div className="sr-only">Delete Line</div>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Delete Line</TooltipContent>
-          </Tooltip>
+          {hasPowerUserAccess && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8"
+                  disabled={disabled}
+                  onClick={onDelete}
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  <div className="sr-only">Delete Line</div>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete Line</TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </div>
       {isEditing && (
@@ -173,7 +179,6 @@ const InterlinearLineRow = ({
       )}
       <div className="flex gap-2 overflow-hidden border-t p-2">
         <div
-          contentEditable
           className={cn(
             "w-full flex-1 overflow-x-auto rounded-md p-3 px-4 outline-none",
             {

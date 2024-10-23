@@ -335,113 +335,108 @@ export default function WardsTable() {
     ],
   );
 
+  if (allWords.isError) {
+    return <p>{allWords.error.message}</p>;
+  }
+
   return (
-    <section id="practice-words" className="my-8">
-      <div className="mb-4">
-        <h2 className="text-xl font-medium">Words List</h2>
-      </div>
-      {allWords.isError ? (
-        <p>{allWords.error.message}</p>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={allWords.data ?? []}
-          isLoading={allWords.isPending}
-          filterColumn="word"
-          filterPlaceholder="Filter words..."
-          persistKeyPrefix="words-data-table"
-          getRowId={(row) => row.wordId}
-          renderActions={({ table }) => (
-            <>
-              <Tabs value={filter}>
-                <TabsList>
-                  <TabsTrigger
-                    onClick={() => {
-                      setFilter("all");
-                      table.setRowSelection({});
-                    }}
-                    value="all"
-                  >
-                    All
-                  </TabsTrigger>
-                  <TabsTrigger
-                    onClick={() => {
-                      setFilter("known");
-                      table.setRowSelection({});
-                    }}
-                    value="known"
-                  >
-                    Known
-                  </TabsTrigger>
-                  <TabsTrigger
-                    onClick={() => {
-                      setFilter("unknown");
-                      table.setRowSelection({});
-                    }}
-                    value="unknown"
-                  >
-                    Unknown
-                  </TabsTrigger>
-                  <TabsTrigger
-                    onClick={() => {
-                      setFilter("practicing");
-                      table.setRowSelection({});
-                    }}
-                    value="practicing"
-                  >
-                    Practicing
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </>
-          )}
-          initialState={{
-            columnPinning: {
-              left: ["select", "word"],
-              right: ["actions"],
-            },
-          }}
-          renderRowSelectionActios={({ table }) => {
-            const selectedWordIds = table
-              .getSelectedRowModel()
-              .rows.map((row) => row.original.wordId);
-            return (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="destructive"
-                  disabled={deleteUserWordMut.isPending}
-                  onClick={async () => {
-                    await handleDeleteSelectedWords(selectedWordIds);
-                    table.setRowSelection({});
-                  }}
-                >
-                  Delete {selectedWordIds.length}{" "}
-                  {pluralize("Word", selectedWordIds.length)}
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={markWordKnownMutation.isPending}
-                  onClick={async () => {
-                    await handleMarkSelectedWordsKnown(selectedWordIds);
-                    table.setRowSelection({});
-                  }}
-                >
-                  Mark {selectedWordIds.length}{" "}
-                  {pluralize("Word", selectedWordIds.length)} Known
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    table.setRowSelection({});
-                  }}
-                >
-                  Deselect All
-                </Button>
-              </div>
-            );
-          }}
-        />
+    <DataTable
+      columns={columns}
+      data={allWords.data ?? []}
+      isLoading={allWords.isPending}
+      filterColumn="word"
+      filterPlaceholder="Filter words..."
+      persistKeyPrefix="words-data-table"
+      getRowId={(row) => row.wordId}
+      renderActions={({ table }) => (
+        <>
+          <Tabs value={filter}>
+            <TabsList>
+              <TabsTrigger
+                onClick={() => {
+                  setFilter("all");
+                  table.setRowSelection({});
+                }}
+                value="all"
+              >
+                All
+              </TabsTrigger>
+              <TabsTrigger
+                onClick={() => {
+                  setFilter("known");
+                  table.setRowSelection({});
+                }}
+                value="known"
+              >
+                Known
+              </TabsTrigger>
+              <TabsTrigger
+                onClick={() => {
+                  setFilter("unknown");
+                  table.setRowSelection({});
+                }}
+                value="unknown"
+              >
+                Unknown
+              </TabsTrigger>
+              <TabsTrigger
+                onClick={() => {
+                  setFilter("practicing");
+                  table.setRowSelection({});
+                }}
+                value="practicing"
+              >
+                Practicing
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </>
       )}
-    </section>
+      initialState={{
+        columnPinning: {
+          left: ["select", "word"],
+          right: ["actions"],
+        },
+      }}
+      renderRowSelectionActios={({ table }) => {
+        const selectedWordIds = table
+          .getSelectedRowModel()
+          .rows.map((row) => row.original.wordId);
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="destructive"
+              disabled={deleteUserWordMut.isPending}
+              onClick={async () => {
+                await handleDeleteSelectedWords(selectedWordIds);
+                table.setRowSelection({});
+              }}
+            >
+              Delete {selectedWordIds.length}{" "}
+              {pluralize("Word", selectedWordIds.length)}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={markWordKnownMutation.isPending}
+              onClick={async () => {
+                await handleMarkSelectedWordsKnown(selectedWordIds);
+                table.setRowSelection({});
+              }}
+            >
+              Mark {selectedWordIds.length}{" "}
+              {pluralize("Word", selectedWordIds.length)} Known
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                table.setRowSelection({});
+              }}
+            >
+              Deselect All
+            </Button>
+          </div>
+        );
+      }}
+    />
   );
 }

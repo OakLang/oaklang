@@ -1,113 +1,97 @@
-import { createStore } from "zustand/vanilla";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 import type { SentenceWord } from "@acme/db/schema";
+import {
+  DEFAULT_INTERLINEAR_LINES_PROMPT_TEMPLATE,
+  EXERCISE_1,
+} from "@acme/core/constants";
 
-interface AppState {
-  generateSentencesPromptTemplate: string;
-  generateSentenceWordsPromptTemplate: string;
+import { storage } from "~/lib/storage";
+
+export interface AppState {
+  exercise1PromptTemplate: string;
+  overrideExercise1PromptTemplate: boolean;
+  interlinearLinesPromptTemplate: string;
+  overrideGenerateSentenceWordsPromptTemplate: boolean;
   inspectedWord: SentenceWord | null;
   inspectionPanelOpen: boolean;
   fontSize: number;
+  collectionsCollapced: Record<string, boolean>;
+  playgroundPlaybackSpeed: number;
 }
 
-interface AppActions {
-  setGenerateSentencesPromptTemplate: (template: string) => void;
-  setGenerateSentenceWordsPromptTemplate: (template: string) => void;
+export interface AppActions {
+  setExercise1PromptTemplate: (template: string, override?: boolean) => void;
+  setInterlinearLinesPromptTemplate: (
+    template: string,
+    override?: boolean,
+  ) => void;
   setInspectedWord: (word: SentenceWord | null) => void;
   setInspectionPanelOpen: (sidebarOpen: boolean) => void;
   setFontSize: (fontSize: number) => void;
+  collapceCollection: (collectionId: string) => void;
+  expandCollection: (collectionId: string) => void;
+  setPlaygroundPlaybackSpeed: (speed: number) => void;
 }
 
 export type AppStore = AppState & AppActions;
 
-export const createAppStore = (initState: AppState) => {
-  return createStore<AppStore>()((set) => ({
-    ...initState,
-    setGenerateSentencesPromptTemplate: (generateSentencesPromptTemplate) => {
-      set({ generateSentencesPromptTemplate });
-      localStorage.setItem(
-        "GENERATE_SENTENCES_PROMPT_TEMPLATE",
-        generateSentencesPromptTemplate,
-      );
-    },
-    setGenerateSentenceWordsPromptTemplate: (
-      generateSentenceWordsPromptTemplate,
-    ) => {
-      set({ generateSentenceWordsPromptTemplate });
-      localStorage.setItem(
-        "GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE",
-        generateSentenceWordsPromptTemplate,
-      );
-    },
-    setFontSize: (fontSize) => {
-      set({ fontSize });
-      localStorage.setItem("font_size", String(fontSize));
-    },
-    setInspectedWord: (inspectedWord) => {
-      set({ inspectedWord });
-    },
-    setInspectionPanelOpen: (inspectionPanelOpen) => {
-      set({ inspectionPanelOpen });
-      localStorage.setItem(
-        "inspection_panel_open",
-        inspectionPanelOpen ? "true" : "false",
-      );
-    },
-  }));
-};
-
-export const DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE = `
-You are an expert {PRACTICE_LANGUAGE} tutor specializing in creating effective practice exercises for students. Your task is to generate a set of sentences that help a student practice new vocabulary at their current proficiency level. Each sentence should:
-
-	•	Be grammatically correct and contextually natural.
-	•	Use words primarily from the PRACTICE WORDS list while limiting other vocabulary to the most relevant words from the KNOWN WORDS list.
-	• If no PRACTICE WORDS are provided, you may select a set of words yourself and use only those to generate sentences.
-	•	Match the student’s {COMPLEXITY} proficiency level in {PRACTICE_LANGUAGE}.
-	•	Ensure variety in sentence structure, avoiding repetition of PREVIOUSLY GENERATED SENTENCES.
-	•	Align with the natural flow of {PRACTICE_LANGUAGE}, while maximizing the usage of PRACTICE WORDS in a meaningful way.
-  • Generate sentences centered around the provided {TOPIC} if specified.
-
-Please generate {SENTENCE_COUNT} sentences based on the following constraints:
-
-PRACTICE WORDS: {PRACTICE_WORDS}
-
-KNOWN WORDS: {KNOWN_WORDS}
-
-TOPIC: {TOPIC}
-
-PREVIOUSLY GENERATED SENTENCES: 
-{PREVIOUSLY_GENERATED_SENTENCES}
-`;
-
-export const DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE = `
-You are a {PRACTICE_LANGUAGE} tutor providing detailed interlinear breakdowns for individual words in a sentence. For each word in the SENTENCE below, generate the corresponding lines based on the schema. Do not break punctuation apart from the words they are attached to; in creating this breakdown they will be considered part of that word, and be stripped as specified in certain lines.
-
-SENTENCE: {SENTENCE}
-`;
-
-export const initAppStore = (): AppState => {
-  if (typeof window === "undefined") {
-    return {
+export const useAppStore = create<AppStore>()(
+  persist(
+    (set) => ({
       fontSize: 16,
-      generateSentencesPromptTemplate: "",
-      generateSentenceWordsPromptTemplate: "",
+      exercise1PromptTemplate: EXERCISE_1.promptTemplate.trim(),
+      overrideExercise1PromptTemplate: false,
+      interlinearLinesPromptTemplate:
+        DEFAULT_INTERLINEAR_LINES_PROMPT_TEMPLATE.trim(),
+      overrideGenerateSentenceWordsPromptTemplate: false,
       inspectedWord: null,
       inspectionPanelOpen: false,
-    };
-  }
-
-  return {
-    generateSentencesPromptTemplate:
-      localStorage.getItem("GENERATE_SENTENCES_PROMPT_TEMPLATE") ??
-      DEFAULT_GENERATE_SENTENCES_PROMPT_TEMPLATE.trim(),
-    generateSentenceWordsPromptTemplate:
-      localStorage.getItem("GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE") ??
-      DEFAULT_GENERATE_SENTENCE_WORDS_PROMPT_TEMPLATE.trim(),
-    inspectedWord: null,
-    inspectionPanelOpen:
-      localStorage.getItem("inspection_panel_open") === "true",
-    fontSize: localStorage.getItem("font_size")
-      ? Number(localStorage.getItem("font_size"))
-      : 16,
-  };
-};
+      collectionsCollapced: {},
+      playgroundPlaybackSpeed: 1,
+      setExercise1PromptTemplate: (exercise1PromptTemplate, override = true) =>
+        set({
+          exercise1PromptTemplate,
+          overrideExercise1PromptTemplate: override,
+        }),
+      setInterlinearLinesPromptTemplate: (
+        interlinearLinesPromptTemplate,
+        override = true,
+      ) =>
+        set({
+          interlinearLinesPromptTemplate,
+          overrideGenerateSentenceWordsPromptTemplate: override,
+        }),
+      setFontSize: (fontSize) => set({ fontSize }),
+      setInspectedWord: (inspectedWord) => set({ inspectedWord }),
+      setInspectionPanelOpen: (inspectionPanelOpen) =>
+        set({ inspectionPanelOpen }),
+      collapceCollection: (collectionId) => {
+        set((state) => {
+          const collectionsCollapced = { ...state.collectionsCollapced };
+          collectionsCollapced[collectionId] = true;
+          return { collectionsCollapced };
+        });
+      },
+      expandCollection: (collectionId) => {
+        set((state) => {
+          const collectionsCollapced = { ...state.collectionsCollapced };
+          collectionsCollapced[collectionId] = false;
+          return { collectionsCollapced };
+        });
+      },
+      setPlaygroundPlaybackSpeed: (playgroundPlaybackSpeed) =>
+        set({ playgroundPlaybackSpeed }),
+    }),
+    {
+      name: "oaklang-state",
+      storage,
+      version: 0,
+      migrate(persistedState, version) {
+        console.log(persistedState, version);
+        return persistedState;
+      },
+    },
+  ),
+);

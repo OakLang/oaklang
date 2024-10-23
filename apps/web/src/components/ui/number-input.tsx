@@ -10,7 +10,7 @@ export type NumberInputProps = NumberFieldProps &
   React.RefAttributes<HTMLDivElement>;
 
 const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
-  ({ className, ...props }, ref) => {
+  ({ className, id, ...props }, ref) => {
     return (
       <NumberField
         className={cn(
@@ -20,7 +20,10 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         ref={ref}
         {...props}
       >
-        <Input className="flex-1 bg-transparent px-3 py-2 focus-visible:outline-none" />
+        <Input
+          id={id}
+          className="flex-1 bg-transparent px-3 py-2 focus-visible:outline-none"
+        />
         <div className="flex flex-col border-l">
           <Button
             slot="increment"

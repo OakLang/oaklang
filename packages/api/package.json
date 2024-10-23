@@ -6,7 +6,7 @@
     ".": "./src/index.ts",
     "./openai": "./src/libs/openai.ts",
     "./env": "./src/env.ts",
-    "./validators": "./src/validators.ts"
+    "./validators": "./src/validators/index.ts"
   },
   "license": "MIT",
   "scripts": {
@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@acme/wakaq": "workspace:*",
     "@acme/auth": "workspace:*",
     "@acme/core": "workspace:*",
     "@acme/db": "workspace:*",

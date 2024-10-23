@@ -1,15 +1,16 @@
 import { useMemo } from "react";
+import { useParams } from "next/navigation";
 import { CheckIcon, FilterIcon, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import type { SentenceWord } from "@acme/db/schema";
 import { hasPowerUserAccess } from "@acme/core/helpers";
 
+import type { TrainingSessionParams } from "~/types";
 import {
   useMarkWordKnownMutation,
   useMarkWordUnknownMutation,
 } from "~/hooks/mutations";
-import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
 import { cn, formatDate } from "~/utils";
@@ -36,7 +37,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
   const openWindow = (url: string, target: string) => {
     window.open(url, target, "width=720,height=480");
   };
-  const trainingSessionId = useTrainingSessionId();
+  const { trainingSessionId } = useParams<TrainingSessionParams>();
   const userWordQuery = api.words.getUserWord.useQuery({
     wordId: word.wordId,
   });

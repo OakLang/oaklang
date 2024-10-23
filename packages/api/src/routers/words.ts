@@ -5,12 +5,26 @@ import dayjs from "dayjs";
 import ms from "ms";
 import { z } from "zod";
 
-import { and, asc, eq, isNull, lte, not, or, sql } from "@acme/db";
+import {
+  and,
+  asc,
+  createSelectSchema,
+  eq,
+  isNull,
+  lte,
+  not,
+  or,
+  sql,
+} from "@acme/db";
 import { userWordsTable, wordsTable } from "@acme/db/schema";
 
-import type { UserWordWithWord } from "../validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getLanguageOrThrow, getUserSettings } from "../utils";
+import {
+  getLanguageOrThrow,
+  getOrCreateWords,
+  getUserSettings,
+  insertUserWords,
+} from "../utils";
 import { userWordWithWordSchema } from "../validators";
 
 export const wordsRouter = createTRPCRouter({
@@ -327,7 +341,7 @@ export const wordsRouter = createTRPCRouter({
         languageCode: z.string(),
       }),
     )
-    .output(z.array(userWordWithWordSchema))
+    .output(z.array(createSelectSchema(wordsTable)))
     .mutation(async ({ ctx, input }) => {
       const language = await getLanguageOrThrow(input.languageCode, ctx.db);
 
@@ -341,59 +355,13 @@ export const wordsRouter = createTRPCRouter({
       });
       const uniqueWords = [...new Set(result.object.lemmas)];
 
-      const insertedWords = await ctx.db
-        .insert(wordsTable)
-        .values(
-          uniqueWords.map(
-            (word) =>
-              ({
-                languageCode: input.languageCode,
-                word,
-              }) satisfies typeof wordsTable.$inferInsert,
-          ),
-        )
-        .onConflictDoUpdate({
-          target: [wordsTable.word, wordsTable.languageCode],
-          set: {
-            word: sql`${wordsTable.word}`,
-            languageCode: sql`${wordsTable.languageCode}`,
-          },
-        })
-        .returning();
-
-      const practiceWordsList = await ctx.db
-        .insert(userWordsTable)
-        .values(
-          insertedWords.map(
-            (word) =>
-              ({
-                userId: ctx.session.user.id,
-                wordId: word.id,
-              }) satisfies typeof userWordsTable.$inferInsert,
-          ),
-        )
-        .onConflictDoUpdate({
-          target: [userWordsTable.userId, userWordsTable.wordId],
-          set: {
-            userId: sql`${userWordsTable.userId}`,
-            wordId: sql`${userWordsTable.wordId}`,
-          },
-        })
-        .returning();
-
-      return practiceWordsList
-        .map((userWord) => {
-          const word = insertedWords.find((w) => w.id === userWord.wordId);
-          if (!word) {
-            return null;
-          }
-          return {
-            ...userWord,
-            word: word.word,
-            languageCode: word.languageCode,
-          } satisfies UserWordWithWord;
-        })
-        .filter((item) => !!item);
+      const insertedWords = await getOrCreateWords(
+        uniqueWords,
+        input.languageCode,
+        ctx.db,
+      );
+      await insertUserWords(insertedWords, ctx.session.user.id, ctx.db);
+      return insertedWords;
     }),
   addWordsToPracticeListFromCommaSeparatedList: protectedProcedure
     .input(
@@ -402,18 +370,8 @@ export const wordsRouter = createTRPCRouter({
         languageCode: z.string(),
       }),
     )
-    .output(z.array(userWordWithWordSchema))
+    .output(z.array(createSelectSchema(wordsTable)))
     .mutation(async ({ ctx, input }) => {
-      // const language = await getLanguageOrThrow(input.languageCode, ctx.db);
-
-      // const model = openai("gpt-4o", { user: ctx.session.user.id });
-      // const result = await generateObject({
-      //   model,
-      //   schema: z.object({
-      //     lemmas: z.array(z.string()).describe("lemma list"),
-      //   }),
-      //   prompt: `Please extract all the words from the following text and return each word in its lemma form in ${language.name} language. Ensure no word is omitted, and return each lemma only once, without repetition. Once a lemma has been listed, it should not appear again. Maintain the order of their first appearance. The text is as follows:\n\n${input.text}`,
-      // });
       const uniqueWords = [
         ...new Set(
           input.text
@@ -422,59 +380,12 @@ export const wordsRouter = createTRPCRouter({
             .filter((item) => !!item),
         ),
       ];
-
-      const insertedWords = await ctx.db
-        .insert(wordsTable)
-        .values(
-          uniqueWords.map(
-            (word) =>
-              ({
-                languageCode: input.languageCode,
-                word,
-              }) satisfies typeof wordsTable.$inferInsert,
-          ),
-        )
-        .onConflictDoUpdate({
-          target: [wordsTable.word, wordsTable.languageCode],
-          set: {
-            word: sql`${wordsTable.word}`,
-            languageCode: sql`${wordsTable.languageCode}`,
-          },
-        })
-        .returning();
-
-      const practiceWordsList = await ctx.db
-        .insert(userWordsTable)
-        .values(
-          insertedWords.map(
-            (word) =>
-              ({
-                userId: ctx.session.user.id,
-                wordId: word.id,
-              }) satisfies typeof userWordsTable.$inferInsert,
-          ),
-        )
-        .onConflictDoUpdate({
-          target: [userWordsTable.userId, userWordsTable.wordId],
-          set: {
-            userId: sql`${userWordsTable.userId}`,
-            wordId: sql`${userWordsTable.wordId}`,
-          },
-        })
-        .returning();
-
-      return practiceWordsList
-        .map((userWord) => {
-          const word = insertedWords.find((w) => w.id === userWord.wordId);
-          if (!word) {
-            return null;
-          }
-          return {
-            ...userWord,
-            word: word.word,
-            languageCode: word.languageCode,
-          } satisfies UserWordWithWord;
-        })
-        .filter((item) => !!item);
+      const insertedWords = await getOrCreateWords(
+        uniqueWords,
+        input.languageCode,
+        ctx.db,
+      );
+      await insertUserWords(insertedWords, ctx.session.user.id, ctx.db);
+      return insertedWords;
     }),
 });

@@ -2,10 +2,10 @@ import { toast } from "sonner";
 
 import { api } from "~/trpc/react";
 
-export const useUpdateTrainingSessionMutation = () => {
+export const useChangeSentenceIndex = () => {
   const utils = api.useUtils();
 
-  return api.trainingSessions.updateTrainingSession.useMutation({
+  return api.trainingSessions.changeSentenceIndex.useMutation({
     onMutate: (vars) => {
       const oldData = utils.trainingSessions.getTrainingSession.getData({
         trainingSessionId: vars.trainingSessionId,
@@ -16,17 +16,11 @@ export const useUpdateTrainingSessionMutation = () => {
           oldData
             ? {
                 ...oldData,
-                ...vars,
+                sentenceIndex: vars.sentenceIndex,
               }
             : undefined,
       );
       return { oldData };
-    },
-    onSuccess: (newData, vars) => {
-      utils.trainingSessions.getTrainingSession.setData(
-        { trainingSessionId: vars.trainingSessionId },
-        newData,
-      );
     },
     onError: (error, vars, ctx) => {
       toast("Failed to update training session", {
@@ -37,6 +31,10 @@ export const useUpdateTrainingSessionMutation = () => {
           { trainingSessionId: vars.trainingSessionId },
           ctx.oldData,
         );
+      } else {
+        void utils.trainingSessions.getTrainingSession.invalidate({
+          trainingSessionId: vars.trainingSessionId,
+        });
       }
     },
   });

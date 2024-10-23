@@ -1,13 +1,14 @@
+import { useParams } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
-import { useTrainingSessionId } from "~/hooks/useTrainingSessionId";
+import type { TrainingSessionParams } from "~/types";
 import { api } from "~/trpc/react";
 import { formatDate } from "~/utils";
 import ObjectDetailsList from "./ObjectDetailsList";
 import RenderQueryResult from "./RenderQueryResult";
 
-export default function CurrentPracticeWordsPanel() {
-  const trainingSessionId = useTrainingSessionId();
+export default function TrainingSessionDetailsSideBarWidget() {
+  const { trainingSessionId } = useParams<TrainingSessionParams>();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId },
   );
@@ -31,12 +32,11 @@ export default function CurrentPracticeWordsPanel() {
             <ObjectDetailsList
               data={{
                 Id: trainingSession.id,
-                "User Id": trainingSession.userId,
                 "Created At": formatDate(trainingSession.createdAt),
                 Name: trainingSession.title,
-                Complexity: trainingSession.complexity,
-                "Language Code": trainingSession.languageCode,
-                Topic: trainingSession.topic,
+                Language: trainingSession.language.name,
+                Exercise: trainingSession.exercise,
+                ...trainingSession.data,
               }}
             />
           )}

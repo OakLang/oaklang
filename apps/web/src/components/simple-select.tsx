@@ -14,12 +14,14 @@ export default function SimpleSelect({
   value,
   placeholder,
   defaultValue,
+  id,
 }: {
   options: { value: string; name?: string }[];
   defaultValue?: string;
   value?: string;
   onValueChange?: (value: string) => void;
   placeholder?: string;
+  id?: string;
 }) {
   return (
     <Select
@@ -27,7 +29,7 @@ export default function SimpleSelect({
       value={value}
       onValueChange={onValueChange}
     >
-      <SelectTrigger>
+      <SelectTrigger id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

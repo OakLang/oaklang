@@ -4,12 +4,6 @@ export const AUTH_REQUEST_EMAIL = "auth_request@oaklang.com";
 export const CONTACT_EMAIL = "auth_request@oaklang.com";
 export const SUPPORT_EMAIL = "support@oaklang.com";
 
-export const Exercises = {
-  exercies1: "exercise-1",
-  exercies2: "exercise-2",
-  exercies3: "exercise-3",
-} as const;
-
 export const COMPLEXITY_LIST = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 export const INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS = [
@@ -17,24 +11,9 @@ export const INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS = [
   "{NATIVE_LANGUAGE}",
 ];
 
-export const AVAILABLE_PROMPT_TEMPLATE_KEYS = [
-  "{PRACTICE_LANGUAGE}",
-  "{NATIVE_LANGUAGE}",
-  "{PRACTICE_WORDS}",
-  "{KNOWN_WORDS}",
-  "{PREVIOUSLY_GENERATED_SENTENCES}",
-  "{SENTENCE_COUNT}",
-  "{COMPLEXITY}",
-  "{TOPIC}",
-];
-
 export const TTS_SPEED_OPTIONS: number[] = [
   0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2,
 ];
-
-export * from "./interlinear-lines";
-export * from "./spaced-repetition-stages";
-export * from "./prompt-modes";
 
 export const NO_REPLY_EMAIL = `${APP_NAME} <no_reply@oaklang.com>`;
 
@@ -132,3 +111,18 @@ export const TRAINING_SESSION_TOPICS: {
       "Fun sentences involving imaginary worlds, mythical creatures, or heroic quests.",
   },
 ];
+
+export const DEFAULT_INTERLINEAR_LINES_PROMPT_TEMPLATE = `
+You are a {PRACTICE_LANGUAGE} tutor providing detailed interlinear breakdowns for individual words in a sentence. For each word in the SENTENCE below, generate the corresponding lines based on the schema. Do not break punctuation apart from the words they are attached to; in creating this breakdown they will be considered part of that word, and be stripped as specified in certain lines.
+
+SENTENCE: {SENTENCE}
+`;
+export const INTERLINEAR_LINES_PROMPT_TEMPLATE_KEYS = [
+  "{PRACTICE_LANGUAGE}",
+  "{NATIVE_LANGUAGE}",
+  "{SENTENCE}",
+];
+
+export * from "./interlinear-lines";
+export * from "./spaced-repetition-stages";
+export * from "./expercises";

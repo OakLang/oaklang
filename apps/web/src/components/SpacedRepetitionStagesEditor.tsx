@@ -164,6 +164,7 @@ const SpacedRepetitionStageRow = ({
             <Label htmlFor="repetitions">Repetitions</Label>
             <NumberInput
               id="repetitions"
+              aria-label="Repetitions"
               value={item.repetitions}
               minValue={1}
               onChange={(repetitions) => onChange({ ...item, repetitions })}
@@ -176,6 +177,7 @@ const SpacedRepetitionStageRow = ({
             </Label>
             <NumberInput
               id="timesToShowDisappearing"
+              aria-label="Times To Show Disappearing"
               value={item.timesToShowDisappearing}
               minValue={0}
               onChange={(timesToShowDisappearing) =>

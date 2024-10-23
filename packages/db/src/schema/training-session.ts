@@ -1,19 +1,30 @@
 import { relations } from "drizzle-orm";
 import {
   integer,
+  jsonb,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { COMPLEXITY_LIST } from "@acme/core/constants";
+import { Exercises } from "@acme/core/constants";
 
+import type { CreateTrainingSessoin, Exercise1FormData } from "../validators";
 import { createPrefixedId } from "../utils";
 import { usersTable } from "./auth";
 import { languagesTable } from "./language";
 import { sentencesTable } from "./sentence";
 import { wordsTable } from "./word";
+
+export const trainingSessionStatus = pgEnum("training_session_status", [
+  "idle",
+  "pending",
+  "success",
+  "error",
+  "canceled",
+]);
 
 export const trainingSessionsTable = pgTable("training_session", {
   id: text("id")
@@ -25,13 +36,19 @@ export const trainingSessionsTable = pgTable("training_session", {
     .references(() => usersTable.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   sentenceIndex: integer("sentence_index").notNull().default(0),
-  complexity: text("complexity", { enum: COMPLEXITY_LIST })
-    .notNull()
-    .default("A1"),
   languageCode: text("language_code")
     .notNull()
     .references(() => languagesTable.code, { onDelete: "cascade" }),
-  topic: text("topic"),
+  exercise: text("exercise").notNull().default(Exercises.exercise1),
+  data: jsonb("data")
+    .notNull()
+    .$type<CreateTrainingSessoin["data"]>()
+    .default({
+      complexity: "A1",
+      topic: "",
+      words: [],
+    } satisfies Exercise1FormData["data"]),
+  status: trainingSessionStatus("status").notNull().default("idle"),
 });
 
 export type TrainingSession = typeof trainingSessionsTable.$inferSelect;
