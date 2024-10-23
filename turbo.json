@@ -39,7 +39,11 @@
     "AUTH_TRUST_HOST",
     "PORT",
     "OPENAI_API_KEY",
-    "RESEND_API_KEY"
+    "RESEND_API_KEY",
+    "REDIS_HOST",
+    "REDIS_USERNAME",
+    "REDIS_PORT",
+    "REDIS_PASSWORD"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
