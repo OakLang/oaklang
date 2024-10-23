@@ -11,7 +11,6 @@ const withNextIntl = createNextIntlPlugin();
 createJiti(fileURLToPath(import.meta.url))("./src/env");
 
 const config: NextConfig = {
-  output: "standalone",
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   reactStrictMode: true,
   transpilePackages: [
