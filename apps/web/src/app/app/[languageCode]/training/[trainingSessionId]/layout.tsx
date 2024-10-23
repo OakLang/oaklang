@@ -4,23 +4,25 @@ import { notFound } from "next/navigation";
 import type { TrainingSessionParams } from "~/types";
 import { HydrateClient, trpc } from "~/trpc/server";
 
-export default async function TrainingLayout({
-  children,
-  params,
-}: Readonly<{
-  children: ReactNode;
-  params: TrainingSessionParams;
-}>) {
+export default async function TrainingLayout(
+  props: Readonly<{
+    children: ReactNode;
+    params: Promise<TrainingSessionParams>;
+  }>,
+) {
+  const { children, params } = props;
+  const { languageCode, trainingSessionId } = await params;
+
   const trainingSession = await trpc.trainingSessions.getTrainingSession({
-    trainingSessionId: params.trainingSessionId,
+    trainingSessionId,
   });
 
-  if (trainingSession.languageCode !== params.languageCode) {
+  if (trainingSession.languageCode !== languageCode) {
     notFound();
   }
 
   void trpc.trainingSessions.getTrainingSession.prefetch(
-    { trainingSessionId: params.trainingSessionId },
+    { trainingSessionId },
     { initialData: trainingSession },
   );
 

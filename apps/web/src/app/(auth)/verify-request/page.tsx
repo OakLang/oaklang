@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { MailCheckIcon } from "lucide-react";
 
-export default function VerfiyPage({
-  searchParams,
-}: {
-  searchParams: { provider?: string; type?: string };
+export default async function VerfiyPage(props: {
+  searchParams: Promise<{ provider?: string; type?: string }>;
 }) {
-  if (searchParams.type === "email" && searchParams.provider === "resend") {
+  const { provider, type } = await props.searchParams;
+
+  if (type === "email" && provider === "resend") {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="flex max-w-md flex-col items-center px-6 py-16">
