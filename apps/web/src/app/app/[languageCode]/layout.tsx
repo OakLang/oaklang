@@ -14,13 +14,15 @@ import { OnboardingRoutes } from "~/utils/constants";
 import { getAccessRequest, getUserNativeLanguage } from "~/utils/queries";
 import AppBar from "./app-bar";
 
-export default async function MainAppLayout({
-  children,
-  params: { languageCode },
-}: Readonly<{
-  children: ReactNode;
-  params: LanguageCodeParams;
-}>) {
+export default async function MainAppLayout(
+  props: Readonly<{
+    children: ReactNode;
+    params: Promise<LanguageCodeParams>;
+  }>,
+) {
+  const { children, params } = props;
+  const { languageCode } = await params;
+
   const session = await auth();
   if (!session) {
     notFound();
@@ -84,14 +86,14 @@ As we are currently offering limited access, we could not accommodate your reque
       { languageCode },
       { initialData: practiceLanguage },
     );
-
-    return (
-      <HydrateClient>
-        <AppBar languageCode={languageCode} />
-        {children}
-      </HydrateClient>
-    );
   } catch (error) {
     notFound();
   }
+
+  return (
+    <HydrateClient>
+      <AppBar languageCode={languageCode} />
+      {children}
+    </HydrateClient>
+  );
 }

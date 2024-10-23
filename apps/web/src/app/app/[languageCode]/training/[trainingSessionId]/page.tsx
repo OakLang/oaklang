@@ -1,7 +1,5 @@
-import dynamic from "next/dynamic";
-
-const ContentView = dynamic(() => import("./content-view"), { ssr: false });
-const RightBar = dynamic(() => import("./right-bar"), { ssr: false });
+import ContentView from "./content-view";
+import RightBar from "./right-bar";
 
 export default function TrainingPage() {
   return (

@@ -5,11 +5,11 @@ import { APP_NAME } from "@acme/core/constants";
 import EmailSignInForm from "../email-signin-form";
 import OAuthProviders from "../oauth-providers";
 
-export default function LogInPage({
-  searchParams: { callbackUrl },
-}: {
-  searchParams: { callbackUrl?: string };
+export default async function LogInPage(props: {
+  searchParams: Promise<{ callbackUrl?: string }>;
 }) {
+  const { callbackUrl } = await props.searchParams;
+
   const search = new URLSearchParams();
   if (callbackUrl) {
     search.set("callbackUrl", callbackUrl);

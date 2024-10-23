@@ -23,9 +23,9 @@
     "@acme/email": "workspace:*",
     "@auth/core": "0.31.0",
     "@t3-oss/env-nextjs": "^0.10.1",
-    "next": "^14.2.3",
-    "next-auth": "5.0.0-beta.18",
-    "react": "18.3.1",
+    "next": "15.0.1",
+    "next-auth": "5.0.0-beta.25",
+    "react": "19.0.0-rc-69d4b800-20241021",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -33,7 +33,7 @@
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
-    "@types/react": "^18.3.11",
+    "@types/react": "npm:types-react@19.0.0-rc.1",
     "eslint": "^8.57.0",
     "typescript": "^5.4.5"
   },
