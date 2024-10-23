@@ -86,14 +86,14 @@ As we are currently offering limited access, we could not accommodate your reque
       { languageCode },
       { initialData: practiceLanguage },
     );
-
-    return (
-      <HydrateClient>
-        <AppBar languageCode={languageCode} />
-        {children}
-      </HydrateClient>
-    );
   } catch (error) {
     notFound();
   }
+
+  return (
+    <HydrateClient>
+      <AppBar languageCode={languageCode} />
+      {children}
+    </HydrateClient>
+  );
 }
