@@ -1,5 +1,5 @@
 import type { Language } from "@acme/db/schema";
-import { and, eq, inArray, sql } from "@acme/db";
+import { and, eq, inArray } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
   languagesTable,

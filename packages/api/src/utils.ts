@@ -2,8 +2,8 @@ import { TRPCError } from "@trpc/server";
 
 import type { Session } from "@acme/auth";
 import type { DB } from "@acme/db/client";
-import type { Language, UserSettings, Word } from "@acme/db/schema";
-import { and, count, eq, inArray, isNull, not, sql } from "@acme/db";
+import type { Language, UserSettings } from "@acme/db/schema";
+import { and, count, eq, inArray, isNull, not } from "@acme/db";
 import {
   languagesTable,
   sentencesTable,

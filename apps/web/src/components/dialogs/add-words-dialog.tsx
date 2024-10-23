@@ -1,4 +1,3 @@
-import type { FormEvent } from "react";
 import { useCallback, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
