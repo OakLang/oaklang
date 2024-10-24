@@ -25,13 +25,9 @@
     "@acme/prettier-config": "workspace:*",
     "turbo": "^2.2.3"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "prettier": "@acme/prettier-config",
   "packageManager": "pnpm@9.11.0",
   "engines": {
-    "node": ">=20"
+    "node": "^20"
   }
 }
