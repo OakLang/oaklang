@@ -3,6 +3,13 @@ import { WakaQ, WakaQueue } from "wakaq";
 
 import { env } from "./env";
 
+console.log("wakaq/src/index.ts", {
+  REDIS_HOST: env.REDIS_HOST,
+  REDIS_PASSWORD: env.REDIS_PASSWORD,
+  REDIS_PORT: env.REDIS_PORT,
+  REDIS_USERNAME: env.REDIS_USERNAME,
+});
+
 export const wakaq = new WakaQ({
   /* Raise SoftTimeout in a task if it runs longer than 14 minutes. Can also be set per
      task or queue. If no soft timeout set, tasks can run forever.
@@ -18,11 +25,11 @@ export const wakaq = new WakaQ({
         int. The variable "cores" is replaced with the number of processors on
         the current machine.
      */
-  concurrency: "cores*4",
+  concurrency: 6,
 
   /* List your queues and their priorities.
    */
-  queues: [new WakaQueue("high priority"), new WakaQueue("default")],
+  queues: [new WakaQueue("default")],
 
   /* Redis normally doesn't use TLS, but some cloud providers need it.
    */
