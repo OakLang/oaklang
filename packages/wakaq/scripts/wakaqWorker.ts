@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { WakaQWorker } from "wakaq";
 
 import { wakaq } from "../src";
@@ -10,4 +12,5 @@ await new WakaQWorker(wakaq, [
   "tsx",
   "scripts/wakaqChild.ts",
 ]).start();
+wakaq.disconnect();
 process.exit(0);

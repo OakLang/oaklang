@@ -53,9 +53,9 @@ export const generateInterlinearLineForSentence = wakaq.task(
     const { sentenceId } = await z
       .object({ sentenceId: z.string() })
       .parseAsync(args);
-    console.log("Running Task: generateInterlinearLineForSentence", {
-      sentenceId,
-    });
+    wakaq.logger?.info(
+      `Running Task: generateInterlinearLineForSentence. Sentence id: ${sentenceId}`,
+    );
 
     const [sentence] = await db
       .select({
@@ -97,7 +97,7 @@ export const generateInterlinearLineForSentence = wakaq.task(
       })
       .where(eq(sentencesTable.id, sentenceId));
     try {
-      console.log("Deleting previous sentence words!");
+      wakaq.logger?.info("Deleting previous sentence words!");
 
       await db
         .delete(sentenceWordsTable)
@@ -130,14 +130,12 @@ export const generateInterlinearLineForSentence = wakaq.task(
         text: string;
         [x: string]: string;
       }[];
-      console.log({ filterdInterlinearColumns });
 
       const primaryWords = filterdInterlinearColumns.map((item) => item.lemma);
       const insertedWords = await getOrCreateWords(
         primaryWords,
         sentence.languageCode,
       );
-      console.log({ insertedWords });
 
       const values = filterdInterlinearColumns
         .map((column, index) => {
@@ -156,7 +154,6 @@ export const generateInterlinearLineForSentence = wakaq.task(
           } satisfies typeof sentenceWordsTable.$inferInsert;
         })
         .filter((item) => !!item);
-      console.log({ values });
 
       if (values.length > 0) {
         await db.insert(sentenceWordsTable).values(values);

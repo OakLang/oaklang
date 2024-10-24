@@ -12,4 +12,5 @@ import * as generateSentencesForExercise2 from "../src/tasks/generateSentencesFo
 // also make sure to enable tsc option verbatimModuleSyntax
 
 await new WakaQChildWorker(wakaq).start();
+wakaq.disconnect();
 process.exit(0);

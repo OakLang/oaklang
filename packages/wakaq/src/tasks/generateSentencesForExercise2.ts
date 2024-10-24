@@ -75,9 +75,9 @@ export const generateSentencesForExercise2 = wakaq.task(
       })
       .parseAsync(args);
 
-    console.log("Running Task: generateSentencesForExercise2", {
-      trainingSessionId,
-    });
+    wakaq.logger?.info(
+      `Running Task: generateSentencesForExercise2. Training Session Id: ${trainingSessionId}`,
+    );
 
     const [trainingSession] = await db
       .select({
@@ -193,8 +193,6 @@ export const generateSentencesForExercise2 = wakaq.task(
           break;
         }
       }
-
-      console.log({ generatedSentences });
 
       const values = generatedSentences.map(
         (sentence, index) =>

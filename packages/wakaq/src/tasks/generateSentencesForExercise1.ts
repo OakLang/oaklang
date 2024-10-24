@@ -161,10 +161,9 @@ export const generateSentencesForExercise1 = wakaq.task(
       })
       .parseAsync(args);
 
-    console.log("Running Task: generateSentencesForExercise1", {
-      trainingSessionId,
-      promptTemplate,
-    });
+    wakaq.logger?.info(
+      `Running Task: generateSentencesForExercise1. Training Session Id: ${trainingSessionId}`,
+    );
 
     const [trainingSession] = await db
       .select({
