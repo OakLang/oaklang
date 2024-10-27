@@ -4,9 +4,12 @@
   "type": "module",
   "exports": {
     "./types": "./src/types/index.ts",
+    "./types/*": "./src/types/*.ts",
     "./validators": "./src/validators/index.ts",
     "./constants": "./src/constants/index.ts",
-    "./helpers": "./src/helpers/index.ts"
+    "./constants/*": "./src/constants/*.ts",
+    "./helpers": "./src/helpers/index.ts",
+    "./helpers/*": "./src/helpers/*.ts"
   },
   "license": "MIT",
   "scripts": {
@@ -16,12 +19,14 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "string-template": "^1.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@types/string-template": "^1.0.6",
     "eslint": "^8.57.0",
     "prettier": "^3.3.1",
     "typescript": "^5.4.5"

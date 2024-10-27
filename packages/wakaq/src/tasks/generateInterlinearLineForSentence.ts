@@ -5,14 +5,16 @@ import stringTemplate from "string-template";
 import { z } from "zod";
 
 import type { InterlinearLine } from "@acme/core/validators";
-import { DEFAULT_INTERLINEAR_LINES_PROMPT_TEMPLATE } from "@acme/core/constants";
+import { generateInterlinearLinesForSentencePrompt } from "@acme/core/constants/prompt-templates";
 import { eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
+  aiUsageTable,
   languagesTable,
   sentencesTable,
   sentenceWordsTable,
   trainingSessionsTable,
+  usersTable,
 } from "@acme/db/schema";
 
 import { wakaq } from "..";
@@ -64,7 +66,8 @@ export const generateInterlinearLineForSentence = wakaq.task(
           sentencesTable.interlinearLineGenerationStatus,
         trainingSessionId: sentencesTable.trainingSessionId,
         languageCode: trainingSessionsTable.languageCode,
-        userId: trainingSessionsTable.userId,
+        userId: usersTable.id,
+        userEmail: usersTable.email,
         language: languagesTable,
       })
       .from(sentencesTable)
@@ -76,6 +79,7 @@ export const generateInterlinearLineForSentence = wakaq.task(
         languagesTable,
         eq(languagesTable.code, trainingSessionsTable.languageCode),
       )
+      .innerJoin(usersTable, eq(usersTable.id, trainingSessionsTable.userId))
       .where(eq(sentencesTable.id, sentenceId));
 
     if (!sentence) {
@@ -103,12 +107,13 @@ export const generateInterlinearLineForSentence = wakaq.task(
         .delete(sentenceWordsTable)
         .where(eq(sentenceWordsTable.sentenceId, sentenceId));
 
+      const practiceLanguage = sentence.language;
       const nativeLanguage = await getNativeLanguage(sentence.userId);
       const interlinearLines = await getInterlinearLines(sentence.userId);
 
-      const prompt = stringTemplate(DEFAULT_INTERLINEAR_LINES_PROMPT_TEMPLATE, {
-        PRACTICE_LANGUAGE: sentence.language.name,
+      const prompt = generateInterlinearLinesForSentencePrompt({
         NATIVE_LANGUAGE: nativeLanguage.name,
+        PRACTICE_LANGUAGE: practiceLanguage.name,
         SENTENCE: sentence.sentence,
       });
 
@@ -122,6 +127,23 @@ export const generateInterlinearLineForSentence = wakaq.task(
         model: openai("gpt-4o", { user: sentence.userId }),
         prompt,
         schema,
+      });
+
+      await db.insert(aiUsageTable).values({
+        platform: "openai",
+        model: "gpt-4o",
+        generationType: "object",
+        prompt,
+        result,
+        tokenCount: result.usage.totalTokens,
+        userId: sentence.userId,
+        userEmail: sentence.userEmail,
+        metadata: {
+          trainingSessionId: sentence.trainingSessionId,
+          sentenceId: sentenceId,
+          zodSchema: schema,
+          words: result.object.words,
+        },
       });
 
       const filterdInterlinearColumns = result.object.words as unknown as {

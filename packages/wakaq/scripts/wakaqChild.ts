@@ -1,15 +1,25 @@
 import { WakaQChildWorker } from "wakaq";
 
 import { wakaq } from "../src";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as generateInterlinearLinesForSentence from "../src/tasks/generateInterlinearLinesForSentence";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as generateSentencesForExercise1 from "../src/tasks/generateSentencesForExercise1";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as generateSentencesForExercise2 from "../src/tasks/generateSentencesForExercise2";
+import { generateInterlinearLineForSentence } from "../src/tasks/generateInterlinearLineForSentence";
+import { generateSentencesForExercise1 } from "../src/tasks/generateSentencesForExercise1";
+import { generateSentencesForExercise2 } from "../src/tasks/generateSentencesForExercise2";
+import { generateSentencesForExercise3 } from "../src/tasks/generateSentencesForExercise3";
 
 // import your tasks so they're registered
 // also make sure to enable tsc option verbatimModuleSyntax
+
+const tasks = [
+  generateInterlinearLineForSentence,
+  generateSentencesForExercise1,
+  generateSentencesForExercise2,
+  generateSentencesForExercise3,
+];
+
+console.log(
+  "All Tasks",
+  tasks.map((task, i) => `${i + 1}: ${task.name}`),
+);
 
 await new WakaQChildWorker(wakaq).start();
 wakaq.disconnect();

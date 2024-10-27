@@ -3,13 +3,6 @@ import { WakaQ, WakaQueue } from "wakaq";
 
 import { env } from "./env";
 
-console.log("wakaq/src/index.ts", {
-  REDIS_HOST: env.REDIS_HOST,
-  REDIS_PASSWORD: env.REDIS_PASSWORD,
-  REDIS_PORT: env.REDIS_PORT,
-  REDIS_USERNAME: env.REDIS_USERNAME,
-});
-
 export const wakaq = new WakaQ({
   /* Raise SoftTimeout in a task if it runs longer than 14 minutes. Can also be set per
      task or queue. If no soft timeout set, tasks can run forever.

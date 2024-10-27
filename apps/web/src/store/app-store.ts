@@ -3,9 +3,9 @@ import { persist } from "zustand/middleware";
 
 import type { SentenceWord } from "@acme/db/schema";
 import {
-  DEFAULT_INTERLINEAR_LINES_PROMPT_TEMPLATE,
-  EXERCISE_1,
-} from "@acme/core/constants";
+  EXERCISE_1_PROMPT_TEMPLATE,
+  GENERATE_INTERLINEAR_LINES_FOR_SENTENCE_PROMPT_TEMPLATE,
+} from "@acme/core/constants/prompt-templates";
 
 import { storage } from "~/lib/storage";
 
@@ -41,10 +41,10 @@ export const useAppStore = create<AppStore>()(
   persist(
     (set) => ({
       fontSize: 16,
-      exercise1PromptTemplate: EXERCISE_1.promptTemplate.trim(),
+      exercise1PromptTemplate: EXERCISE_1_PROMPT_TEMPLATE.trim(),
       overrideExercise1PromptTemplate: false,
       interlinearLinesPromptTemplate:
-        DEFAULT_INTERLINEAR_LINES_PROMPT_TEMPLATE.trim(),
+        GENERATE_INTERLINEAR_LINES_FOR_SENTENCE_PROMPT_TEMPLATE.trim(),
       overrideGenerateSentenceWordsPromptTemplate: false,
       inspectedWord: null,
       inspectionPanelOpen: false,

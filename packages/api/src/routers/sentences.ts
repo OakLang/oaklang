@@ -8,7 +8,7 @@ import {
   userWordsTable,
   wordsTable,
 } from "@acme/db/schema";
-import { generateInterlinearLineForSentence } from "@acme/wakaq/tasks/generateInterlinearLinesForSentence";
+import { generateInterlinearLineForSentence } from "@acme/wakaq/tasks/generateInterlinearLineForSentence";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getSentenceOrThrow, getTrainingSessionOrThrow } from "../utils";

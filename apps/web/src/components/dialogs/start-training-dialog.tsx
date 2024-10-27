@@ -13,9 +13,9 @@ import type {
   Exercise3FormData,
 } from "@acme/db/validators";
 import {
+  ALL_EXERCISES,
   COMPLEXITY_LIST,
   Exercises,
-  EXERCISES,
   TRAINING_SESSION_TOPICS,
 } from "@acme/core/constants";
 import { createTrainingSessionSchema } from "@acme/db/validators";
@@ -317,7 +317,7 @@ export default function StartTrainingDialog({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {EXERCISES.map((exercise) => (
+                          {ALL_EXERCISES.map((exercise) => (
                             <SelectItem key={exercise.id} value={exercise.id}>
                               {exercise.name}
                             </SelectItem>

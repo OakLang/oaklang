@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import ms from "ms";
 import { z } from "zod";
 
+import { getExtractWordsFromAPieceOfTextPrompt } from "@acme/core/constants/prompt-templates";
 import {
   and,
   asc,
@@ -16,7 +17,7 @@ import {
   or,
   sql,
 } from "@acme/db";
-import { userWordsTable, wordsTable } from "@acme/db/schema";
+import { aiUsageTable, userWordsTable, wordsTable } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
@@ -346,13 +347,34 @@ export const wordsRouter = createTRPCRouter({
       const language = await getLanguageOrThrow(input.languageCode, ctx.db);
 
       const model = openai("gpt-4o", { user: ctx.session.user.id });
+      const prompt = getExtractWordsFromAPieceOfTextPrompt({
+        PIECE_OF_TEXT: input.text,
+        LANGUAGE: language.name,
+      });
+      const schema = z.object({
+        lemmas: z.array(z.string()).describe("lemma list"),
+      });
       const result = await generateObject({
         model,
-        schema: z.object({
-          lemmas: z.array(z.string()).describe("lemma list"),
-        }),
-        prompt: `Please extract all the words from the following text and return each word in its lemma form in ${language.name} language. Ensure no word is omitted, and return each lemma only once, without repetition. Once a lemma has been listed, it should not appear again. Maintain the order of their first appearance. The text is as follows:\n\n${input.text}`,
+        schema,
+        prompt,
       });
+
+      await ctx.db.insert(aiUsageTable).values({
+        platform: "openai",
+        model: "gpt-4o",
+        generationType: "object",
+        prompt,
+        result,
+        tokenCount: result.usage.totalTokens,
+        userId: ctx.session.user.id,
+        userEmail: ctx.session.user.email,
+        metadata: {
+          words: result.object.lemmas,
+          zodSchema: schema,
+        },
+      });
+
       const uniqueWords = [...new Set(result.object.lemmas)];
 
       const insertedWords = await getOrCreateWords(

@@ -404,6 +404,9 @@ importers:
 
   packages/core:
     dependencies:
+      string-template:
+        specifier: ^1.0.0
+        version: 1.0.0
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -417,6 +420,9 @@ importers:
       '@acme/tsconfig':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/string-template':
+        specifier: ^1.0.6
+        version: 1.0.6
       eslint:
         specifier: ^8.57.0
         version: 8.57.1

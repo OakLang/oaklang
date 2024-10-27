@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { Exercise2, Exercises } from "@acme/core/constants";
-import { exercise2Data } from "@acme/db/validators";
+import { Exercise3, Exercises } from "@acme/core/constants";
+import { exercise3Data } from "@acme/db/validators";
 
 import { wakaq } from "..";
 import {
@@ -12,9 +12,9 @@ import {
 } from "../helpers";
 import { generateSentences } from "../helpers/ai";
 
-const Exercise = Exercises.exercise2;
+const Exercise = Exercises.exercise3;
 
-export const generateSentencesForExercise2 = wakaq.task(
+export const generateSentencesForExercise3 = wakaq.task(
   async (args) => {
     const { trainingSessionId } = await z
       .object({
@@ -23,7 +23,7 @@ export const generateSentencesForExercise2 = wakaq.task(
       .parseAsync(args);
 
     wakaq.logger?.info(
-      `Running Task: generateSentencesForExercise2. Training Session Id: ${trainingSessionId}`,
+      `Running Task: generateSentencesForExercise3. Training Session Id: ${trainingSessionId}`,
     );
 
     const trainingSession = await getOrThrowTrainingSession(trainingSessionId);
@@ -46,39 +46,25 @@ export const generateSentencesForExercise2 = wakaq.task(
       const practiceLanguage = trainingSession.language;
       const nativeLanguage = await getNativeLanguage(trainingSession.userId);
 
-      const data = await exercise2Data.parseAsync(trainingSession.data);
+      const data = await exercise3Data.parseAsync(trainingSession.data);
 
       let prompt = "";
 
       switch (data.learnFrom) {
-        case "list-of-words": {
-          prompt = Exercise2.getListOfWordsPrompt({
-            NATIVE_LANGUAGE: nativeLanguage.name,
+        case "ask-ai": {
+          prompt = Exercise3.getAskAIPrompt({
             PRACTICE_LANGUAGE: practiceLanguage.name,
-            COMPLEXITY: data.complexity,
-            EACH_WORD_PRACTICE_COUNT: data.eachWordPracticeCount,
-            WORDS: data.words.join(", "),
-          });
-          break;
-        }
-        case "number-of-words": {
-          prompt = Exercise2.getNumberOfWordsPrompt({
             NATIVE_LANGUAGE: nativeLanguage.name,
-            PRACTICE_LANGUAGE: practiceLanguage.name,
             COMPLEXITY: data.complexity,
-            EACH_WORD_PRACTICE_COUNT: data.eachWordPracticeCount,
-            NUMBER_OF_WORDS: data.numberOfWords,
             TOPIC: data.topic,
           });
           break;
         }
-        case "number-of-sentences": {
-          prompt = Exercise2.getNumberOfSentencesPrompt({
-            NATIVE_LANGUAGE: nativeLanguage.name,
+        case "content": {
+          prompt = Exercise3.getContentPrompt({
             PRACTICE_LANGUAGE: practiceLanguage.name,
-            COMPLEXITY: data.complexity,
-            NUMBER_OF_SENTENCES: data.numberOfSentences,
-            TOPIC: data.topic,
+            NATIVE_LANGUAGE: nativeLanguage.name,
+            CONTENT: data.content,
           });
           break;
         }
@@ -104,5 +90,5 @@ export const generateSentencesForExercise2 = wakaq.task(
       await updateTrainingSessionStatus(trainingSessionId, "error");
     }
   },
-  { name: "generateSentencesForExercise2" },
+  { name: "generateSentencesForExercise3" },
 );

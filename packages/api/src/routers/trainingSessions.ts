@@ -12,6 +12,7 @@ import {
 import { createTrainingSessionSchema } from "@acme/db/validators";
 import { generateSentencesForExercise1 } from "@acme/wakaq/tasks/generateSentencesForExercise1";
 import { generateSentencesForExercise2 } from "@acme/wakaq/tasks/generateSentencesForExercise2";
+import { generateSentencesForExercise3 } from "@acme/wakaq/tasks/generateSentencesForExercise3";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getLanguageOrThrow, getTrainingSessionOrThrow } from "../utils";
@@ -140,6 +141,11 @@ export const trainingSessionsRouter = createTRPCRouter({
           break;
         case Exercises.exercise2:
           await generateSentencesForExercise2.enqueue({
+            trainingSessionId: trainingSession.id,
+          });
+          break;
+        case Exercises.exercise3:
+          await generateSentencesForExercise3.enqueue({
             trainingSessionId: trainingSession.id,
           });
           break;

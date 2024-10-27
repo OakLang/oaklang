@@ -4,13 +4,8 @@ import { useMemo } from "react";
 import { Label } from "@radix-ui/react-label";
 import { RefreshCcwIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useFormatter } from "next-intl";
 
-import {
-  EXERCISE_1,
-  EXERCISE_1_PROMPT_TEMPLATE_KEYS,
-  INTERLINEAR_LINES_PROMPT_TEMPLATE_KEYS,
-} from "@acme/core/constants";
+import { Exercise1 } from "@acme/core/constants";
 import { hasPowerUserAccess } from "@acme/core/helpers";
 
 import { Button } from "~/components/ui/button";
@@ -40,7 +35,7 @@ export default function PromptEditSection() {
   const setInterlinearLinesPromptTemplate = useAppStore(
     (state) => state.setInterlinearLinesPromptTemplate,
   );
-  const format = useFormatter();
+  // const format = useFormatter();
 
   if (!isPowerUser) {
     return null;
@@ -56,7 +51,7 @@ export default function PromptEditSection() {
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="exercise-1-prompt-template">
-              Exercise 1 ({EXERCISE_1.name}) Prompt Template
+              Exercise 1 ({Exercise1.name}) Prompt Template
             </Label>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -89,7 +84,7 @@ export default function PromptEditSection() {
             className="bg-secondary/50 resize-y"
             rows={10}
           />
-          <p className="text-muted-foreground text-sm">
+          {/* <p className="text-muted-foreground text-sm">
             Available Keys{" "}
             {format.list(
               EXERCISE_1_PROMPT_TEMPLATE_KEYS.map((key) => (
@@ -98,7 +93,7 @@ export default function PromptEditSection() {
                 </code>
               )),
             )}
-          </p>
+          </p> */}
         </div>
 
         <div className="grid gap-2">
@@ -136,7 +131,7 @@ export default function PromptEditSection() {
             className="bg-secondary/50 resize-y"
             rows={10}
           />
-          <p className="text-muted-foreground text-sm">
+          {/* <p className="text-muted-foreground text-sm">
             Available Keys{" "}
             {format.list(
               INTERLINEAR_LINES_PROMPT_TEMPLATE_KEYS.map((key) => (
@@ -145,7 +140,7 @@ export default function PromptEditSection() {
                 </code>
               )),
             )}
-          </p>
+          </p> */}
         </div>
       </div>
     </section>
