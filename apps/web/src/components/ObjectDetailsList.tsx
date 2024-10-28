@@ -4,7 +4,7 @@ export default function ObjectDetailsList({
   data: Record<string, string | string[] | number | null>;
 }) {
   return (
-    <table>
+    <table className="w-full">
       <tbody>
         {Object.entries(data).map((entry) => {
           const key = entry[0];

@@ -18,7 +18,7 @@ export const getExtractWordsFromAPieceOfTextPrompt = (
     string | number
   >,
   template = EXTRACT_WORDS_FROM_A_PIECE_OF_TEXT_PROMPT_TEMPLATE,
-) => format(template, input);
+) => format(template, input).trim();
 
 // [End]: Extract words from a piece of text prompt
 

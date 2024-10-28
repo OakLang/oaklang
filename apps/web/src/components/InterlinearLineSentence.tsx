@@ -138,7 +138,7 @@ function RenderSentence({
     <div ref={ref}>
       {sentence.words.map((word) => (
         <InterlinearLineWordColumn
-          key={`${word.id}-${word.index}`}
+          key={`${word.word.id}-${word.index}`}
           word={word}
         />
       ))}

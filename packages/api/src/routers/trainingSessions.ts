@@ -8,6 +8,7 @@ import {
   practiceLanguagesTable,
   trainingSessionsTable,
   userWordsTable,
+  wordsTable,
 } from "@acme/db/schema";
 import { createTrainingSessionSchema } from "@acme/db/validators";
 import { generateSentencesForExercise1 } from "@acme/wakaq/tasks/generateSentencesForExercise1";
@@ -233,5 +234,27 @@ export const trainingSessionsRouter = createTRPCRouter({
           trainingSessionId: trainingSession.id,
         });
       }
+    }),
+  getAllKnownWordsFromSession: protectedProcedure
+    .input(z.object({ trainingSessionId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const trainingSession = await getTrainingSessionOrThrow(
+        input.trainingSessionId,
+        ctx.db,
+        ctx.session,
+      );
+
+      const knownWords = await ctx.db
+        .select({ word: wordsTable })
+        .from(userWordsTable)
+        .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
+        .where(
+          and(
+            eq(userWordsTable.userId, ctx.session.user.id),
+            eq(userWordsTable.knownFromId, trainingSession.id),
+          ),
+        );
+
+      return knownWords.map((item) => item.word);
     }),
 });

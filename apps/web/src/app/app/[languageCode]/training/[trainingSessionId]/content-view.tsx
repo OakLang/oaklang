@@ -9,8 +9,10 @@ import { ChevronLeftIcon, Loader2Icon } from "lucide-react";
 import type { TrainingSession } from "@acme/db/schema";
 
 import type { TrainingSessionParams } from "~/types";
+import RenderQueryResult from "~/components/RenderQueryResult";
 import { SentenceView } from "~/components/SentenceView";
 import ToolBar from "~/components/ToolBar";
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
 
@@ -137,6 +139,11 @@ const SessionComplete = ({
   trainingSession: TrainingSession;
   onBack: () => void;
 }) => {
+  const knownWordsQuery =
+    api.trainingSessions.getAllKnownWordsFromSession.useQuery({
+      trainingSessionId: trainingSession.id,
+    });
+
   return (
     <>
       <ToolBar trainingSession={trainingSession} />
@@ -157,6 +164,30 @@ const SessionComplete = ({
           <div className="flex flex-1 flex-col">
             <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
               <p className="text-2xl font-semibold">YAY! Session complete!</p>
+
+              <RenderQueryResult query={knownWordsQuery}>
+                {(query) => {
+                  if (query.data.length === 0) {
+                    return null;
+                  }
+
+                  return (
+                    <div className="my-16 space-y-4">
+                      <p className="text-lg font-medium">
+                        You have added {query.data.length} known words
+                      </p>
+
+                      <div className="flex flex-wrap gap-2">
+                        {query.data.map((word) => (
+                          <Badge key={word.id} variant="outline">
+                            {word.word}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }}
+              </RenderQueryResult>
             </div>
           </div>
 

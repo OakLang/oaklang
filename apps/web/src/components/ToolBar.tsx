@@ -4,12 +4,12 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeftIcon,
   BookAIcon,
   MoreHorizontalIcon,
   SettingsIcon,
   SidebarCloseIcon,
   SidebarOpenIcon,
+  XIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -71,12 +71,12 @@ export default function ToolBar({
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="mr-2" asChild>
                 <Link href={`/app/${trainingSession.languageCode}`}>
-                  <ArrowLeftIcon className="h-5 w-5" />
-                  <div className="sr-only">Back</div>
+                  <XIcon className="h-5 w-5" />
+                  <div className="sr-only">Close Session</div>
                 </Link>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Back</TooltipContent>
+            <TooltipContent side="bottom">Close Session</TooltipContent>
           </Tooltip>
 
           <h1 className="flex-1 truncate text-lg font-medium max-md:hidden">

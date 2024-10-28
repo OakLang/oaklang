@@ -34,15 +34,7 @@ export const sentencesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const sentence = await getSentenceOrThrow(input.sentenceId, ctx);
       const words = await ctx.db
-        .select({
-          id: wordsTable.id,
-          word: wordsTable.word,
-          index: sentenceWordsTable.index,
-          interlinearLines: sentenceWordsTable.interlinearLines,
-          sentenceId: sentenceWordsTable.sentenceId,
-          knownAt: userWordsTable.knownAt,
-          hideLines: userWordsTable.hideLines,
-        })
+        .select()
         .from(sentenceWordsTable)
         .innerJoin(wordsTable, eq(wordsTable.id, sentenceWordsTable.wordId))
         .leftJoin(
@@ -54,7 +46,11 @@ export const sentencesRouter = createTRPCRouter({
 
       return {
         ...sentence,
-        words,
+        words: words.map((item) => ({
+          ...item.sentence_word,
+          word: item.word,
+          userWord: item.user_word,
+        })),
       };
     }),
   regenerateSentenceInterlinearLines: protectedProcedure
