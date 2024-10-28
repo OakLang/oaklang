@@ -40,7 +40,7 @@ export default function UserButton({
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent side="bottom" align="end">
         <div className="p-2">
           <p className="text-muted-foreground text-sm">{t("signed-in-as")}</p>
           <p className="font-medium">{data.user.email}</p>

@@ -1,18 +1,15 @@
 import type { ReactNode } from "react";
 
-import type { LanguageCodeParams } from "~/types";
-import SideBar from "./side-bar";
+import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
+import SettingsSidebar from "./sidebar";
 
-export default async function SettingsLayout(
-  props: Readonly<{ children: ReactNode; params: Promise<LanguageCodeParams> }>,
-) {
-  const { children, params } = props;
-  const { languageCode } = await params;
-
+export default function SettingsLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   return (
-    <>
-      <SideBar languageCode={languageCode} />
-      <div className="ml-64">{children}</div>
-    </>
+    <SidebarProvider>
+      <SettingsSidebar />
+      <SidebarInset>{children}</SidebarInset>
+    </SidebarProvider>
   );
 }

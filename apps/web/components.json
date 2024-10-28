@@ -6,11 +6,13 @@
   "aliases": {
     "components": "~/components",
     "ui": "~/components/ui",
-    "utils": "~/utils"
+    "utils": "~/utils",
+    "hooks": "~/hooks",
+    "lib": "~/lib"
   },
   "tailwind": {
     "config": "tailwind.config.ts",
-    "css": "src/styles/global.css",
+    "css": "src/styles/globals.css",
     "baseColor": "slate",
     "cssVariables": true
   }

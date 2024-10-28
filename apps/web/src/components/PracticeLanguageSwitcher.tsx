@@ -51,7 +51,7 @@ export default function PracticeLanguageSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <TooltipTrigger asChild>
-            <Button variant="secondary" className="rounded-full">
+            <Button variant="ghost" className="rounded-full pr-3">
               <Image
                 src={`https://hatscripts.github.io/circle-flags/flags/${practiceLanguage.countryCode}.svg`}
                 alt={practiceLanguage.name}
@@ -95,7 +95,7 @@ const LanguagesDropdownContent = ({
   );
 
   return (
-    <DropdownMenuContent>
+    <DropdownMenuContent side="bottom" align="end">
       <DropdownMenuGroup>
         {practiceLanguagesQuery.data?.map((item) => (
           <LanguageItem

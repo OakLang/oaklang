@@ -42,10 +42,11 @@ export default function AppBar({ languageCode }: { languageCode: string }) {
             Words
           </Link>
         </div>
-        <div className="flex-1" />
-        <PracticeLanguageSwitcher practiceLanguageCode={languageCode} />
-        <ThemeToggle />
-        <UserButton languageCode={languageCode} />
+        <div className="flex flex-1 items-center justify-end gap-1">
+          <PracticeLanguageSwitcher practiceLanguageCode={languageCode} />
+          <ThemeToggle />
+          <UserButton languageCode={languageCode} />
+        </div>
       </div>
     </header>
   );
