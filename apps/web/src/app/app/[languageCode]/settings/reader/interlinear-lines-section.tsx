@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import { PlusIcon, RefreshCcwIcon } from "lucide-react";
 import { nanoid } from "nanoid";
 
@@ -11,26 +10,10 @@ import {
   DEFAULT_INTERLINEAR_LINES,
 } from "@acme/core/constants";
 
+import InterlinearLinesEditor from "~/components/InterlinearLineEditor";
 import { Button } from "~/components/ui/button";
-import { Skeleton } from "~/components/ui/skeleton";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
-
-const InterlinearLinesEditor = dynamic(
-  () => import("~/components/InterlinearLineEditor"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="grid gap-4">
-        <Skeleton className="h-24 border" />
-        <Skeleton className="h-24 border" />
-        <Skeleton className="h-24 border" />
-        <Skeleton className="h-24 border" />
-        <Skeleton className="h-24 border" />
-      </div>
-    ),
-  },
-);
 
 export default function InterlinearLineSection() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);

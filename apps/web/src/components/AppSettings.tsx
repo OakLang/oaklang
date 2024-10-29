@@ -1,5 +1,6 @@
 import * as Tabs from "@radix-ui/react-tabs";
 
+import AIPromptsPage from "~/app/app/[languageCode]/settings/ai-prompts/page";
 import LanguagesPage from "~/app/app/[languageCode]/settings/languages/page";
 import PreferencesPage from "~/app/app/[languageCode]/settings/preferences/page";
 import ReaderPage from "~/app/app/[languageCode]/settings/reader/page";
@@ -42,6 +43,15 @@ export default function AppSettings() {
             >
               Languages
             </Tabs.Trigger>
+            <Tabs.Trigger
+              className={cn(
+                buttonVariants({ variant: "ghost" }),
+                "text-muted-foreground data-[state=active]:bg-secondary data-[state=active]:text-foreground flex items-center justify-start text-left",
+              )}
+              value="ai-prompts"
+            >
+              AI Prompts
+            </Tabs.Trigger>
           </Tabs.List>
         </aside>
         <div className="flex-1 overflow-y-auto">
@@ -53,6 +63,9 @@ export default function AppSettings() {
           </Tabs.Content>
           <Tabs.Content value="languages">
             <LanguagesPage />
+          </Tabs.Content>
+          <Tabs.Content value="ai-prompts">
+            <AIPromptsPage />
           </Tabs.Content>
         </div>
       </Tabs.Root>

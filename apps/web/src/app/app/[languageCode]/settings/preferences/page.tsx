@@ -3,7 +3,6 @@ import { useTranslations } from "next-intl";
 import PageTitle from "~/components/PageTitle";
 import AudioSection from "./audio-section";
 import GeneralSection from "./general-section";
-import PromptEditSection from "./prompt-edit-section";
 import SpacedRepetitionStagesSection from "./spaced-repetition-stages-section";
 
 export default function PreferencesPage() {
@@ -15,7 +14,6 @@ export default function PreferencesPage() {
       <GeneralSection />
       <AudioSection />
       <SpacedRepetitionStagesSection />
-      <PromptEditSection />
     </div>
   );
 }

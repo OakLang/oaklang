@@ -1,6 +1,13 @@
 "use client";
 
-import { LayoutIcon, LogOutIcon, SettingsIcon, UserIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import {
+  HomeIcon,
+  LayoutIcon,
+  LogOutIcon,
+  SettingsIcon,
+  UserIcon,
+} from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 
@@ -23,6 +30,7 @@ export default function UserButton({
 }) {
   const t = useTranslations("App");
   const { data, status } = useSession();
+  const pathname = usePathname();
 
   if (status != "authenticated") {
     return <Skeleton className="h-10 w-10 rounded-full" />;
@@ -47,7 +55,7 @@ export default function UserButton({
         </div>
 
         <DropdownMenuSeparator />
-        {data.user.role === "admin" && (
+        {data.user.role === "admin" && !pathname.startsWith("/admin") && (
           <DropdownMenuItem asChild>
             <PrefetchLink href="/admin">
               <LayoutIcon className="mr-2 h-4 w-4" />
@@ -55,23 +63,28 @@ export default function UserButton({
             </PrefetchLink>
           </DropdownMenuItem>
         )}
+        {!pathname.startsWith("/app") && (
+          <DropdownMenuItem asChild>
+            <PrefetchLink href="/app">
+              <LayoutIcon className="mr-2 h-4 w-4" />
+              Dashboard
+            </PrefetchLink>
+          </DropdownMenuItem>
+        )}
+        {languageCode && (
+          <DropdownMenuItem asChild>
+            <PrefetchLink href={`/app/${languageCode}/settings`}>
+              <SettingsIcon className="mr-2 h-4 w-4" />
+              {t("settings")}
+            </PrefetchLink>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem asChild>
-          <PrefetchLink href="/app">
-            <LayoutIcon className="mr-2 h-4 w-4" />
-            Dashboard
+          <PrefetchLink href="/home">
+            <HomeIcon className="mr-2 h-4 w-4" />
+            Home
           </PrefetchLink>
         </DropdownMenuItem>
-        {languageCode && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <PrefetchLink href={`/app/${languageCode}/settings`}>
-                <SettingsIcon className="mr-2 h-4 w-4" />
-                {t("settings")}
-              </PrefetchLink>
-            </DropdownMenuItem>
-          </>
-        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={async () => {

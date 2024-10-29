@@ -10,10 +10,6 @@ import {
 import { storage } from "~/lib/storage";
 
 export interface AppState {
-  exercise1PromptTemplate: string;
-  overrideExercise1PromptTemplate: boolean;
-  interlinearLinesPromptTemplate: string;
-  overrideGenerateSentenceWordsPromptTemplate: boolean;
   inspectedWord: SentenceWord | null;
   inspectionPanelOpen: boolean;
   fontSize: number;
@@ -22,11 +18,6 @@ export interface AppState {
 }
 
 export interface AppActions {
-  setExercise1PromptTemplate: (template: string, override?: boolean) => void;
-  setInterlinearLinesPromptTemplate: (
-    template: string,
-    override?: boolean,
-  ) => void;
   setInspectedWord: (word: SentenceWord | null) => void;
   setInspectionPanelOpen: (sidebarOpen: boolean) => void;
   setFontSize: (fontSize: number) => void;
@@ -50,19 +41,6 @@ export const useAppStore = create<AppStore>()(
       inspectionPanelOpen: false,
       collectionsCollapced: {},
       playgroundPlaybackSpeed: 1,
-      setExercise1PromptTemplate: (exercise1PromptTemplate, override = true) =>
-        set({
-          exercise1PromptTemplate,
-          overrideExercise1PromptTemplate: override,
-        }),
-      setInterlinearLinesPromptTemplate: (
-        interlinearLinesPromptTemplate,
-        override = true,
-      ) =>
-        set({
-          interlinearLinesPromptTemplate,
-          overrideGenerateSentenceWordsPromptTemplate: override,
-        }),
       setFontSize: (fontSize) => set({ fontSize }),
       setInspectedWord: (inspectedWord) => set({ inspectedWord }),
       setInspectionPanelOpen: (inspectionPanelOpen) =>

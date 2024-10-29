@@ -32,3 +32,24 @@ export const interlinearLine = z.object({
 
 export type Disappearing = z.infer<typeof disappearingEnum>;
 export type InterlinearLine = z.infer<typeof interlinearLine>;
+
+export const interlinearLines = z
+  .array(interlinearLine)
+  .min(1)
+  .refine(
+    (items) => {
+      let unique = true;
+      const names = items.map((line) => line.name);
+      names.forEach((name, i) => {
+        if (names.findIndex((n) => n === name) !== i) {
+          unique = false;
+        }
+      });
+      return unique;
+    },
+    {
+      message: "Each interlinear line name should be unique",
+    },
+  );
+
+export type InterlinearLines = z.infer<typeof interlinearLines>;

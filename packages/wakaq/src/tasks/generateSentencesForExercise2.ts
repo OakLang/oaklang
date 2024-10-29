@@ -1,12 +1,14 @@
 import { z } from "zod";
 
 import { Exercise2, Exercises } from "@acme/core/constants";
+import { hasPowerUserAccess } from "@acme/core/helpers";
 import { exercise2Data } from "@acme/db/validators";
 
 import { wakaq } from "..";
 import {
   getNativeLanguage,
   getOrThrowTrainingSession,
+  getUserSettingsPrompts,
   handleCreateSentences,
   updateTrainingSessionStatus,
 } from "../helpers";
@@ -45,6 +47,7 @@ export const generateSentencesForExercise2 = wakaq.task(
 
       const practiceLanguage = trainingSession.language;
       const nativeLanguage = await getNativeLanguage(trainingSession.userId);
+      const prompts = await getUserSettingsPrompts(trainingSession.userId);
 
       const data = await exercise2Data.parseAsync(trainingSession.data);
 
@@ -52,37 +55,76 @@ export const generateSentencesForExercise2 = wakaq.task(
 
       switch (data.learnFrom) {
         case "list-of-words": {
-          prompt = Exercise2.getListOfWordsPrompt({
-            NATIVE_LANGUAGE: nativeLanguage.name,
-            PRACTICE_LANGUAGE: practiceLanguage.name,
-            COMPLEXITY: data.complexity,
-            EACH_WORD_PRACTICE_COUNT: data.eachWordPracticeCount,
-            WORDS: data.words.join(", "),
-          });
+          let customPromptTemplate: string | undefined = undefined;
+          if (
+            hasPowerUserAccess(trainingSession.userRole) &&
+            prompts["exercise-2.list-of-words"]?.override &&
+            prompts["exercise-2.list-of-words"].prompt
+          ) {
+            customPromptTemplate = prompts["exercise-2.list-of-words"].prompt;
+          }
+
+          prompt = Exercise2.getListOfWordsPrompt(
+            {
+              NATIVE_LANGUAGE: nativeLanguage.name,
+              PRACTICE_LANGUAGE: practiceLanguage.name,
+              COMPLEXITY: data.complexity,
+              EACH_WORD_PRACTICE_COUNT: data.eachWordPracticeCount,
+              WORDS: data.words.join(", "),
+            },
+            customPromptTemplate,
+          );
           break;
         }
         case "number-of-words": {
-          prompt = Exercise2.getNumberOfWordsPrompt({
-            NATIVE_LANGUAGE: nativeLanguage.name,
-            PRACTICE_LANGUAGE: practiceLanguage.name,
-            COMPLEXITY: data.complexity,
-            EACH_WORD_PRACTICE_COUNT: data.eachWordPracticeCount,
-            NUMBER_OF_WORDS: data.numberOfWords,
-            TOPIC: data.topic,
-          });
+          let customPromptTemplate: string | undefined = undefined;
+          if (
+            hasPowerUserAccess(trainingSession.userRole) &&
+            prompts["exercise-2.number-of-words"]?.override &&
+            prompts["exercise-2.number-of-words"].prompt
+          ) {
+            customPromptTemplate = prompts["exercise-2.number-of-words"].prompt;
+          }
+
+          prompt = Exercise2.getNumberOfWordsPrompt(
+            {
+              NATIVE_LANGUAGE: nativeLanguage.name,
+              PRACTICE_LANGUAGE: practiceLanguage.name,
+              COMPLEXITY: data.complexity,
+              EACH_WORD_PRACTICE_COUNT: data.eachWordPracticeCount,
+              NUMBER_OF_WORDS: data.numberOfWords,
+              TOPIC: data.topic,
+            },
+            customPromptTemplate,
+          );
           break;
         }
         case "number-of-sentences": {
-          prompt = Exercise2.getNumberOfSentencesPrompt({
-            NATIVE_LANGUAGE: nativeLanguage.name,
-            PRACTICE_LANGUAGE: practiceLanguage.name,
-            COMPLEXITY: data.complexity,
-            NUMBER_OF_SENTENCES: data.numberOfSentences,
-            TOPIC: data.topic,
-          });
+          let customPromptTemplate: string | undefined = undefined;
+          if (
+            hasPowerUserAccess(trainingSession.userRole) &&
+            prompts["exercise-2.number-of-sentences"]?.override &&
+            prompts["exercise-2.number-of-sentences"].prompt
+          ) {
+            customPromptTemplate =
+              prompts["exercise-2.number-of-sentences"].prompt;
+          }
+
+          prompt = Exercise2.getNumberOfSentencesPrompt(
+            {
+              NATIVE_LANGUAGE: nativeLanguage.name,
+              PRACTICE_LANGUAGE: practiceLanguage.name,
+              COMPLEXITY: data.complexity,
+              NUMBER_OF_SENTENCES: data.numberOfSentences,
+              TOPIC: data.topic,
+            },
+            customPromptTemplate,
+          );
           break;
         }
       }
+
+      wakaq.logger?.info(JSON.stringify({ prompt }, null, 2));
 
       if (!prompt) {
         await updateTrainingSessionStatus(trainingSessionId, "error");

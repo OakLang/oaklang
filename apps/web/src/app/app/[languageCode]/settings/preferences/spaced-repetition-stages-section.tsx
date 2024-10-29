@@ -1,32 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import { PlusIcon, RefreshCcwIcon } from "lucide-react";
 import { nanoid } from "nanoid";
 
 import type { SpacedRepetitionStage } from "@acme/core/validators";
 import { DEFAULT_SPACED_REPETITION_STAGES } from "@acme/core/constants";
 
+import SpacedRepetitionStagesEditor from "~/components/SpacedRepetitionStagesEditor";
 import { Button } from "~/components/ui/button";
-import { Skeleton } from "~/components/ui/skeleton";
 import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
 import { api } from "~/trpc/react";
-
-const SpacedRepetitionStagesEditor = dynamic(
-  () => import("~/components/SpacedRepetitionStagesEditor"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="grid gap-4">
-        <Skeleton className="h-14 border" />
-        <Skeleton className="h-14 border" />
-        <Skeleton className="h-14 border" />
-        <Skeleton className="h-14 border" />
-      </div>
-    ),
-  },
-);
 
 export default function SpacedRepetitionStagesSection() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);

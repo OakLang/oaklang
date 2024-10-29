@@ -246,6 +246,13 @@
       "when": 1729584055950,
       "tag": "0034_sticky_scarlet_witch",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1730129039615,
+      "tag": "0035_blue_mentor",
+      "breakpoints": true
     }
   ]
 }

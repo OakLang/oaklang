@@ -33,8 +33,8 @@ export default async function AdminOverviewPage() {
 
   return (
     <>
-      <AppBar title="Overview" />
-      <div className="container mx-auto my-16 max-w-screen-xl px-4">
+      <AppBar pageTitle="Overview" />
+      <div className="mx-auto my-16 w-full max-w-screen-xl px-4">
         <div>
           <p className="mb-4 font-semibold">Stats</p>
           <InfoTable

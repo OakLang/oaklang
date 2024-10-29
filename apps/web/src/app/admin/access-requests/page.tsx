@@ -4,8 +4,8 @@ import AccessRequestsTable from "./access-requests-table";
 export default function AccessRequestsPage() {
   return (
     <>
-      <AppBar title="Access Requests" />
-      <div className="mx-auto my-16 max-w-screen-xl px-4">
+      <AppBar pageTitle="Access Requests" />
+      <div className="mx-auto my-16 w-full max-w-screen-xl px-4">
         <AccessRequestsTable />
       </div>
     </>

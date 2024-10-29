@@ -19,7 +19,7 @@ export default function GeneralSection() {
 
   const { theme, setTheme } = useTheme();
   const locale = useLocale();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const onChange = (value: string) => {
     startTransition(async () => {
@@ -37,7 +37,7 @@ export default function GeneralSection() {
             <p>{t("language")}</p>
           </div>
           <Select defaultValue={locale} onValueChange={onChange}>
-            <SelectTrigger className="w-48" disabled={isPending}>
+            <SelectTrigger className="w-48" disabled>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

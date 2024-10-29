@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { Exercise1, Exercises } from "@acme/core/constants";
+import { hasPowerUserAccess } from "@acme/core/helpers";
 import { and, desc, eq, isNull, not } from "@acme/db";
 import { db } from "@acme/db/client";
 import { sentencesTable, userWordsTable, wordsTable } from "@acme/db/schema";
@@ -10,6 +11,7 @@ import { wakaq } from "..";
 import {
   getNativeLanguage,
   getOrThrowTrainingSession,
+  getUserSettingsPrompts,
   handleCreateSentences,
   updateTrainingSessionStatus,
 } from "../helpers";
@@ -47,6 +49,7 @@ export const generateSentencesForExercise1 = wakaq.task(
 
       const practiceLanguage = trainingSession.language;
       const nativeLanguage = await getNativeLanguage(trainingSession.userId);
+      const prompts = await getUserSettingsPrompts(trainingSession.userId);
 
       const data = await exercise1Data.parseAsync(trainingSession.data);
 
@@ -86,18 +89,32 @@ export const generateSentencesForExercise1 = wakaq.task(
         .orderBy(desc(sentencesTable.index))
         .limit(20);
 
-      const prompt = Exercise1.getPrompt({
-        PRACTICE_LANGUAGE: practiceLanguage.name,
-        NATIVE_LANGUAGE: nativeLanguage.name,
-        PRACTICE_WORDS: practiceWords.join(", "),
-        KNOWN_WORDS: knownWords.join(", "),
-        PREVIOUSLY_GENERATED_SENTENCES: previouslyGeneratedSentences
-          .map((item) => `${item.index}. ${item.sentence}`)
-          .join(", "),
-        SENTENCE_COUNT: 5,
-        COMPLEXITY: data.complexity,
-        TOPIC: data.topic,
-      });
+      let customPromptTemplate: string | undefined = undefined;
+      if (
+        hasPowerUserAccess(trainingSession.userRole) &&
+        prompts["exercise-1"]?.override &&
+        prompts["exercise-1"].prompt
+      ) {
+        customPromptTemplate = prompts["exercise-1"].prompt;
+      }
+
+      const prompt = Exercise1.getPrompt(
+        {
+          PRACTICE_LANGUAGE: practiceLanguage.name,
+          NATIVE_LANGUAGE: nativeLanguage.name,
+          PRACTICE_WORDS: practiceWords.join(", "),
+          KNOWN_WORDS: knownWords.join(", "),
+          PREVIOUSLY_GENERATED_SENTENCES: previouslyGeneratedSentences
+            .map((item) => `${item.index}. ${item.sentence}`)
+            .join(", "),
+          SENTENCE_COUNT: 5,
+          COMPLEXITY: data.complexity,
+          TOPIC: data.topic,
+        },
+        customPromptTemplate,
+      );
+
+      wakaq.logger?.info(JSON.stringify({ prompt }, null, 2));
 
       const generatedSentences = await generateSentences({
         nativeLanguage: nativeLanguage.name,

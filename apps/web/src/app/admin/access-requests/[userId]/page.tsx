@@ -9,10 +9,12 @@ export default async function AccessRequestReviewPage(props: {
   return (
     <>
       <AppBar
-        title={`Access Request #${userId}`}
-        backHref="/admin/access-requests"
+        breadcrumb={[
+          { href: "/admin/access-requests", title: "Access Requests" },
+        ]}
+        pageTitle={userId}
       />
-      <div className="mx-auto my-16 max-w-screen-lg px-4">
+      <div className="mx-auto my-16 w-full max-w-screen-lg px-4">
         <AccessRequestDetails userId={userId} />
       </div>
     </>

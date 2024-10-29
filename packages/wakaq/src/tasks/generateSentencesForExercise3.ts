@@ -1,12 +1,14 @@
 import { z } from "zod";
 
 import { Exercise3, Exercises } from "@acme/core/constants";
+import { hasPowerUserAccess } from "@acme/core/helpers";
 import { exercise3Data } from "@acme/db/validators";
 
 import { wakaq } from "..";
 import {
   getNativeLanguage,
   getOrThrowTrainingSession,
+  getUserSettingsPrompts,
   handleCreateSentences,
   updateTrainingSessionStatus,
 } from "../helpers";
@@ -45,6 +47,7 @@ export const generateSentencesForExercise3 = wakaq.task(
 
       const practiceLanguage = trainingSession.language;
       const nativeLanguage = await getNativeLanguage(trainingSession.userId);
+      const prompts = await getUserSettingsPrompts(trainingSession.userId);
 
       const data = await exercise3Data.parseAsync(trainingSession.data);
 
@@ -52,23 +55,49 @@ export const generateSentencesForExercise3 = wakaq.task(
 
       switch (data.learnFrom) {
         case "ask-ai": {
-          prompt = Exercise3.getAskAIPrompt({
-            PRACTICE_LANGUAGE: practiceLanguage.name,
-            NATIVE_LANGUAGE: nativeLanguage.name,
-            COMPLEXITY: data.complexity,
-            TOPIC: data.topic,
-          });
+          let customPromptTemplate: string | undefined = undefined;
+          if (
+            hasPowerUserAccess(trainingSession.userRole) &&
+            prompts["exercise-3.ask-ai"]?.override &&
+            prompts["exercise-3.ask-ai"].prompt
+          ) {
+            customPromptTemplate = prompts["exercise-3.ask-ai"].prompt;
+          }
+
+          prompt = Exercise3.getAskAIPrompt(
+            {
+              PRACTICE_LANGUAGE: practiceLanguage.name,
+              NATIVE_LANGUAGE: nativeLanguage.name,
+              COMPLEXITY: data.complexity,
+              TOPIC: data.topic,
+            },
+            customPromptTemplate,
+          );
           break;
         }
         case "content": {
-          prompt = Exercise3.getContentPrompt({
-            PRACTICE_LANGUAGE: practiceLanguage.name,
-            NATIVE_LANGUAGE: nativeLanguage.name,
-            CONTENT: data.content,
-          });
+          let customPromptTemplate: string | undefined = undefined;
+          if (
+            hasPowerUserAccess(trainingSession.userRole) &&
+            prompts["exercise-3.content"]?.override &&
+            prompts["exercise-3.content"].prompt
+          ) {
+            customPromptTemplate = prompts["exercise-3.content"].prompt;
+          }
+
+          prompt = Exercise3.getContentPrompt(
+            {
+              PRACTICE_LANGUAGE: practiceLanguage.name,
+              NATIVE_LANGUAGE: nativeLanguage.name,
+              CONTENT: data.content,
+            },
+            customPromptTemplate,
+          );
           break;
         }
       }
+
+      wakaq.logger?.info(JSON.stringify({ prompt }, null, 2));
 
       if (!prompt) {
         await updateTrainingSessionStatus(trainingSessionId, "error");

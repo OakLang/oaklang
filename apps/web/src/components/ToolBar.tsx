@@ -37,7 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Sheet, SheetContent } from "~/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "~/components/ui/sheet";
 import { Slider } from "~/components/ui/slider";
 import {
   Tooltip,
@@ -216,6 +216,7 @@ export default function ToolBar({
           side="bottom"
           className="h-screen border-none p-0 md:left-4 md:right-4 md:h-[calc(100vh-2rem)] md:rounded-t-xl"
         >
+          <SheetTitle className="sr-only">App Settings</SheetTitle>
           <AppSettings />
         </SheetContent>
       </Sheet>

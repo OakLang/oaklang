@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import {
   BookOpenIcon,
-  BookUserIcon,
+  BotIcon,
   LanguagesIcon,
   SettingsIcon,
   UserIcon,
@@ -23,8 +23,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
+import { useHasPowerUserAccess } from "~/hooks/useHasPowerUserAccess";
 
 export default function SettingsSidebar() {
+  const hasPowerUserAccess = useHasPowerUserAccess();
   const { languageCode } = useParams<LanguageCodeParams>();
   const t = useTranslations("Settings.SideBar");
   const pathname = usePathname();
@@ -35,11 +37,6 @@ export default function SettingsSidebar() {
         title: t("account"),
         icon: UserIcon,
         exact: true,
-      },
-      {
-        url: `/app/${languageCode}/settings/profile`,
-        title: t("profile"),
-        icon: BookUserIcon,
       },
       {
         url: `/app/${languageCode}/settings/preferences`,
@@ -56,8 +53,17 @@ export default function SettingsSidebar() {
         title: t("languages"),
         icon: LanguagesIcon,
       },
+      ...(hasPowerUserAccess
+        ? [
+            {
+              url: `/app/${languageCode}/settings/ai-prompts`,
+              title: "AI Prompts",
+              icon: BotIcon,
+            },
+          ]
+        : []),
     ],
-    [languageCode, t],
+    [hasPowerUserAccess, languageCode, t],
   );
 
   return (

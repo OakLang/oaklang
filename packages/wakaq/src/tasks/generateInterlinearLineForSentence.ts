@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import type { InterlinearLine } from "@acme/core/validators";
 import { generateInterlinearLinesForSentencePrompt } from "@acme/core/constants/prompt-templates";
+import { hasPowerUserAccess } from "@acme/core/helpers";
 import { eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
@@ -22,6 +23,7 @@ import {
   getInterlinearLines,
   getNativeLanguage,
   getOrCreateWords,
+  getUserSettingsPrompts,
 } from "../helpers";
 
 const buildSentenceWordsGPTSchema = ({
@@ -68,6 +70,7 @@ export const generateInterlinearLineForSentence = wakaq.task(
         languageCode: trainingSessionsTable.languageCode,
         userId: usersTable.id,
         userEmail: usersTable.email,
+        userRole: usersTable.role,
         language: languagesTable,
       })
       .from(sentencesTable)
@@ -110,12 +113,26 @@ export const generateInterlinearLineForSentence = wakaq.task(
       const practiceLanguage = sentence.language;
       const nativeLanguage = await getNativeLanguage(sentence.userId);
       const interlinearLines = await getInterlinearLines(sentence.userId);
+      const prompts = await getUserSettingsPrompts(sentence.userId);
 
-      const prompt = generateInterlinearLinesForSentencePrompt({
-        NATIVE_LANGUAGE: nativeLanguage.name,
-        PRACTICE_LANGUAGE: practiceLanguage.name,
-        SENTENCE: sentence.sentence,
-      });
+      let customPromptTemplate: string | undefined = undefined;
+
+      if (
+        hasPowerUserAccess(sentence.userRole) &&
+        prompts["interlinear-lines-for-sentence"]?.override &&
+        prompts["interlinear-lines-for-sentence"].prompt
+      ) {
+        customPromptTemplate = prompts["interlinear-lines-for-sentence"].prompt;
+      }
+
+      const prompt = generateInterlinearLinesForSentencePrompt(
+        {
+          NATIVE_LANGUAGE: nativeLanguage.name,
+          PRACTICE_LANGUAGE: practiceLanguage.name,
+          SENTENCE: sentence.sentence,
+        },
+        customPromptTemplate,
+      );
 
       const schema = buildSentenceWordsGPTSchema({
         nativeLanguage: nativeLanguage.name,

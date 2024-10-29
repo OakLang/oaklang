@@ -1,3 +1,4 @@
+import type { Prompts } from "@acme/core/validators";
 import type { Language, TrainingSession } from "@acme/db/schema";
 import { FINITE_EXERCISES } from "@acme/core/constants";
 import { and, desc, eq, inArray } from "@acme/db";
@@ -33,6 +34,20 @@ export async function getNativeLanguage(userId: string): Promise<Language> {
   return nativeLanguage;
 }
 
+export async function getUserSettingsPrompts(userId: string): Promise<Prompts> {
+  const userSettingsResult = await db
+    .select({
+      prompts: userSettingsTable.prompts,
+    })
+    .from(userSettingsTable)
+    .where(eq(userSettingsTable.userId, userId));
+  const prompts = userSettingsResult[0]?.prompts;
+  if (!prompts) {
+    throw new Error(`prompts not found for user ${userId}`);
+  }
+  return prompts;
+}
+
 export async function getOrThrowTrainingSession(trainingSessionId: string) {
   const [trainingSession] = await db
     .select({
@@ -44,6 +59,7 @@ export async function getOrThrowTrainingSession(trainingSessionId: string) {
       language: languagesTable,
       userId: usersTable.id,
       userEmail: usersTable.email,
+      userRole: usersTable.role,
     })
     .from(trainingSessionsTable)
     .innerJoin(

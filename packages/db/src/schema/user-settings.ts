@@ -4,14 +4,19 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 import type {
-  InterlinearLine,
+  InterlinearLines,
+  Prompts,
   SpacedRepetitionStage,
 } from "@acme/core/validators";
 import {
   DEFAULT_INTERLINEAR_LINES,
   DEFAULT_SPACED_REPETITION_STAGES,
 } from "@acme/core/constants";
-import { interlinearLine, spacedRepetitionStage } from "@acme/core/validators";
+import {
+  interlinearLines,
+  prompts,
+  spacedRepetitionStage,
+} from "@acme/core/validators";
 
 import { createPrefixedId } from "../utils";
 import { usersTable } from "./auth";
@@ -26,7 +31,7 @@ export const userSettingsTable = pgTable("user_settings", {
     .unique()
     .references(() => usersTable.id, { onDelete: "cascade" }),
   interlinearLines: jsonb("interlinear_lines")
-    .$type<InterlinearLine[]>()
+    .$type<InterlinearLines>()
     .notNull()
     .default(DEFAULT_INTERLINEAR_LINES),
   spacedRepetitionStages: jsonb("spaced_repetition_stages")
@@ -38,10 +43,9 @@ export const userSettingsTable = pgTable("user_settings", {
   ttsSpeed: real("tts_speed").notNull().default(1),
   nativeLanguage: text("native_language").references(
     () => languagesTable.code,
-    {
-      onDelete: "set null",
-    },
+    { onDelete: "set null" },
   ),
+  prompts: jsonb("prompts").notNull().$type<Prompts>().default({}),
 });
 
 export type UserSettings = typeof userSettingsTable.$inferSelect;
@@ -62,7 +66,8 @@ export const userSettingsRelations = relations(
 );
 
 export const updateUserSettingsSchema = createInsertSchema(userSettingsTable, {
-  interlinearLines: z.array(interlinearLine).min(1),
+  interlinearLines,
+  prompts,
   spacedRepetitionStages: z.array(spacedRepetitionStage).min(1),
   ttsSpeed: z.number().min(0.25).max(4),
 }).pick({
@@ -72,6 +77,7 @@ export const updateUserSettingsSchema = createInsertSchema(userSettingsTable, {
   ttsVoice: true,
   nativeLanguage: true,
   spacedRepetitionStages: true,
+  prompts: true,
 });
 
 export type UpdateUserSettingsInput = z.infer<typeof updateUserSettingsSchema>;
