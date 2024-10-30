@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { asc, createSelectSchema, eq } from "@acme/db";
+import { and, asc, createSelectSchema, eq } from "@acme/db";
 import {
   sentencesTable,
   sentenceWordsTable,
@@ -39,7 +39,10 @@ export const sentencesRouter = createTRPCRouter({
         .innerJoin(wordsTable, eq(wordsTable.id, sentenceWordsTable.wordId))
         .leftJoin(
           userWordsTable,
-          eq(userWordsTable.wordId, sentenceWordsTable.wordId),
+          and(
+            eq(userWordsTable.wordId, sentenceWordsTable.wordId),
+            eq(userWordsTable.userId, ctx.session.user.id),
+          ),
         )
         .where(eq(sentenceWordsTable.sentenceId, input.sentenceId))
         .orderBy(asc(sentenceWordsTable.index));
