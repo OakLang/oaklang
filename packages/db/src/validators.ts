@@ -8,7 +8,7 @@ const baseSchema = z.object({
 });
 
 export const exercise1Data = z.object({
-  topic: z.string().min(1, "Topic is required").max(300),
+  topic: z.string().min(1, "Topic is required").max(1000),
   complexity: z.enum(COMPLEXITY_LIST),
   words: z.array(z.string()).optional(),
 });
@@ -35,7 +35,7 @@ export const exercise2Data = z.discriminatedUnion("learnFrom", [
       .min(1)
       .max(50),
     eachWordPracticeCount: z.number().min(1).max(10),
-    topic: z.string().min(1, "Topic is required").max(300),
+    topic: z.string().min(1, "Topic is required").max(1000),
     complexity: z.enum(COMPLEXITY_LIST),
   }),
   z.object({
@@ -45,7 +45,7 @@ export const exercise2Data = z.discriminatedUnion("learnFrom", [
       .int()
       .min(1)
       .max(50),
-    topic: z.string().min(1, "Topic is required").max(300),
+    topic: z.string().min(1, "Topic is required").max(1000),
     complexity: z.enum(COMPLEXITY_LIST),
   }),
 ]);
@@ -60,11 +60,11 @@ export type Exercise2FormData = z.infer<typeof exercise2Schema>;
 export const exercise3Data = z.discriminatedUnion("learnFrom", [
   z.object({
     learnFrom: z.literal("content"),
-    content: z.string().min(1).max(1000),
+    content: z.string().min(1).max(10000),
   }),
   z.object({
     learnFrom: z.literal("ask-ai"),
-    topic: z.string().min(1).max(300),
+    topic: z.string().min(1).max(1000),
     complexity: z.enum(COMPLEXITY_LIST),
   }),
 ]);
