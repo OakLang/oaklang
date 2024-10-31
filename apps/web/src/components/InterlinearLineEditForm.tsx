@@ -166,39 +166,37 @@ export const InterlinearLineEditForm = ({
   return (
     <div className="grid gap-8 p-4">
       <div className="grid gap-4">
-        {disabled ? null : !hasPowerUserAccess ? null : (
-          <>
-            <fieldset className="col-span-full grid gap-2">
-              <Label htmlFor="interlinear-line-name">Name</Label>
-              <Input
-                id="interlinear-line-name"
-                value={item.name}
-                onChange={(e) => onChangeName(e)}
-              />
-            </fieldset>
+        <fieldset className="col-span-full grid gap-2">
+          <Label htmlFor="interlinear-line-name">Name</Label>
+          <Input
+            id="interlinear-line-name"
+            value={item.name}
+            onChange={(e) => onChangeName(e)}
+            disabled={!hasPowerUserAccess || disabled}
+          />
+        </fieldset>
 
-            <fieldset className="col-span-full grid gap-2">
-              <Label htmlFor={`interlinear-line-gpt-prompt`}>Description</Label>
-              <Textarea
-                id="interlinear-line-gpt-prompt"
-                value={item.description}
-                rows={3}
-                className="max-h-48 min-h-0"
-                onChange={(e) => onChangeDescription(e)}
-              />
-              <p className="text-muted-foreground text-sm">
-                Available keys{" "}
-                {format.list(
-                  INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS.map((key) => (
-                    <code key={key} className="font-semibold">
-                      {key}
-                    </code>
-                  )),
-                )}
-              </p>
-            </fieldset>
-          </>
-        )}
+        <fieldset className="col-span-full grid gap-2">
+          <Label htmlFor={`interlinear-line-gpt-prompt`}>Description</Label>
+          <Textarea
+            id="interlinear-line-gpt-prompt"
+            value={item.description}
+            rows={3}
+            className="max-h-48 min-h-0"
+            onChange={(e) => onChangeDescription(e)}
+            disabled={!hasPowerUserAccess}
+          />
+          <p className="text-muted-foreground text-sm">
+            Available keys{" "}
+            {format.list(
+              INTERLINEAR_LINE_DESCRIPTION_AVAILABLE_KEYS.map((key) => (
+                <code key={key} className="font-semibold">
+                  {key}
+                </code>
+              )),
+            )}
+          </p>
+        </fieldset>
 
         <fieldset className="col-span-full flex items-center justify-between">
           <Label htmlFor="hide-line">Hide Line</Label>
