@@ -1,4 +1,6 @@
 import { useCallback, useMemo } from "react";
+import { useIsFetching } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 import {
   CheckIcon,
   ChevronLeftIcon,
@@ -17,6 +19,7 @@ import InterlinearView from "./InterlinearView";
 import ToolBar from "./ToolBar";
 import TrainingProgressBar from "./TrainingProgressBar";
 import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export function SentenceView({
@@ -36,6 +39,13 @@ export function SentenceView({
 
   const utils = api.useUtils();
   const changeSentenceIndex = useChangeSentenceIndex();
+
+  const sentenceQuery = api.sentences.getSentence.useQuery(
+    { sentenceId: sentence?.id ?? "" },
+    {
+      enabled: false,
+    },
+  );
 
   const isInfiniteExercise = INFINITE_EXERCISES.includes(
     trainingSession.exercise,
@@ -165,12 +175,20 @@ export function SentenceView({
                 {sentence ? (
                   <div className="mx-auto flex w-full max-w-screen-md flex-1 flex-col">
                     <div className="mb-8 flex items-center justify-center gap-2 md:mb-8">
-                      <AudioPlayButton
-                        text={sentence.sentence}
-                        autoPlay={
-                          userSettingsQuery.data?.autoPlayAudio === true
-                        }
-                      />
+                      {sentenceQuery.data?.interlinearLineGenerationStatus ===
+                      "success" ? (
+                        <AudioPlayButton
+                          text={sentence.sentence}
+                          autoPlay={
+                            userSettingsQuery.data?.autoPlayAudio === true
+                          }
+                        />
+                      ) : (
+                        <>
+                          <Skeleton className="h-14 w-14 rounded-full" />
+                          <Skeleton className="h-10 w-14 rounded-full" />
+                        </>
+                      )}
                     </div>
                     <InterlinearView
                       sentences={[sentence]}
