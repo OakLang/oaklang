@@ -170,9 +170,11 @@ export const generateInterlinearLineForSentence = wakaq.task(
         [x: string]: string;
       }[];
 
-      const primaryWords = filterdInterlinearColumns.map((item) => item.lemma);
+      const uniqueWords = [
+        ...new Set(filterdInterlinearColumns.map((item) => item.lemma)),
+      ];
       const insertedWords = await getOrCreateWords(
-        [...new Set(primaryWords)],
+        uniqueWords,
         sentence.languageCode,
       );
 

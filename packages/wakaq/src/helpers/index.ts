@@ -167,15 +167,19 @@ export const getOrCreateWords = async (
         inArray(wordsTable.word, words),
       ),
     );
-  const values = words
-    .filter((word) => !existingWords.find((item) => item.word === word))
-    .map(
-      (word) =>
-        ({
-          languageCode,
-          word,
-        }) satisfies typeof wordsTable.$inferInsert,
-    );
+  const values = [
+    ...new Set(
+      words
+        .filter((word) => !existingWords.find((item) => item.word === word))
+        .map(
+          (word) =>
+            ({
+              languageCode,
+              word,
+            }) satisfies typeof wordsTable.$inferInsert,
+        ),
+    ),
+  ];
 
   if (values.length > 0) {
     const newWords = await db.insert(wordsTable).values(values).returning();

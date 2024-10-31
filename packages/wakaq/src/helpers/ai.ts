@@ -121,7 +121,7 @@ export async function getMoreWords({
     },
   });
 
-  const words = result.object.words;
+  const words = [...new Set(result.object.words)];
 
   const newWords = await getOrCreateWords(words, practiceLanguage.code);
   await insertUserWords(newWords, userId);
