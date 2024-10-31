@@ -161,7 +161,7 @@ export default function ContentView() {
         )}
       </div>
 
-      <div className="flex items-center border-t p-4">
+      <div className="flex h-20 items-center px-4">
         <div className="flex-1"></div>
         {FINITE_EXERCISES.includes(trainingSessionQuery.data.exercise) && (
           <div className="bg-secondary flex gap-1 rounded-lg p-1">
@@ -176,13 +176,16 @@ export default function ContentView() {
                     });
                   }
                 }}
-                className={cn("text-muted-foreground h-8", {
-                  "bg-background text-foreground hover:bg-background hover:text-foreground":
-                    view.value === trainingSessionQuery.data.view,
-                })}
+                className={cn(
+                  "text-muted-foreground h-fit w-32 justify-center gap-0 py-3",
+                  {
+                    "bg-background text-foreground hover:bg-background hover:text-foreground":
+                      view.value === trainingSessionQuery.data.view,
+                  },
+                )}
               >
-                <view.icon className="-ml-1 mr-2 h-5 w-5" />
-                {view.name}
+                <view.icon className="mr-2 h-5 w-5" />
+                <span>{view.name}</span>
               </Button>
             ))}
           </div>

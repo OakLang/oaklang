@@ -3,13 +3,10 @@
 import { useState } from "react";
 import { PlusIcon } from "lucide-react";
 
-import type { Word } from "@acme/db/schema";
-
 import StartTrainingDialog from "~/components/dialogs/start-training-dialog";
 import { Button } from "~/components/ui/button";
 
 export default function StartLearningButton() {
-  const [wordsList, setWordsList] = useState<Word[]>([]);
   const [showTrainigSessionDialog, setShowTrainigSessionDialog] =
     useState(false);
 
@@ -22,13 +19,7 @@ export default function StartLearningButton() {
 
       <StartTrainingDialog
         open={showTrainigSessionDialog}
-        onOpenChange={(open) => {
-          setShowTrainigSessionDialog(open);
-          if (!open) {
-            setWordsList([]);
-          }
-        }}
-        words={wordsList.map((word) => word.word)}
+        onOpenChange={setShowTrainigSessionDialog}
       />
     </>
   );

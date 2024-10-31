@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { ChevronLeftIcon } from "lucide-react";
 
 import type { TrainingSession } from "@acme/db/schema";
 
 import { api } from "~/trpc/react";
+import StartTrainingDialog from "./dialogs/start-training-dialog";
 import RenderQueryResult from "./RenderQueryResult";
 import ToolBar from "./ToolBar";
 import { Badge } from "./ui/badge";
@@ -15,6 +17,8 @@ export function SessionComplete({
   trainingSession: TrainingSession;
   onBack: () => void;
 }) {
+  const [showTrainigSessionDialog, setShowTrainigSessionDialog] =
+    useState(false);
   const knownWordsQuery =
     api.trainingSessions.getAllKnownWordsFromSession.useQuery({
       trainingSessionId: trainingSession.id,
@@ -64,6 +68,17 @@ export function SessionComplete({
                   );
                 }}
               </RenderQueryResult>
+
+              <div className="my-16 space-y-4">
+                <Button onClick={() => setShowTrainigSessionDialog(true)}>
+                  Start a new Session
+                </Button>
+
+                <StartTrainingDialog
+                  open={showTrainigSessionDialog}
+                  onOpenChange={setShowTrainigSessionDialog}
+                />
+              </div>
             </div>
           </div>
 
