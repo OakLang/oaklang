@@ -26,6 +26,12 @@ export const trainingSessionStatus = pgEnum("training_session_status", [
   "canceled",
 ]);
 
+export const trainingSessionView = pgEnum("training_session_view", [
+  "scroll",
+  "page",
+  "sentence",
+]);
+
 export const trainingSessionsTable = pgTable("training_session", {
   id: text("id")
     .primaryKey()
@@ -49,6 +55,7 @@ export const trainingSessionsTable = pgTable("training_session", {
       words: [],
     } satisfies Exercise1FormData["data"]),
   status: trainingSessionStatus("status").notNull().default("idle"),
+  view: trainingSessionView("view").notNull().default("sentence"),
 });
 
 export type TrainingSession = typeof trainingSessionsTable.$inferSelect;

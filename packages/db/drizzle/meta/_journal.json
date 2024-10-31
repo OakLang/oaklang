@@ -253,6 +253,13 @@
       "when": 1730129039615,
       "tag": "0035_blue_mentor",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1730358047787,
+      "tag": "0036_motionless_vision",
+      "breakpoints": true
     }
   ]
 }

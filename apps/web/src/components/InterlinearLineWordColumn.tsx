@@ -72,10 +72,7 @@ export default function InterlinearLineWordColumn({
   });
 
   return (
-    <div
-      className="mb-16 mr-4 inline-flex flex-col items-center gap-2"
-      ref={ref}
-    >
+    <span className="flex flex-col items-center gap-2" ref={ref}>
       {userSettingsQuery.data?.interlinearLines
         .filter((line) => !line.hidden)
         .map((line) => {
@@ -89,7 +86,7 @@ export default function InterlinearLineWordColumn({
             />
           );
         })}
-    </div>
+    </span>
   );
 }
 

@@ -1,9 +1,11 @@
-import { createContext, memo, useCallback } from "react";
+import { createContext, memo, useCallback, useRef } from "react";
 
 import type { Sentence } from "@acme/db/schema";
 
 import type { RouterOutputs } from "~/trpc/react";
 import { useIntersectionObserver } from "~/hooks/useIntersectionObserver";
+import useOnScreen from "~/hooks/useOnScreen";
+import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import InterlinearLineWordColumn from "./InterlinearLineWordColumn";
 import { Button } from "./ui/button";
@@ -18,6 +20,8 @@ export default function InterlinearLineSentence({
 }: {
   sentence: Sentence;
 }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useOnScreen(ref);
   const utils = api.useUtils();
   const sentenceQuery = api.sentences.getSentence.useQuery(
     { sentenceId: sentence.id },
@@ -29,6 +33,7 @@ export default function InterlinearLineSentence({
         }
         return false;
       },
+      enabled: inView,
     },
   );
   const regenerateSentenceInterlinearLines =
@@ -40,64 +45,54 @@ export default function InterlinearLineSentence({
       },
     });
 
-  if (sentenceQuery.isError) {
-    return <p>{sentenceQuery.error.message}</p>;
-  }
-
-  if (
-    sentenceQuery.isPending ||
-    sentenceQuery.data.interlinearLineGenerationStatus === "idle" ||
-    sentenceQuery.data.interlinearLineGenerationStatus === "pending"
-  ) {
-    return <SentenceLoader />;
-  }
-
-  if (sentenceQuery.data.interlinearLineGenerationStatus === "canceled") {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 py-8">
-        <p className="text-muted-foreground text-center">
-          Interlinear Lines generation canceled
-        </p>
-        <Button
-          onClick={() =>
-            regenerateSentenceInterlinearLines.mutate({
-              sentenceId: sentenceQuery.data.id,
-            })
-          }
-          disabled={regenerateSentenceInterlinearLines.isPending}
-          className="pointer-events-auto"
-        >
-          Regenerate
-        </Button>
-      </div>
-    );
-  }
-
-  if (sentenceQuery.data.interlinearLineGenerationStatus === "failed") {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 py-8">
-        <p className="text-muted-foreground text-center">
-          Interlinear Lines generation failed
-        </p>
-        <Button
-          onClick={() =>
-            regenerateSentenceInterlinearLines.mutate({
-              sentenceId: sentenceQuery.data.id,
-            })
-          }
-          disabled={regenerateSentenceInterlinearLines.isPending}
-          className="pointer-events-auto"
-        >
-          Regenerate
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <SentenceContext.Provider value={{ sentence: sentenceQuery.data }}>
-      <RenderSentence sentence={sentenceQuery.data} />
-    </SentenceContext.Provider>
+    <div ref={ref}>
+      {sentenceQuery.isError ? (
+        <p>{sentenceQuery.error.message}</p>
+      ) : sentenceQuery.isPending ||
+        sentenceQuery.data.interlinearLineGenerationStatus === "idle" ||
+        sentenceQuery.data.interlinearLineGenerationStatus === "pending" ? (
+        <SentenceLoader />
+      ) : sentenceQuery.data.interlinearLineGenerationStatus === "canceled" ? (
+        <div className="flex flex-col items-center justify-center gap-4 py-8">
+          <p className="text-muted-foreground text-center">
+            Interlinear Lines generation canceled
+          </p>
+          <Button
+            onClick={() =>
+              regenerateSentenceInterlinearLines.mutate({
+                sentenceId: sentenceQuery.data.id,
+              })
+            }
+            disabled={regenerateSentenceInterlinearLines.isPending}
+            className="pointer-events-auto"
+          >
+            Regenerate
+          </Button>
+        </div>
+      ) : sentenceQuery.data.interlinearLineGenerationStatus === "failed" ? (
+        <div className="flex flex-col items-center justify-center gap-4 py-8">
+          <p className="text-muted-foreground text-center">
+            Interlinear Lines generation failed
+          </p>
+          <Button
+            onClick={() =>
+              regenerateSentenceInterlinearLines.mutate({
+                sentenceId: sentenceQuery.data.id,
+              })
+            }
+            disabled={regenerateSentenceInterlinearLines.isPending}
+            className="pointer-events-auto"
+          >
+            Regenerate
+          </Button>
+        </div>
+      ) : (
+        <SentenceContext.Provider value={{ sentence: sentenceQuery.data }}>
+          <RenderSentence sentence={sentenceQuery.data} />
+        </SentenceContext.Provider>
+      )}
+    </div>
   );
 }
 
@@ -107,6 +102,7 @@ function RenderSentence({
   sentence: RouterOutputs["sentences"]["getSentence"];
 }) {
   const utils = api.useUtils();
+  const fontSize = useAppStore((state) => state.fontSize);
 
   const markSentencesCompletedMut =
     api.sentences.markSentenceComplete.useMutation({
@@ -135,7 +131,14 @@ function RenderSentence({
   });
 
   return (
-    <div ref={ref}>
+    <div
+      ref={ref}
+      className="flex flex-wrap"
+      style={{
+        columnGap: `${(0.5 * fontSize) / 16}rem`,
+        rowGap: `${(2 * fontSize) / 16}rem`,
+      }}
+    >
       {sentence.words.map((word) => (
         <InterlinearLineWordColumn
           key={`${word.word.id}-${word.index}`}
@@ -148,20 +151,31 @@ function RenderSentence({
 
 const SentenceLoader = memo(() => {
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const fontSize = useAppStore((state) => state.fontSize);
 
-  return Array.from({ length: 5 }).map((_, i) => (
-    <div className="mb-16 mr-4 inline-flex flex-col items-center gap-2" key={i}>
-      {userSettingsQuery.data?.interlinearLines.map((line) => (
-        <Skeleton
-          className="inline"
-          style={{
-            height: line.style.fontSize,
-            width:
-              (Math.random() * (40 - 10) + 40) * (line.style.fontSize / 16),
-          }}
-          key={line.id}
-        />
+  return (
+    <div
+      className="flex flex-wrap"
+      style={{
+        columnGap: `${(0.5 * fontSize) / 16}rem`,
+        rowGap: `${(2 * fontSize) / 16}rem`,
+      }}
+    >
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div className="flex flex-col items-center gap-2" key={i}>
+          {userSettingsQuery.data?.interlinearLines.map((line) => (
+            <Skeleton
+              className="inline"
+              style={{
+                height: line.style.fontSize,
+                width:
+                  (Math.random() * (40 - 10) + 40) * (line.style.fontSize / 16),
+              }}
+              key={line.id}
+            />
+          ))}
+        </div>
       ))}
     </div>
-  ));
+  );
 });

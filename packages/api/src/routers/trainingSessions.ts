@@ -7,6 +7,7 @@ import {
   languagesTable,
   practiceLanguagesTable,
   trainingSessionsTable,
+  trainingSessionView,
   userWordsTable,
   wordsTable,
 } from "@acme/db/schema";
@@ -176,6 +177,36 @@ export const trainingSessionsRouter = createTRPCRouter({
           .update(trainingSessionsTable)
           .set({
             sentenceIndex,
+          })
+          .where(eq(trainingSessionsTable.id, trainingSession.id))
+          .returning();
+
+        if (!updatedTrainingSession) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        }
+
+        return updatedTrainingSession;
+      },
+    ),
+  changeView: protectedProcedure
+    .input(
+      z.object({
+        trainingSessionId: z.string(),
+        view: z.enum(trainingSessionView.enumValues),
+      }),
+    )
+    .mutation(
+      async ({ ctx: { db, session }, input: { view, trainingSessionId } }) => {
+        const trainingSession = await getTrainingSessionOrThrow(
+          trainingSessionId,
+          db,
+          session,
+        );
+
+        const [updatedTrainingSession] = await db
+          .update(trainingSessionsTable)
+          .set({
+            view,
           })
           .where(eq(trainingSessionsTable.id, trainingSession.id))
           .returning();
