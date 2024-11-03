@@ -28,7 +28,19 @@ export default function AppBar({ languageCode }: { languageCode: string }) {
             )}
             href={`/app/${languageCode}`}
           >
-            Training
+            Learning
+          </Link>
+          <Link
+            className={cn(
+              "text-muted-foreground hover:text-foreground text-sm font-medium",
+              {
+                "text-foreground":
+                  pathname === `/app/${languageCode}/collections`,
+              },
+            )}
+            href={`/app/${languageCode}/collections`}
+          >
+            Collections
           </Link>
           <Link
             className={cn(
