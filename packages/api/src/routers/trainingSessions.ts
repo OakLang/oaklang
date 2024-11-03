@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { Exercises } from "@acme/core/constants";
-import { and, count, desc, eq } from "@acme/db";
+import { ALL_EXERCISES, Exercises } from "@acme/core/constants";
+import { and, asc, count, desc, eq, ilike, inArray, or } from "@acme/db";
 import {
   languagesTable,
   practiceLanguagesTable,
@@ -44,9 +44,15 @@ export const trainingSessionsRouter = createTRPCRouter({
         languageCode: z.string(),
         limit: z.number().optional().default(10),
         cursor: z.number().optional().default(0),
+        search: z.string().nullish(),
+        exercises: z.array(z.string()).optional(),
+        orderBy: z
+          .enum(["createdAt", "title", "lastPracticedAt"])
+          .default("createdAt"),
       }),
     )
     .query(async ({ ctx: { db, session }, input }) => {
+      console.log({ input });
       const trainingSessionList = await db
         .select()
         .from(trainingSessionsTable)
@@ -58,11 +64,28 @@ export const trainingSessionsRouter = createTRPCRouter({
           and(
             eq(trainingSessionsTable.userId, session.user.id),
             eq(trainingSessionsTable.languageCode, input.languageCode),
+            ...(input.exercises && input.exercises.length > 0
+              ? [inArray(trainingSessionsTable.exercise, input.exercises)]
+              : []),
+            ...(input.search
+              ? [
+                  or(
+                    eq(trainingSessionsTable.id, input.search),
+                    ilike(trainingSessionsTable.title, `%${input.search}%`),
+                  ),
+                ]
+              : []),
           ),
         )
         .limit(input.limit)
         .offset(input.cursor)
-        .orderBy(desc(trainingSessionsTable.createdAt));
+        .orderBy(
+          input.orderBy === "title"
+            ? asc(trainingSessionsTable.title)
+            : input.orderBy === "lastPracticedAt"
+              ? desc(trainingSessionsTable.lastPracticedAt)
+              : desc(trainingSessionsTable.createdAt),
+        );
 
       const list = await Promise.all(
         trainingSessionList
@@ -81,6 +104,9 @@ export const trainingSessionsRouter = createTRPCRouter({
               ...ts,
               newWordsCount: newWords?.count ?? 0,
               knownWordsCount: knownWords?.count ?? 0,
+              exercise: ALL_EXERCISES.find(
+                (exercise) => exercise.id === ts.exercise,
+              ),
             };
           }),
       );

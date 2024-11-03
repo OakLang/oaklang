@@ -56,6 +56,7 @@ export const trainingSessionsTable = pgTable("training_session", {
     } satisfies Exercise1FormData["data"]),
   status: trainingSessionStatus("status").notNull().default("idle"),
   view: trainingSessionView("view").notNull().default("sentence"),
+  lastPracticedAt: timestamp("last_practiced_at"),
 });
 
 export type TrainingSession = typeof trainingSessionsTable.$inferSelect;

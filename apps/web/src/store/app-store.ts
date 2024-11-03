@@ -2,12 +2,29 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import type { SentenceWord } from "@acme/db/schema";
-import {
-  EXERCISE_1_PROMPT_TEMPLATE,
-  GENERATE_INTERLINEAR_LINES_FOR_SENTENCE_PROMPT_TEMPLATE,
-} from "@acme/core/constants/prompt-templates";
 
+import type { RouterInputs } from "~/trpc/react";
 import { storage } from "~/lib/storage";
+
+type OrderBy =
+  RouterInputs["trainingSessions"]["getTrainingSessions"]["orderBy"];
+
+export interface SessionsListDisplay {
+  orderBy: OrderBy;
+  properties: {
+    title: boolean;
+    createdAt: boolean;
+    lastPracticedAt: boolean;
+    newWordsCounter: boolean;
+    knownWordsCounter: boolean;
+    progress: boolean;
+    language: boolean;
+    exercise: boolean;
+  };
+}
+export interface SessionsListFilter {
+  exercises: string[];
+}
 
 export interface AppState {
   inspectedWord: SentenceWord | null;
@@ -15,6 +32,8 @@ export interface AppState {
   fontSize: number;
   collectionsCollapced: Record<string, boolean>;
   playgroundPlaybackSpeed: number;
+  sessionsListDisplay: SessionsListDisplay;
+  sessionsListFilter: SessionsListFilter;
 }
 
 export interface AppActions {
@@ -24,6 +43,8 @@ export interface AppActions {
   collapceCollection: (collectionId: string) => void;
   expandCollection: (collectionId: string) => void;
   setPlaygroundPlaybackSpeed: (speed: number) => void;
+  setSessionsListDisplay: (options: SessionsListDisplay) => void;
+  setSessionsListFilter: (options: SessionsListFilter) => void;
 }
 
 export type AppStore = AppState & AppActions;
@@ -32,14 +53,25 @@ export const useAppStore = create<AppStore>()(
   persist(
     (set) => ({
       fontSize: 16,
-      exercise1PromptTemplate: EXERCISE_1_PROMPT_TEMPLATE.trim(),
-      overrideExercise1PromptTemplate: false,
-      interlinearLinesPromptTemplate:
-        GENERATE_INTERLINEAR_LINES_FOR_SENTENCE_PROMPT_TEMPLATE.trim(),
-      overrideGenerateSentenceWordsPromptTemplate: false,
       inspectedWord: null,
       inspectionPanelOpen: false,
       collectionsCollapced: {},
+      sessionsListDisplay: {
+        orderBy: "createdAt",
+        properties: {
+          title: true,
+          createdAt: false,
+          lastPracticedAt: true,
+          knownWordsCounter: true,
+          language: false,
+          newWordsCounter: true,
+          progress: true,
+          exercise: true,
+        },
+      },
+      sessionsListFilter: {
+        exercises: [],
+      },
       playgroundPlaybackSpeed: 1,
       setFontSize: (fontSize) => set({ fontSize }),
       setInspectedWord: (inspectedWord) => set({ inspectedWord }),
@@ -61,15 +93,15 @@ export const useAppStore = create<AppStore>()(
       },
       setPlaygroundPlaybackSpeed: (playgroundPlaybackSpeed) =>
         set({ playgroundPlaybackSpeed }),
+      setSessionsListDisplay: (sessionsListDisplay) =>
+        set({ sessionsListDisplay }),
+      setSessionsListFilter: (sessionsListFilter) =>
+        set({ sessionsListFilter }),
     }),
     {
       name: "oaklang-state",
       storage,
       version: 0,
-      migrate(persistedState, version) {
-        console.log(persistedState, version);
-        return persistedState;
-      },
     },
   ),
 );

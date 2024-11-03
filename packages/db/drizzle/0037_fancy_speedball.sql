@@ -1,0 +1,1 @@
+ALTER TABLE "training_session" ADD COLUMN "last_practiced_at" timestamp;
