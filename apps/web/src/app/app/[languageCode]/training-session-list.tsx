@@ -77,13 +77,13 @@ export default function TrainingSessionList() {
       <div>
         <h2 className="text-lg font-semibold">Sessions</h2>
       </div>
-      <div className="flex justify-between gap-2 max-md:flex-col md:items-center">
+      <div className="flex gap-2 max-md:flex-col md:items-center">
         <div className="flex items-center gap-2">
           <FilterButton />
           <DisplayButton />
         </div>
-        <div className="flex items-center gap-2">
-          <SearchBar className="w-full flex-1 md:w-64" />
+        <div className="flex flex-1 items-center justify-end gap-2">
+          <SearchBar className="w-full flex-1 md:max-w-80" />
           <StartLearningButton />
         </div>
       </div>
