@@ -23,12 +23,6 @@ export default function AddWordsButton() {
         open={showAddWordsToPracticeListDialog}
         onOpenChange={setShowAddWordsToPracticeListDialog}
         title="Add Words"
-        // action={{
-        //   onClick: (list) => {
-        //     setShowAddWordsToPracticeListDialog(false);
-        //   },
-        //   title: "Start Training",
-        // }}
       />
     </>
   );

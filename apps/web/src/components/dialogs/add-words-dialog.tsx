@@ -158,13 +158,13 @@ function AddWordsFromList({
         languageCode,
         text,
       });
-    void utils.words.getAllWords.invalidate({ languageCode });
+    void utils.words.getUserWords.invalidate({ languageCode });
     onWordsListGenerated(words);
   }, [
     text,
     addWordsToPracticeListFromCommaSeparatedListMut,
     languageCode,
-    utils.words.getAllWords,
+    utils.words.getUserWords,
     onWordsListGenerated,
   ]);
 
@@ -224,14 +224,14 @@ function AddWordsFromPieceOfText({
       languageCode,
       text,
     });
-    void utils.words.getAllWords.invalidate({ languageCode });
+    void utils.words.getUserWords.invalidate({ languageCode });
 
     onWordsListGenerated(words);
   }, [
     text,
     addWordsToPracticeListFromPieceOfTextMut,
     languageCode,
-    utils.words.getAllWords,
+    utils.words.getUserWords,
     onWordsListGenerated,
   ]);
 

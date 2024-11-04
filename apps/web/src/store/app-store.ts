@@ -1,3 +1,4 @@
+import type { VisibilityState } from "@tanstack/react-table";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -34,6 +35,7 @@ export interface AppState {
   playgroundPlaybackSpeed: number;
   sessionsListDisplay: SessionsListDisplay;
   sessionsListFilter: SessionsListFilter;
+  wordsTableColumnVisibility: VisibilityState;
 }
 
 export interface AppActions {
@@ -45,6 +47,9 @@ export interface AppActions {
   setPlaygroundPlaybackSpeed: (speed: number) => void;
   setSessionsListDisplay: (options: SessionsListDisplay) => void;
   setSessionsListFilter: (options: SessionsListFilter) => void;
+  setWordsTableColumnVisibility: (
+    wordsTableColumnVisibility: VisibilityState,
+  ) => void;
 }
 
 export type AppStore = AppState & AppActions;
@@ -73,6 +78,7 @@ export const useAppStore = create<AppStore>()(
         exercises: [],
       },
       playgroundPlaybackSpeed: 1,
+      wordsTableColumnVisibility: {},
       setFontSize: (fontSize) => set({ fontSize }),
       setInspectedWord: (inspectedWord) => set({ inspectedWord }),
       setInspectionPanelOpen: (inspectionPanelOpen) =>
@@ -97,6 +103,8 @@ export const useAppStore = create<AppStore>()(
         set({ sessionsListDisplay }),
       setSessionsListFilter: (sessionsListFilter) =>
         set({ sessionsListFilter }),
+      setWordsTableColumnVisibility: (wordsTableColumnVisibility) =>
+        set({ wordsTableColumnVisibility }),
     }),
     {
       name: "oaklang-state",

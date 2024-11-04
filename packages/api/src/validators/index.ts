@@ -31,8 +31,7 @@ export type SentenceWithWords = z.infer<typeof sentenceWithWords>;
 
 export const userWordWithWordSchema = createSelectSchema(userWordsTable).extend(
   {
-    word: z.string(),
-    languageCode: z.string(),
+    word: createSelectSchema(wordsTable),
   },
 );
 
@@ -42,3 +41,25 @@ export const paginationBaseSchema = z.object({
   size: z.number().min(1).max(100).optional().default(10),
   page: z.number().optional().default(1),
 });
+
+export const wordColumnEnum = z.enum([
+  "word",
+  "wordId",
+  "createdAt",
+  "createdFromId",
+  "knownAt",
+  "knownFromId",
+  "lastSeenAt",
+  "seenCount",
+  "lastPracticedAt",
+  "practiceCount",
+  "seenCountSinceLastPracticed",
+  "nextPracticeAt",
+  "hideLines",
+  "markedUnknownCount",
+  "lastMarkedUnknownAt",
+  "dissableHideLinesCount",
+  "lastDissabledHideLinesAt",
+]);
+
+export const wordFilterEnum = z.enum(["all", "known", "unknown", "practicing"]);

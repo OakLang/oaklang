@@ -5,12 +5,17 @@ import dayjs from "dayjs";
 import ms from "ms";
 import { z } from "zod";
 
+import type { PgColumn, SQLWrapper } from "@acme/db";
 import { getExtractWordsFromAPieceOfTextPrompt } from "@acme/core/constants/prompt-templates";
+import { convertToCSV } from "@acme/core/helpers";
 import {
   and,
   asc,
+  count,
   createSelectSchema,
+  desc,
   eq,
+  ilike,
   isNull,
   lte,
   not,
@@ -26,7 +31,11 @@ import {
   getUserSettings,
   insertUserWords,
 } from "../utils";
-import { userWordWithWordSchema } from "../validators";
+import {
+  userWordWithWordSchema,
+  wordColumnEnum,
+  wordFilterEnum,
+} from "../validators";
 
 export const wordsRouter = createTRPCRouter({
   getUserWord: protectedProcedure
@@ -242,98 +251,156 @@ export const wordsRouter = createTRPCRouter({
           ),
         );
     }),
-  getAllWords: protectedProcedure
+  getUserWords: protectedProcedure
     .input(
       z.object({
         languageCode: z.string(),
-        filter: z
-          .enum(["all", "known", "unknown", "practicing"])
-          .default("all"),
+        filter: wordFilterEnum.optional().default("all"),
+        pageIndex: z.number().min(0).default(0),
+        pageSize: z.number().min(10).max(500).default(10),
+        sortBy: z.string().optional().default("createdAt"),
+        sortDesc: z.boolean().optional().default(false),
+        search: z.string().optional(),
       }),
     )
-    .output(z.array(userWordWithWordSchema))
+    .output(
+      z.object({
+        list: z.array(userWordWithWordSchema),
+        rowCount: z.number(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
+      const where = and(
+        eq(userWordsTable.userId, ctx.session.user.id),
+        eq(wordsTable.languageCode, input.languageCode),
+        ...(input.filter === "known"
+          ? [not(isNull(userWordsTable.knownAt))]
+          : input.filter === "unknown"
+            ? [isNull(userWordsTable.knownAt)]
+            : input.filter === "practicing"
+              ? [
+                  isNull(userWordsTable.knownAt),
+                  or(
+                    isNull(userWordsTable.nextPracticeAt),
+                    lte(userWordsTable.nextPracticeAt, sql`NOW()`),
+                  ),
+                ]
+              : []),
+        ...(input.search
+          ? [
+              or(
+                eq(userWordsTable.wordId, input.search),
+                ilike(wordsTable.word, `%${input.search}%`),
+              ),
+            ]
+          : []),
+      );
+
+      let sortBy = userWordsTable.createdAt as SQLWrapper;
+
+      if (input.sortBy) {
+        if (input.sortBy.startsWith("word_")) {
+          sortBy =
+            (wordsTable[
+              input.sortBy.replace("word_", "") as keyof typeof wordsTable
+            ] as SQLWrapper | undefined) ?? userWordsTable.createdAt;
+        } else {
+          sortBy =
+            (userWordsTable[
+              input.sortBy.replace("word_", "") as keyof typeof userWordsTable
+            ] as SQLWrapper | undefined) ?? userWordsTable.createdAt;
+        }
+      }
+
       const list = await ctx.db
         .select()
         .from(userWordsTable)
         .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
-        .where(
-          and(
-            eq(userWordsTable.userId, ctx.session.user.id),
-            eq(wordsTable.languageCode, input.languageCode),
-            ...(input.filter === "known"
-              ? [not(isNull(userWordsTable.knownAt))]
-              : input.filter === "unknown"
-                ? [isNull(userWordsTable.knownAt)]
-                : input.filter === "practicing"
-                  ? [
-                      isNull(userWordsTable.knownAt),
-                      or(
-                        isNull(userWordsTable.nextPracticeAt),
-                        lte(userWordsTable.nextPracticeAt, sql`NOW()`),
-                      ),
-                    ]
-                  : []),
-          ),
-        )
-        .orderBy(asc(userWordsTable.wordId));
-      return list.map(({ user_word, word }) => ({
-        ...user_word,
-        word: word.word,
-        languageCode: word.languageCode,
-      }));
+        .where(where)
+        .limit(input.pageSize)
+        .offset(input.pageIndex * input.pageSize)
+        .orderBy(
+          ...(input.sortDesc ? [desc(sortBy)] : [asc(sortBy)]),
+          desc(userWordsTable.wordId),
+        );
+
+      const rowCount = await ctx.db
+        .select({ count: count() })
+        .from(userWordsTable)
+        .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
+        .where(where)
+        .then((res) => res[0]?.count ?? 0);
+
+      return {
+        rowCount,
+        list: list.map(({ user_word, word }) => ({
+          ...user_word,
+          word: word,
+        })),
+      };
     }),
-  getAllPracticeWords: protectedProcedure
+  exportUserWordsAsCSV: protectedProcedure
     .input(
       z.object({
         languageCode: z.string(),
+        filter: wordFilterEnum.optional().default("all"),
+        search: z.string().optional(),
+        columns: z.array(wordColumnEnum).min(1),
       }),
     )
-    .output(z.array(userWordWithWordSchema))
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
+      const where = and(
+        eq(userWordsTable.userId, ctx.session.user.id),
+        eq(wordsTable.languageCode, input.languageCode),
+        ...(input.filter === "known"
+          ? [not(isNull(userWordsTable.knownAt))]
+          : input.filter === "unknown"
+            ? [isNull(userWordsTable.knownAt)]
+            : input.filter === "practicing"
+              ? [
+                  isNull(userWordsTable.knownAt),
+                  or(
+                    isNull(userWordsTable.nextPracticeAt),
+                    lte(userWordsTable.nextPracticeAt, sql`NOW()`),
+                  ),
+                ]
+              : []),
+        ...(input.search
+          ? [
+              or(
+                eq(userWordsTable.wordId, input.search),
+                ilike(wordsTable.word, `%${input.search}%`),
+              ),
+            ]
+          : []),
+      );
+
+      const select: Record<string, PgColumn> = {};
+
+      for (const column of input.columns) {
+        if (column === "word") {
+          select[column] = wordsTable.word;
+          continue;
+        }
+        select[column] = userWordsTable[column];
+      }
+
       const list = await ctx.db
-        .select()
+        .select(select)
         .from(userWordsTable)
         .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
-        .where(
-          and(
-            eq(userWordsTable.userId, ctx.session.user.id),
-            eq(wordsTable.languageCode, input.languageCode),
-            isNull(userWordsTable.knownAt),
-          ),
-        )
-        .orderBy(asc(userWordsTable.wordId));
-      return list.map(({ user_word, word }) => ({
-        ...user_word,
-        word: word.word,
-        languageCode: word.languageCode,
-      }));
-    }),
-  getAllKnownWords: protectedProcedure
-    .input(
-      z.object({
-        languageCode: z.string(),
-      }),
-    )
-    .output(z.array(userWordWithWordSchema))
-    .query(async ({ ctx, input }) => {
-      const list = await ctx.db
-        .select()
-        .from(userWordsTable)
-        .innerJoin(wordsTable, eq(wordsTable.id, userWordsTable.wordId))
-        .where(
-          and(
-            eq(userWordsTable.userId, ctx.session.user.id),
-            eq(wordsTable.languageCode, input.languageCode),
-            not(isNull(userWordsTable.knownAt)),
-          ),
-        )
-        .orderBy(asc(userWordsTable.wordId));
-      return list.map(({ user_word, word }) => ({
-        ...user_word,
-        word: word.word,
-        languageCode: word.languageCode,
-      }));
+        .where(where)
+        .orderBy(desc(userWordsTable.createdAt));
+
+      const csvData = convertToCSV(
+        list.map((word) => {
+          const result = new Map([...Object.entries(word)]);
+
+          return Object.fromEntries(result.entries());
+        }),
+      );
+
+      return csvData;
     }),
   addWordsToPracticeListFromPieceOfText: protectedProcedure
     .input(

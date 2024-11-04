@@ -1,32 +1,28 @@
 "use client";
 
 import type {
+  CellContext,
   Column,
   ColumnDef,
-  ColumnFiltersState,
-  InitialTableState,
+  ColumnPinningState,
+  OnChangeFn,
+  PaginationOptions,
+  PaginationState,
   Row,
-  RowSelectionState,
   SortingState,
   Table as TanstackTable,
   VisibilityState,
 } from "@tanstack/react-table";
 import type { CSSProperties, ReactNode } from "react";
-import { useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Loader2 } from "lucide-react";
+import { CheckIcon, XIcon } from "lucide-react";
 
-import { usePersistState } from "~/hooks/useLocalStorageState";
+import { formatDate } from "~/utils";
 import { DataTablePagination } from "./DataTablePagination";
-import { DataTableViewOptions } from "./DataTableViewOptions";
-import { Input } from "./ui/input";
 import {
   Table,
   TableBody,
@@ -60,168 +56,162 @@ function getCommonPinningStyles<
   };
 }
 
+export function getDateColumCell<
+  TData = Record<string, unknown>,
+  TValue = unknown,
+>(props: CellContext<TData, TValue>) {
+  const value = props.getValue() as Date | null;
+  if (value) {
+    return formatDate(value);
+  }
+  return "-";
+}
+
+export function getBooleanColumnCell<
+  TData = Record<string, unknown>,
+  TValue = unknown,
+>(props: CellContext<TData, TValue>) {
+  const value = props.getValue() as boolean | null;
+  if (value !== null) {
+    return value ? (
+      <CheckIcon className="h-4 w-4" />
+    ) : (
+      <XIcon className="h-4 w-4" />
+    );
+  }
+  return "-";
+}
+
+export const DEFAULT_PAGE_INDEX = 0;
+export const DEFAULT_PAGE_SIZE = 10;
+
+export type PaginationParams = PaginationState;
+export interface SortParams {
+  sortBy: `${string}.${"asc" | "desc"}`;
+}
+export type Filters<T> = Partial<T & PaginationParams & SortParams>;
+
 interface DataTableProps<TData = Record<string, unknown>, TValue = unknown> {
-  columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  filterColumn?: string;
-  filterPlaceholder?: string;
-  isLoading?: boolean;
-  renderActions?: ({ table }: { table: TanstackTable<TData> }) => ReactNode;
-  renderLoading?: ({ table }: { table: TanstackTable<TData> }) => ReactNode;
-  renderRowSelectionActios?: ({
-    table,
-  }: {
-    table: TanstackTable<TData>;
-  }) => ReactNode;
-  persistKeyPrefix: string;
-  initialState?: InitialTableState;
-  getRowId?: (
-    originalRow: TData,
-    index: number,
-    parent?: Row<TData> | undefined,
-  ) => string;
+  columns: ColumnDef<TData, TValue>[];
+  pagination?: PaginationState;
+  paginationOptions?: Pick<
+    PaginationOptions,
+    "onPaginationChange" | "rowCount"
+  >;
+  filters?: Filters<TData>;
+  onFilterChange?: (dataFilters: Partial<TData>) => void;
+  onSortingChange?: OnChangeFn<SortingState>;
+  sorting?: SortingState;
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
+  columnPinning?: ColumnPinningState;
+  onColumnPinningChange?: OnChangeFn<ColumnPinningState>;
+  header?: (table: TanstackTable<TData>) => ReactNode;
+  footer?: (table: TanstackTable<TData>) => ReactNode;
+  getRowId?:
+    | ((
+        originalRow: TData,
+        index: number,
+        parent?: Row<TData> | undefined,
+      ) => string)
+    | undefined;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  filterColumn,
-  renderActions,
-  isLoading,
-  renderLoading,
-  persistKeyPrefix,
-  initialState,
-  renderRowSelectionActios,
+  onSortingChange,
+  pagination,
+  paginationOptions,
+  sorting,
+  columnVisibility,
+  onColumnVisibilityChange,
+  header,
+  footer,
+  columnPinning,
+  onColumnPinningChange,
   getRowId,
-  filterPlaceholder,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = usePersistState<SortingState>(
-    `${persistKeyPrefix}-sorting`,
-    [],
-  );
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] =
-    usePersistState<VisibilityState>(
-      `${persistKeyPrefix}-column-visibility`,
-      {},
-    );
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-
   const table = useReactTable<TData>({
     data,
     columns,
+    state: { pagination, sorting, columnVisibility, columnPinning },
+    onSortingChange,
+    ...paginationOptions,
+    manualFiltering: true,
+    manualSorting: true,
+    manualPagination: true,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange,
+    onColumnPinningChange,
     getRowId,
-    initialState,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
   });
 
   return (
     <div>
-      <div className="flex items-center py-4">
-        {Object.values(rowSelection).filter(Boolean).length > 0 ? (
-          (renderRowSelectionActios?.({ table }) ?? null)
-        ) : filterColumn ? (
-          <Input
-            placeholder={filterPlaceholder ?? "Filter rows"}
-            value={
-              (table.getColumn(filterColumn)?.getFilterValue() as
-                | string
-                | undefined) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn(filterColumn)?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-        ) : null}
-        <div className="flex flex-1 items-center justify-end gap-2">
-          {renderActions?.({ table })}
-          <DataTableViewOptions table={table} />
-        </div>
+      {header?.(table)}
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead
+                      key={header.id}
+                      style={{
+                        ...getCommonPinningStyles(header.column),
+                      }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="whitespace-nowrap"
+                      style={{ ...getCommonPinningStyles(cell.column) }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
-      {isLoading ? (
-        renderLoading ? (
-          renderLoading({ table })
-        ) : (
-          <div className="flex h-32 items-center justify-center rounded-md border">
-            <Loader2 className="animate-spin" />
-          </div>
-        )
-      ) : (
-        <div className="overflow-hidden rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead
-                        key={header.id}
-                        style={{
-                          ...getCommonPinningStyles(header.column),
-                        }}
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="whitespace-nowrap"
-                        style={{ ...getCommonPinningStyles(cell.column) }}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
       <DataTablePagination table={table} />
+      {footer?.(table)}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import type { ChangeEvent } from "react";
 import React, { useCallback, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -9,12 +11,20 @@ import { Input } from "./ui/input";
 
 export interface SearchBarProps {
   className?: string;
+  placeholder?: string;
+  searchParamKey?: string;
+  deleteParamsOnSearch?: string[];
 }
 
-export default function SearchBar({ className }: SearchBarProps) {
+export default function SearchBar({
+  className,
+  placeholder = "Search...",
+  searchParamKey = "search",
+  deleteParamsOnSearch,
+}: SearchBarProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const search = searchParams.get("search");
+  const search = searchParams.get(searchParamKey);
   const [searchText, setSearchText] = useState(search ?? "");
 
   const timeout = useRef<NodeJS.Timeout | null>(null);
@@ -23,14 +33,17 @@ export default function SearchBar({ className }: SearchBarProps) {
   const createQueryString = useCallback(
     (key: string, value: string | null) => {
       const params = new URLSearchParams(searchParams.toString());
+      deleteParamsOnSearch?.forEach((key) => {
+        params.delete(key);
+      });
       if (value) {
-        params.set("search", value);
+        params.set(searchParamKey, value);
       } else {
-        params.delete("search");
+        params.delete(searchParamKey);
       }
       return params.toString();
     },
-    [searchParams],
+    [deleteParamsOnSearch, searchParamKey, searchParams],
   );
 
   const handleSearchTextChange = useCallback(
@@ -43,26 +56,26 @@ export default function SearchBar({ className }: SearchBarProps) {
       }
 
       timeout.current = setTimeout(() => {
-        const params = createQueryString("search", value);
+        const params = createQueryString(searchParamKey, value);
         router.push(pathname + "?" + params);
       }, 300);
     },
-    [createQueryString, pathname, router],
+    [createQueryString, pathname, searchParamKey, router],
   );
 
   const handleClearSearchText = useCallback(() => {
     if (timeout.current) {
       clearTimeout(timeout.current);
     }
-    const params = createQueryString("search", null);
+    const params = createQueryString(searchParamKey, null);
     router.push(pathname + "?" + params);
     setSearchText("");
-  }, [createQueryString, pathname, router]);
+  }, [createQueryString, pathname, searchParamKey, router]);
 
   return (
     <div className={cn("relative", className)}>
       <Input
-        placeholder="search"
+        placeholder={placeholder}
         className="w-full pl-9 pr-10"
         value={searchText}
         onChange={handleSearchTextChange}
