@@ -96,6 +96,27 @@ function WordActionButton({ word }: { word: UserWordWithWord }) {
   );
 }
 
+export const COLUMN_TITLE: Record<string, string> = {
+  word_word: "Word",
+  word_id: "Word Id",
+  createdAt: "Created At",
+  spacedRepetitionStage: "Spaced Repetition Stage",
+  seenCount: "Seen Count",
+  practiceCount: "Practice Count",
+  nextPracticeAt: "Next Practice",
+  knownAt: "Known At",
+  lastSeenAt: "Last Seen At",
+  lastPracticedAt: "Last Practiced At",
+  seenCountSinceLastPracticed: "Seen Count Since Last Practiced",
+  hideLines: "Hide Lines",
+  lastDissabledHideLinesAt: "Last Dissabled Hide Lines At",
+  dissableHideLinesCount: "Dissable Hide Lines Count",
+  lastMarkedUnknownAt: "Last Marked Unknown At",
+  markedUnknownCount: "Marked Unknown Count",
+};
+
+export const getColumnTitle = (id: string) => COLUMN_TITLE[id] ?? id;
+
 export const WORD_COLUMNS: ColumnDef<UserWordWithWord>[] = [
   {
     id: "select",
@@ -124,20 +145,29 @@ export const WORD_COLUMNS: ColumnDef<UserWordWithWord>[] = [
   {
     accessorKey: "word.word",
     header: (props) => (
-      <DataTableColumnHeader column={props.column} title="Word" />
+      <DataTableColumnHeader
+        column={props.column}
+        title={getColumnTitle(props.column.id)}
+      />
     ),
   },
   {
     accessorKey: "word.id",
     header: (props) => (
-      <DataTableColumnHeader column={props.column} title="Word Id" />
+      <DataTableColumnHeader
+        column={props.column}
+        title={getColumnTitle(props.column.id)}
+      />
     ),
   },
   {
     accessorKey: "createdAt",
     cell: getDateColumCell,
     header: (props) => (
-      <DataTableColumnHeader column={props.column} title="Created At" />
+      <DataTableColumnHeader
+        column={props.column}
+        title={getColumnTitle(props.column.id)}
+      />
     ),
   },
   {
@@ -145,47 +175,65 @@ export const WORD_COLUMNS: ColumnDef<UserWordWithWord>[] = [
     header: (props) => (
       <DataTableColumnHeader
         column={props.column}
-        title="Spaced Repetition Stage"
+        title={getColumnTitle(props.column.id)}
       />
     ),
   },
   {
     accessorKey: "seenCount",
     header: (props) => (
-      <DataTableColumnHeader column={props.column} title="Seen Count" />
+      <DataTableColumnHeader
+        column={props.column}
+        title={getColumnTitle(props.column.id)}
+      />
     ),
   },
   {
     accessorKey: "practiceCount",
     header: (props) => (
-      <DataTableColumnHeader column={props.column} title="Practice Count" />
+      <DataTableColumnHeader
+        column={props.column}
+        title={getColumnTitle(props.column.id)}
+      />
     ),
   },
   {
     accessorKey: "nextPracticeAt",
     header: (props) => (
-      <DataTableColumnHeader column={props.column} title="Next Practice" />
+      <DataTableColumnHeader
+        column={props.column}
+        title={getColumnTitle(props.column.id)}
+      />
     ),
     cell: getDateColumCell,
   },
   {
     accessorKey: "knownAt",
     header: (props) => (
-      <DataTableColumnHeader column={props.column} title="Known At" />
+      <DataTableColumnHeader
+        column={props.column}
+        title={getColumnTitle(props.column.id)}
+      />
     ),
     cell: getDateColumCell,
   },
   {
     accessorKey: "lastSeenAt",
     header: (props) => (
-      <DataTableColumnHeader column={props.column} title="Last Seen At" />
+      <DataTableColumnHeader
+        column={props.column}
+        title={getColumnTitle(props.column.id)}
+      />
     ),
     cell: getDateColumCell,
   },
   {
     accessorKey: "lastPracticedAt",
     header: (props) => (
-      <DataTableColumnHeader column={props.column} title="Last Practiced At" />
+      <DataTableColumnHeader
+        column={props.column}
+        title={getColumnTitle(props.column.id)}
+      />
     ),
     cell: getDateColumCell,
   },
@@ -195,7 +243,7 @@ export const WORD_COLUMNS: ColumnDef<UserWordWithWord>[] = [
       return (
         <DataTableColumnHeader
           column={props.column}
-          title="Seen Count Since Last Practiced"
+          title={getColumnTitle(props.column.id)}
         />
       );
     },
@@ -203,7 +251,12 @@ export const WORD_COLUMNS: ColumnDef<UserWordWithWord>[] = [
   {
     accessorKey: "hideLines",
     header: (props) => {
-      return <DataTableColumnHeader column={props.column} title="Hide Lines" />;
+      return (
+        <DataTableColumnHeader
+          column={props.column}
+          title={getColumnTitle(props.column.id)}
+        />
+      );
     },
     cell: getBooleanColumnCell,
   },
@@ -212,7 +265,7 @@ export const WORD_COLUMNS: ColumnDef<UserWordWithWord>[] = [
     header: (props) => (
       <DataTableColumnHeader
         column={props.column}
-        title="Last Dissabled Hide Lines At"
+        title={getColumnTitle(props.column.id)}
       />
     ),
     cell: getDateColumCell,
@@ -223,7 +276,7 @@ export const WORD_COLUMNS: ColumnDef<UserWordWithWord>[] = [
       return (
         <DataTableColumnHeader
           column={props.column}
-          title="Dissable Hide Lines Count"
+          title={getColumnTitle(props.column.id)}
         />
       );
     },
@@ -233,7 +286,7 @@ export const WORD_COLUMNS: ColumnDef<UserWordWithWord>[] = [
     header: (props) => (
       <DataTableColumnHeader
         column={props.column}
-        title="Last Marked Unknown At"
+        title={getColumnTitle(props.column.id)}
       />
     ),
     cell: getDateColumCell,
@@ -244,7 +297,7 @@ export const WORD_COLUMNS: ColumnDef<UserWordWithWord>[] = [
       return (
         <DataTableColumnHeader
           column={props.column}
-          title="Marked Unknown Count"
+          title={getColumnTitle(props.column.id)}
         />
       );
     },

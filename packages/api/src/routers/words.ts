@@ -402,6 +402,52 @@ export const wordsRouter = createTRPCRouter({
 
       return csvData;
     }),
+  addUserWords: protectedProcedure
+    .input(
+      z.object({
+        languageCode: z.string(),
+        words: z
+          .array(
+            z.object({
+              word: z.string(),
+              knownAt: z.date().optional(),
+              seenCount: z.number().optional(),
+              hideLines: z.boolean().optional(),
+              practiceCount: z.number().optional(),
+            }),
+          )
+          .min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const words = await getOrCreateWords(
+        input.words.map((word) => word.word),
+        input.languageCode,
+        ctx.db,
+      );
+
+      await ctx.db
+        .insert(userWordsTable)
+        .values(
+          words
+            .map((word) => {
+              const w = input.words.find((w) => w.word === word.word);
+              if (!w) {
+                return null;
+              }
+              return {
+                userId: ctx.session.user.id,
+                wordId: word.id,
+                knownAt: w.knownAt,
+                practiceCount: w.practiceCount,
+                seenCount: w.seenCount,
+                hideLines: w.hideLines,
+              } satisfies typeof userWordsTable.$inferInsert;
+            })
+            .filter((item) => !!item),
+        )
+        .onConflictDoNothing();
+    }),
   addWordsToPracticeListFromPieceOfText: protectedProcedure
     .input(
       z.object({

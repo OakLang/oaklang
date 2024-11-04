@@ -15,10 +15,12 @@ import {
 
 interface DataTableViewOptionsProps<TData> {
   table: Table<TData>;
+  getColumnTitle?: (id: string) => void;
 }
 
 export function DataTableViewOptions<TData>({
   table,
+  getColumnTitle,
 }: DataTableViewOptionsProps<TData>) {
   return (
     <DropdownMenu>
@@ -29,7 +31,7 @@ export function DataTableViewOptions<TData>({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+        <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {table
           .getAllColumns()
@@ -44,7 +46,7 @@ export function DataTableViewOptions<TData>({
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                {column.id}
+                {getColumnTitle?.(column.id) ?? column.id}
               </DropdownMenuCheckboxItem>
             );
           })}

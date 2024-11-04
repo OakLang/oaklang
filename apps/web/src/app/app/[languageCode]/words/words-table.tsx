@@ -21,6 +21,7 @@ import {
 } from "~/components/DataTable";
 import { DataTableViewOptions } from "~/components/DataTableViewOptions";
 import { useExportWordsDialog } from "~/components/dialogs/export-words-dialog";
+import { useImportWordsFromCsvDialog } from "~/components/dialogs/import-words-from-csv-dialog";
 import RenderQueryResult from "~/components/RenderQueryResult";
 import SearchBar from "~/components/SearchBar";
 import { Button } from "~/components/ui/button";
@@ -35,9 +36,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
-import { unimplementedToast } from "~/utils/helpers";
 import AddWordsButton from "./add-words-button";
-import { WORD_COLUMNS } from "./columns";
+import { getColumnTitle, WORD_COLUMNS } from "./columns";
 
 export default function WardsTable() {
   const searchParams = useSearchParams();
@@ -88,8 +88,13 @@ export default function WardsTable() {
   }, [filters.sortBy]);
 
   const { languageCode } = useParams<LanguageCodeParams>();
-  const [ExportWordsDialog, _, setExportWordsDialogOpen] =
+  const [ExportWordsDialog, _exportWordsDialogOpen, setExportWordsDialogOpen] =
     useExportWordsDialog();
+  const [
+    ImportWordsFromCsvDialog,
+    _importWordsFromCsvDialogOpen,
+    setImportWordsFromCsvDialogOpen,
+  ] = useImportWordsFromCsvDialog();
 
   const wordsQuery = api.words.getUserWords.useQuery(
     {
@@ -309,7 +314,10 @@ export default function WardsTable() {
                       </TabsList>
                     </Tabs>
 
-                    <DataTableViewOptions table={table} />
+                    <DataTableViewOptions
+                      table={table}
+                      getColumnTitle={getColumnTitle}
+                    />
                   </div>
                   <div className="flex flex-1 items-center justify-end gap-2">
                     <SearchBar
@@ -326,7 +334,11 @@ export default function WardsTable() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent side="bottom" align="end">
                         <DropdownMenuGroup title="Import words">
-                          <DropdownMenuItem onClick={unimplementedToast}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              setImportWordsFromCsvDialogOpen(true)
+                            }
+                          >
                             <TableIcon className="mr-2 h-4 w-4" />
                             Import from CSV
                           </DropdownMenuItem>
@@ -351,6 +363,7 @@ export default function WardsTable() {
       </RenderQueryResult>
 
       <ExportWordsDialog />
+      <ImportWordsFromCsvDialog />
     </div>
   );
 }

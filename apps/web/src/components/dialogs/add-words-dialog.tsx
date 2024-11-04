@@ -121,16 +121,12 @@ function AddWordsToListContent({
       <TabsList>
         <TabsTrigger value="words-list">From Words List</TabsTrigger>
         <TabsTrigger value="piece-of-text">From Piece of Text</TabsTrigger>
-        <TabsTrigger value="csv-file">From CSV File</TabsTrigger>
       </TabsList>
       <TabsContent className="mt-4" value="words-list">
         <AddWordsFromList onWordsListGenerated={onWordsListGenerated} />
       </TabsContent>
       <TabsContent className="mt-4" value="piece-of-text">
         <AddWordsFromPieceOfText onWordsListGenerated={onWordsListGenerated} />
-      </TabsContent>
-      <TabsContent className="mt-4" value="csv-file">
-        Coming soon...
       </TabsContent>
     </Tabs>
   );
