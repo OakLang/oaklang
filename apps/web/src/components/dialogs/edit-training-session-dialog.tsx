@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import type { TrainingSession } from "@acme/db/schema";
@@ -27,6 +28,7 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
+import { FieldRequiredIndecator } from "../ui/label";
 
 const schema = z.object({
   title: z.string().min(1).max(300),
@@ -60,6 +62,12 @@ export default function EditTrainingSessionDialog({
           languageCode: trainingSession.languageCode,
         });
         props.onOpenChange?.(false);
+        toast("Updated successfully");
+      },
+      onError: (error) => {
+        toast("Failed to update training session!", {
+          description: error.message,
+        });
       },
     });
 
@@ -94,7 +102,10 @@ export default function EditTrainingSessionDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>
+                    Title
+                    <FieldRequiredIndecator />
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Learning German" {...field} />
                   </FormControl>

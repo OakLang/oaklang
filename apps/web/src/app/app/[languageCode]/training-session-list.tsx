@@ -20,11 +20,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import type { CreateTrainingSessoin } from "@acme/db/validators";
 import { ALL_EXERCISES } from "@acme/core/constants";
 
 import type { SessionsListDisplay } from "~/store/app-store";
 import type { RouterOutputs } from "~/trpc/react";
 import type { LanguageCodeParams } from "~/types";
+import { useEditTrainingSessionDialog } from "~/components/dialogs/edit-training-session-dialog";
 import RenderInfiniteQueryResult from "~/components/RenderInfiniteQueryResult";
 import SearchBar from "~/components/SearchBar";
 import { Button } from "~/components/ui/button";
@@ -55,7 +57,6 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
-import { unimplementedToast } from "~/utils/helpers";
 import StartLearningButton from "./start-learning-button";
 
 export default function TrainingSessionList() {
@@ -437,10 +438,12 @@ function FilterButton() {
 }
 
 function SessionCard({
-  session: item,
+  session: session,
 }: {
   session: RouterOutputs["trainingSessions"]["getTrainingSessions"]["list"][number];
 }) {
+  const [EditTrainingSessionDialog, _, setOpenEditTrainingSessionDialgo] =
+    useEditTrainingSessionDialog();
   const sessionsListDisplay = useAppStore((state) => state.sessionsListDisplay);
 
   const utils = api.useUtils();
@@ -458,21 +461,39 @@ function SessionCard({
         });
       },
     });
+  const duplicateTrainingSessionMut =
+    api.trainingSessions.duplicateTrainingSession.useMutation({
+      onSuccess: (data) => {
+        void utils.trainingSessions.getTrainingSessions.invalidate({
+          languageCode: data.languageCode,
+        });
+        toast("Successfully duplicated session!");
+      },
+      onError: (error) => {
+        toast("Failed to duplicate session!", {
+          description: error.message,
+        });
+      },
+    });
+
+  const handleDuplicateSession = useCallback(() => {
+    duplicateTrainingSessionMut.mutate({ trainingSessionId: session.id });
+  }, [duplicateTrainingSessionMut, session.id]);
 
   return (
     <div className="bg-card text-card-foreground hover:bg-secondary/50 group relative flex items-center gap-4 overflow-hidden rounded-lg border p-4 text-left shadow-sm transition-colors">
       <Link
-        href={`/app/${item.languageCode}/training/${item.id}`}
+        href={`/app/${session.languageCode}/training/${session.id}`}
         className="focus-visible:ring-ring ring-offset-background absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       />
       <div className="flex-1 overflow-hidden">
         {sessionsListDisplay.properties.title ? (
-          <p className="line-clamp-2 font-medium">{item.title}</p>
+          <p className="line-clamp-2 font-medium">{session.title}</p>
         ) : (
           <div className="flex items-center gap-2 overflow-hidden">
-            <p className="truncate font-medium">{item.id}</p>
+            <p className="truncate font-medium">{session.id}</p>
             <Button
-              onClick={() => window.navigator.clipboard.writeText(item.id)}
+              onClick={() => window.navigator.clipboard.writeText(session.id)}
               size="icon"
               variant="outline"
               className="z-10 h-7 w-7 flex-shrink-0"
@@ -486,12 +507,12 @@ function SessionCard({
             <>
               <p className="text-muted-foreground text-sm max-md:hidden">
                 Created{" "}
-                {formatDistanceToNow(item.createdAt, {
+                {formatDistanceToNow(session.createdAt, {
                   addSuffix: true,
                 })}
               </p>
               <p className="text-muted-foreground text-sm md:hidden">
-                {formatDistanceToNow(item.createdAt, {
+                {formatDistanceToNow(session.createdAt, {
                   addSuffix: false,
                 })}
               </p>
@@ -500,15 +521,21 @@ function SessionCard({
           {sessionsListDisplay.properties.lastPracticedAt && (
             <>
               <p className="text-muted-foreground text-sm max-md:hidden">
-                {item.lastPracticedAt ? "Practiced" : "Created"}{" "}
-                {formatDistanceToNow(item.lastPracticedAt ?? item.createdAt, {
-                  addSuffix: true,
-                })}
+                {session.lastPracticedAt ? "Practiced" : "Created"}{" "}
+                {formatDistanceToNow(
+                  session.lastPracticedAt ?? session.createdAt,
+                  {
+                    addSuffix: true,
+                  },
+                )}
               </p>
               <p className="text-muted-foreground text-sm md:hidden">
-                {formatDistanceToNow(item.lastPracticedAt ?? item.createdAt, {
-                  addSuffix: false,
-                })}
+                {formatDistanceToNow(
+                  session.lastPracticedAt ?? session.createdAt,
+                  {
+                    addSuffix: false,
+                  },
+                )}
               </p>
             </>
           )}
@@ -518,28 +545,28 @@ function SessionCard({
       <div className="flex items-center gap-2">
         {sessionsListDisplay.properties.exercise && (
           <div className="text-muted-foreground flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-sm max-lg:hidden">
-            {item.exercise?.name ?? "Unknown Exercise"}
+            {session.exerciseInfo?.name ?? "Unknown Exercise"}
           </div>
         )}
         {sessionsListDisplay.properties.newWordsCounter && (
           <div className="text-muted-foreground flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-sm">
             <span className="text-xs max-md:hidden">New Words</span>
             <span className="text-xs md:hidden">NW</span>
-            {item.newWordsCount}
+            {session.newWordsCount}
           </div>
         )}
         {sessionsListDisplay.properties.knownWordsCounter && (
           <div className="text-muted-foreground flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-sm">
             <span className="text-xs max-md:hidden">Known Words</span>
             <span className="text-xs md:hidden">KW</span>
-            {item.knownWordsCount}
+            {session.knownWordsCount}
           </div>
         )}
         {sessionsListDisplay.properties.language && (
           <div className="text-muted-foreground flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-sm">
             <LanguagesIcon className="h-4 w-4" />
-            <span className="max-md:hidden">{item.language.name}</span>
-            <span className="md:hidden">{item.language.code}</span>
+            <span className="max-md:hidden">{session.language.name}</span>
+            <span className="md:hidden">{session.language.code}</span>
           </div>
         )}
 
@@ -556,17 +583,14 @@ function SessionCard({
           <DropdownMenuContent align="end" side="bottom">
             <DropdownMenuItem
               onClick={() => {
-                unimplementedToast();
+                setOpenEditTrainingSessionDialgo(true);
               }}
             >
               <EditIcon className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                unimplementedToast();
-              }}
-            >
+
+            <DropdownMenuItem onClick={handleDuplicateSession}>
               <CopyIcon className="mr-2 h-4 w-4" />
               Duplicate
             </DropdownMenuItem>
@@ -574,7 +598,7 @@ function SessionCard({
             <DropdownMenuItem
               onClick={() => {
                 deleteTrainingSessionMut.mutate({
-                  trainingSessionId: item.id,
+                  trainingSessionId: session.id,
                 });
               }}
             >
@@ -584,6 +608,8 @@ function SessionCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <EditTrainingSessionDialog trainingSession={session} />
     </div>
   );
 }

@@ -49,6 +49,7 @@ import {
 } from "~/components/ui/select";
 import { api } from "~/trpc/react";
 import CreateModuleForm from "../forms/create-module-form";
+import { FieldRequiredIndecator } from "../ui/label";
 import NumberInput from "../ui/number-input";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Textarea } from "../ui/textarea";
@@ -115,7 +116,7 @@ export default function StartTrainingDialog({
         name="data.topic"
         render={({ field }) => (
           <FormItem className="grid w-full">
-            <FormLabel>Topic{required && <RequiredBadge />}</FormLabel>
+            <FormLabel>Topic{required && <FieldRequiredIndecator />}</FormLabel>
             <FormControl>
               <Textarea
                 placeholder="Type a topic or choose from the list to generate sentences (e.g., Travel, Cooking, Space Exploration...)"
@@ -160,7 +161,7 @@ export default function StartTrainingDialog({
           <FormItem>
             <FormLabel>
               Complexity
-              {required && <RequiredBadge />}
+              {required && <FieldRequiredIndecator />}
             </FormLabel>
             <FormControl>
               <Select
@@ -201,7 +202,7 @@ export default function StartTrainingDialog({
           <FormItem>
             <FormLabel>
               Words
-              {required && <RequiredBadge />}
+              {required && <FieldRequiredIndecator />}
             </FormLabel>
             <FormControl>
               <WordsList
@@ -283,7 +284,7 @@ export default function StartTrainingDialog({
                   <FormItem>
                     <FormLabel>
                       Title
-                      <RequiredBadge />
+                      <FieldRequiredIndecator />
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="Learning German" {...field} />
@@ -300,7 +301,7 @@ export default function StartTrainingDialog({
                   <FormItem>
                     <FormLabel>
                       Exercise
-                      <RequiredBadge />
+                      <FieldRequiredIndecator />
                     </FormLabel>
                     <FormControl>
                       <Select
@@ -347,7 +348,7 @@ export default function StartTrainingDialog({
                       <FormItem>
                         <FormLabel>
                           Learn From
-                          <RequiredBadge />
+                          <FieldRequiredIndecator />
                         </FormLabel>
                         <FormControl>
                           <Select
@@ -392,7 +393,7 @@ export default function StartTrainingDialog({
                           <FormItem>
                             <FormLabel>
                               Each Word Practice Count
-                              <RequiredBadge />
+                              <FieldRequiredIndecator />
                             </FormLabel>
                             <FormControl>
                               <NumberInput
@@ -420,7 +421,7 @@ export default function StartTrainingDialog({
                           <FormItem>
                             <FormLabel>
                               Number Of Words
-                              <RequiredBadge />
+                              <FieldRequiredIndecator />
                             </FormLabel>
                             <FormControl>
                               <NumberInput
@@ -443,7 +444,7 @@ export default function StartTrainingDialog({
                           <FormItem>
                             <FormLabel>
                               Each Word Practice Count
-                              <RequiredBadge />
+                              <FieldRequiredIndecator />
                             </FormLabel>
                             <FormControl>
                               <NumberInput
@@ -472,7 +473,7 @@ export default function StartTrainingDialog({
                           <FormItem>
                             <FormLabel>
                               Number Of Sentences
-                              <RequiredBadge />
+                              <FieldRequiredIndecator />
                             </FormLabel>
                             <FormControl>
                               <NumberInput
@@ -503,7 +504,7 @@ export default function StartTrainingDialog({
                       <FormItem>
                         <FormLabel>
                           Learn From
-                          <RequiredBadge />
+                          <FieldRequiredIndecator />
                         </FormLabel>
                         <FormControl>
                           <Select
@@ -764,7 +765,3 @@ const WordsList = ({
     </div>
   );
 };
-
-function RequiredBadge() {
-  return <span className="text-destructive">*</span>;
-}

@@ -1,6 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { Exercise } from "@acme/core/constants";
+import type { TrainingSession } from "@acme/db/schema";
 import { ALL_EXERCISES, Exercises } from "@acme/core/constants";
 import { and, asc, count, desc, eq, ilike, inArray, or } from "@acme/db";
 import {
@@ -18,6 +20,26 @@ import { generateSentencesForExercise3 } from "@acme/wakaq/tasks/generateSentenc
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { getLanguageOrThrow, getTrainingSessionOrThrow } from "../utils";
+
+async function startGeneratingSentences(trainingSession: TrainingSession) {
+  switch (trainingSession.exercise) {
+    case Exercises.exercise1:
+      await generateSentencesForExercise1.enqueue({
+        trainingSessionId: trainingSession.id,
+      });
+      break;
+    case Exercises.exercise2:
+      await generateSentencesForExercise2.enqueue({
+        trainingSessionId: trainingSession.id,
+      });
+      break;
+    case Exercises.exercise3:
+      await generateSentencesForExercise3.enqueue({
+        trainingSessionId: trainingSession.id,
+      });
+      break;
+  }
+}
 
 export const trainingSessionsRouter = createTRPCRouter({
   getTrainingSession: protectedProcedure
@@ -65,7 +87,12 @@ export const trainingSessionsRouter = createTRPCRouter({
             eq(trainingSessionsTable.userId, session.user.id),
             eq(trainingSessionsTable.languageCode, input.languageCode),
             ...(input.exercises && input.exercises.length > 0
-              ? [inArray(trainingSessionsTable.exercise, input.exercises)]
+              ? [
+                  inArray(
+                    trainingSessionsTable.exercise,
+                    input.exercises as Exercise["id"][],
+                  ),
+                ]
               : []),
             ...(input.search
               ? [
@@ -88,27 +115,26 @@ export const trainingSessionsRouter = createTRPCRouter({
         );
 
       const list = await Promise.all(
-        trainingSessionList
-          .map((ts) => ({ ...ts.training_session, language: ts.language }))
-          .map(async (ts) => {
-            const [newWords] = await db
-              .select({ count: count() })
-              .from(userWordsTable)
-              .where(eq(userWordsTable.createdFromId, ts.id));
-            const [knownWords] = await db
-              .select({ count: count() })
-              .from(userWordsTable)
-              .where(eq(userWordsTable.knownFromId, ts.id));
+        trainingSessionList.map(async ({ language, training_session }) => {
+          const [newWords] = await db
+            .select({ count: count() })
+            .from(userWordsTable)
+            .where(eq(userWordsTable.createdFromId, training_session.id));
+          const [knownWords] = await db
+            .select({ count: count() })
+            .from(userWordsTable)
+            .where(eq(userWordsTable.knownFromId, training_session.id));
 
-            return {
-              ...ts,
-              newWordsCount: newWords?.count ?? 0,
-              knownWordsCount: knownWords?.count ?? 0,
-              exercise: ALL_EXERCISES.find(
-                (exercise) => exercise.id === ts.exercise,
-              ),
-            };
-          }),
+          return {
+            ...training_session,
+            language,
+            newWordsCount: newWords?.count ?? 0,
+            knownWordsCount: knownWords?.count ?? 0,
+            exerciseInfo: ALL_EXERCISES.find(
+              (exercise) => exercise.id === training_session.exercise,
+            ),
+          };
+        }),
       );
 
       return {
@@ -161,23 +187,7 @@ export const trainingSessionsRouter = createTRPCRouter({
         });
       }
 
-      switch (trainingSession.exercise) {
-        case Exercises.exercise1:
-          await generateSentencesForExercise1.enqueue({
-            trainingSessionId: trainingSession.id,
-          });
-          break;
-        case Exercises.exercise2:
-          await generateSentencesForExercise2.enqueue({
-            trainingSessionId: trainingSession.id,
-          });
-          break;
-        case Exercises.exercise3:
-          await generateSentencesForExercise3.enqueue({
-            trainingSessionId: trainingSession.id,
-          });
-          break;
-      }
+      await startGeneratingSentences(trainingSession);
 
       return trainingSession;
     }),
@@ -213,6 +223,42 @@ export const trainingSessionsRouter = createTRPCRouter({
         }
 
         return updatedTrainingSession;
+      },
+    ),
+  duplicateTrainingSession: protectedProcedure
+    .input(
+      z.object({
+        trainingSessionId: z.string(),
+      }),
+    )
+    .mutation(
+      async ({ ctx: { db, session }, input: { trainingSessionId } }) => {
+        const trainingSession = await getTrainingSessionOrThrow(
+          trainingSessionId,
+          db,
+          session,
+        );
+
+        const { data, exercise, languageCode, title, view } = trainingSession;
+        const [newTrainingSession] = await db
+          .insert(trainingSessionsTable)
+          .values({
+            data,
+            exercise,
+            languageCode,
+            title: `${title} - Copy`,
+            view,
+            userId: session.user.id,
+          })
+          .returning();
+
+        if (!newTrainingSession) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        }
+
+        await startGeneratingSentences(newTrainingSession);
+
+        return newTrainingSession;
       },
     ),
   deleteTrainingSession: protectedProcedure

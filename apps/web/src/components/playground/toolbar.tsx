@@ -5,10 +5,12 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   BookAIcon,
+  EditIcon,
   MoreHorizontalIcon,
   SettingsIcon,
   SidebarCloseIcon,
   SidebarOpenIcon,
+  TrashIcon,
   XIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -20,6 +22,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Label } from "~/components/ui/label";
@@ -49,7 +52,8 @@ import { useTrainingSessionView } from "./training-session-view";
 
 export default function ToolBar({ children }: { children?: ReactNode }) {
   const { trainingSession } = useTrainingSession();
-  const { sidebarOpen, setSidebarOpen, isComplete } = useTrainingSessionView();
+  const { sidebarOpen, setSidebarOpen, isComplete, closeSession } =
+    useTrainingSessionView();
 
   const [EditTrainingSessionDialog, _, setEditTrainingSessionDialog] =
     useEditTrainingSessionDialog();
@@ -66,11 +70,14 @@ export default function ToolBar({ children }: { children?: ReactNode }) {
         <div className="flex flex-1 items-center">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="mr-2" asChild>
-                <Link href={`/app/${trainingSession.languageCode}`}>
-                  <XIcon className="h-5 w-5" />
-                  <div className="sr-only">Close Session</div>
-                </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="mr-2"
+                onClick={closeSession}
+              >
+                <XIcon className="h-5 w-5" />
+                <div className="sr-only">Close Session</div>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">Close Session</TooltipContent>
@@ -189,12 +196,17 @@ export default function ToolBar({ children }: { children?: ReactNode }) {
                   <DropdownMenuItem
                     onClick={() => setEditTrainingSessionDialog(true)}
                   >
-                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    <EditIcon className="mr-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSettingsSheetOpen(true)}>
                     <SettingsIcon className="mr-2 h-4 w-4" />
                     Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setSettingsSheetOpen(true)}>
+                    <TrashIcon className="mr-2 h-4 w-4" />
+                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

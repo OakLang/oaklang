@@ -1,7 +1,14 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { useRouter } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Loader2Icon } from "lucide-react";
 
@@ -25,15 +32,21 @@ export interface TrainingSessionViewContextValue {
   setInspectedWord: Dispatch<SetStateAction<SentenceWord | null>>;
   sidebarOpen: boolean;
   setSidebarOpen: Dispatch<SetStateAction<boolean>>;
+  closeSession: () => void;
 }
 
 const Context = createContext<TrainingSessionViewContextValue | null>(null);
 
-export default function TrainingSessionView() {
+export default function TrainingSessionView({
+  onClose,
+}: {
+  onClose?: () => void;
+}) {
   const [inspectedWord, setInspectedWord] = useState<SentenceWord | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { trainingSession, updateTrainingSession } = useTrainingSession();
+  const router = useRouter();
 
   const sentencesQuery = api.sentences.getSentences.useQuery(
     { trainingSessionId: trainingSession.id },
@@ -41,6 +54,14 @@ export default function TrainingSessionView() {
   );
 
   const utils = api.useUtils();
+
+  const closeSession = useCallback(() => {
+    if (onClose) {
+      onClose();
+    } else {
+      router.push(`/app/${trainingSession.languageCode}`);
+    }
+  }, [onClose, router, trainingSession.languageCode]);
 
   useEffect(() => {
     if (trainingSession.status === "success") {
@@ -117,6 +138,7 @@ export default function TrainingSessionView() {
               setInspectedWord,
               setSidebarOpen,
               sidebarOpen,
+              closeSession,
             }}
           >
             {isComplete ? (

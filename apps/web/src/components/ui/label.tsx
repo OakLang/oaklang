@@ -24,4 +24,8 @@ const Label = React.forwardRef<
 ));
 Label.displayName = LabelPrimitive.Root.displayName;
 
-export { Label };
+function FieldRequiredIndecator() {
+  return <span className="text-destructive">*</span>;
+}
+
+export { Label, FieldRequiredIndecator };

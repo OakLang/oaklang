@@ -4,7 +4,7 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { Controller, FormProvider, useFormContext } from "react-hook-form";
 
-import { Label } from "~/components/ui/label";
+import { FieldRequiredIndecator, Label } from "~/components/ui/label";
 import { cn } from "~/utils";
 
 const Form = FormProvider;
@@ -80,8 +80,10 @@ FormItem.displayName = "FormItem";
 
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & {
+    required?: boolean;
+  }
+>(({ className, children, required, ...props }, ref) => {
   const { error, formItemId } = useFormField();
 
   return (
@@ -90,7 +92,10 @@ const FormLabel = React.forwardRef<
       htmlFor={formItemId}
       ref={ref}
       {...props}
-    />
+    >
+      {children}
+      {required && <FieldRequiredIndecator />}
+    </Label>
   );
 });
 FormLabel.displayName = "FormLabel";

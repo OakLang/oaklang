@@ -9,7 +9,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { Exercises } from "@acme/core/constants";
+import { ALL_EXERCISE_IDS, Exercises } from "@acme/core/constants";
 
 import type { CreateTrainingSessoin, Exercise1FormData } from "../validators";
 import { createPrefixedId } from "../utils";
@@ -45,7 +45,9 @@ export const trainingSessionsTable = pgTable("training_session", {
   languageCode: text("language_code")
     .notNull()
     .references(() => languagesTable.code, { onDelete: "cascade" }),
-  exercise: text("exercise").notNull().default(Exercises.exercise1),
+  exercise: text("exercise", { enum: ALL_EXERCISE_IDS })
+    .notNull()
+    .default(Exercises.exercise1),
   data: jsonb("data")
     .notNull()
     .$type<CreateTrainingSessoin["data"]>()
