@@ -5,7 +5,7 @@ import type { Sentence } from "@acme/db/schema";
 import { useAppStore } from "~/store/app-store";
 import InterlinearLineSentence from "./InterlinearLineSentence";
 
-export default function InterlinearView({
+export default function InterlinearLineView({
   sentences,
 }: {
   sentences: Sentence[];

@@ -22,7 +22,7 @@ import { useTrainingSession } from "~/providers/training-session-provider";
 import { useUserSettings } from "~/providers/user-settings-provider";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
-import InterlinearView from "../InterlinearView";
+import InterlinearLineView from "../interlinear-line/interlinear-line-view";
 import TrainingProgressBar from "../TrainingProgressBar";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
@@ -241,7 +241,7 @@ export function SentenceView() {
                   )}
                 </div>
 
-                <InterlinearView sentences={[sentence]} />
+                <InterlinearLineView sentences={[sentence]} />
 
                 {sentenceQuery.data?.interlinearLineGenerationStatus ===
                   "success" && (

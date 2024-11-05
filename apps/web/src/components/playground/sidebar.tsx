@@ -1,12 +1,11 @@
 "use client";
 
-import TrainingSessionDetailsSideBarWidget from "~/components/TrainingSessionDetailsSideBarWidget";
-import WordInspectionPanel from "~/components/WordInspectionPanel";
-import { useAppStore } from "~/store/app-store";
+import NoInspectionSidebarView from "./no-inspection-sidebar-view";
+import { useTrainingSessionView } from "./training-session-view";
+import WordInspectionSidebarView from "./word-inspection-sidebar-view";
 
 export default function PlaygroundSidebar() {
-  const sidebarOpen = useAppStore((state) => state.inspectionPanelOpen);
-  const inspectedWord = useAppStore((state) => state.inspectedWord);
+  const { inspectedWord, sidebarOpen } = useTrainingSessionView();
 
   if (!sidebarOpen) {
     return null;
@@ -15,9 +14,9 @@ export default function PlaygroundSidebar() {
   return (
     <aside className="flex h-full w-96 flex-shrink-0 flex-col overflow-y-auto border-l">
       {inspectedWord ? (
-        <WordInspectionPanel word={inspectedWord} />
+        <WordInspectionSidebarView word={inspectedWord} />
       ) : (
-        <TrainingSessionDetailsSideBarWidget />
+        <NoInspectionSidebarView />
       )}
     </aside>
   );

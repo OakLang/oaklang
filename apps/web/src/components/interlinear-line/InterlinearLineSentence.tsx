@@ -3,14 +3,14 @@ import { createContext, memo, useCallback, useRef } from "react";
 import type { Sentence } from "@acme/db/schema";
 
 import type { RouterOutputs } from "~/trpc/react";
+import { Button } from "~/components/ui/button";
+import { Skeleton } from "~/components/ui/skeleton";
 import { useIntersectionObserver } from "~/hooks/useIntersectionObserver";
 import useOnScreen from "~/hooks/useOnScreen";
 import { useUserSettings } from "~/providers/user-settings-provider";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import InterlinearLineWordColumn from "./InterlinearLineWordColumn";
-import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
 
 export const SentenceContext = createContext<{
   sentence: RouterOutputs["sentences"]["getSentence"];

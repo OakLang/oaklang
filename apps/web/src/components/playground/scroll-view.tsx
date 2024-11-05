@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { ArrowRightIcon, Loader2Icon } from "lucide-react";
 
 import { useTrainingSession } from "~/providers/training-session-provider";
-import InterlinearView from "../InterlinearView";
+import InterlinearLineView from "../interlinear-line/interlinear-line-view";
 import { Button } from "../ui/button";
 import ToolBar from "./toolbar";
 import { useTrainingSessionView } from "./training-session-view";
@@ -27,7 +27,7 @@ export default function ScrollView() {
           <div className="mx-auto my-8 flex max-w-screen-2xl flex-col px-4 md:my-16 md:px-8">
             {sentences.length > 0 ? (
               <>
-                <InterlinearView sentences={sentences} />
+                <InterlinearLineView sentences={sentences} />
                 <div className="mt-16 flex items-center justify-center gap-2">
                   <Button
                     onClick={() => setIsComplete(true)}

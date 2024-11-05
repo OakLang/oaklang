@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { CheckIcon, FilterIcon, Loader2 } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import { CheckIcon, FilterIcon, Loader2, XIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import type { SentenceWord } from "@acme/db/schema";
@@ -13,21 +13,30 @@ import { useTrainingSession } from "~/providers/training-session-provider";
 import { useUserSettings } from "~/providers/user-settings-provider";
 import { api } from "~/trpc/react";
 import { cn, formatDate } from "~/utils";
-import AudioPlayButton from "./AudioPlayButton";
-import ObjectDetailsList from "./ObjectDetailsList";
-import RenderQueryResult from "./RenderQueryResult";
-import { Button } from "./ui/button";
+import AudioPlayButton from "../AudioPlayButton";
+import ObjectDetailsList from "../ObjectDetailsList";
+import RenderQueryResult from "../RenderQueryResult";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Skeleton } from "./ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+} from "../ui/dropdown-menu";
+import { Skeleton } from "../ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { useTrainingSessionView } from "./training-session-view";
 
-export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
+export default function WordInspectionSidebarView({
+  word,
+}: {
+  word: SentenceWord;
+}) {
   const { data } = useSession();
+  const { setInspectedWord } = useTrainingSessionView();
+  const { trainingSession } = useTrainingSession();
+  const { userSettings, updateUserSettings } = useUserSettings();
+
   const isPowerUser = useMemo(
     () => hasPowerUserAccess(data?.user.role),
     [data?.user.role],
@@ -36,8 +45,6 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
   const openWindow = (url: string, target: string) => {
     window.open(url, target, "width=720,height=480");
   };
-  const { trainingSession } = useTrainingSession();
-  const { userSettings, updateUserSettings } = useUserSettings();
 
   const userWordQuery = api.words.getUserWord.useQuery({
     wordId: word.wordId,
@@ -51,6 +58,30 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
     [userWordQuery.data?.word.word, word.interlinearLines.text],
   );
 
+  const handleToggleKnown = useCallback(() => {
+    if (!userWordQuery.isSuccess) {
+      return;
+    }
+
+    if (userWordQuery.data.knownAt) {
+      markWordUnknownMutation.mutate({
+        wordId: userWordQuery.data.wordId,
+      });
+    } else {
+      markWordKnownMutation.mutate({
+        wordId: userWordQuery.data.wordId,
+        sessionId: trainingSession.id,
+      });
+    }
+  }, [
+    markWordKnownMutation,
+    markWordUnknownMutation,
+    trainingSession.id,
+    userWordQuery.data?.knownAt,
+    userWordQuery.data?.wordId,
+    userWordQuery.isSuccess,
+  ]);
+
   return (
     <RenderQueryResult
       query={userWordQuery}
@@ -61,20 +92,21 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
             <Skeleton className="h-4 w-24" />
           </div>
           <Skeleton className="h-10 w-10 rounded-full" />
+          <Skeleton className="h-10 w-10 rounded-full" />
         </div>
       )}
     >
       {({ data: userWord }) => (
         <>
           <div className="grid gap-4 border-b p-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 overflow-hidden">
               <AudioPlayButton
                 value={wordText}
                 autoPlay={userSettings.autoPlayAudio}
               />
-              <div className="flex-1">
-                <p>{wordText}</p>
-              </div>
+
+              <p className="flex-1 truncate">{wordText}</p>
+
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -87,34 +119,37 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
                       "bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20 hover:text-yellow-500 dark:text-yellow-500":
                         !!userWord.knownAt,
                     })}
-                    onClick={() => {
-                      if (userWord.knownAt) {
-                        markWordUnknownMutation.mutate({
-                          wordId: userWord.wordId,
-                        });
-                      } else {
-                        markWordKnownMutation.mutate({
-                          wordId: userWord.wordId,
-                          sessionId: trainingSession.id,
-                        });
-                      }
-                    }}
+                    onClick={handleToggleKnown}
                     size="icon"
                   >
                     {markWordKnownMutation.isPending ||
                     markWordUnknownMutation.isPending ? (
-                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      <CheckIcon className="h-6 w-6" />
+                      <CheckIcon className="h-5 w-5" />
                     )}
                     <span className="sr-only">
                       {userWord.knownAt ? "Mark as unknown" : "Mark as known"}
                     </span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="left" align="center">
+                <TooltipContent>
                   {userWord.knownAt ? "Mark as unknown" : "Mark as known"}
                 </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setInspectedWord(null)}
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground rounded-full"
+                  >
+                    <XIcon className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Close Inspection</TooltipContent>
               </Tooltip>
             </div>
           </div>

@@ -12,6 +12,17 @@ import { InterlinearLineAction } from "@acme/core/constants";
 
 import type { RouterOutputs } from "~/trpc/react";
 import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "~/components/ui/context-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
+import {
   useMarkWordKnownMutation,
   useMarkWordUnknownMutation,
   useUpdateUserWordMutation,
@@ -24,14 +35,8 @@ import { useUserSettings } from "~/providers/user-settings-provider";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
+import { useTrainingSessionView } from "../playground/training-session-view";
 import { SentenceContext } from "./InterlinearLineSentence";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "./ui/context-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function InterlinearLineWordColumn({
   word: { word, userWord, ...sentenceWord },
@@ -103,6 +108,8 @@ const InterlinearLineWordColumnCell = ({
   sentenceWord: SentenceWord;
 }) => {
   const { trainingSession } = useTrainingSession();
+  const { inspectedWord, setInspectedWord, setSidebarOpen } =
+    useTrainingSessionView();
   const sentenceCtx = useContext(SentenceContext);
   if (!sentenceCtx) {
     throw new Error("SentenceProvider not found in the tree");
@@ -114,12 +121,7 @@ const InterlinearLineWordColumnCell = ({
     [line.disappearing, userWord?.hideLines],
   );
 
-  const setInspectionPanelOpen = useAppStore(
-    (state) => state.setInspectionPanelOpen,
-  );
   const fontSize = useAppStore((state) => state.fontSize);
-  const inspectedWord = useAppStore((state) => state.inspectedWord);
-  const setInspectedWord = useAppStore((state) => state.setInspectedWord);
   const [showLinePopover, setShowLinePopover] = useState(false);
   const [popoverLineName, setPopoverLineName] = useState<
     string | null | undefined
@@ -144,13 +146,13 @@ const InterlinearLineWordColumnCell = ({
       sentenceId: sentenceWord.sentenceId,
       wordId: word.id,
     });
-    setInspectionPanelOpen(true);
+    setSidebarOpen(true);
   }, [
     sentenceWord.index,
     sentenceWord.interlinearLines,
     sentenceWord.sentenceId,
     setInspectedWord,
-    setInspectionPanelOpen,
+    setSidebarOpen,
     word.id,
   ]);
 

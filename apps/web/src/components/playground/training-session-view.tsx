@@ -5,6 +5,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Loader2Icon } from "lucide-react";
 
+import type { SentenceWord } from "@acme/db/schema";
+
 import type { RouterOutputs } from "~/trpc/react";
 import ScrollView from "~/components/playground/scroll-view";
 import { SentenceView } from "~/components/playground/sentence-view";
@@ -19,11 +21,17 @@ export interface TrainingSessionViewContextValue {
   sentences: RouterOutputs["sentences"]["getSentences"];
   isComplete: boolean;
   setIsComplete: Dispatch<SetStateAction<boolean>>;
+  inspectedWord: SentenceWord | null;
+  setInspectedWord: Dispatch<SetStateAction<SentenceWord | null>>;
+  sidebarOpen: boolean;
+  setSidebarOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 const Context = createContext<TrainingSessionViewContextValue | null>(null);
 
 export default function TrainingSessionView() {
+  const [inspectedWord, setInspectedWord] = useState<SentenceWord | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { trainingSession, updateTrainingSession } = useTrainingSession();
 
@@ -101,7 +109,15 @@ export default function TrainingSessionView() {
       {(query) => {
         return (
           <Context.Provider
-            value={{ sentences: query.data, isComplete, setIsComplete }}
+            value={{
+              sentences: query.data,
+              isComplete,
+              setIsComplete,
+              inspectedWord,
+              setInspectedWord,
+              setSidebarOpen,
+              sidebarOpen,
+            }}
           >
             {isComplete ? (
               <TrainingSessionCompleteView />

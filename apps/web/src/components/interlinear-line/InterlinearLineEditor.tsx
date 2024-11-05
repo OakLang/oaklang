@@ -5,13 +5,17 @@ import { EditIcon, EyeIcon, EyeOffIcon, TrashIcon } from "lucide-react";
 import type { InterlinearLine } from "@acme/core/validators";
 import { NON_EDITABLE_LINE_NAMES } from "@acme/core/constants";
 
+import { ReorderIcon } from "~/components/icons/drag-icon";
+import { Button } from "~/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 import { useHasPowerUserAccess } from "~/hooks/useHasPowerUserAccess";
 import { useRaisedShadow } from "~/hooks/useRaisedShadow";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
-import { ReorderIcon } from "./icons/drag-icon";
 import { InterlinearLineEditForm } from "./InterlinearLineEditForm";
-import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function InterlinearLinesEditor({
   onChange,

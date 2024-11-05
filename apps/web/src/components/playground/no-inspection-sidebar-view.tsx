@@ -1,8 +1,8 @@
 import { useTrainingSession } from "~/providers/training-session-provider";
 import { formatDate } from "~/utils";
-import ObjectDetailsList from "./ObjectDetailsList";
+import ObjectDetailsList from "../ObjectDetailsList";
 
-export default function TrainingSessionDetailsSideBarWidget() {
+export default function NoInspectionSidebarView() {
   const { trainingSession } = useTrainingSession();
 
   return (

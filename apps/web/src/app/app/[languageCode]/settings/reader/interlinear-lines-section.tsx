@@ -10,7 +10,7 @@ import {
   DEFAULT_INTERLINEAR_LINES,
 } from "@acme/core/constants";
 
-import InterlinearLinesEditor from "~/components/InterlinearLineEditor";
+import InterlinearLinesEditor from "~/components/interlinear-line/InterlinearLineEditor";
 import { Button } from "~/components/ui/button";
 import { useUserSettings } from "~/providers/user-settings-provider";
 

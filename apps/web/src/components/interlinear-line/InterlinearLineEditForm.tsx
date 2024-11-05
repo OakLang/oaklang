@@ -14,16 +14,16 @@ import {
   NON_EDITABLE_LINE_NAMES,
 } from "@acme/core/constants";
 
+import SimpleSelect from "~/components/simple-select";
+import ColorPicker from "~/components/ui/color-picker";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import NumberInput from "~/components/ui/number-input";
+import { Switch } from "~/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Textarea } from "~/components/ui/textarea";
 import { useHasPowerUserAccess } from "~/hooks/useHasPowerUserAccess";
 import { useUserSettings } from "~/providers/user-settings-provider";
-import SimpleSelect from "./simple-select";
-import ColorPicker from "./ui/color-picker";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import NumberInput from "./ui/number-input";
-import { Switch } from "./ui/switch";
-import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
-import { Textarea } from "./ui/textarea";
 
 const disappearingOptions: {
   value: Disappearing;
