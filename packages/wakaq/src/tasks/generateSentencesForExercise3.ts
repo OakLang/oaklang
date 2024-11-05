@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { Exercise3, Exercises } from "@acme/core/constants";
 import { hasPowerUserAccess } from "@acme/core/helpers";
-import { exercise3Data } from "@acme/db/validators";
+import { exercise3Data } from "@acme/core/validators";
 
 import { wakaq } from "..";
 import {

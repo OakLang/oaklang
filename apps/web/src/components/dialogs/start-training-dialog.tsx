@@ -5,20 +5,20 @@ import { Loader2Icon, PlusIcon, TrashIcon, XIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import type { ModuleData } from "@acme/core/validators";
 import type {
   CreateTrainingSessoin,
   Exercise1FormData,
   Exercise2FormData,
   Exercise3FormData,
-} from "@acme/db/validators";
+  ModuleData,
+} from "@acme/core/validators";
 import {
   ALL_EXERCISES,
   COMPLEXITY_LIST,
   Exercises,
   TRAINING_SESSION_TOPICS,
 } from "@acme/core/constants";
-import { createTrainingSessionSchema } from "@acme/db/validators";
+import { createTrainingSessionSchema } from "@acme/core/validators";
 
 import type { LanguageCodeParams } from "~/types";
 import { Button } from "~/components/ui/button";

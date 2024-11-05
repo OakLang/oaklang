@@ -2,10 +2,10 @@ import { z } from "zod";
 
 import { Exercise1, Exercises } from "@acme/core/constants";
 import { hasPowerUserAccess } from "@acme/core/helpers";
+import { exercise1Data } from "@acme/core/validators";
 import { and, desc, eq, isNull, not } from "@acme/db";
 import { db } from "@acme/db/client";
 import { sentencesTable, userWordsTable, wordsTable } from "@acme/db/schema";
-import { exercise1Data } from "@acme/db/validators";
 
 import { wakaq } from "..";
 import {

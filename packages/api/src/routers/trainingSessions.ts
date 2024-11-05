@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { Exercise } from "@acme/core/constants";
 import type { TrainingSession } from "@acme/db/schema";
 import { ALL_EXERCISES, Exercises } from "@acme/core/constants";
+import { createTrainingSessionSchema } from "@acme/core/validators";
 import { and, asc, count, desc, eq, ilike, inArray, or } from "@acme/db";
 import {
   languagesTable,
@@ -13,7 +14,6 @@ import {
   userWordsTable,
   wordsTable,
 } from "@acme/db/schema";
-import { createTrainingSessionSchema } from "@acme/db/validators";
 import { generateSentencesForExercise1 } from "@acme/wakaq/tasks/generateSentencesForExercise1";
 import { generateSentencesForExercise2 } from "@acme/wakaq/tasks/generateSentencesForExercise2";
 import { generateSentencesForExercise3 } from "@acme/wakaq/tasks/generateSentencesForExercise3";

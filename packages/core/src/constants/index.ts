@@ -115,3 +115,4 @@ export const TRAINING_SESSION_TOPICS: {
 export * from "./interlinear-lines";
 export * from "./spaced-repetition-stages";
 export * from "./expercises";
+export * from "./session-recommendations";

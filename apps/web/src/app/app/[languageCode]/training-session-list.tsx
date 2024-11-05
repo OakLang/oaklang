@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import {
   CheckIcon,
@@ -12,6 +12,7 @@ import {
   FilterIcon,
   LanguagesIcon,
   LibraryBigIcon,
+  Loader2,
   MoreHorizontal,
   PackageOpenIcon,
   SlidersIcon,
@@ -20,8 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { CreateTrainingSessoin } from "@acme/db/validators";
-import { ALL_EXERCISES } from "@acme/core/constants";
+import { ALL_EXERCISES, SESSION_RECOMMENDATIONS } from "@acme/core/constants";
 
 import type { SessionsListDisplay } from "~/store/app-store";
 import type { RouterOutputs } from "~/trpc/react";
@@ -30,6 +30,7 @@ import { useEditTrainingSessionDialog } from "~/components/dialogs/edit-training
 import RenderInfiniteQueryResult from "~/components/RenderInfiniteQueryResult";
 import SearchBar from "~/components/SearchBar";
 import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   Command,
   CommandEmpty,
@@ -62,16 +63,41 @@ import StartLearningButton from "./start-learning-button";
 export default function TrainingSessionList() {
   const searchParams = useSearchParams();
   const search = searchParams.get("search");
+  const router = useRouter();
 
   const { languageCode } = useParams<LanguageCodeParams>();
   const exercises = useAppStore((state) => state.sessionsListFilter.exercises);
   const orderBy = useAppStore((state) => state.sessionsListDisplay.orderBy);
 
+  const utils = api.useUtils();
   const trainingSessionsQuery =
     api.trainingSessions.getTrainingSessions.useInfiniteQuery(
       { languageCode, search, exercises, orderBy },
       { getNextPageParam: (lastPage) => lastPage.nextCursor },
     );
+
+  const createTrainingSessionMut =
+    api.trainingSessions.createTrainingSession.useMutation({
+      onSuccess: (data) => {
+        void utils.trainingSessions.getTrainingSessions.invalidate({
+          languageCode,
+        });
+        router.push(`/app/${data.languageCode}/training/${data.id}`);
+      },
+      onError: (error) => {
+        toast("Failed to create training session", {
+          description: error.message,
+        });
+      },
+    });
+
+  const recommendations = useMemo(
+    () =>
+      SESSION_RECOMMENDATIONS.filter(
+        (item) => item.languageCode === languageCode,
+      ),
+    [languageCode],
+  );
 
   return (
     <div className="space-y-8">
@@ -88,6 +114,48 @@ export default function TrainingSessionList() {
           <StartLearningButton />
         </div>
       </div>
+
+      {recommendations.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Recommendations</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <div className="flex min-w-max gap-6">
+              {recommendations.map((recommendation) => (
+                <div
+                  key={recommendation.title}
+                  className="bg-secondary/50 grid w-[320px] gap-6 rounded-xl border p-6"
+                >
+                  <div>
+                    <p className="line-clamp-2 text-lg font-semibold leading-tight">
+                      {recommendation.title}
+                    </p>
+                    <p className="text-muted-foreground mt-2 line-clamp-2 text-sm leading-normal">
+                      {recommendation.description}
+                    </p>
+                  </div>
+                  <div className="mt-auto">
+                    <Button
+                      onClick={() => {
+                        createTrainingSessionMut.mutate(recommendation);
+                      }}
+                      disabled={createTrainingSessionMut.isPending}
+                    >
+                      {createTrainingSessionMut.variables?.title ===
+                        recommendation.title &&
+                        createTrainingSessionMut.isPending && (
+                          <Loader2 className="-ml-1 mr-2 h-4 w-4 animate-spin" />
+                        )}
+                      Try this
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <RenderInfiniteQueryResult
         query={trainingSessionsQuery}
