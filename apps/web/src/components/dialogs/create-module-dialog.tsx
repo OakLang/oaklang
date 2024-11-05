@@ -24,7 +24,7 @@ export default function CreateModuleDialog({
         <DialogHeader>
           <DialogTitle>Create Module</DialogTitle>
         </DialogHeader>
-        <CreateModuleForm>
+        {/* <CreateModuleForm>
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="ghost" type="reset">
@@ -33,7 +33,7 @@ export default function CreateModuleDialog({
             </DialogClose>
             <Button>Create</Button>
           </DialogFooter>
-        </CreateModuleForm>
+        </CreateModuleForm> */}
       </DialogContent>
     </Dialog>
   );

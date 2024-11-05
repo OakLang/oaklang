@@ -44,11 +44,15 @@ import {
 } from "~/components/ui/tooltip";
 import { useTrainingSession } from "~/providers/training-session-provider";
 import { useAppStore } from "~/store/app-store";
+import { useEditTrainingSessionDialog } from "../dialogs/edit-training-session-dialog";
 import { useTrainingSessionView } from "./training-session-view";
 
 export default function ToolBar({ children }: { children?: ReactNode }) {
   const { trainingSession } = useTrainingSession();
   const { sidebarOpen, setSidebarOpen, isComplete } = useTrainingSessionView();
+
+  const [EditTrainingSessionDialog, _, setEditTrainingSessionDialog] =
+    useEditTrainingSessionDialog();
 
   const [settingsSheetOpen, setSettingsSheetOpen] = useState(false);
 
@@ -182,6 +186,12 @@ export default function ToolBar({ children }: { children?: ReactNode }) {
                   <TooltipContent side="bottom">Options</TooltipContent>
                 </Tooltip>
                 <DropdownMenuContent side="bottom" align="end">
+                  <DropdownMenuItem
+                    onClick={() => setEditTrainingSessionDialog(true)}
+                  >
+                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSettingsSheetOpen(true)}>
                     <SettingsIcon className="mr-2 h-4 w-4" />
                     Settings
@@ -225,6 +235,8 @@ export default function ToolBar({ children }: { children?: ReactNode }) {
           <AppSettings />
         </SheetContent>
       </Sheet>
+
+      <EditTrainingSessionDialog trainingSession={trainingSession} />
     </>
   );
 }
