@@ -38,11 +38,16 @@ export default function InterlinearLineWordColumn({
 }: {
   word: RouterOutputs["sentences"]["getSentence"]["words"][number];
 }) {
-  const userWordQuery = api.words.getUserWord.useQuery(
-    {
-      wordId: word.id,
+  const { trainingSessionId } = useParams<TrainingSessionParams>();
+  const seenWordMutation = api.words.seenWord.useMutation({
+    onError: (error) => {
+      toast(error.message);
     },
+  });
+  const userWordQuery = api.words.getUserWord.useQuery(
+    { wordId: word.id },
     {
+      enabled: false,
       initialData: userWord
         ? {
             ...userWord,
@@ -52,12 +57,6 @@ export default function InterlinearLineWordColumn({
     },
   );
   const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const { trainingSessionId } = useParams<TrainingSessionParams>();
-  const seenWordMutation = api.words.seenWord.useMutation({
-    onError: (error) => {
-      toast(error.message);
-    },
-  });
 
   const onIntersect = useCallback(() => {
     seenWordMutation.mutate({

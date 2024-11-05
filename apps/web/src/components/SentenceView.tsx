@@ -236,61 +236,64 @@ export function SentenceView({
                 </div>
                 <InterlinearView sentences={[sentence]} />
 
-                <div className="pointer-events-none mt-16">
-                  <div className="flex flex-wrap gap-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowTranslation(!showTranslation)}
-                      className="text-muted-foreground pointer-events-auto"
-                    >
-                      {showTranslation
-                        ? "Hide Translation"
-                        : "Show Translation"}
-                      <ChevronDownIcon
-                        className={cn(
-                          "-mr-1 ml-2 h-4 w-4 transition-transform duration-200",
-                          {
-                            "-rotate-180": showTranslation,
-                          },
-                        )}
-                      />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-muted-foreground pointer-events-auto"
-                      onClick={handleMarkAllWordsKnownAndNext}
-                    >
-                      Mark all Words Known and Next
-                      <ArrowRightIcon className="-mr-1 ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                  {showTranslation && (
-                    <div className="text-muted-foreground bg-muted/50 pointer-events-auto mt-2 flex gap-4 overflow-hidden rounded-lg p-2">
-                      <AudioPlayButton2
-                        value={sentence.translation}
+                {sentenceQuery.data?.interlinearLineGenerationStatus ===
+                  "success" && (
+                  <div className="pointer-events-none mt-16">
+                    <div className="flex flex-wrap gap-4">
+                      <Button
                         variant="outline"
-                      />
-                      <div className="flex-1">
-                        <p className="italic">{sentence.translation}</p>
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="text-muted-foreground hover:text-foreground mt-2 h-fit px-0"
-                          asChild
-                        >
-                          <Link
-                            href={`https://translate.google.com/?sl=${trainingSession.languageCode}&tl=${userSettingsQuery.data?.nativeLanguage}&text=${sentences.map((sent) => sent.sentence).join(" ")}&op=translate`}
-                            target="_blank"
-                            rel="nofollow noreferrer"
-                          >
-                            Google Translate
-                            <ExternalLinkIcon className="-mr-1 ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </div>
+                        onClick={() => setShowTranslation(!showTranslation)}
+                        className="text-muted-foreground pointer-events-auto"
+                      >
+                        {showTranslation
+                          ? "Hide Translation"
+                          : "Show Translation"}
+                        <ChevronDownIcon
+                          className={cn(
+                            "-mr-1 ml-2 h-4 w-4 transition-transform duration-200",
+                            {
+                              "-rotate-180": showTranslation,
+                            },
+                          )}
+                        />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="text-muted-foreground pointer-events-auto"
+                        onClick={handleMarkAllWordsKnownAndNext}
+                      >
+                        Mark all Words Known and Next
+                        <ArrowRightIcon className="-mr-1 ml-2 h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
-                </div>
+                    {showTranslation && (
+                      <div className="text-muted-foreground bg-muted/50 pointer-events-auto mt-2 flex gap-4 overflow-hidden rounded-lg p-2">
+                        <AudioPlayButton2
+                          value={sentence.translation}
+                          variant="outline"
+                        />
+                        <div className="flex-1">
+                          <p className="italic">{sentence.translation}</p>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="text-muted-foreground hover:text-foreground mt-2 h-fit px-0"
+                            asChild
+                          >
+                            <Link
+                              href={`https://translate.google.com/?sl=${trainingSession.languageCode}&tl=${userSettingsQuery.data?.nativeLanguage}&text=${sentences.map((sent) => sent.sentence).join(" ")}&op=translate`}
+                              target="_blank"
+                              rel="nofollow noreferrer"
+                            >
+                              Google Translate
+                              <ExternalLinkIcon className="-mr-1 ml-2 h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             ) : trainingSession.status === "idle" ||
               trainingSession.status === "pending" ? (

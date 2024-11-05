@@ -167,6 +167,7 @@ export default function ContentView() {
           <div className="bg-secondary flex gap-1 rounded-lg p-1">
             {views.map((view) => (
               <Button
+                key={view.value}
                 variant="ghost"
                 onClick={() => {
                   if (view.value !== trainingSessionQuery.data.view) {
