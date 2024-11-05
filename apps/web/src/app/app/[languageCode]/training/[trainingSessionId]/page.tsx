@@ -1,15 +1,49 @@
-import ContentView from "./content-view";
-import RightBar from "./right-bar";
+import { notFound } from "next/navigation";
+
+import { eq } from "@acme/db";
+import { db } from "@acme/db/client";
+import { trainingSessionsTable } from "@acme/db/schema";
+
+import type { TrainingSessionParams } from "~/types";
+import TrainingSessionView from "~/components/playground/training-session-view";
+import TrainingSessionProvider from "~/providers/training-session-provider";
+import { HydrateClient, trpc } from "~/trpc/server";
 
 export const dynamic = "force-dynamic";
 
-export default function TrainingPage() {
+export default async function TrainingPage(
+  props: Readonly<{
+    params: Promise<TrainingSessionParams>;
+  }>,
+) {
+  const { params } = props;
+  const { languageCode, trainingSessionId } = await params;
+
+  const trainingSession = await trpc.trainingSessions.getTrainingSession({
+    trainingSessionId,
+  });
+
+  if (trainingSession.languageCode !== languageCode) {
+    notFound();
+  }
+
+  void trpc.trainingSessions.getTrainingSession.prefetch(
+    { trainingSessionId },
+    { initialData: trainingSession },
+  );
+
+  await db
+    .update(trainingSessionsTable)
+    .set({ lastPracticedAt: new Date() })
+    .where(eq(trainingSessionsTable.id, trainingSession.id));
+
   return (
-    <div className="relative flex h-[calc(100vh-4rem-1px)] overflow-hidden">
-      <div className="relative flex flex-1 flex-col overflow-hidden">
-        <ContentView />
-      </div>
-      <RightBar />
-    </div>
+    <HydrateClient>
+      <TrainingSessionProvider trainingSessionId={trainingSessionId}>
+        <div className="flex h-[calc(100vh-4rem-1px)] overflow-hidden">
+          <TrainingSessionView />
+        </div>
+      </TrainingSessionProvider>
+    </HydrateClient>
   );
 }

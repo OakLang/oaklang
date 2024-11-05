@@ -10,16 +10,14 @@ import { ReorderIcon } from "~/components/icons/drag-icon";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { useRaisedShadow } from "~/hooks/useRaisedShadow";
-import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
-import { api } from "~/trpc/react";
+import { useUserSettings } from "~/providers/user-settings-provider";
 import { cn } from "~/utils";
 
 export default function SimpleInterlinearLineEditor() {
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
+  const { userSettings, updateUserSettings } = useUserSettings();
 
   const [interlinearLines, setInterlinearLines] = useState<InterlinearLine[]>(
-    userSettingsQuery.data?.interlinearLines ?? [],
+    userSettings.interlinearLines,
   );
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -30,10 +28,10 @@ export default function SimpleInterlinearLineEditor() {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        updateUserSettingsMutation.mutate({ interlinearLines: value });
+        updateUserSettings.mutate({ interlinearLines: value });
       }, 300);
     },
-    [updateUserSettingsMutation],
+    [updateUserSettings],
   );
 
   const handleChange = useCallback(
@@ -42,17 +40,15 @@ export default function SimpleInterlinearLineEditor() {
       if (useDebounce) {
         debouncedChange(value);
       } else {
-        updateUserSettingsMutation.mutate({ interlinearLines: value });
+        updateUserSettings.mutate({ interlinearLines: value });
       }
     },
-    [debouncedChange, updateUserSettingsMutation],
+    [debouncedChange, updateUserSettings],
   );
 
   useEffect(() => {
-    if (userSettingsQuery.data?.interlinearLines) {
-      setInterlinearLines(userSettingsQuery.data.interlinearLines);
-    }
-  }, [userSettingsQuery.data?.interlinearLines]);
+    setInterlinearLines(userSettings.interlinearLines);
+  }, [userSettings.interlinearLines]);
 
   return (
     <Reorder.Group
@@ -102,33 +98,34 @@ function InterlinearLineItem({
       dragControls={controls}
       style={{ boxShadow, y }}
       layout="position"
-      className="bg-background flex items-center rounded-md"
     >
-      <div
-        onPointerDown={(event) => controls.start(event)}
-        className="hover:bg-secondary flex h-8 w-6 cursor-grab items-center justify-center rounded-md"
-      >
-        <ReorderIcon className="h-4 w-4" />
+      <div className="bg-background flex items-center rounded-md">
+        <div
+          onPointerDown={(event) => controls.start(event)}
+          className="hover:bg-secondary flex h-8 w-6 cursor-grab items-center justify-center rounded-md"
+        >
+          <ReorderIcon className="h-4 w-4" />
+        </div>
+        <p
+          className={cn("flex-1 truncate px-2", {
+            "line-through": item.hidden,
+          })}
+        >
+          {item.name}
+        </p>
+        <Button
+          aria-label="Show or hide Line"
+          onClick={onToggleHidden}
+          size="icon"
+          variant="ghost"
+        >
+          {item.hidden ? (
+            <EyeOffIcon className="h-4 w-4" />
+          ) : (
+            <EyeIcon className="h-4 w-4" />
+          )}
+        </Button>
       </div>
-      <p
-        className={cn("flex-1 truncate px-2", {
-          "line-through": item.hidden,
-        })}
-      >
-        {item.name}
-      </p>
-      <Button
-        aria-label="Show or hide Line"
-        onClick={onToggleHidden}
-        size="icon"
-        variant="ghost"
-      >
-        {item.hidden ? (
-          <EyeOffIcon className="h-4 w-4" />
-        ) : (
-          <EyeIcon className="h-4 w-4" />
-        )}
-      </Button>
     </Reorder.Item>
   );
 }

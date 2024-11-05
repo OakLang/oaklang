@@ -5,6 +5,7 @@ import type { Sentence } from "@acme/db/schema";
 import type { RouterOutputs } from "~/trpc/react";
 import { useIntersectionObserver } from "~/hooks/useIntersectionObserver";
 import useOnScreen from "~/hooks/useOnScreen";
+import { useUserSettings } from "~/providers/user-settings-provider";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import InterlinearLineWordColumn from "./InterlinearLineWordColumn";
@@ -150,7 +151,7 @@ function RenderSentence({
 }
 
 const SentenceLoader = memo(() => {
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const { userSettings } = useUserSettings();
   const fontSize = useAppStore((state) => state.fontSize);
 
   return (
@@ -163,7 +164,7 @@ const SentenceLoader = memo(() => {
     >
       {Array.from({ length: 5 }).map((_, i) => (
         <div className="flex flex-col items-center gap-2" key={i}>
-          {userSettingsQuery.data?.interlinearLines.map((line) => (
+          {userSettings.interlinearLines.map((line) => (
             <Skeleton
               className="inline"
               style={{

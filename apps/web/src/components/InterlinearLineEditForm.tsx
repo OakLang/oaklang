@@ -15,7 +15,7 @@ import {
 } from "@acme/core/constants";
 
 import { useHasPowerUserAccess } from "~/hooks/useHasPowerUserAccess";
-import { api } from "~/trpc/react";
+import { useUserSettings } from "~/providers/user-settings-provider";
 import SimpleSelect from "./simple-select";
 import ColorPicker from "./ui/color-picker";
 import { Input } from "./ui/input";
@@ -335,7 +335,7 @@ const ActionForm = ({
   onChange: (action: InterlinearLineActionType | null) => void;
   actions: ActionItem[];
 }) => {
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const { userSettings } = useUserSettings();
   const requireLineName = useMemo(
     () =>
       actions.find((item) => item.value === action?.action)?.requireLineName,
@@ -373,11 +373,9 @@ const ActionForm = ({
             <SimpleSelect
               id={id2}
               value={action.lineName ?? undefined}
-              options={
-                userSettingsQuery.data?.interlinearLines.map((item) => ({
-                  value: item.name,
-                })) ?? []
-              }
+              options={userSettings.interlinearLines.map((item) => ({
+                value: item.name,
+              }))}
               onValueChange={(lineName) => onChange({ ...action, lineName })}
             />
           </fieldset>

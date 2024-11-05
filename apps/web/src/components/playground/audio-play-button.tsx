@@ -35,7 +35,7 @@ export default function AudioPlayButton({
     <>
       <audio ref={audioRef} />
       <Button
-        className="h-14 w-14 rounded-full"
+        className="pointer-events-auto h-14 w-14 rounded-full"
         size="icon"
         variant="outline"
         onClick={() => {
@@ -59,7 +59,7 @@ export default function AudioPlayButton({
         value={String(playgroundPlaybackSpeed)}
         onValueChange={(rate) => setPlaygroundPlaybackSpeed(parseFloat(rate))}
       >
-        <SelectTrigger className="w-fit gap-2 rounded-full">
+        <SelectTrigger className="pointer-events-auto w-fit gap-2 rounded-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -10,9 +10,13 @@ export * from "./exercise-3";
 
 export const ALL_EXERCISES = [Exercise1, Exercise2, Exercise3];
 
-export const INFINITE_EXERCISES: string[] = [Exercises.exercise1];
-
-export const FINITE_EXERCISES: string[] = [
+export const ALL_EXERCISE_IDS: string[] = [
+  Exercises.exercise1,
+  Exercises.exercise2,
+  Exercises.exercise3,
+];
+export const INFINITE_EXERCISE_IDS: string[] = [Exercises.exercise1];
+export const FINITE_EXERCISES_IDS: string[] = [
   Exercises.exercise2,
   Exercises.exercise3,
 ];

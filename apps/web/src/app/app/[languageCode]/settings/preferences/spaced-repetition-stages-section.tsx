@@ -9,17 +9,16 @@ import { DEFAULT_SPACED_REPETITION_STAGES } from "@acme/core/constants";
 
 import SpacedRepetitionStagesEditor from "~/components/SpacedRepetitionStagesEditor";
 import { Button } from "~/components/ui/button";
-import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
-import { api } from "~/trpc/react";
+import { useUserSettings } from "~/providers/user-settings-provider";
 
 export default function SpacedRepetitionStagesSection() {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
+  const { userSettings, updateUserSettings } = useUserSettings();
 
   const [spacedRepetitionStages, setSpacedRepetitionStages] = useState<
     SpacedRepetitionStage[]
-  >(userSettingsQuery.data?.spacedRepetitionStages ?? []);
+  >(userSettings.spacedRepetitionStages);
+
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedChange = useCallback(
     (spacedRepetitionStages: SpacedRepetitionStage[]) => {
@@ -27,10 +26,10 @@ export default function SpacedRepetitionStagesSection() {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        updateUserSettingsMutation.mutate({ spacedRepetitionStages });
+        updateUserSettings.mutate({ spacedRepetitionStages });
       }, 300);
     },
-    [updateUserSettingsMutation],
+    [updateUserSettings],
   );
 
   const handleChange = useCallback(
@@ -53,21 +52,19 @@ export default function SpacedRepetitionStagesSection() {
       },
     ];
     setSpacedRepetitionStages(newStages);
-    updateUserSettingsMutation.mutate({ spacedRepetitionStages: newStages });
-  }, [spacedRepetitionStages, updateUserSettingsMutation]);
+    updateUserSettings.mutate({ spacedRepetitionStages: newStages });
+  }, [spacedRepetitionStages, updateUserSettings]);
 
   const handleResetStages = useCallback(() => {
     setSpacedRepetitionStages(DEFAULT_SPACED_REPETITION_STAGES);
-    updateUserSettingsMutation.mutate({
+    updateUserSettings.mutate({
       spacedRepetitionStages: DEFAULT_SPACED_REPETITION_STAGES,
     });
-  }, [updateUserSettingsMutation]);
+  }, [updateUserSettings]);
 
   useEffect(() => {
-    if (userSettingsQuery.data?.spacedRepetitionStages) {
-      setSpacedRepetitionStages(userSettingsQuery.data.spacedRepetitionStages);
-    }
-  }, [userSettingsQuery.data?.spacedRepetitionStages]);
+    setSpacedRepetitionStages(userSettings.spacedRepetitionStages);
+  }, [userSettings.spacedRepetitionStages]);
 
   return (
     <section id="interlinear-lines" className="my-8">

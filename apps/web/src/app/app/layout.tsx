@@ -7,6 +7,7 @@ import FullScreenMessage from "~/components/FullScreenMessage";
 import LogoutButton from "~/components/logout-button";
 import { Button } from "~/components/ui/button";
 import UserNotFound from "~/components/user-not-found";
+import UserSettingsProvider from "~/providers/user-settings-provider";
 import { HydrateClient, trpc } from "~/trpc/server";
 import { getUser } from "~/utils/queries";
 
@@ -32,5 +33,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   await trpc.userSettings.getUserSettings.prefetch();
 
-  return <HydrateClient>{children}</HydrateClient>;
+  return (
+    <HydrateClient>
+      <UserSettingsProvider>{children}</UserSettingsProvider>
+    </HydrateClient>
+  );
 }

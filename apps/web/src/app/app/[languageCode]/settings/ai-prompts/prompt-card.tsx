@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import type { Prompt, Prompts } from "@acme/core/validators";
 import { prompt } from "@acme/core/validators";
 
-import RenderQueryResult from "~/components/RenderQueryResult";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -34,8 +33,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
-import { api } from "~/trpc/react";
+import { useUserSettings } from "~/providers/user-settings-provider";
 
 export default function PromptCard({
   id,
@@ -50,7 +48,7 @@ export default function PromptCard({
   defaultPrompt: string;
   keys?: string[];
 }) {
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+  const { userSettings } = useUserSettings();
 
   return (
     <Card className="my-16">
@@ -58,17 +56,13 @@ export default function PromptCard({
         <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
-      <RenderQueryResult query={userSettingsQuery}>
-        {(query) => (
-          <PromptForm
-            id={id}
-            value={query.data.prompts[id]}
-            defaultPrompt={defaultPrompt}
-            keys={keys}
-            prompts={query.data.prompts}
-          />
-        )}
-      </RenderQueryResult>
+      <PromptForm
+        id={id}
+        value={userSettings.prompts[id]}
+        defaultPrompt={defaultPrompt}
+        keys={keys}
+        prompts={userSettings.prompts}
+      />
     </Card>
   );
 }
@@ -94,16 +88,16 @@ const PromptForm = ({
       prompt: defaultPrompt,
     },
   });
-  const updateUserSettingsMut = useUpdateUserSettingsMutation();
+  const { updateUserSettings } = useUserSettings();
 
   const handleSubmit = useCallback(
     (data: Prompt) => {
       const newPrompts: Prompts = { ...prompts };
       newPrompts[id] = data;
-      updateUserSettingsMut.mutate({ prompts: newPrompts });
+      updateUserSettings.mutate({ prompts: newPrompts });
       form.reset(data);
     },
-    [form, id, prompts, updateUserSettingsMut],
+    [form, id, prompts, updateUserSettings],
   );
 
   return (
@@ -170,11 +164,9 @@ const PromptForm = ({
         </CardContent>
         <CardFooter className="space-x-2">
           <Button
-            disabled={
-              !form.formState.isDirty || updateUserSettingsMut.isPending
-            }
+            disabled={!form.formState.isDirty || updateUserSettings.isPending}
           >
-            {updateUserSettingsMut.isPending && (
+            {updateUserSettings.isPending && (
               <Loader2 className="-ml-1 mr-2 animate-spin" />
             )}
             Save

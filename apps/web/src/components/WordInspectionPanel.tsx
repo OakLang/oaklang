@@ -1,17 +1,16 @@
 import { useMemo } from "react";
-import { useParams } from "next/navigation";
 import { CheckIcon, FilterIcon, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import type { SentenceWord } from "@acme/db/schema";
 import { hasPowerUserAccess } from "@acme/core/helpers";
 
-import type { TrainingSessionParams } from "~/types";
 import {
   useMarkWordKnownMutation,
   useMarkWordUnknownMutation,
 } from "~/hooks/mutations";
-import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
+import { useTrainingSession } from "~/providers/training-session-provider";
+import { useUserSettings } from "~/providers/user-settings-provider";
 import { api } from "~/trpc/react";
 import { cn, formatDate } from "~/utils";
 import AudioPlayButton from "./AudioPlayButton";
@@ -37,12 +36,12 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
   const openWindow = (url: string, target: string) => {
     window.open(url, target, "width=720,height=480");
   };
-  const { trainingSessionId } = useParams<TrainingSessionParams>();
+  const { trainingSession } = useTrainingSession();
+  const { userSettings, updateUserSettings } = useUserSettings();
+
   const userWordQuery = api.words.getUserWord.useQuery({
     wordId: word.wordId,
   });
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const updateUserSettingsMut = useUpdateUserSettingsMutation();
 
   const markWordKnownMutation = useMarkWordKnownMutation();
   const markWordUnknownMutation = useMarkWordUnknownMutation();
@@ -71,7 +70,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
             <div className="flex items-center gap-4">
               <AudioPlayButton
                 value={wordText}
-                autoPlay={userSettingsQuery.data?.autoPlayAudio}
+                autoPlay={userSettings.autoPlayAudio}
               />
               <div className="flex-1">
                 <p>{wordText}</p>
@@ -96,7 +95,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
                       } else {
                         markWordKnownMutation.mutate({
                           wordId: userWord.wordId,
-                          sessionId: trainingSessionId,
+                          sessionId: trainingSession.id,
                         });
                       }
                     }}
@@ -162,19 +161,18 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    {userSettingsQuery.data?.interlinearLines.map((line) => (
+                    {userSettings.interlinearLines.map((line) => (
                       <DropdownMenuCheckboxItem
                         key={line.id}
                         checked={!line.hiddenInInspectionPanel}
                         onCheckedChange={(value) => {
-                          updateUserSettingsMut.mutate({
-                            interlinearLines:
-                              userSettingsQuery.data.interlinearLines.map(
-                                (l) =>
-                                  l.id === line.id
-                                    ? { ...l, hiddenInInspectionPanel: !value }
-                                    : l,
-                              ),
+                          updateUserSettings.mutate({
+                            interlinearLines: userSettings.interlinearLines.map(
+                              (l) =>
+                                l.id === line.id
+                                  ? { ...l, hiddenInInspectionPanel: !value }
+                                  : l,
+                            ),
                           });
                         }}
                       >
@@ -186,7 +184,7 @@ export default function WordInspectionPanel({ word }: { word: SentenceWord }) {
               </div>
               <ObjectDetailsList
                 data={Object.fromEntries(
-                  (userSettingsQuery.data?.interlinearLines ?? [])
+                  userSettings.interlinearLines
                     .filter((line) => !line.hiddenInInspectionPanel)
                     .map((item) => [
                       item.name,

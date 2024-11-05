@@ -18,10 +18,7 @@ export const userSettingsRouter = createTRPCRouter({
   updateUserSettings: protectedProcedure
     .input(updateUserSettingsSchema)
     .mutation(async ({ ctx, input }) => {
-      if (
-        (input.interlinearLines ?? input.prompts) &&
-        !hasPowerUserAccess(ctx.session.user.role)
-      ) {
+      if (input.prompts && !hasPowerUserAccess(ctx.session.user.role)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have power user access",

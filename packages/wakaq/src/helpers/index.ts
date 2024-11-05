@@ -1,6 +1,6 @@
 import type { Prompts } from "@acme/core/validators";
 import type { Language, TrainingSession } from "@acme/db/schema";
-import { FINITE_EXERCISES } from "@acme/core/constants";
+import { FINITE_EXERCISES_IDS } from "@acme/core/constants";
 import { and, desc, eq, inArray } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
@@ -95,7 +95,7 @@ export async function handleCreateSentences(
 ) {
   let startIndex = 0;
 
-  if (FINITE_EXERCISES.includes(trainingSession.exercise)) {
+  if (FINITE_EXERCISES_IDS.includes(trainingSession.exercise)) {
     await db
       .delete(sentencesTable)
       .where(eq(sentencesTable.trainingSessionId, trainingSession.id));

@@ -4,7 +4,7 @@ import TrainingSessionDetailsSideBarWidget from "~/components/TrainingSessionDet
 import WordInspectionPanel from "~/components/WordInspectionPanel";
 import { useAppStore } from "~/store/app-store";
 
-export default function RightBar() {
+export default function PlaygroundSidebar() {
   const sidebarOpen = useAppStore((state) => state.inspectionPanelOpen);
   const inspectedWord = useAppStore((state) => state.inspectedWord);
 

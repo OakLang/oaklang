@@ -14,7 +14,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
+import { useUserSettings } from "~/providers/user-settings-provider";
 import { api } from "~/trpc/react";
 
 export default function NativeLanguageForm({
@@ -22,6 +22,7 @@ export default function NativeLanguageForm({
 }: {
   nextPath?: string;
 }) {
+  const { updateUserSettings } = useUserSettings();
   const [nativeLanguageCode, setNativeLanguageCode] = useState("");
   const languagesQuery = api.languages.getLanguages.useQuery();
   const router = useRouter();
@@ -31,15 +32,13 @@ export default function NativeLanguageForm({
     [languagesQuery.data, nativeLanguageCode],
   );
 
-  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
-
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (!nativeLanguage) {
         return;
       }
-      updateUserSettingsMutation.mutate(
+      updateUserSettings.mutate(
         { nativeLanguage: nativeLanguage.code },
         {
           onSuccess: () => {
@@ -48,7 +47,7 @@ export default function NativeLanguageForm({
         },
       );
     },
-    [nativeLanguage, nextPath, router, updateUserSettingsMutation],
+    [nativeLanguage, nextPath, router, updateUserSettings],
   );
 
   return (
@@ -103,12 +102,12 @@ export default function NativeLanguageForm({
       <Button
         disabled={
           !nativeLanguageCode ||
-          updateUserSettingsMutation.isPending ||
-          updateUserSettingsMutation.isSuccess
+          updateUserSettings.isPending ||
+          updateUserSettings.isSuccess
         }
         className="mx-auto"
       >
-        {updateUserSettingsMutation.isPending && (
+        {updateUserSettings.isPending && (
           <Loader2 className="-ml-1 mr-2 h-4 w-4" />
         )}
         Continue

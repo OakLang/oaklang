@@ -3,21 +3,16 @@
 import { useMemo } from "react";
 import { ArrowRightIcon, Loader2Icon } from "lucide-react";
 
-import type { Sentence, TrainingSession } from "@acme/db/schema";
+import { useTrainingSession } from "~/providers/training-session-provider";
+import InterlinearView from "../InterlinearView";
+import { Button } from "../ui/button";
+import ToolBar from "./toolbar";
+import { useTrainingSessionView } from "./training-session-view";
 
-import InterlinearView from "./InterlinearView";
-import ToolBar from "./ToolBar";
-import { Button } from "./ui/button";
+export default function ScrollView() {
+  const { trainingSession } = useTrainingSession();
+  const { sentences, setIsComplete } = useTrainingSessionView();
 
-export default function ScrollView({
-  sentences,
-  onComplete,
-  trainingSession,
-}: {
-  sentences: Sentence[];
-  onComplete: () => void;
-  trainingSession: TrainingSession;
-}) {
   const hasUncompleteSentence = useMemo(
     () => !!sentences.find((sentence) => !sentence.completedAt),
     [sentences],
@@ -25,7 +20,7 @@ export default function ScrollView({
 
   return (
     <>
-      <ToolBar trainingSession={trainingSession}></ToolBar>
+      <ToolBar />
 
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 flex-col overflow-y-auto">
@@ -34,7 +29,10 @@ export default function ScrollView({
               <>
                 <InterlinearView sentences={sentences} />
                 <div className="mt-16 flex items-center justify-center gap-2">
-                  <Button onClick={onComplete} disabled={hasUncompleteSentence}>
+                  <Button
+                    onClick={() => setIsComplete(true)}
+                    disabled={hasUncompleteSentence}
+                  >
                     Complete
                     <ArrowRightIcon className="-mr-1 ml-2 h-4 w-4" />
                   </Button>

@@ -1,32 +1,30 @@
 import { useState } from "react";
 import { ChevronLeftIcon } from "lucide-react";
 
-import type { TrainingSession } from "@acme/db/schema";
-
+import { useTrainingSession } from "~/providers/training-session-provider";
 import { api } from "~/trpc/react";
-import StartTrainingDialog from "./dialogs/start-training-dialog";
-import RenderQueryResult from "./RenderQueryResult";
-import ToolBar from "./ToolBar";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import StartTrainingDialog from "../dialogs/start-training-dialog";
+import RenderQueryResult from "../RenderQueryResult";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import ToolBar from "./toolbar";
+import { useTrainingSessionView } from "./training-session-view";
 
-export function SessionComplete({
-  onBack,
-  trainingSession,
-}: {
-  trainingSession: TrainingSession;
-  onBack: () => void;
-}) {
-  const [showTrainigSessionDialog, setShowTrainigSessionDialog] =
+export function TrainingSessionCompleteView() {
+  const [showStartTrainigSessionDialog, setShowStartTrainigSessionDialog] =
     useState(false);
+
+  const { trainingSession } = useTrainingSession();
+  const { setIsComplete } = useTrainingSessionView();
+
   const knownWordsQuery =
     api.trainingSessions.getAllKnownWordsFromSession.useQuery({
       trainingSessionId: trainingSession.id,
     });
 
   return (
-    <>
-      <ToolBar trainingSession={trainingSession} />
+    <div className="flex flex-1 flex-col">
+      <ToolBar />
 
       <div className="flex flex-1 flex-col overflow-y-auto">
         <div className="flex flex-1 gap-4 py-8 md:py-16">
@@ -35,7 +33,7 @@ export function SessionComplete({
               variant="ghost"
               className="text-muted-foreground h-full w-12"
               size="icon"
-              onClick={onBack}
+              onClick={() => setIsComplete(false)}
             >
               <ChevronLeftIcon className="h-8 w-8" />
             </Button>
@@ -70,13 +68,13 @@ export function SessionComplete({
               </RenderQueryResult>
 
               <div className="my-16 space-y-4">
-                <Button onClick={() => setShowTrainigSessionDialog(true)}>
+                <Button onClick={() => setShowStartTrainigSessionDialog(true)}>
                   Start a new Session
                 </Button>
 
                 <StartTrainingDialog
-                  open={showTrainigSessionDialog}
-                  onOpenChange={setShowTrainigSessionDialog}
+                  open={showStartTrainigSessionDialog}
+                  onOpenChange={setShowStartTrainigSessionDialog}
                 />
               </div>
             </div>
@@ -87,6 +85,6 @@ export function SessionComplete({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

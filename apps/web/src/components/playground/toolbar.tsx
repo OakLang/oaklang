@@ -13,8 +13,6 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
-import type { TrainingSession } from "@acme/db/schema";
-
 import AppSettings from "~/components/AppSettings";
 import SimpleInterlinearLineEditor from "~/components/SimpleInterlinearLineEditor";
 import { Button } from "~/components/ui/button";
@@ -44,15 +42,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { useTrainingSession } from "~/providers/training-session-provider";
 import { useAppStore } from "~/store/app-store";
 
-export default function ToolBar({
-  trainingSession,
-  children,
-}: {
-  trainingSession: TrainingSession;
-  children?: ReactNode;
-}) {
+export default function ToolBar({ children }: { children?: ReactNode }) {
+  const { trainingSession } = useTrainingSession();
+
   const [settingsSheetOpen, setSettingsSheetOpen] = useState(false);
 
   const inspectionPanelOpen = useAppStore((state) => state.inspectionPanelOpen);
@@ -65,7 +60,7 @@ export default function ToolBar({
 
   return (
     <>
-      <header className="flex items-center gap-4 p-2">
+      <header className="pointer-events-auto flex items-center gap-4 p-2">
         <div className="flex flex-1 items-center">
           <Tooltip>
             <TooltipTrigger asChild>

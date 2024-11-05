@@ -181,18 +181,21 @@ export const trainingSessionsRouter = createTRPCRouter({
 
       return trainingSession;
     }),
-  changeSentenceIndex: protectedProcedure
+  updateTrainingSession: protectedProcedure
     .input(
       z.object({
         trainingSessionId: z.string(),
-        sentenceIndex: z.number().min(0),
+        dto: z
+          .object({
+            sentenceIndex: z.number().min(0),
+            view: z.enum(trainingSessionView.enumValues),
+            title: z.string().min(1).max(100),
+          })
+          .partial(),
       }),
     )
     .mutation(
-      async ({
-        ctx: { db, session },
-        input: { sentenceIndex, trainingSessionId },
-      }) => {
+      async ({ ctx: { db, session }, input: { dto, trainingSessionId } }) => {
         const trainingSession = await getTrainingSessionOrThrow(
           trainingSessionId,
           db,
@@ -201,39 +204,7 @@ export const trainingSessionsRouter = createTRPCRouter({
 
         const [updatedTrainingSession] = await db
           .update(trainingSessionsTable)
-          .set({
-            sentenceIndex,
-          })
-          .where(eq(trainingSessionsTable.id, trainingSession.id))
-          .returning();
-
-        if (!updatedTrainingSession) {
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-        }
-
-        return updatedTrainingSession;
-      },
-    ),
-  changeView: protectedProcedure
-    .input(
-      z.object({
-        trainingSessionId: z.string(),
-        view: z.enum(trainingSessionView.enumValues),
-      }),
-    )
-    .mutation(
-      async ({ ctx: { db, session }, input: { view, trainingSessionId } }) => {
-        const trainingSession = await getTrainingSessionOrThrow(
-          trainingSessionId,
-          db,
-          session,
-        );
-
-        const [updatedTrainingSession] = await db
-          .update(trainingSessionsTable)
-          .set({
-            view,
-          })
+          .set(dto)
           .where(eq(trainingSessionsTable.id, trainingSession.id))
           .returning();
 

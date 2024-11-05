@@ -11,8 +11,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Switch } from "~/components/ui/switch";
-import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
-import { api } from "~/trpc/react";
+import { useUserSettings } from "~/providers/user-settings-provider";
 
 const voices: { voice: string; name: string }[] = [
   { voice: "alloy", name: "Alloy" },
@@ -24,8 +23,7 @@ const voices: { voice: string; name: string }[] = [
 ];
 
 export default function AudioSection() {
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
+  const { userSettings, updateUserSettings } = useUserSettings();
 
   return (
     <div className="grid gap-6">
@@ -36,10 +34,10 @@ export default function AudioSection() {
             Auto Play
           </Label>
           <Switch
-            checked={userSettingsQuery.data?.autoPlayAudio}
+            checked={userSettings.autoPlayAudio}
             id="auto-play"
             onCheckedChange={(autoPlayAudio) =>
-              updateUserSettingsMutation.mutate({ autoPlayAudio })
+              updateUserSettings.mutate({ autoPlayAudio })
             }
           />
         </div>
@@ -49,9 +47,9 @@ export default function AudioSection() {
             Voice
           </Label>
           <Select
-            value={userSettingsQuery.data?.ttsVoice}
+            value={userSettings.ttsVoice}
             onValueChange={(ttsVoice) =>
-              updateUserSettingsMutation.mutate({ ttsVoice })
+              updateUserSettings.mutate({ ttsVoice })
             }
           >
             <SelectTrigger id="voice" className="w-48">
@@ -69,13 +67,13 @@ export default function AudioSection() {
 
         <div className="flex items-center">
           <Label htmlFor="speed" className="flex-1 truncate">
-            Speed ({userSettingsQuery.data?.ttsSpeed}x)
+            Speed ({userSettings.ttsSpeed}x)
           </Label>
 
           <Select
-            value={String(userSettingsQuery.data?.ttsSpeed)}
+            value={String(userSettings.ttsSpeed)}
             onValueChange={(value) =>
-              updateUserSettingsMutation.mutate({ ttsSpeed: Number(value) })
+              updateUserSettings.mutate({ ttsSpeed: Number(value) })
             }
           >
             <SelectTrigger id="voice" className="w-48">

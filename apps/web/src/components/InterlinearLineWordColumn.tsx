@@ -1,7 +1,6 @@
 import type { MouseEvent } from "react";
 import type { z } from "zod";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
 import type {
@@ -12,7 +11,6 @@ import type { SentenceWord, UserWord, Word } from "@acme/db/schema";
 import { InterlinearLineAction } from "@acme/core/constants";
 
 import type { RouterOutputs } from "~/trpc/react";
-import type { TrainingSessionParams } from "~/types";
 import {
   useMarkWordKnownMutation,
   useMarkWordUnknownMutation,
@@ -21,6 +19,8 @@ import {
 import { useDoubleClick } from "~/hooks/useDoubleClick";
 import { useIntersectionObserver } from "~/hooks/useIntersectionObserver";
 import usePlayTextToSpeech from "~/hooks/usePlayTextToSpeech";
+import { useTrainingSession } from "~/providers/training-session-provider";
+import { useUserSettings } from "~/providers/user-settings-provider";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
@@ -38,12 +38,9 @@ export default function InterlinearLineWordColumn({
 }: {
   word: RouterOutputs["sentences"]["getSentence"]["words"][number];
 }) {
-  const { trainingSessionId } = useParams<TrainingSessionParams>();
-  const seenWordMutation = api.words.seenWord.useMutation({
-    onError: (error) => {
-      toast(error.message);
-    },
-  });
+  const { trainingSession } = useTrainingSession();
+  const { userSettings } = useUserSettings();
+
   const userWordQuery = api.words.getUserWord.useQuery(
     { wordId: word.id },
     {
@@ -56,15 +53,20 @@ export default function InterlinearLineWordColumn({
         : undefined,
     },
   );
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
+
+  const seenWordMutation = api.words.seenWord.useMutation({
+    onError: (error) => {
+      toast(error.message);
+    },
+  });
 
   const onIntersect = useCallback(() => {
     seenWordMutation.mutate({
-      sessionId: trainingSessionId,
+      sessionId: trainingSession.id,
       wordId: word.id,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trainingSessionId, word.id]);
+  }, [trainingSession.id, word.id]);
 
   const ref = useIntersectionObserver({
     onIntersect,
@@ -72,7 +74,7 @@ export default function InterlinearLineWordColumn({
 
   return (
     <span className="flex flex-col items-center gap-2" ref={ref}>
-      {userSettingsQuery.data?.interlinearLines
+      {userSettings.interlinearLines
         .filter((line) => !line.hidden)
         .map((line) => {
           return (
@@ -100,7 +102,7 @@ const InterlinearLineWordColumnCell = ({
   userWord?: UserWord | null;
   sentenceWord: SentenceWord;
 }) => {
-  const { trainingSessionId } = useParams<TrainingSessionParams>();
+  const { trainingSession } = useTrainingSession();
   const sentenceCtx = useContext(SentenceContext);
   if (!sentenceCtx) {
     throw new Error("SentenceProvider not found in the tree");
@@ -155,9 +157,9 @@ const InterlinearLineWordColumnCell = ({
   const markWordKnownAction = useCallback(() => {
     markWordKnownMut.mutate({
       wordId: word.id,
-      sessionId: trainingSessionId,
+      sessionId: trainingSession.id,
     });
-  }, [markWordKnownMut, trainingSessionId, word.id]);
+  }, [markWordKnownMut, trainingSession.id, word.id]);
 
   const markWordUnknownAction = useCallback(() => {
     markWordUnknownMut.mutate({ wordId: word.id });

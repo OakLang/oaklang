@@ -12,16 +12,14 @@ import {
 
 import InterlinearLinesEditor from "~/components/InterlinearLineEditor";
 import { Button } from "~/components/ui/button";
-import { useUpdateUserSettingsMutation } from "~/hooks/useUpdateUserSettings";
-import { api } from "~/trpc/react";
+import { useUserSettings } from "~/providers/user-settings-provider";
 
 export default function InterlinearLineSection() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const userSettingsQuery = api.userSettings.getUserSettings.useQuery();
-  const updateUserSettingsMutation = useUpdateUserSettingsMutation();
+  const { userSettings, updateUserSettings } = useUserSettings();
 
   const [interlinearLines, setInterlinearLines] = useState<InterlinearLine[]>(
-    userSettingsQuery.data?.interlinearLines ?? [],
+    userSettings.interlinearLines,
   );
 
   const debouncedChange = useCallback(
@@ -30,10 +28,10 @@ export default function InterlinearLineSection() {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        updateUserSettingsMutation.mutate({ interlinearLines: value });
+        updateUserSettings.mutate({ interlinearLines: value });
       }, 300);
     },
-    [updateUserSettingsMutation],
+    [updateUserSettings],
   );
 
   const handleChange = useCallback(
@@ -42,10 +40,10 @@ export default function InterlinearLineSection() {
       if (debounce) {
         debouncedChange(value);
       } else {
-        updateUserSettingsMutation.mutate({ interlinearLines: value });
+        updateUserSettings.mutate({ interlinearLines: value });
       }
     },
-    [debouncedChange, updateUserSettingsMutation],
+    [debouncedChange, updateUserSettings],
   );
 
   const handleAddNewLine = useCallback(() => {
@@ -61,21 +59,19 @@ export default function InterlinearLineSection() {
       },
     ];
     setInterlinearLines(newLines);
-    updateUserSettingsMutation.mutate({ interlinearLines: newLines });
-  }, [interlinearLines, updateUserSettingsMutation]);
+    updateUserSettings.mutate({ interlinearLines: newLines });
+  }, [interlinearLines, updateUserSettings]);
 
   const handleResetLines = useCallback(() => {
     setInterlinearLines(DEFAULT_INTERLINEAR_LINES);
-    updateUserSettingsMutation.mutate({
+    updateUserSettings.mutate({
       interlinearLines: DEFAULT_INTERLINEAR_LINES,
     });
-  }, [updateUserSettingsMutation]);
+  }, [updateUserSettings]);
 
   useEffect(() => {
-    if (userSettingsQuery.data?.interlinearLines) {
-      setInterlinearLines(userSettingsQuery.data.interlinearLines);
-    }
-  }, [userSettingsQuery.data?.interlinearLines]);
+    setInterlinearLines(userSettings.interlinearLines);
+  }, [userSettings.interlinearLines]);
 
   return (
     <section id="interlinear-lines" className="my-8">
