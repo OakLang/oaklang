@@ -23,11 +23,11 @@ import { useUserSettings } from "~/providers/user-settings-provider";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 import InterlinearLineView from "../interlinear-line/interlinear-line-view";
-import TrainingProgressBar from "../TrainingProgressBar";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import ToolBar from "./toolbar";
+import TrainingProgressBar from "./training-progress-bar";
 import { useTrainingSessionView } from "./training-session-view";
 
 export function SentenceView() {
@@ -56,9 +56,9 @@ export function SentenceView() {
 
   const markWordKnownMut = api.words.markWordKnown.useMutation();
 
-  const isInfiniteExercise = INFINITE_EXERCISE_IDS.includes(
-    trainingSession.exercise,
-  );
+  const isInfiniteExercise = (
+    INFINITE_EXERCISE_IDS as unknown as string[]
+  ).includes(trainingSession.exercise);
 
   const shouldCompleteSession = useMemo(() => {
     return (

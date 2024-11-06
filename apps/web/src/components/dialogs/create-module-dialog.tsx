@@ -1,13 +1,4 @@
-import CreateModuleForm from "../forms/create-module-form";
-import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 export interface CreateModuleDialogProps {
   open: boolean;

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import type { Sentence } from "@acme/db/schema";
 
 import { cn } from "~/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 const maxIndicatorsToShow = 9;
 

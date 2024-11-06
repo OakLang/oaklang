@@ -9,9 +9,12 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+import type {
+  CreateTrainingSessoin,
+  Exercise1FormData,
+} from "@acme/core/validators";
 import { ALL_EXERCISE_IDS, Exercises } from "@acme/core/constants";
 
-import type { CreateTrainingSessoin, Exercise1FormData } from "../validators";
 import { createPrefixedId } from "../utils";
 import { usersTable } from "./auth";
 import { languagesTable } from "./language";
