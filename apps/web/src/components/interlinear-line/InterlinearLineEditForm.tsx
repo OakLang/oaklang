@@ -100,6 +100,10 @@ const clickActions: ActionItem[] = [
     value: InterlinearLineAction.toggleHideOrShowLines,
     name: "Toggle Hide or Show Lines",
   },
+  {
+    value: InterlinearLineAction.practiceWord,
+    name: "Practice Word",
+  },
 ];
 
 const hoverActions: ActionItem[] = [

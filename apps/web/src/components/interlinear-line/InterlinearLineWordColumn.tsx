@@ -4,6 +4,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import type {
+  Exercise1FormData,
   InterlinearLine,
   interlinearLineActionSchema,
 } from "@acme/core/validators";
@@ -35,6 +36,7 @@ import { useUserSettings } from "~/providers/user-settings-provider";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import { cn, getCSSStyleForInterlinearLine } from "~/utils";
+import { useTrainingSessionDialog } from "../dialogs/training-session-dialog";
 import { useTrainingSessionView } from "../playground/training-session-view";
 import { SentenceContext } from "./InterlinearLineSentence";
 
@@ -107,6 +109,12 @@ const InterlinearLineWordColumnCell = ({
   userWord?: UserWord | null;
   sentenceWord: SentenceWord;
 }) => {
+  const [wordPracticeTSId, setWordPracticeTSId] = useState<string | null>(null);
+  const [
+    TrainingSessionDialog,
+    _trainingSessionDialogOpen,
+    setTrainingSessionDialogOpen,
+  ] = useTrainingSessionDialog();
   const { trainingSession } = useTrainingSession();
   const { inspectedWord, setInspectedWord, setSidebarOpen } =
     useTrainingSessionView();
@@ -114,6 +122,9 @@ const InterlinearLineWordColumnCell = ({
   if (!sentenceCtx) {
     throw new Error("SentenceProvider not found in the tree");
   }
+  const createTrainingSessionMut =
+    api.trainingSessions.createTrainingSession.useMutation();
+
   const isPrimaryLine = useMemo(() => line.name === "text", [line.name]);
 
   const lineHidden = useMemo(
@@ -126,7 +137,9 @@ const InterlinearLineWordColumnCell = ({
   const [popoverLineName, setPopoverLineName] = useState<
     string | null | undefined
   >();
+
   const { audioRef, play, isFetching: isFetchingAudio } = usePlayTextToSpeech();
+
   const markWordKnownMut = useMarkWordKnownMutation();
   const markWordUnknownMut = useMarkWordUnknownMutation();
   const updateUserWord = useUpdateUserWordMutation();
@@ -154,6 +167,57 @@ const InterlinearLineWordColumnCell = ({
     setInspectedWord,
     setSidebarOpen,
     word.id,
+  ]);
+
+  const handlePracticeWord = useCallback(async () => {
+    if (wordPracticeTSId) {
+      setTrainingSessionDialogOpen(true);
+    } else {
+      const toastId = toast(
+        `Starting a practice session for word "${word.word}"`,
+        {
+          dismissible: false,
+        },
+      );
+      try {
+        let topic = "";
+        const complexity: Exercise1FormData["data"]["complexity"] = "A1";
+
+        if (
+          "topic" in trainingSession.data &&
+          typeof trainingSession.data.topic === "string"
+        ) {
+          topic = trainingSession.data.topic;
+        }
+
+        const ts = await createTrainingSessionMut.mutateAsync({
+          title: `Practice word "${word.word}"`,
+          exercise: "exercise-1",
+          languageCode: word.languageCode,
+          data: { topic, complexity, words: [word.word] },
+        });
+        setWordPracticeTSId(ts.id);
+        requestAnimationFrame(() => {
+          setTrainingSessionDialogOpen(true);
+        });
+        toast.dismiss(toastId);
+        toast(
+          `Successfully created a practice session for word "${word.word}"`,
+        );
+      } catch (error) {
+        toast(
+          `Failed to create a practice session for the word "${word.word}".`,
+        );
+        toast.dismiss(toastId);
+      }
+    }
+  }, [
+    createTrainingSessionMut,
+    setTrainingSessionDialogOpen,
+    trainingSession.data,
+    word.languageCode,
+    word.word,
+    wordPracticeTSId,
   ]);
 
   const markWordKnownAction = useCallback(() => {
@@ -222,11 +286,16 @@ const InterlinearLineWordColumnCell = ({
           setShowLinePopover(true);
           break;
         }
+        case InterlinearLineAction.practiceWord: {
+          void handlePracticeWord();
+          break;
+        }
         default:
           break;
       }
     },
     [
+      handlePracticeWord,
       hideLinesAction,
       inspectWordAction,
       markWordKnownAction,
@@ -331,6 +400,9 @@ const InterlinearLineWordColumnCell = ({
               >
                 Inspect Word
               </ContextMenuItem>
+              <ContextMenuItem onClick={handlePracticeWord}>
+                Practice Word
+              </ContextMenuItem>
               {userWord?.knownAt ? (
                 <ContextMenuItem onClick={markWordUnknownAction}>
                   Mark Word Unknown
@@ -353,6 +425,10 @@ const InterlinearLineWordColumnCell = ({
           )}
         </Tooltip>
       </ContextMenu>
+
+      {wordPracticeTSId && (
+        <TrainingSessionDialog trainingSessionId={wordPracticeTSId} />
+      )}
     </>
   );
 };

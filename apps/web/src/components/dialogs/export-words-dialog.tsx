@@ -35,7 +35,7 @@ import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Switch } from "../ui/switch";
 
-export type ExportWordsDialogProps = DialogProps & {
+export type ExportWordsDialogProps = Omit<DialogProps, "children"> & {
   title?: string;
   description?: string;
 };

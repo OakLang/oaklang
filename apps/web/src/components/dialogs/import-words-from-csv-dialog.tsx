@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 
-export type ImportWordsFromCsvDialogProps = DialogProps & {
+export type ImportWordsFromCsvDialogProps = Omit<DialogProps, "children"> & {
   title?: string;
   description?: string;
 };

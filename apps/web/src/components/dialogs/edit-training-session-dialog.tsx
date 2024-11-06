@@ -36,7 +36,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export type EditTrainingSessionDialogProps = DialogProps & {
+export type EditTrainingSessionDialogProps = Omit<DialogProps, "children"> & {
   trainingSession: TrainingSession;
 };
 

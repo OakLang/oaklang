@@ -11,6 +11,7 @@ export const InterlinearLineAction = {
   hideLines: "hide-lines",
   showLines: "show-lines",
   toggleHideOrShowLines: "toggle-hide-or-show-lines",
+  practiceWord: "practice-word",
 } as const;
 
 export const NON_EDITABLE_LINE_NAMES = ["word", "lemma", "text"];
