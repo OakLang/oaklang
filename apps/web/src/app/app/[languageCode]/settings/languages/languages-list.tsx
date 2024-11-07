@@ -2,13 +2,12 @@
 
 import { Fragment } from "react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { APP_NAME } from "@acme/core/constants";
 
-import type { LanguageCodeParams } from "~/types";
 import RenderQueryResult from "~/components/RenderQueryResult";
 import {
   AlertDialog,
@@ -23,10 +22,11 @@ import {
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 import { api } from "~/trpc/react";
 
 export default function LanguagesList() {
-  const { languageCode } = useParams<LanguageCodeParams>();
+  const { language } = usePracticeLanguage();
   const practiceLanguagesQuery = api.languages.getPracticeLanguages.useQuery();
   const utils = api.useUtils();
   const router = useRouter();
@@ -36,7 +36,7 @@ export default function LanguagesList() {
       onSuccess: (data) => {
         void utils.languages.getPracticeLanguages.invalidate();
         toast(`Your ${data.language.name} data has been deleted.`);
-        if (languageCode === data.language.code) {
+        if (language.code === data.language.code) {
           const newLang = practiceLanguagesQuery.data?.find(
             (item) => item.code !== data.language.code,
           );

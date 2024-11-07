@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import {
   ArrowRightIcon,
   CheckIcon,
@@ -15,9 +14,9 @@ import { toast } from "sonner";
 
 import { INFINITE_EXERCISE_IDS } from "@acme/core/constants";
 
-import type { TrainingSessionParams } from "~/types";
 import AudioPlayButton2 from "~/components/AudioPlayButton";
 import AudioPlayButton from "~/components/playground/audio-play-button";
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 import { useTrainingSession } from "~/providers/training-session-provider";
 import { useUserSettings } from "~/providers/user-settings-provider";
 import { api } from "~/trpc/react";
@@ -33,7 +32,7 @@ import { useTrainingSessionView } from "./training-session-view";
 export function SentenceView() {
   const { sentences, setIsComplete } = useTrainingSessionView();
   const { trainingSession, updateTrainingSession } = useTrainingSession();
-  const { languageCode } = useParams<TrainingSessionParams>();
+  const { language } = usePracticeLanguage();
   const [showTranslation, setShowTranslation] = useState(false);
   const { userSettings } = useUserSettings();
 
@@ -163,7 +162,7 @@ export function SentenceView() {
         void utils.words.getUserWord.invalidate({ wordId: word.wordId });
       });
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode,
+        languageCode: language.code,
       });
       void utils.languages.getPracticeLanguages.invalidate();
       setIsComplete(true);
@@ -171,7 +170,7 @@ export function SentenceView() {
       toast((error as Error).message);
     }
   }, [
-    languageCode,
+    language.code,
     markWordKnownMut,
     sentence,
     setIsComplete,

@@ -1,11 +1,9 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { useParams } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 import type { UserWordWithWord } from "@acme/api/validators";
 
-import type { LanguageCodeParams } from "~/types";
 import { getBooleanColumnCell, getDateColumCell } from "~/components/DataTable";
 import { DataTableColumnHeader } from "~/components/DataTableColumnHeader";
 import { Button } from "~/components/ui/button";
@@ -17,19 +15,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 import { api } from "~/trpc/react";
 
 function WordActionButton({ word }: { word: UserWordWithWord }) {
   const utils = api.useUtils();
-  const { languageCode } = useParams<LanguageCodeParams>();
+  const { language } = usePracticeLanguage();
 
   const markKnownMut = api.words.markWordKnown.useMutation({
     onSuccess: () => {
       void utils.words.getUserWords.invalidate({
-        languageCode,
+        languageCode: language.code,
       });
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode,
+        languageCode: language.code,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
@@ -39,10 +38,10 @@ function WordActionButton({ word }: { word: UserWordWithWord }) {
   const markUnknownMut = api.words.markWordUnknown.useMutation({
     onSuccess: () => {
       void utils.words.getUserWords.invalidate({
-        languageCode,
+        languageCode: language.code,
       });
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode,
+        languageCode: language.code,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
@@ -52,10 +51,10 @@ function WordActionButton({ word }: { word: UserWordWithWord }) {
   const deleteUserWordMut = api.words.deleteUserWord.useMutation({
     onSuccess: () => {
       void utils.words.getUserWords.invalidate({
-        languageCode,
+        languageCode: language.code,
       });
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode,
+        languageCode: language.code,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },

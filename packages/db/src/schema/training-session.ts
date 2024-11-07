@@ -9,11 +9,8 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import type {
-  CreateTrainingSessoin,
-  Exercise1FormData,
-} from "@acme/core/validators";
-import { ALL_EXERCISE_IDS, Exercises } from "@acme/core/constants";
+import type { ExerciseFormData } from "@acme/core/validators";
+import { ALL_EXERCISE_IDS } from "@acme/core/constants";
 
 import { createPrefixedId } from "../utils";
 import { usersTable } from "./auth";
@@ -48,17 +45,8 @@ export const trainingSessionsTable = pgTable("training_session", {
   languageCode: text("language_code")
     .notNull()
     .references(() => languagesTable.code, { onDelete: "cascade" }),
-  exercise: text("exercise", { enum: ALL_EXERCISE_IDS })
-    .notNull()
-    .default(Exercises.exercise1),
-  data: jsonb("data")
-    .notNull()
-    .$type<CreateTrainingSessoin["data"]>()
-    .default({
-      complexity: "A1",
-      topic: "",
-      words: [],
-    } satisfies Exercise1FormData["data"]),
+  exercise: text("exercise", { enum: ALL_EXERCISE_IDS }).notNull(),
+  data: jsonb("data").notNull().$type<ExerciseFormData["data"]>(),
   status: trainingSessionStatus("status").notNull().default("idle"),
   view: trainingSessionView("view").notNull().default("sentence"),
   lastPracticedAt: timestamp("last_practiced_at"),

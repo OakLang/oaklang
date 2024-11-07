@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
-import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,6 +9,7 @@ import type { Language, TrainingSession } from "@acme/db/schema";
 
 import RenderQueryResult from "~/components/RenderQueryResult";
 import { api } from "~/trpc/react";
+import { usePracticeLanguage } from "./practice-language-provider";
 
 export interface TrainingSessionContextValue {
   trainingSession: TrainingSession & { language: Language };
@@ -30,7 +30,7 @@ export default function TrainingSessionProvider({
   children,
   trainingSessionId,
 }: TrainingSessionProviderProps) {
-  const { languageCode } = useParams<{ languageCode: string }>();
+  const { language } = usePracticeLanguage();
   const trainingSessionQuery = api.trainingSessions.getTrainingSession.useQuery(
     { trainingSessionId },
   );
@@ -80,7 +80,7 @@ export default function TrainingSessionProvider({
       )}
     >
       {(query) => {
-        if (query.data.languageCode !== languageCode) {
+        if (query.data.languageCode !== language.code) {
           return <p>Not found!</p>;
         }
 

@@ -1,52 +1,42 @@
-# oaklang.com
+# Oaklang
 
 - Prod: https://oaklang.com
 - Dev: http://localhost:3000
 
 ## Setup
 
-Install [Postgres](https://postgresapp.com/).
-
 ```
 git clone git@github.com:soaklander/oaklang.git
 cd oaklang
-psql -c "CREATE ROLE oaklang WITH LOGIN SUPERUSER PASSWORD 'oaklang';"
-psql -c "CREATE DATABASE oaklang WITH OWNER oaklang;"
-psql -d oaklang -c "CREATE EXTENSION citext;"
+
+# Make sure you have docker installed
+docker compose up -d
+
+# Make sure to define your own values
 cp .env.example .env
+
 pnpm i
 pnpm migrate
 pnpm dev
-```
 
-## Reset DB
-
-```
-psql -c 'DROP DATABASE oaklang;'
-psql -c "CREATE ROLE oaklang WITH LOGIN SUPERUSER PASSWORD 'oaklang';"
-psql -c "CREATE DATABASE oaklang WITH OWNER oaklang;"
-psql -d oaklang -c "CREATE EXTENSION citext;"
-pnpm generate
-pnpm migrate
-pnpm seed
+pnpm wakaq:worker
 ```
 
 ## Seed
 
 ```
-Supported Languages
+# Supported Languages
 pnpm seed
 ```
 
 ## Tech Stack
 
-- [Next.js](https://nextjs.org)
-- [Drizzle](https://orm.drizzle.team/docs/overview)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
-- [DigitalOcean App Platform](https://cloud.digitalocean.com/projects/dffbd5f9-9621-4bbf-a6f3-7b521f85b1bc)
-
-## Admin
-
-To access your local admin, [get your user id](http://localhost:3000/me/id) and add to `ADMIN_USER_IDS` in your `.env` file.
-Then visit http://localhost:3000/admin
+- [Next.js](https://nextjs.org) Web Framework
+- [Drizzle](https://orm.drizzle.team/docs/overview) Database ORM
+- [Tailwind CSS](https://tailwindcss.com) CSS Styling
+- [shadcn/ui](https://ui.shadcn.com) UI Component Library
+- [tRPC](https://trpc.io) End-to-end typesafe APIs
+- [DigitalOcean App Platform](https://cloud.digitalocean.com/projects/dffbd5f9-9621-4bbf-a6f3-7b521f85b1bc) App hosting platform
+- [Wakaq](https://github.com/wakatime/wakaq-ts) Background Task Queue
+- [Resend](https://resend.com/) Email Server
+- [React Email](https://react.email) Write emails using React and TypeScript

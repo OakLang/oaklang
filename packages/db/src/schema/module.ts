@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-import type { ModuleData } from "@acme/core/validators";
+import type { ExerciseFormData } from "@acme/core/validators";
 
 import { createPrefixedId } from "../utils";
 import { usersTable } from "./auth";
@@ -25,7 +25,7 @@ export const modulesTable = pgTable("module", {
   languageCode: text("language_code")
     .notNull()
     .references(() => languagesTable.code, { onDelete: "cascade" }),
-  jsonData: jsonb("json_data").notNull().$type<ModuleData>(),
+  jsonData: jsonb("json_data").notNull().$type<ExerciseFormData>(),
 });
 
 export type Module = typeof modulesTable.$inferSelect;

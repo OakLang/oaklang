@@ -1,7 +1,7 @@
 import type { DialogProps } from "@radix-ui/react-dialog";
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TRPCError } from "@trpc/server";
 import { Loader2 } from "lucide-react";
@@ -12,7 +12,7 @@ import { z } from "zod";
 import { wordColumnEnum } from "@acme/api/validators";
 
 import type { RouterInputs } from "~/trpc/react";
-import type { LanguageCodeParams } from "~/types";
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 import { api } from "~/trpc/react";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -96,7 +96,7 @@ export default function ExportWordsDialog({
   ...props
 }: ExportWordsDialogProps) {
   const [isExporting, setIsExporting] = useState(false);
-  const { languageCode } = useParams<LanguageCodeParams>();
+  const { language } = usePracticeLanguage();
   const searchParams = useSearchParams();
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -119,7 +119,7 @@ export default function ExportWordsDialog({
 
         const csv = await exportUserWordsAsCSVMut.mutateAsync({
           columns: data.columns.length > 0 ? data.columns : defaultColumns,
-          languageCode,
+          languageCode: language.code,
           filter: data.applyCurrentFilters
             ? (filter as RouterInputs["words"]["exportUserWordsAsCSV"]["filter"])
             : "all",
@@ -145,7 +145,7 @@ export default function ExportWordsDialog({
         setIsExporting(false);
       }
     },
-    [exportUserWordsAsCSVMut, languageCode, props, searchParams],
+    [exportUserWordsAsCSVMut, language.code, props, searchParams],
   );
 
   return (

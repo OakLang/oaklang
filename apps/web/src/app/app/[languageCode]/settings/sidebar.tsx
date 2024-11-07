@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   BookOpenIcon,
   BotIcon,
@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import type { LanguageCodeParams } from "~/types";
 import {
   Sidebar,
   SidebarContent,
@@ -24,46 +23,47 @@ import {
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
 import { useHasPowerUserAccess } from "~/hooks/useHasPowerUserAccess";
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 
 export default function SettingsSidebar() {
   const hasPowerUserAccess = useHasPowerUserAccess();
-  const { languageCode } = useParams<LanguageCodeParams>();
+  const { language } = usePracticeLanguage();
   const t = useTranslations("Settings.SideBar");
   const pathname = usePathname();
   const menu = useMemo(
     () => [
       {
-        url: `/app/${languageCode}/settings`,
+        url: `/app/${language.code}/settings`,
         title: t("account"),
         icon: UserIcon,
         exact: true,
       },
       {
-        url: `/app/${languageCode}/settings/preferences`,
+        url: `/app/${language.code}/settings/preferences`,
         title: t("preferences"),
         icon: SettingsIcon,
       },
       {
-        url: `/app/${languageCode}/settings/reader`,
+        url: `/app/${language.code}/settings/reader`,
         title: t("reader"),
         icon: BookOpenIcon,
       },
       {
-        url: `/app/${languageCode}/settings/languages`,
+        url: `/app/${language.code}/settings/languages`,
         title: t("languages"),
         icon: LanguagesIcon,
       },
       ...(hasPowerUserAccess
         ? [
             {
-              url: `/app/${languageCode}/settings/ai-prompts`,
+              url: `/app/${language.code}/settings/ai-prompts`,
               title: "AI Prompts",
               icon: BotIcon,
             },
           ]
         : []),
     ],
-    [hasPowerUserAccess, languageCode, t],
+    [hasPowerUserAccess, language.code, t],
   );
 
   return (

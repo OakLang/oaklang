@@ -2,18 +2,12 @@
 
 import type { ColumnSort, PaginationState } from "@tanstack/react-table";
 import { useCallback, useMemo } from "react";
-import {
-  useParams,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
 import { DownloadIcon, MoreVerticalIcon, TableIcon } from "lucide-react";
 import pluralize from "pluralize";
 
 import type { RouterInputs } from "~/trpc/react";
-import type { LanguageCodeParams } from "~/types";
 import {
   DataTable,
   DEFAULT_PAGE_INDEX,
@@ -34,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import AddWordsButton from "./add-words-button";
@@ -87,7 +82,7 @@ export default function WardsTable() {
     return { id: "createdAt", desc: false };
   }, [filters.sortBy]);
 
-  const { languageCode } = useParams<LanguageCodeParams>();
+  const { language } = usePracticeLanguage();
   const [ExportWordsDialog, _exportWordsDialogOpen, setExportWordsDialogOpen] =
     useExportWordsDialog();
   const [
@@ -98,7 +93,7 @@ export default function WardsTable() {
 
   const wordsQuery = api.words.getUserWords.useQuery(
     {
-      languageCode,
+      languageCode: language.code,
       filter: filters.filter,
       search: filters.search ?? "",
       pageIndex: pagination.pageIndex,
@@ -127,14 +122,14 @@ export default function WardsTable() {
       );
       void wordsQuery.refetch();
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: languageCode,
+        languageCode: language.code,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     [
       wordsQuery,
       markWordKnownMutation,
-      languageCode,
+      language.code,
       utils.languages.getPracticeLanguage,
       utils.languages.getPracticeLanguages,
     ],
@@ -147,14 +142,14 @@ export default function WardsTable() {
       );
       void wordsQuery.refetch();
       void utils.languages.getPracticeLanguage.invalidate({
-        languageCode: languageCode,
+        languageCode: language.code,
       });
       void utils.languages.getPracticeLanguages.invalidate();
     },
     [
       wordsQuery,
       deleteUserWordMut,
-      languageCode,
+      language.code,
       utils.languages.getPracticeLanguage,
       utils.languages.getPracticeLanguages,
     ],

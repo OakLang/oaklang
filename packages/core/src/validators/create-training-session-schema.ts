@@ -2,11 +2,6 @@ import { z } from "zod";
 
 import { COMPLEXITY_LIST, Exercises } from "@acme/core/constants";
 
-const baseSchema = z.object({
-  title: z.string().min(1, "title required"),
-  languageCode: z.string().min(1, "languageCode required"),
-});
-
 export const exercise1Data = z.object({
   topic: z.string().min(1, "Topic is required").max(1000),
   complexity: z.enum(COMPLEXITY_LIST),
@@ -76,12 +71,18 @@ export const exercise3Schema = z.object({
 
 export type Exercise3FormData = z.infer<typeof exercise3Schema>;
 
-export const createTrainingSessionSchema = z
-  .discriminatedUnion("exercise", [
-    exercise1Schema,
-    exercise2Schema,
-    exercise3Schema,
-  ])
-  .and(baseSchema);
+export const exerciseSchema = z.discriminatedUnion("exercise", [
+  exercise1Schema,
+  exercise2Schema,
+  exercise3Schema,
+]);
+
+export type ExerciseFormData = z.infer<typeof exerciseSchema>;
+
+export const createTrainingSessionSchema = z.object({
+  title: z.string().min(1, "title required"),
+  languageCode: z.string().min(1, "languageCode required"),
+  exercise: exerciseSchema,
+});
 
 export type CreateTrainingSessoin = z.infer<typeof createTrainingSessionSchema>;

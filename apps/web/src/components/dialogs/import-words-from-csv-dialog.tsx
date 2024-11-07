@@ -1,12 +1,12 @@
 import type { DialogProps } from "@radix-ui/react-dialog";
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { useCallback, useState } from "react";
-import { useParams } from "next/navigation";
 import dayjs from "dayjs";
 import { ArrowRightIcon, Loader2Icon, UploadIcon } from "lucide-react";
 import Papa from "papaparse";
 import { toast } from "sonner";
 
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 import SimpleSelect from "../simple-select";
@@ -53,10 +53,11 @@ export default function ImportWordsFromCsvDialog({
   const [fileData, setFileData] = useState<Record<string, string>[] | null>(
     null,
   );
+  const { language } = usePracticeLanguage();
   const utils = api.useUtils();
   const addUserWordsMut = api.words.addUserWords.useMutation({
     onSuccess: () => {
-      void utils.words.getUserWords.invalidate({ languageCode });
+      void utils.words.getUserWords.invalidate({ languageCode: language.code });
       toast("Words imported successfully");
       props.onOpenChange?.(false);
     },
@@ -64,7 +65,6 @@ export default function ImportWordsFromCsvDialog({
       toast("Failed to upload words", { description: error.message });
     },
   });
-  const { languageCode } = useParams<{ languageCode: string }>();
 
   const [columnMapping, setColumnMapping] = useState(defaultColumnMapping);
 
@@ -204,11 +204,11 @@ export default function ImportWordsFromCsvDialog({
     }
 
     if (values.length > 0) {
-      addUserWordsMut.mutate({ languageCode, words: values });
+      addUserWordsMut.mutate({ languageCode: language.code, words: values });
     } else {
       toast("No words found to import");
     }
-  }, [addUserWordsMut, columnMapping, fileData, languageCode]);
+  }, [addUserWordsMut, columnMapping, fileData, language.code]);
 
   return (
     <Dialog {...props}>

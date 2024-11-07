@@ -175,8 +175,8 @@ export const trainingSessionsRouter = createTRPCRouter({
           title: input.title,
           userId: ctx.session.user.id,
           languageCode: language.code,
-          exercise: input.exercise,
-          data: input.data,
+          exercise: input.exercise.exercise,
+          data: input.exercise.data,
         })
         .returning();
 

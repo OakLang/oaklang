@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 
 import type { Language } from "@acme/db/schema";
 
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
 import { Button } from "./ui/button";
@@ -20,31 +21,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-export default function PracticeLanguageSwitcher({
-  practiceLanguageCode,
-}: {
-  practiceLanguageCode: string;
-}) {
+export default function PracticeLanguageSwitcher() {
   const t = useTranslations("App");
-  const {
-    data: practiceLanguage,
-    isPending,
-    isError,
-    error,
-  } = api.languages.getPracticeLanguage.useQuery({
-    languageCode: practiceLanguageCode,
-  });
-
-  if (isPending) {
-    return <Skeleton className="h-10 w-14 rounded-full lg:w-32" />;
-  }
-
-  if (isError) {
-    return <p>{error.message}</p>;
-  }
+  const { language } = usePracticeLanguage();
 
   return (
     <Tooltip>
@@ -53,18 +34,18 @@ export default function PracticeLanguageSwitcher({
           <TooltipTrigger asChild>
             <Button variant="ghost" className="rounded-full pr-3">
               <Image
-                src={`https://hatscripts.github.io/circle-flags/flags/${practiceLanguage.countryCode}.svg`}
-                alt={practiceLanguage.name}
+                src={`https://hatscripts.github.io/circle-flags/flags/${language.countryCode}.svg`}
+                alt={language.name}
                 className="-ml-2 mr-2 h-6 w-6 object-cover"
                 width={24}
                 height={24}
               />
-              {practiceLanguage.knownWords.toLocaleString()}{" "}
+              {language.knownWords.toLocaleString()}{" "}
               <span className="ml-1 max-lg:hidden">{t("known-words")}</span>
             </Button>
           </TooltipTrigger>
         </DropdownMenuTrigger>
-        <LanguagesDropdownContent practiceLanguageCode={practiceLanguageCode} />
+        <LanguagesDropdownContent practiceLanguageCode={language.code} />
       </DropdownMenu>
 
       <TooltipContent>{t("practice-language")}</TooltipContent>

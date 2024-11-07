@@ -267,6 +267,13 @@
       "when": 1730634441257,
       "tag": "0037_fancy_speedball",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1730967660098,
+      "tag": "0038_curved_sunspot",
+      "breakpoints": true
     }
   ]
 }

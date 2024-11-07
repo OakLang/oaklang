@@ -2,11 +2,10 @@ import type { DialogProps } from "@radix-ui/react-dialog";
 import { useCallback, useState } from "react";
 import { Loader2 } from "lucide-react";
 
-import type { ExerciseFormData } from "@acme/core/validators";
 import type { Module } from "@acme/db/schema";
 
 import type { UseDialogHookValue } from "./types";
-import CreateModuleForm from "../forms/create-module-form";
+import UpdateModuleForm from "../forms/update-module-form";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -17,58 +16,50 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 
-export type CreateModuleDialogProps = Omit<DialogProps, "children"> & {
-  name?: string;
-  description?: string;
-  collectionId?: string;
-  exercise?: Partial<ExerciseFormData>;
-  onCreated?: (module: Module) => void;
+export type UpdateModuleDialogProps = Omit<DialogProps, "children"> & {
+  module: Module;
+  onUpdated?: (module: Module) => void;
 };
 
-export default function CreateModuleDialog({
-  name,
-  description,
-  collectionId,
-  exercise,
-  onCreated,
+export default function UpdateModuleDialog({
+  module,
+  onUpdated,
   ...props
-}: CreateModuleDialogProps) {
+}: UpdateModuleDialogProps) {
   return (
     <Dialog {...props}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Module</DialogTitle>
+          <DialogTitle>Update Module</DialogTitle>
         </DialogHeader>
-        <CreateModuleForm
-          {...{ name, description, collectionId, exercise, onCreated }}
-        >
-          {({ isLoading }) => (
+        <UpdateModuleForm module={module} onUpdated={onUpdated}>
+          {({ isLoading, form }) => (
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="ghost" type="reset">
                   Cancel
                 </Button>
               </DialogClose>
-              <Button disabled={isLoading}>
+              <Button disabled={!form.formState.isDirty || isLoading}>
                 {isLoading && (
                   <Loader2 className="-ml-1 mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create Module
+                Update Module
               </Button>
             </DialogFooter>
           )}
-        </CreateModuleForm>
+        </UpdateModuleForm>
       </DialogContent>
     </Dialog>
   );
 }
 
-export function useCreateModuleDialog(): UseDialogHookValue<CreateModuleDialogProps> {
+export function useUpdateModuleDialog(): UseDialogHookValue<UpdateModuleDialogProps> {
   const [open, setOpen] = useState(false);
 
   const Dialog = useCallback(
-    (props: CreateModuleDialogProps) => (
-      <CreateModuleDialog open={open} onOpenChange={setOpen} {...props} />
+    (props: UpdateModuleDialogProps) => (
+      <UpdateModuleDialog open={open} onOpenChange={setOpen} {...props} />
     ),
     [open],
   );

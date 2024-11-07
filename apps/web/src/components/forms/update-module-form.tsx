@@ -48,49 +48,44 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export interface CreateModuleFormProps {
-  name?: string;
-  description?: string;
-  collectionId?: string;
-  exercise?: Partial<ExerciseFormData>;
+export interface UpdateModuleFormProps {
   children?: (props: {
     form: UseFormReturn<FormData>;
     isLoading?: boolean;
   }) => ReactNode;
-  onCreated?: (module: Module) => void;
+  onUpdated?: (module: Module) => void;
+  module: Module;
 }
 
-export default function CreateModuleForm({
+export default function UpdateModuleForm({
   children,
-  exercise: data,
-  description: defaultDescription,
-  name: defaultName,
-  onCreated,
-  collectionId,
-}: CreateModuleFormProps) {
+  onUpdated,
+  module,
+}: UpdateModuleFormProps) {
   const [CreateCollectionDialog, , setCreateCollectionDialogOpen] =
     useCreateCollectionDialog();
   const { language } = usePracticeLanguage();
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: defaultName ?? "",
-      description: defaultDescription ?? "",
-      collectionId,
-      exercise: data,
+      name: module.name,
+      description: module.description ?? "",
+      collectionId: module.collectionId,
+      exercise: module.jsonData,
     },
   });
+
   const collectionsQuery = api.collections.getCollections.useInfiniteQuery(
     { languageCode: language.code },
     { getNextPageParam: (lastPage) => lastPage.nextCursor },
   );
 
-  const createModuleMut = api.modules.createModule.useMutation({
+  const updateModuleMut = api.modules.updateModule.useMutation({
     onSuccess: (module) => {
-      onCreated?.(module);
+      onUpdated?.(module);
     },
     onError: (error) => {
-      toast("Failed to create module", {
+      toast("Failed to update module", {
         description: error.message,
       });
     },
@@ -98,15 +93,15 @@ export default function CreateModuleForm({
 
   const handleSubmit = useCallback(
     ({ description, name, collectionId, exercise }: FormData) => {
-      createModuleMut.mutate({
+      updateModuleMut.mutate({
+        moduleId: module.id,
         collectionId,
         data: exercise,
-        languageCode: language.code,
         name,
         description,
       });
     },
-    [createModuleMut, language.code],
+    [updateModuleMut, module.id],
   );
 
   return (
@@ -225,17 +220,18 @@ export default function CreateModuleForm({
             );
           }}
         />
+
         <ExerciseDataForm
           form={
             form as unknown as UseFormReturn<{ exercise: ExerciseFormData }>
           }
         />
 
-        {children?.({ form, isLoading: createModuleMut.isPending }) ?? (
+        {children?.({ form, isLoading: updateModuleMut.isPending }) ?? (
           <Button
-            disabled={createModuleMut.isPending || !form.formState.isValid}
+            disabled={updateModuleMut.isPending || !form.formState.isValid}
           >
-            Create Module
+            Update Module
           </Button>
         )}
       </form>

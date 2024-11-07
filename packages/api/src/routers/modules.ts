@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { moduleDataSchema } from "@acme/core/validators";
-import { and, eq } from "@acme/db";
+import { exerciseSchema } from "@acme/core/validators";
+import { and, desc, eq } from "@acme/db";
 import { modulesTable } from "@acme/db/schema";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -27,7 +27,8 @@ export const modulesRouter = createTRPCRouter({
           ),
         )
         .limit(input.limit)
-        .offset(input.cursor);
+        .offset(input.cursor)
+        .orderBy(desc(modulesTable.createdAt));
 
       return {
         list,
@@ -66,7 +67,7 @@ export const modulesRouter = createTRPCRouter({
         description: z.string().max(300).nullish(),
         languageCode: z.string().min(1),
         collectionId: z.string().min(1),
-        data: moduleDataSchema,
+        data: exerciseSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -85,6 +86,50 @@ export const modulesRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
       return module;
+    }),
+  updateModule: protectedProcedure
+    .input(
+      z.object({
+        moduleId: z.string(),
+        name: z.string().min(1).max(100).optional(),
+        description: z.string().max(300).nullish(),
+        languageCode: z.string().min(1).optional(),
+        collectionId: z.string().min(1).optional(),
+        data: exerciseSchema.optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [module] = await ctx.db
+        .select()
+        .from(modulesTable)
+        .where(
+          and(
+            eq(modulesTable.id, input.moduleId),
+            eq(modulesTable.userId, ctx.session.user.id),
+          ),
+        );
+      if (!module) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Module not found!",
+        });
+      }
+      const [updatedModule] = await ctx.db
+        .update(modulesTable)
+        .set({
+          name: input.name,
+          languageCode: input.languageCode,
+          userId: ctx.session.user.id,
+          description: input.description,
+          collectionId: input.collectionId,
+          jsonData: input.data,
+        })
+        .where(eq(modulesTable.id, input.moduleId))
+        .returning();
+      if (!updatedModule) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      }
+      return updatedModule;
     }),
   deleteModule: protectedProcedure
     .input(

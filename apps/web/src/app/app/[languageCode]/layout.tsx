@@ -9,6 +9,7 @@ import type { LanguageCodeParams } from "~/types";
 import FullScreenMessage from "~/components/FullScreenMessage";
 import LogoutButton from "~/components/logout-button";
 import { Button } from "~/components/ui/button";
+import PracticeLanguageProvider from "~/providers/practice-language-provider";
 import { HydrateClient, trpc } from "~/trpc/server";
 import { OnboardingRoutes } from "~/utils/constants";
 import { getAccessRequest, getUserNativeLanguage } from "~/utils/queries";
@@ -86,14 +87,16 @@ As we are currently offering limited access, we could not accommodate your reque
       { languageCode },
       { initialData: practiceLanguage },
     );
+    return (
+      <HydrateClient>
+        <PracticeLanguageProvider languageCode={languageCode}>
+          <AppBar />
+          {children}
+        </PracticeLanguageProvider>
+      </HydrateClient>
+    );
   } catch (error) {
-    notFound();
+    /* empty */
   }
-
-  return (
-    <HydrateClient>
-      <AppBar languageCode={languageCode} />
-      {children}
-    </HydrateClient>
-  );
+  notFound();
 }

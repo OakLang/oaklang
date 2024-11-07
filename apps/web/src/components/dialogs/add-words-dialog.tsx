@@ -1,11 +1,10 @@
 import { useCallback, useState } from "react";
-import { useParams } from "next/navigation";
 import { Loader2, XIcon } from "lucide-react";
 import pluralize from "pluralize";
 
 import type { Word } from "@acme/db/schema";
 
-import type { LanguageCodeParams } from "~/types";
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 import { api } from "~/trpc/react";
 import { Button } from "../ui/button";
 import {
@@ -137,7 +136,7 @@ function AddWordsFromList({
 }: {
   onWordsListGenerated: (list: Word[]) => void;
 }) {
-  const { languageCode } = useParams<LanguageCodeParams>();
+  const { language } = usePracticeLanguage();
   const [text, setText] = useState("");
 
   const utils = api.useUtils();
@@ -151,15 +150,15 @@ function AddWordsFromList({
 
     const words =
       await addWordsToPracticeListFromCommaSeparatedListMut.mutateAsync({
-        languageCode,
+        languageCode: language.code,
         text,
       });
-    void utils.words.getUserWords.invalidate({ languageCode });
+    void utils.words.getUserWords.invalidate({ languageCode: language.code });
     onWordsListGenerated(words);
   }, [
     text,
     addWordsToPracticeListFromCommaSeparatedListMut,
-    languageCode,
+    language.code,
     utils.words.getUserWords,
     onWordsListGenerated,
   ]);
@@ -204,7 +203,7 @@ function AddWordsFromPieceOfText({
 }: {
   onWordsListGenerated: (list: Word[]) => void;
 }) {
-  const { languageCode } = useParams<LanguageCodeParams>();
+  const { language } = usePracticeLanguage();
   const [text, setText] = useState("");
 
   const utils = api.useUtils();
@@ -217,16 +216,16 @@ function AddWordsFromPieceOfText({
     }
 
     const words = await addWordsToPracticeListFromPieceOfTextMut.mutateAsync({
-      languageCode,
+      languageCode: language.code,
       text,
     });
-    void utils.words.getUserWords.invalidate({ languageCode });
+    void utils.words.getUserWords.invalidate({ languageCode: language.code });
 
     onWordsListGenerated(words);
   }, [
     text,
     addWordsToPracticeListFromPieceOfTextMut,
-    languageCode,
+    language.code,
     utils.words.getUserWords,
     onWordsListGenerated,
   ]);

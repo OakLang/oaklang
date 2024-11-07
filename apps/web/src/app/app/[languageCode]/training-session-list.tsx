@@ -2,31 +2,35 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import {
   CheckIcon,
   ChevronDownIcon,
   CopyIcon,
   EditIcon,
+  FilePlusIcon,
   FilterIcon,
   LanguagesIcon,
   LibraryBigIcon,
   Loader2,
   MoreHorizontal,
   PackageOpenIcon,
+  PlusIcon,
   SlidersIcon,
   SortDescIcon,
   TrashIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
+import type { ExerciseFormData } from "@acme/core/validators";
 import { ALL_EXERCISES, SESSION_RECOMMENDATIONS } from "@acme/core/constants";
 
 import type { SessionsListDisplay } from "~/store/app-store";
 import type { RouterOutputs } from "~/trpc/react";
-import type { LanguageCodeParams } from "~/types";
+import { useCreateModuleDialog } from "~/components/dialogs/create-module-dialog";
 import { useEditTrainingSessionDialog } from "~/components/dialogs/edit-training-session-dialog";
+import { useStartTrainingSessionDialog } from "~/components/dialogs/start-training-dialog";
 import RenderInfiniteQueryResult from "~/components/RenderInfiniteQueryResult";
 import SearchBar from "~/components/SearchBar";
 import { Button } from "~/components/ui/button";
@@ -55,24 +59,29 @@ import {
 } from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
+import { usePracticeLanguage } from "~/providers/practice-language-provider";
 import { useAppStore } from "~/store/app-store";
 import { api } from "~/trpc/react";
 import { cn } from "~/utils";
-import StartLearningButton from "./start-learning-button";
 
 export default function TrainingSessionList() {
+  const [
+    StartTrainingSessionDialog,
+    _startTrainingSessionDialogOpen,
+    setStartTrainingSessionDialogOpen,
+  ] = useStartTrainingSessionDialog();
   const searchParams = useSearchParams();
   const search = searchParams.get("search");
   const router = useRouter();
 
-  const { languageCode } = useParams<LanguageCodeParams>();
+  const { language } = usePracticeLanguage();
   const exercises = useAppStore((state) => state.sessionsListFilter.exercises);
   const orderBy = useAppStore((state) => state.sessionsListDisplay.orderBy);
 
   const utils = api.useUtils();
   const trainingSessionsQuery =
     api.trainingSessions.getTrainingSessions.useInfiniteQuery(
-      { languageCode, search, exercises, orderBy },
+      { languageCode: language.code, search, exercises, orderBy },
       { getNextPageParam: (lastPage) => lastPage.nextCursor },
     );
 
@@ -80,7 +89,7 @@ export default function TrainingSessionList() {
     api.trainingSessions.createTrainingSession.useMutation({
       onSuccess: (data) => {
         void utils.trainingSessions.getTrainingSessions.invalidate({
-          languageCode,
+          languageCode: data.languageCode,
         });
         router.push(`/app/${data.languageCode}/training/${data.id}`);
       },
@@ -94,9 +103,9 @@ export default function TrainingSessionList() {
   const recommendations = useMemo(
     () =>
       SESSION_RECOMMENDATIONS.filter(
-        (item) => item.languageCode === languageCode,
+        (item) => item.languageCode === language.code,
       ),
-    [languageCode],
+    [language.code],
   );
 
   return (
@@ -111,7 +120,11 @@ export default function TrainingSessionList() {
         </div>
         <div className="flex flex-1 items-center justify-end gap-2">
           <SearchBar className="w-full flex-1 md:max-w-80" />
-          <StartLearningButton />
+
+          <Button onClick={() => setStartTrainingSessionDialogOpen(true)}>
+            <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
+            Start Learning
+          </Button>
         </div>
       </div>
 
@@ -169,7 +182,7 @@ export default function TrainingSessionList() {
         )}
       >
         {({ data: { pages } }) => {
-          if (pages[0]?.list.length === 0) {
+          if ((pages[0]?.list.length ?? 0) === 0) {
             if (search ?? exercises.length > 0) {
               return (
                 <div className="rounded-lg border py-16">
@@ -198,7 +211,12 @@ export default function TrainingSessionList() {
                     learing button below to start your first session.
                   </p>
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                    <StartLearningButton />
+                    <Button
+                      onClick={() => setStartTrainingSessionDialogOpen(true)}
+                    >
+                      <PlusIcon className="-ml-1 mr-2 h-4 w-4" />
+                      Start Learning
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -215,6 +233,8 @@ export default function TrainingSessionList() {
           );
         }}
       </RenderInfiniteQueryResult>
+
+      <StartTrainingSessionDialog />
     </div>
   );
 }
@@ -510,8 +530,10 @@ function SessionCard({
 }: {
   session: RouterOutputs["trainingSessions"]["getTrainingSessions"]["list"][number];
 }) {
-  const [EditTrainingSessionDialog, _, setOpenEditTrainingSessionDialgo] =
+  const [EditTrainingSessionDialog, , setOpenEditTrainingSessionDialgo] =
     useEditTrainingSessionDialog();
+  const [CreateModuleDialog, , setCreateModuleDialogOpen] =
+    useCreateModuleDialog();
   const sessionsListDisplay = useAppStore((state) => state.sessionsListDisplay);
 
   const utils = api.useUtils();
@@ -662,6 +684,18 @@ function SessionCard({
               <CopyIcon className="mr-2 h-4 w-4" />
               Duplicate
             </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              onClick={() => {
+                setCreateModuleDialogOpen(true);
+              }}
+            >
+              <FilePlusIcon className="mr-2 h-4 w-4" />
+              Use as Module
+            </DropdownMenuItem>
+
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
@@ -678,6 +712,16 @@ function SessionCard({
       </div>
 
       <EditTrainingSessionDialog trainingSession={session} />
+      <CreateModuleDialog
+        exercise={
+          { exercise: session.exercise, data: session.data } as ExerciseFormData
+        }
+        name={session.title}
+        onCreated={() => {
+          toast("Module created");
+          setCreateModuleDialogOpen(false);
+        }}
+      />
     </div>
   );
 }

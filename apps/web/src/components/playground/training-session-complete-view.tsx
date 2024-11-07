@@ -3,7 +3,7 @@ import { ChevronLeftIcon } from "lucide-react";
 
 import { useTrainingSession } from "~/providers/training-session-provider";
 import { api } from "~/trpc/react";
-import StartTrainingDialog from "../dialogs/start-training-dialog";
+import StartTrainingSessionDialog from "../dialogs/start-training-dialog";
 import RenderQueryResult from "../RenderQueryResult";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -72,7 +72,7 @@ export function TrainingSessionCompleteView() {
                   Start a new Session
                 </Button>
 
-                <StartTrainingDialog
+                <StartTrainingSessionDialog
                   open={showStartTrainigSessionDialog}
                   onOpenChange={setShowStartTrainigSessionDialog}
                 />
