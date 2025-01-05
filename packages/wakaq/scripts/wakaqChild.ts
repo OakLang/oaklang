@@ -9,17 +9,12 @@ import { generateSentencesForExercise3 } from "../src/tasks/generateSentencesFor
 // import your tasks so they're registered
 // also make sure to enable tsc option verbatimModuleSyntax
 
-const tasks = [
+const _tasks = [
   generateInterlinearLineForSentence,
   generateSentencesForExercise1,
   generateSentencesForExercise2,
   generateSentencesForExercise3,
 ];
-
-console.log(
-  "All Tasks",
-  tasks.map((task, i) => `${i + 1}: ${task.name}`),
-);
 
 await new WakaQChildWorker(wakaq).start();
 wakaq.disconnect();

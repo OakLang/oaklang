@@ -192,9 +192,11 @@ const InterlinearLineWordColumnCell = ({
 
         const ts = await createTrainingSessionMut.mutateAsync({
           title: `Practice word "${word.word}"`,
-          exercise: "exercise-1",
+          exercise: {
+            exercise: "exercise-1",
+            data: { topic, complexity, words: [word.word] },
+          },
           languageCode: word.languageCode,
-          data: { topic, complexity, words: [word.word] },
         });
         setWordPracticeTSId(ts.id);
         requestAnimationFrame(() => {
