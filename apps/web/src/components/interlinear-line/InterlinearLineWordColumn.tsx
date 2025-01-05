@@ -180,17 +180,23 @@ const InterlinearLineWordColumnCell = ({
         },
       );
       try {
-        let topic = "";
-        const complexity: Exercise1FormData["data"]["complexity"] = "A1";
+        let topic =
+          "Create a variety of sentences that illustrate different usages in meaning and grammar of the word.";
+        let complexity: Exercise1FormData["data"]["complexity"] = "A1";
 
         if (
           "topic" in trainingSession.data &&
           typeof trainingSession.data.topic === "string"
         ) {
           topic = trainingSession.data.topic;
-        } else {
-          topic =
-            "Create a variety of sentences that illustrate different usages in meaning and grammar of the word.";
+        }
+
+        if (
+          "complexity" in trainingSession.data &&
+          typeof trainingSession.data.complexity === "string"
+        ) {
+          complexity = trainingSession.data
+            .complexity as unknown as Exercise1FormData["data"]["complexity"];
         }
 
         const ts = await createTrainingSessionMut.mutateAsync({
