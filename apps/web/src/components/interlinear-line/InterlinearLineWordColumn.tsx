@@ -188,6 +188,9 @@ const InterlinearLineWordColumnCell = ({
           typeof trainingSession.data.topic === "string"
         ) {
           topic = trainingSession.data.topic;
+        } else {
+          topic =
+            "Create a variety of sentences that illustrate different usages in meaning and grammar of the word.";
         }
 
         const ts = await createTrainingSessionMut.mutateAsync({
