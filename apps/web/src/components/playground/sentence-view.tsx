@@ -249,7 +249,7 @@ export function SentenceView() {
                       <Button
                         variant="outline"
                         onClick={() => setShowTranslation(!showTranslation)}
-                        className="text-muted-foreground"
+                        className="text-muted-foreground pointer-events-auto"
                       >
                         {showTranslation
                           ? "Hide Translation"
@@ -265,7 +265,7 @@ export function SentenceView() {
                       </Button>
                       <Button
                         variant="outline"
-                        className="text-muted-foreground"
+                        className="text-muted-foreground pointer-events-auto"
                         onClick={handleMarkAllWordsKnownAndNext}
                       >
                         Mark all Words Known and Next
@@ -283,7 +283,7 @@ export function SentenceView() {
                           <Button
                             variant="link"
                             size="sm"
-                            className="text-muted-foreground hover:text-foreground mt-2 h-fit px-0"
+                            className="text-muted-foreground hover:text-foreground pointer-events-auto mt-2 h-fit px-0"
                             asChild
                           >
                             <Link
