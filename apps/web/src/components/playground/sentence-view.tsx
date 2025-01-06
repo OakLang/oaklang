@@ -165,15 +165,15 @@ export function SentenceView() {
         languageCode: language.code,
       });
       void utils.languages.getPracticeLanguages.invalidate();
-      setIsComplete(true);
+      handleNext();
     } catch (error) {
       toast((error as Error).message);
     }
   }, [
+    handleNext,
     language.code,
     markWordKnownMut,
     sentence,
-    setIsComplete,
     trainingSession.id,
     utils.languages.getPracticeLanguage,
     utils.languages.getPracticeLanguages,

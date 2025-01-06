@@ -167,6 +167,9 @@ export const insertUserWords = async (
   userId: string,
   db: DB,
 ) => {
+  if (words.length === 0) {
+    return;
+  }
   await db
     .insert(userWordsTable)
     .values(

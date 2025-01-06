@@ -51,7 +51,6 @@ export default function InterlinearLineWordColumn({
   const userWordQuery = api.words.getUserWord.useQuery(
     { wordId: word.id },
     {
-      enabled: false,
       initialData: userWord
         ? {
             ...userWord,
@@ -88,7 +87,7 @@ export default function InterlinearLineWordColumn({
             <InterlinearLineWordColumnCell
               key={line.id}
               line={line}
-              word={word}
+              word={userWordQuery.data?.word ?? word}
               userWord={userWordQuery.data}
               sentenceWord={sentenceWord}
             />

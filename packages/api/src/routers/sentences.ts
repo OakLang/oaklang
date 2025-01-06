@@ -11,7 +11,11 @@ import {
 import { generateInterlinearLineForSentence } from "@acme/wakaq/tasks/generateInterlinearLineForSentence";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { getSentenceOrThrow, getTrainingSessionOrThrow } from "../utils";
+import {
+  getSentenceOrThrow,
+  getTrainingSessionOrThrow,
+  insertUserWords,
+} from "../utils";
 
 export const sentencesRouter = createTRPCRouter({
   getSentences: protectedProcedure
@@ -46,6 +50,13 @@ export const sentencesRouter = createTRPCRouter({
         )
         .where(eq(sentenceWordsTable.sentenceId, input.sentenceId))
         .orderBy(asc(sentenceWordsTable.index));
+
+      const wordsWithNoUserWord = words
+        .filter((word) => word.user_word === null)
+        .map((word) => word.word);
+      if (wordsWithNoUserWord.length > 0) {
+        await insertUserWords(wordsWithNoUserWord, ctx.session.user.id, ctx.db);
+      }
 
       return {
         ...sentence,
