@@ -12,6 +12,7 @@ export const aiUsageTable = pgTable("ai_usage", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   userEmail: text("user_email"),
   userId: text("user_id"),
+  type: text("type"),
   generationType: text("generation_type", {
     enum: ["text", "object", "audio"],
   }),

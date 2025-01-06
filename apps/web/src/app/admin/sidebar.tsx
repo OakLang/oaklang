@@ -3,7 +3,7 @@
 import type { FC } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileUserIcon, LayoutIcon, UsersIcon } from "lucide-react";
+import { BotIcon, FileUserIcon, LayoutIcon, UsersIcon } from "lucide-react";
 
 import {
   Sidebar,
@@ -52,6 +52,17 @@ export default function AdminSidebar() {
           icon: FileUserIcon,
           title: "Access Requests",
           url: `/admin/access-requests`,
+        },
+      ],
+    },
+    {
+      id: "ai",
+      title: "AI",
+      items: [
+        {
+          icon: BotIcon,
+          title: "AI Usage",
+          url: `/admin/ai-usage`,
         },
       ],
     },

@@ -97,8 +97,6 @@ export const generateSentencesForExercise3 = wakaq.task(
         }
       }
 
-      wakaq.logger?.info(JSON.stringify({ prompt }, null, 2));
-
       if (!prompt) {
         await updateTrainingSessionStatus(trainingSessionId, "error");
         return;

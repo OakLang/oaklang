@@ -479,6 +479,7 @@ export const wordsRouter = createTRPCRouter({
         generationType: "object",
         prompt,
         result,
+        type: "extract-words-from-a-piece-of-text",
         tokenCount: result.usage.totalTokens,
         userId: ctx.session.user.id,
         userEmail: ctx.session.user.email,

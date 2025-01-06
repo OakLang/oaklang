@@ -114,8 +114,6 @@ export const generateSentencesForExercise1 = wakaq.task(
         customPromptTemplate,
       );
 
-      wakaq.logger?.info(JSON.stringify({ prompt }, null, 2));
-
       const generatedSentences = await generateSentences({
         nativeLanguage: nativeLanguage.name,
         practiceLanguage: practiceLanguage.name,

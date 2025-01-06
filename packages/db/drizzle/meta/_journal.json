@@ -274,6 +274,13 @@
       "when": 1730967660098,
       "tag": "0038_curved_sunspot",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1736142754951,
+      "tag": "0039_sad_timeslip",
+      "breakpoints": true
     }
   ]
 }

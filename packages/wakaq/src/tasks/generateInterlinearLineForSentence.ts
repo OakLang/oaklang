@@ -152,6 +152,7 @@ export const generateInterlinearLineForSentence = wakaq.task(
         generationType: "object",
         prompt,
         result,
+        type: "generate-interlinear-line",
         tokenCount: result.usage.totalTokens,
         userId: sentence.userId,
         userEmail: sentence.userEmail,
