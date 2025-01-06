@@ -10,10 +10,10 @@ import { buttonVariants } from "./ui/button";
 export default function AppSettings() {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">
-      <div className="flex h-16 flex-shrink-0 items-center border-b px-4">
-        <p className="text-lg font-semibold">App Settings</p>
-      </div>
-      <Tabs.Root className="flex flex-1 overflow-hidden">
+      <Tabs.Root
+        defaultValue="preferences"
+        className="flex flex-1 overflow-hidden"
+      >
         <aside className="w-64 border-r">
           <Tabs.List className="grid h-fit w-full gap-1 bg-transparent p-4">
             <Tabs.Trigger
