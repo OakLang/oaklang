@@ -74,7 +74,6 @@ export const trainingSessionsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx: { db, session }, input }) => {
-      console.log({ input });
       const trainingSessionList = await db
         .select()
         .from(trainingSessionsTable)

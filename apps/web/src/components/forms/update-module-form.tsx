@@ -238,7 +238,6 @@ export default function UpdateModuleForm({
 
       <CreateCollectionDialog
         onCreated={async (collection) => {
-          console.log(collection);
           await collectionsQuery.refetch();
           form.setValue("collectionId", collection.id, {
             shouldDirty: true,

@@ -49,7 +49,6 @@ export default function EmailSignInForm({
         callbackUrl: callbackUrl ?? "/app",
         redirect: false,
       });
-      console.log(data);
 
       if (data?.url) {
         const url = new URL(data.url);

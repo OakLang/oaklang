@@ -23,7 +23,6 @@ export const usePersistState = <T = undefined>(
       setState((prevState) => {
         if (typeof value === "function") {
           const newValue = (value as (prevState: T) => T)(prevState);
-          console.log(newValue);
           localStorage.setItem(key, JSON.stringify(newValue));
           return newValue;
         } else {
