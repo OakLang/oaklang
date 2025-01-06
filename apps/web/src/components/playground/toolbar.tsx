@@ -1,16 +1,18 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import {
   BookAIcon,
   EditIcon,
   MoreHorizontalIcon,
+  RotateCcw,
   SettingsIcon,
   SidebarCloseIcon,
   SidebarOpenIcon,
   TrashIcon,
+  X,
   XIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -38,7 +40,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Sheet, SheetContent, SheetTitle } from "~/components/ui/sheet";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "~/components/ui/sheet";
 import { Slider } from "~/components/ui/slider";
 import {
   Tooltip,
@@ -51,7 +59,7 @@ import { useEditTrainingSessionDialog } from "../dialogs/edit-training-session-d
 import { useTrainingSessionView } from "./training-session-view";
 
 export default function ToolBar({ children }: { children?: ReactNode }) {
-  const { trainingSession } = useTrainingSession();
+  const { trainingSession, updateTrainingSession } = useTrainingSession();
   const { sidebarOpen, setSidebarOpen, isComplete, closeSession } =
     useTrainingSessionView();
 
@@ -63,6 +71,15 @@ export default function ToolBar({ children }: { children?: ReactNode }) {
   const fontSize = useAppStore((state) => state.fontSize);
   const setFontSize = useAppStore((state) => state.setFontSize);
   const { theme, setTheme } = useTheme();
+
+  const handleGoToBeginning = useCallback(() => {
+    updateTrainingSession.mutate({
+      trainingSessionId: trainingSession.id,
+      dto: {
+        sentenceIndex: 0,
+      },
+    });
+  }, [trainingSession.id, updateTrainingSession]);
 
   return (
     <>
@@ -203,6 +220,10 @@ export default function ToolBar({ children }: { children?: ReactNode }) {
                     <SettingsIcon className="mr-2 h-4 w-4" />
                     Settings
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleGoToBeginning}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Go to beginning
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setSettingsSheetOpen(true)}>
                     <TrashIcon className="mr-2 h-4 w-4" />
@@ -243,7 +264,14 @@ export default function ToolBar({ children }: { children?: ReactNode }) {
           side="bottom"
           className="h-screen border-none p-0 md:left-4 md:right-4 md:h-[calc(100vh-2rem)] md:rounded-t-xl"
         >
-          <SheetTitle className="sr-only">App Settings</SheetTitle>
+          <SheetHeader className="flex h-14 flex-row items-center justify-between space-y-0 border-b px-4">
+            <SheetTitle>App Settings</SheetTitle>
+            <SheetClose asChild>
+              <Button variant="ghost" size="icon">
+                <X className="size-5" />
+              </Button>
+            </SheetClose>
+          </SheetHeader>
           <AppSettings />
         </SheetContent>
       </Sheet>
