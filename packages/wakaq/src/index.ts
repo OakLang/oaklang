@@ -18,7 +18,7 @@ export const wakaq = new WakaQ({
         int. The variable "cores" is replaced with the number of processors on
         the current machine.
      */
-  concurrency: 6,
+  concurrency: 1,
 
   /* List your queues and their priorities.
    */
